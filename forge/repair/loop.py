@@ -70,9 +70,13 @@ class LoopResult:
 
 class RepairLoop:
     def __init__(self, model, tokenizer, harness: RenderHarness,
-                 max_rounds: int = 2, max_tokens: int = 900):
+                 max_rounds: int = 2, max_tokens: int = 900, index=None):
         self.model, self.tok, self.harness = model, tokenizer, harness
         self.max_rounds, self.max_tokens = max_rounds, max_tokens
+        # Optional example index. Retrieval is a variable under test, not an
+        # assumption: dense context is a measured failure mode for small
+        # models, so whether it helps has to be shown rather than believed.
+        self.index = index
 
     def _generate(self, user: str) -> str:
         from mlx_lm import generate
@@ -86,7 +90,12 @@ class RepairLoop:
                         sampler=make_sampler(temp=0.0), verbose=False)
 
     def run(self, description: str) -> LoopResult:
-        code = extract_code(self._generate(description))
+        first = description
+        if self.index is not None:
+            shots = self.index.as_fewshot(description, k=2)
+            if shots:
+                first = f"{shots}\n\nNow write a scene for:\n{description}"
+        code = extract_code(self._generate(first))
         code, rules = lint(code)
         result = self.harness.render(code, quality="low", frames=4)
         history = [result.error_kind.value]
