@@ -97,10 +97,19 @@ def main() -> None:
         if expired():
             return
         model = pool.next_model()
+        idle_since = None
         while model is None:
             if expired():
                 return
-            time.sleep(min(30.0, max(5.0, pool.seconds_until_any())))
+            # Every model cooling at once means the key's daily quota is gone,
+            # not that one model is busy. Retrying every 30s then burns hours
+            # of 429s; the quota resets on a daily boundary, so back off to
+            # long sleeps and let the run resume when it actually can.
+            if idle_since is None:
+                idle_since = time.monotonic()
+            starved_min = (time.monotonic() - idle_since) / 60
+            nap = 30.0 if starved_min < 10 else 600.0
+            time.sleep(min(nap, max(5.0, pool.seconds_until_any())))
             model = pool.next_model()
 
         teacher = Teacher(provider="gemini", model=model)

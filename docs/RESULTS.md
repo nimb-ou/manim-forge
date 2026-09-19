@@ -82,4 +82,46 @@ Scored on render success, duration against the real runtime, beat count, and
 concept coverage — whether the generated narration mentions the terms the real
 video spends its time on.
 
-*Baseline not yet run.*
+### Baseline — untuned model, 15 tasks
+
+| metric | value |
+|--------|-------|
+| render success | 80% (12/15) |
+| mean duration | **15.9s** |
+| real videos average | **11 min** |
+| length ratio | 2.55% |
+| concept coverage | 10.6% |
+| mean play calls | 5.2 |
+
+The diagnosis is more useful than the score. Best case — *"Matrix multiplication
+as composition"* — reached **31.8% coverage in 34 seconds**, matching `matrix`,
+`transformation`, `linear`, `multiplication`. The model produces **topically
+relevant but drastically too short** output: it answers with a clip where a
+chapter was asked for.
+
+So the gap on this eval is length and structure, not subject understanding.
+That is what the `decompose` task type targets — breaking a large request into
+several scene-sized ones — and this measurement is the reason to believe it
+matters rather than an assumption that it might.
+
+---
+
+## Free-tier reality
+
+The documented Gemini free tier (1,500 requests/day for Flash) does not match
+what the key actually delivers. Measured across a full day:
+
+| | |
+|---|---|
+| total calls before exhaustion | **~944** |
+| models exhausted | all 6 in rotation |
+| reset | daily, Pacific midnight |
+
+Roughly **900–1,000 generations per day**, not per model. At ~95% verified
+yield that is ~900 scenes/day, so a 10,000-scene corpus takes about ten days.
+Rotation across six models still matters — it is what reaches that ceiling
+instead of stopping at one model's share — but it does not multiply it.
+
+Raising concurrency does **not** help and actively hurt: 5 workers produced
+~10 tasks/min while 8 produced ~5.7, because extra workers front-load the
+exhaustion and then everything waits.
