@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Manim Forge</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Spectral:wght@400;600&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --ground:#0B0D10; --surface:#13171C; --surface-2:#1A1F26;
+    --line:#242C36; --ink:#E7ECF2; --muted:#8C99A8; --faint:#5F6B79;
+    --blue:#58C4DD; --teal:#5CD0B3; --gold:#F0AC5F; --red:#FC6255;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--ground);color:var(--ink);
+       font-family:"IBM Plex Sans",system-ui,sans-serif;line-height:1.55}
+  .wrap{max-width:1080px;margin-inline:auto;padding-inline:20px;padding-block:32px 72px}
+  h1{font-family:Spectral,serif;font-size:1.9rem;font-weight:600;margin:0 0 4px}
+  .sub{color:var(--muted);font-size:.9rem;margin:0 0 26px}
+  .mono{font-family:"IBM Plex Mono",monospace}
+
+  .composer{display:flex;flex-direction:column;gap:12px;
+            background:var(--surface);border:1px solid var(--line);
+            border-radius:10px;padding:16px}
+  textarea{width:100%;min-height:88px;resize:vertical;background:var(--surface-2);
+           color:var(--ink);border:1px solid var(--line);border-radius:7px;
+           padding:12px;font:inherit;font-size:.95rem}
+  textarea:focus{outline:2px solid var(--blue);outline-offset:1px}
+  .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+  select{background:var(--surface-2);color:var(--ink);border:1px solid var(--line);
+         border-radius:6px;padding:8px 10px;font:inherit;font-size:.86rem}
+  button{background:var(--blue);color:#07222B;border:0;border-radius:7px;
+         padding:9px 20px;font:inherit;font-weight:500;cursor:pointer}
+  button:disabled{opacity:.5;cursor:default}
+  .hint{color:var(--faint);font-size:.8rem}
+
+  .chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:14px}
+  .chip{background:var(--surface-2);border:1px solid var(--line);color:var(--muted);
+        border-radius:999px;padding:5px 12px;font-size:.8rem;cursor:pointer}
+  .chip:hover{border-color:var(--blue);color:var(--ink)}
+
+  .out{margin-top:26px;display:none;grid-template-columns:1fr;gap:18px}
+  .out.on{display:grid}
+  @media(min-width:880px){.out.on{grid-template-columns:1.05fr .95fr}}
+  .panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;
+         overflow:hidden;min-width:0}
+  .panel h2{font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;
+            color:var(--faint);margin:0;padding:11px 14px;border-bottom:1px solid var(--line);
+            font-family:"IBM Plex Mono",monospace;font-weight:500}
+  video{width:100%;display:block;background:#000}
+  pre{margin:0;padding:14px;overflow:auto;max-height:440px;font-size:.78rem;
+      font-family:"IBM Plex Mono",monospace;color:#CBD5E1}
+
+  .status{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;align-items:center}
+  .tag{font-family:"IBM Plex Mono",monospace;font-size:.72rem;padding:3px 9px;
+       border-radius:5px;border:1px solid var(--line);color:var(--muted)}
+  .tag.ok{color:var(--teal);border-color:#2C6A5B}
+  .tag.bad{color:var(--red);border-color:#6E322C}
+  .tag.warn{color:var(--gold);border-color:#6B4D24}
+  .spin{width:13px;height:13px;border:2px solid var(--line);border-top-color:var(--blue);
+        border-radius:50%;animation:s .8s linear infinite;display:inline-block}
+  @keyframes s{to{transform:rotate(360deg)}}
+  @media(prefers-reduced-motion:reduce){.spin{animation:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Manim Forge</h1>
+  <p class="sub">Describe an animation in plain English. It gets written, rendered, and repaired if it breaks.</p>
+
+  <div class="composer">
+    <textarea id="prompt" placeholder="e.g. build a chess grid, place a rook, and animate the squares it can reach"></textarea>
+    <div class="row">
+      <select id="backend">
+        <option value="gemini">Gemini 3.7 Flash (remote)</option>
+        <option value="local">Qwen2.5-Coder-7B (local)</option>
+      </select>
+      <select id="rounds">
+        <option value="2">repair: 2 rounds</option>
+        <option value="0">repair: off</option>
+        <option value="4">repair: 4 rounds</option>
+      </select>
+      <button id="go">Animate</button>
+      <span class="hint" id="hint"></span>
+    </div>
+    <div class="chips" id="chips"></div>
+  </div>
+
+  <div class="status" id="status"></div>
+
+  <div class="out" id="out">
+    <div class="panel">
+      <h2>Animation</h2>
+      <video id="vid" controls loop playsinline></video>
+    </div>
+    <div class="panel">
+      <h2>Generated code</h2>
+      <pre id="code"></pre>
+    </div>
+  </div>
+</div>
+
+<script>
+const EXAMPLES = [
+  "build a chess grid, place a rook, animate the squares it can reach",
+  "show vector addition head to tail with two arrows",
+  "gradient descent rolling downhill on a loss curve",
+  "Riemann sums converging to the area under a parabola",
+  "a decision boundary separating two clusters of points",
+];
+const $ = id => document.getElementById(id);
+
+const chips = $("chips");
+EXAMPLES.forEach(t => {
+  const b = document.createElement("button");
+  b.className = "chip"; b.type = "button"; b.textContent = t;
+  b.onclick = () => { $("prompt").value = t; $("prompt").focus(); };
+  chips.appendChild(b);
+});
+
+function tag(text, cls) {
+  const s = document.createElement("span");
+  s.className = "tag " + (cls || ""); s.textContent = text;
+  return s;
+}
+
+$("go").onclick = async () => {
+  const prompt = $("prompt").value.trim();
+  if (!prompt) { $("prompt").focus(); return; }
+
+  const status = $("status");
+  status.innerHTML = "";
+  const live = tag("", "");
+  live.innerHTML = '<span class="spin"></span> generating…';
+  status.appendChild(live);
+  $("go").disabled = true;
+  $("out").classList.remove("on");
+
+  const t0 = performance.now();
+  try {
+    const r = await fetch("/generate", {
+      method: "POST", headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({
+        prompt,
+        backend: $("backend").value,
+        max_rounds: parseInt($("rounds").value, 10),
+      }),
+    });
+    const d = await r.json();
+
+    status.innerHTML = "";
+    status.appendChild(tag(d.ok ? "rendered" : "failed", d.ok ? "ok" : "bad"));
+    status.appendChild(tag(d.backend));
+    status.appendChild(tag(d.seconds + "s total"));
+    if (d.video_s) status.appendChild(tag(d.video_s.toFixed(1) + "s video"));
+    if (d.rounds > 0) status.appendChild(tag(d.rounds + " repair round" + (d.rounds>1?"s":""), "warn"));
+    (d.attempts || []).forEach((a, i) => {
+      if (!a.ok) status.appendChild(tag("try " + (i+1) + ": " + a.error, "warn"));
+    });
+
+    $("code").textContent = d.code || "";
+    if (d.video_url) {
+      $("vid").src = d.video_url + "?t=" + Date.now();
+      $("vid").parentElement.style.display = "";
+    } else {
+      $("vid").removeAttribute("src");
+      $("vid").parentElement.style.display = "none";
+      if (d.error) {
+        $("code").textContent = d.error + "\n\n--- last attempt ---\n" + (d.code || "");
+      }
+    }
+    $("out").classList.add("on");
+  } catch (e) {
+    status.innerHTML = "";
+    status.appendChild(tag("request failed: " + e.message, "bad"));
+  } finally {
+    $("go").disabled = false;
+    $("hint").textContent = ((performance.now() - t0) / 1000).toFixed(1) + "s";
+  }
+};
+</script>
+</body>
+</html>
