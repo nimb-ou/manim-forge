@@ -19,16 +19,29 @@ from __future__ import annotations
 import json
 import random
 import time
+import threading
 from dataclasses import dataclass, field
 from pathlib import Path
 
 
 @dataclass
 class ModelPool:
-    """Which models still answer, and when a retired one may be retried."""
+    """Which models still answer, and when a retired one may be retried.
+
+    Thread-safe, because workers run concurrently: generation waits on the
+    network and rendering waits on a subprocess, so a sequential loop leaves
+    both the API quota and the CPU mostly idle.
+
+    ``next_model`` round-robins rather than always returning the strongest
+    available one. Hammering a single model drives it straight into its 429
+    while the others sit unused — which is the exact failure this pool exists
+    to avoid.
+    """
     models: list[str]
     cooldown_s: float = 900.0
     _retired: dict[str, float] = field(default_factory=dict)
+    _lock: threading.Lock = field(default_factory=threading.Lock)
+    _cursor: int = 0
 
     def available(self) -> list[str]:
         now = time.monotonic()
@@ -36,11 +49,16 @@ class ModelPool:
                 if m not in self._retired or self._retired[m] <= now]
 
     def retire(self, model: str) -> None:
-        self._retired[model] = time.monotonic() + self.cooldown_s
+        with self._lock:
+            self._retired[model] = time.monotonic() + self.cooldown_s
 
     def next_model(self) -> str | None:
-        free = self.available()
-        return free[0] if free else None
+        with self._lock:
+            free = self.available()
+            if not free:
+                return None
+            self._cursor = (self._cursor + 1) % len(free)
+            return free[self._cursor]
 
     def seconds_until_any(self) -> float:
         if self.available():
