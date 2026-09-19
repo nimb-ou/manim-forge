@@ -22,18 +22,7 @@ import random
 import time
 from pathlib import Path
 
-INSTRUCTION = """Below is a passage of narration from a mathematics video.
-
-Write the Manim scene that should be on screen while this is being said.
-Follow every rule you were given about beats, computed values and layout.
-Set each beat's narration= to the part of the passage it covers.
-
-If the passage cannot sensibly be animated — it is an aside, a sponsor
-message, a reference to another video, or pure commentary with no visual
-content — reply with exactly SKIP and nothing else.
-
-PASSAGE:
-"""
+from forge.synth.teacher import NARRATION_INSTRUCTION as INSTRUCTION
 
 
 def main() -> None:

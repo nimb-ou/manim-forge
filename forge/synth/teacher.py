@@ -348,3 +348,20 @@ class Teacher:
             max_tokens=max_tokens,
         )
         return extract_code(r.choices[0].message.content)
+
+
+#: Prompt wrapper for turning a passage of 3Blue1Brown narration into a scene.
+#: Shared by the one-shot script and the continuous daemon, so it lives here
+#: rather than in a script — `scripts/` is not an importable package.
+NARRATION_INSTRUCTION = """Below is a passage of narration from a mathematics video.
+
+Write the Manim scene that should be on screen while this is being said.
+Follow every rule you were given about beats, computed values and layout.
+Set each beat's narration= to the part of the passage it covers.
+
+If the passage cannot sensibly be animated — it is an aside, a sponsor
+message, a reference to another video, or pure commentary with no visual
+content — reply with exactly SKIP and nothing else.
+
+PASSAGE:
+"""
