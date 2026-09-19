@@ -38,6 +38,12 @@ class BeatSpec:
     seconds: float | None
     order: int
     source: str = ""
+    #: What a narrator would say over this beat. Optional, and worth having
+    #: even with no audio: writing it forces the planner to reason about the
+    #: *explanation* rather than only the picture, which is the difference
+    #: between an explainer and a diagram. It is also exactly what a
+    #: text-to-speech track needs later, timed against ``seconds``.
+    narration: str = ""
 
     def as_instruction(self) -> str:
         """The line a planner emits and a coder consumes."""
@@ -45,7 +51,7 @@ class BeatSpec:
         return f"{self.intent}{dur}"
 
 
-def beat(intent: str, seconds: float | None = None):
+def beat(intent: str, seconds: float | None = None, narration: str = ""):
     """Mark a method as one beat.
 
     ``intent`` is the natural-language description of what this step
@@ -62,6 +68,7 @@ def beat(intent: str, seconds: float | None = None):
             intent=intent,
             seconds=seconds,
             order=next(_ORDER),
+            narration=narration,
         )
         return fn
     return decorate
@@ -79,6 +86,15 @@ def beats_of(cls) -> list:
         if spec is not None:
             found.append(fn)
     return sorted(found, key=lambda f: f._forge_beat.order)
+
+
+def script_of(cls) -> str:
+    """The narration track, in order — captions today, a voiceover later."""
+    lines = []
+    for spec in storyboard(cls):
+        if spec.narration:
+            lines.append(spec.narration.strip())
+    return "\n\n".join(lines)
 
 
 def storyboard(cls) -> list[BeatSpec]:
