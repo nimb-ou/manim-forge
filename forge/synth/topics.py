@@ -96,6 +96,72 @@ DISCRETE = [
     "a sorting algorithm comparing and swapping bars",
 ]
 
+
+PHYSICS = [
+    "projectile motion tracing a parabola under gravity",
+    "simple harmonic motion of a mass on a spring, with its sine trace",
+    "a pendulum swinging, and why small angles make it simple",
+    "conservation of momentum in an elastic collision of two balls",
+    "the electric field of a point charge drawn as radiating arrows",
+    "field lines between two opposite charges",
+    "wave interference: two sources producing a pattern of peaks and troughs",
+    "refraction: a light ray bending as it enters glass",
+    "the Doppler effect as a moving source compresses wavefronts",
+    "orbital motion as continuous falling around a planet",
+    "torque as force applied at a distance from a pivot",
+    "standing waves on a string at the first three harmonics",
+    "the ideal gas law shown as particles in a shrinking box",
+    "buoyancy: displaced volume versus weight",
+]
+
+CHEMISTRY = [
+    "electron shells filling up around a nucleus",
+    "a covalent bond as two atoms sharing an electron pair",
+    "the shape of a water molecule and why it is bent",
+    "sp3 hybridisation producing a tetrahedral arrangement",
+    "balancing a chemical equation by counting atoms on each side",
+    "titration: pH changing as base is added, with the curve drawn",
+    "reaction rate as concentration decaying over time",
+    "a benzene ring and its delocalised electrons",
+    "ionic bonding as electron transfer between sodium and chlorine",
+]
+
+SHAPES_3D = [
+    "a cube rotating in three dimensions, showing its hidden edges",
+    "the five Platonic solids, one after another",
+    "slicing a cone to produce circle, ellipse, parabola and hyperbola",
+    "a sphere built from stacked circles of varying radius",
+    "a torus traced by a circle swept around an axis",
+    "unfolding a 3D solid into its 2D net",
+    "a surface z = f(x, y) with its gradient field beneath",
+    "projecting a 3D object onto a 2D plane as its shadow",
+    "a helix as circular motion combined with steady rise",
+]
+
+GRAPHS = [
+    "a graph traversed breadth first from a starting node",
+    "depth first search exploring one branch to the end",
+    "Dijkstra's algorithm relaxing edges toward the shortest path",
+    "a minimum spanning tree growing edge by edge",
+    "the seven bridges of Konigsberg and why the walk is impossible",
+    "a bipartite graph and a maximum matching between its sides",
+    "graph colouring with the fewest colours that work",
+    "a cycle detected while traversing a directed graph",
+    "degree distribution of a network shown as a histogram",
+]
+
+PUZZLES = [
+    "the Monty Hall problem played out across many trials",
+    "towers of Hanoi solved recursively",
+    "the two-envelope paradox laid out with expected values",
+    "a knight's tour covering every square of a chessboard",
+    "the 100 prisoners problem and the loop strategy",
+    "why 0.999... equals 1, shown geometrically",
+    "the Tower of Hanoi step count doubling with each disc",
+    "a magic square and why its rows, columns and diagonals agree",
+    "the coupon collector problem: how long to collect every one",
+]
+
 ALL = (
     [(t, "geometry") for t in GEOMETRY]
     + [(t, "vectors") for t in VECTORS]
@@ -104,6 +170,11 @@ ALL = (
     + [(t, "machine-learning") for t in MACHINE_LEARNING]
     + [(t, "number-theory") for t in NUMBER_THEORY]
     + [(t, "discrete") for t in DISCRETE]
+    + [(t, "physics") for t in PHYSICS]
+    + [(t, "chemistry") for t in CHEMISTRY]
+    + [(t, "shapes-3d") for t in SHAPES_3D]
+    + [(t, "graphs") for t in GRAPHS]
+    + [(t, "puzzles") for t in PUZZLES]
 )
 
 #: Beat counts requested per variation, so the corpus spans short clips through
