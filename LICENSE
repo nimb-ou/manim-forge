@@ -1,0 +1,25 @@
+Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International
+(CC BY-NC-SA 4.0)
+
+Copyright (c) 2026 Manim Forge contributors
+
+You are free to share and adapt this material for NON-COMMERCIAL purposes,
+provided you give appropriate credit and distribute your contributions under
+this same license.
+
+Full legal text: https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode
+Human-readable summary: https://creativecommons.org/licenses/by-nc-sa/4.0/
+
+WHY THIS LICENSE
+----------------
+Manim Forge trains on material released under CC BY-NC-SA 4.0 — notably
+3b1b/videos (Grant Sanderson's own scene code) and the ManimBench benchmark.
+That license is share-alike, so any derivative corpus or model must carry the
+same terms. This project is an educational tool and will never be
+commercialised, so those terms cost us nothing and are honoured deliberately
+rather than worked around.
+
+The Manim engine itself is MIT licensed and imposes no such restriction.
+
+Per-source attribution for every dataset ingested is recorded in
+docs/DATA_LICENSES.md and in the `license` field of every corpus row.

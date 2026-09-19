@@ -1,0 +1,18 @@
+# environments
+.venv/
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+
+# data + renders: large, regenerable, and license-encumbered. Never committed.
+data/
+media/
+models/
+adapters/
+*.mp4
+*.mkv
+*.png
+*.jpg
+
+# os
+.DS_Store

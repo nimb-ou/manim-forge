@@ -1,0 +1,21 @@
+# --- Phase 0: render harness -------------------------------------------------
+manim==0.21.0            # Manim Community Edition. NOT manimgl — see docs/PLAN.md
+# system deps (Homebrew): cairo pango pkg-config ffmpeg, plus BasicTeX
+
+# --- Phase 1: ingestion ------------------------------------------------------
+datasets>=3.0
+huggingface-hub>=0.26
+pyarrow>=17.0
+
+# --- Phase 6: evaluation -----------------------------------------------------
+scikit-image>=0.24       # SSIM over sampled frames
+torch>=2.4               # CLIP backbone
+transformers>=4.45       # openai/clip-vit-base-patch32 (already cached locally)
+
+# --- Phase 7: local platform -------------------------------------------------
+fastapi>=0.115
+uvicorn[standard]>=0.32
+
+# --- Phase 5: fine-tuning (Apple Silicon) ------------------------------------
+# installed separately, see docs/SETUP.md:
+#   mlx>=0.21  mlx-lm>=0.20
