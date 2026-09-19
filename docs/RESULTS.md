@@ -1,0 +1,85 @@
+# Results
+
+Every measurement, in order, with what changed between them. Benchmark data
+lives under `data/bench/` which is gitignored (it is large and regenerable), so
+this file is the durable record.
+
+**Benchmark**: ManimBench v1 held-out test split. Render Success Rate — the
+fraction of generated scenes that execute and produce video. Greedy decoding
+(temp 0) so runs are reproducible. Environment failures excluded from the
+denominator.
+
+---
+
+## Baseline progression — untuned Qwen2.5-Coder-7B-Instruct-4bit
+
+| n | RSR | first try | rescued | what changed |
+|---|-----|-----------|---------|--------------|
+| 20 | 40% | — | — | bare system prompt, no repair |
+| 20 | 70% | 13 | 1 | + "always animate with self.play() and end with self.wait()" in the system prompt, + repair loop |
+| 20 | 85% | 14 | 3 | + few-shot retrieval over verified scenes |
+| **100** | **83.0%** | 75 | 8 | same configuration, full split — the first defensible number |
+| **100** | **89.0%** | 77 | 12 | + repair escalation, + stdlib import lint |
+
+Nothing above is trained. Every point came from inference-time work.
+
+### Attribution
+
+- **One sentence** in the system prompt was worth ~25 points, by eliminating
+  the whole `empty_render` class. The repair loop, far more machinery, added 5.
+- **Retrieval** added ~15, and made repair three times more effective —
+  examples behave nothing like documentation, which is a measured failure mode
+  for small models.
+- **Escalation** added ~4 (rescued 8 → 12). **Import lint** added ~2
+  (measured at +1 in isolation).
+
+### Confounds — stated, not hidden
+
+Two comparisons here changed more than one variable:
+
+1. The 70% run altered the system prompt *and* introduced the repair loop.
+   Attribution survived only because rounds-used was logged per trial.
+2. The 89% run was meant to isolate escalation; the import lint went in as
+   well. It decomposes because first-try and rescued-by-repair are recorded
+   separately, but that is luck.
+
+For inference experiments this costs ten minutes to redo. For training runs it
+costs a week of compute and yields a number that cannot be trusted.
+
+### What is left
+
+11 failures at 89%, of which **9 are `api_misuse`** — the model using a real
+Manim class with arguments that do not exist. That class has now survived the
+system prompt, introspected API briefings, retrieval, escalation and linting.
+It is what fine-tuning is for.
+
+---
+
+## Corpus
+
+| source | rows | verified | note |
+|--------|------|----------|------|
+| 5 public datasets, deduplicated | 3,680 | 1,760 (47.8%) | 7,433 raw rows; half were duplicates |
+| Synthetic — topics | growing | ~94% yield | 115 topics across 12 domains |
+| Synthetic — 3b1b narration | growing | ~91% yield | his words as the prompt |
+| Gold — hand-authored | 4 | 4 | weighted 6× at training |
+| 3b1b transcripts | 5,825 segments | — | 151 videos, subtitles only |
+
+Dedupe is AST-structural, so renamed variables and reflowed whitespace collapse
+together. `generaleoley` (1,622 rows) contributed **zero** new rows — it is
+entirely contained in `thanhkt`.
+
+---
+
+## Hard eval — a whole explainer from one line
+
+81 real 3Blue1Brown video titles as one-line prompts. Deliberately much harder
+than the benchmark, and expected to score poorly at first: the point is a
+measurement that keeps moving as the model improves at the actual job rather
+than one that saturates on single scenes.
+
+Scored on render success, duration against the real runtime, beat count, and
+concept coverage — whether the generated narration mentions the terms the real
+video spends its time on.
+
+*Baseline not yet run.*
