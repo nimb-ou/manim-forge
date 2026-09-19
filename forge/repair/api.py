@@ -123,6 +123,54 @@ def blamed_names(stderr: str) -> list[str]:
     return list(dict.fromkeys(out))
 
 
+_BAD_KWARG = re.compile(r"(?:(\w+)\.__init__\(\) )?got an unexpected keyword argument '(\w+)'")
+
+
+def all_keywords(name: str) -> list[str]:
+    """Every accepted keyword for a Manim class, uncut.
+
+    Used for the class the traceback actually blames. A truncated list is worse
+    than none there: the model cannot tell whether the argument it wants is
+    absent or merely off the end, so it invents another one.
+    """
+    obj = resolve(name)
+    if obj is None:
+        return []
+    try:
+        target = obj.__init__ if inspect.isclass(obj) else obj
+        return [n for n, p in inspect.signature(target).parameters.items()
+                if n not in ("self", "args", "kwargs")
+                and p.kind not in (p.VAR_POSITIONAL, p.VAR_KEYWORD)]
+    except (ValueError, TypeError):
+        return []
+
+
+def blamed_class(code: str, stderr: str) -> str | None:
+    """Which class received the bad keyword.
+
+    Manim constructors delegate up to Mobject, so the traceback often blames
+    `Mobject.__init__` for a keyword the user passed to `Table`. The class the
+    author actually wrote is the one worth correcting, so the bad keyword is
+    traced back to the call site in the source.
+    """
+    m = _BAD_KWARG.search(stderr or "")
+    if not m:
+        return None
+    reported, kwarg = m.group(1), m.group(2)
+    try:
+        tree = ast.parse(code)
+    except SyntaxError:
+        tree = None
+    if tree is not None:
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Call) and any(k.arg == kwarg for k in node.keywords):
+                f = node.func
+                nm = f.id if isinstance(f, ast.Name) else getattr(f, "attr", None)
+                if nm and exists(nm):
+                    return nm
+    return reported if reported and exists(reported) else None
+
+
 def api_briefing(code: str, stderr: str, max_entries: int = 6) -> str:
     """The documentation fragment injected into a repair prompt.
 
@@ -135,6 +183,22 @@ def api_briefing(code: str, stderr: str, max_entries: int = 6) -> str:
     used = names_used(code)
 
     lines: list[str] = []
+
+    # 0. The class the traceback blames comes first and is never truncated.
+    #    Getting this wrong was a real bug: the offending class was cut short
+    #    while three irrelevant ones were shown in full, so the model swapped
+    #    one invented keyword for another.
+    culprit = blamed_class(code, stderr)
+    if culprit:
+        kws = all_keywords(culprit)
+        bad = _BAD_KWARG.search(stderr or "")
+        if bad:
+            lines.append(
+                f"`{bad.group(2)}` is NOT a valid argument for `{culprit}`.")
+        if kws:
+            lines.append(
+                f"`{culprit}` accepts ONLY these arguments — use no others:\n"
+                f"      {', '.join(kws)}")
 
     # 1. Invented names -> what actually exists.
     for nm in blamed:
@@ -151,7 +215,7 @@ def api_briefing(code: str, stderr: str, max_entries: int = 6) -> str:
     for nm in used:
         if len(lines) >= max_entries:
             break
-        if not exists(nm) or nm in shown:
+        if not exists(nm) or nm in shown or nm == culprit:
             continue
         sig = signature_of(nm)
         if not sig:

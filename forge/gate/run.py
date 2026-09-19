@@ -31,6 +31,7 @@ from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
 
 from forge.harness import RenderHarness, ErrorKind
+from forge.repair.lint import lint
 
 _HARNESS: RenderHarness | None = None
 
@@ -46,10 +47,20 @@ def _gate_one(payload: tuple[str, str, str | None]) -> dict:
     row_id, code, scene = payload
     assert _HARNESS is not None
     t = time.monotonic()
+
+    # Lint before rendering. Roughly two thirds of ManimBench calls self.add
+    # and never animates, which renders zero frames and writes no video. That
+    # is valid Manim producing a still image, not broken code, so a trailing
+    # self.wait() recovers the row. It stays tagged as static (n_play_calls is
+    # 0 in the corpus) so the training mix can weight it down.
+    code, rules = lint(code)
+
     r = _HARNESS.render(code, scene_class=scene, quality="low", frames=4)
     return {
         "id": row_id,
         "ok": r.ok,
+        "lint": rules,
+        "code": code if (r.ok and rules) else None,   # keep repaired source
         "error_kind": r.error_kind.value,
         "is_env_failure": r.is_environment_failure,
         "n_frames": len(r.frame_paths),
@@ -60,16 +71,26 @@ def _gate_one(payload: tuple[str, str, str | None]) -> dict:
 
 
 def load_done(path: Path) -> set[str]:
-    """Ids already gated, so a resumed run does no work twice."""
+    """Ids already gated, so a resumed run does no work twice.
+
+    Environment failures are deliberately *not* counted as done. A row that
+    failed because TeX was missing or a worker crashed has told us nothing
+    about the code, so it must get another chance on the next run rather than
+    being written off as bad data.
+    """
     if not path.exists():
         return set()
     done = set()
     with path.open() as f:
         for line in f:
             try:
-                done.add(json.loads(line)["id"])
-            except (json.JSONDecodeError, KeyError):
+                rec = json.loads(line)
+            except json.JSONDecodeError:
                 continue
+            if rec.get("is_env_failure"):
+                continue
+            if "id" in rec:
+                done.add(rec["id"])
     return done
 
 
