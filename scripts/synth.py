@@ -26,13 +26,15 @@ def main() -> None:
     ap.add_argument("--delay", type=float, default=4.0,
                     help="seconds between calls; free tier is ~15 req/min")
     ap.add_argument("--lengths", default="short,medium,long")
+    ap.add_argument("--repair-rounds", type=int, default=2,
+                    help="retry failures with the real API signature injected")
     a = ap.parse_args()
 
     from forge.synth.teacher import Teacher
     from forge.synth.topics import ALL, LENGTHS
     from forge.harness import RenderHarness
-    from forge.repair.lint import lint
     from forge.ingest.schema import CorpusRow
+    from forge.synth.repair_gen import generate_and_repair
 
     out = Path(a.out)
     out.parent.mkdir(parents=True, exist_ok=True)
@@ -67,33 +69,36 @@ def main() -> None:
         for i, (topic, domain, length, n_beats, hint) in enumerate(jobs, 1):
             t0 = time.monotonic()
             try:
-                code = teacher.generate(topic, n_beats, hint)
+                g = generate_and_repair(teacher, harness, topic, n_beats, hint,
+                                        max_rounds=a.repair_rounds)
             except Exception as e:
                 print(f"  [{i:>3}/{len(jobs)}] API ERROR {type(e).__name__}: {str(e)[:90]}")
                 time.sleep(a.delay * 2)
                 continue
 
-            code, rules = lint(code)
-            r = harness.render(code, quality="low", frames=4)
             row = CorpusRow.build(source=f"synth-{a.provider}", license="CC-BY-NC-SA-4.0",
-                                  prompt=topic, code=code, index=i,
+                                  prompt=topic, code=g.code, index=i,
                                   tags=[f"domain:{domain}", f"length:{length}", "synthetic"])
             rec = row.to_dict()
             rec.update({"topic": topic, "domain": domain, "length": length,
                         "teacher_model": getattr(teacher, "last_model_used", ""),
                         "finish_reason": getattr(teacher, "last_finish_reason", ""),
                         "usage": getattr(teacher, "last_usage", None),
-                        "ok": r.ok, "error_kind": r.error_kind.value,
-                        "n_frames": len(r.frame_paths), "video_s": r.duration_s,
-                        "lint": rules})
+                        "ok": g.ok, "error_kind": g.error_kind,
+                        "repair_rounds": g.rounds, "history": g.history,
+                        "n_frames": g.n_frames, "video_s": g.duration_s,
+                        "lint": g.lint_rules})
+            r = g
             sink.write(json.dumps(rec) + "\n")
             sink.flush()
             n_ok += r.ok
             n_generated += 1
 
-            flag = "PASS" if r.ok else f"FAIL {r.error_kind.value}"
-            print(f"  [{i:>3}/{len(jobs)}] {flag:<22} {domain:<16} beats={row.n_play_calls:<3} "
-                  f"{time.monotonic()-t0:4.1f}s  | {topic[:44]}", flush=True)
+            flag = "PASS" if g.ok else f"FAIL {g.error_kind}"
+            fixed = f" (fixed in {g.rounds})" if g.ok and g.rounds else ""
+            print(f"  [{i:>3}/{len(jobs)}] {flag:<22}{fixed:<14} {domain:<14} "
+                  f"plays={row.n_play_calls:<3} {time.monotonic()-t0:5.1f}s | {topic[:40]}",
+                  flush=True)
 
             time.sleep(max(0.0, a.delay - (time.monotonic() - t0)))
 

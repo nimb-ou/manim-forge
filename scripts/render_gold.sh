@@ -6,7 +6,9 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 export PATH="/Library/TeX/texbin:$PATH"
 Q="${Q:--qh}"
-for spec in "forge/gold/rook_corners.py RookCorners" "forge/gold/gradient_descent.py LearningRate"; do
+for spec in "forge/gold/rook_corners.py RookCorners" \
+            "forge/gold/gradient_descent.py LearningRate" \
+            "forge/gold/dot_product.py DotProduct"; do
   set -- $spec
   echo "rendering $2 at $Q ..."
   ./.venv/bin/manim render "$Q" --disable_caching --save_sections \

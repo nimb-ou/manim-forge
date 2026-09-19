@@ -49,8 +49,8 @@ def main() -> None:
 
     from forge.synth.teacher import Teacher
     from forge.harness import RenderHarness
-    from forge.repair.lint import lint
     from forge.ingest.schema import CorpusRow
+    from forge.synth.repair_gen import generate_and_repair
 
     segs = [json.loads(l) for l in Path(a.narration).open()]
     # Very short segments carry no content; very long ones span several ideas
@@ -81,8 +81,11 @@ def main() -> None:
     with out.open("a") as sink:
         for i, s in enumerate(todo, 1):
             t0 = time.monotonic()
+            request = INSTRUCTION + s["text"]
             try:
-                code = teacher.generate(INSTRUCTION + s["text"], 6, "matching the passage")
+                # Probe first: a SKIP costs one call, and repairing a scene the
+                # teacher declined to write would be repairing nothing.
+                code = teacher.generate(request, 6, "matching the passage")
             except Exception as e:
                 print(f"  [{i:>3}/{len(todo)}] API {type(e).__name__}", flush=True)
                 time.sleep(a.delay * 2)
@@ -94,22 +97,27 @@ def main() -> None:
                 print(f"  [{i:>3}/{len(todo)}] SKIP (not animatable)  {s['title'][:40]}", flush=True)
                 continue
 
-            code, rules = lint(code)
-            r = harness.render(code, quality="low", frames=4)
+            g = generate_and_repair(teacher, harness, request, 6,
+                                    "matching the passage", max_rounds=2,
+                                    first_code=code)
             row = CorpusRow.build(source="synth-narration", license="CC-BY-NC-SA-4.0",
-                                  prompt=s["text"], code=code, index=i,
+                                  prompt=s["text"], code=g.code, index=i,
                                   tags=["synthetic", "from-3b1b-narration"])
             rec = row.to_dict()
             rec.update({"video_id": s["video_id"], "seg_index": s["index"],
-                        "title": s["title"], "ok": r.ok,
-                        "error_kind": r.error_kind.value, "lint": rules,
-                        "video_s": r.duration_s,
+                        "title": s["title"], "ok": g.ok,
+                        "error_kind": g.error_kind, "lint": g.lint_rules,
+                        "repair_rounds": g.rounds, "history": g.history,
+                        "video_s": g.duration_s,
                         "teacher_model": getattr(teacher, "last_model_used", "")})
+            r = g
             sink.write(json.dumps(rec) + "\n")
             sink.flush()
             n_ok += r.ok
-            flag = "PASS" if r.ok else f"FAIL {r.error_kind.value}"
-            print(f"  [{i:>3}/{len(todo)}] {flag:<20} {time.monotonic()-t0:4.1f}s  {s['title'][:40]}", flush=True)
+            flag = "PASS" if g.ok else f"FAIL {g.error_kind}"
+            fixed = f" (fixed in {g.rounds})" if g.ok and g.rounds else ""
+            print(f"  [{i:>3}/{len(todo)}] {flag:<20}{fixed:<14} "
+                  f"{time.monotonic()-t0:5.1f}s  {s['title'][:40]}", flush=True)
             time.sleep(max(0.0, a.delay - (time.monotonic() - t0)))
 
     scored = n_gen - n_skip
