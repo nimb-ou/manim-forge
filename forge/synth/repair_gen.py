@@ -22,7 +22,18 @@ from forge.repair.lint import lint
 from forge.synth.teacher import Teacher, extract_code
 
 
-def repair_instruction(original_request: str, code: str, result: RenderResult) -> str:
+ESCALATION = (
+    "You have now failed twice with the same kind of error, so the approach "
+    "itself is wrong, not the details.\n"
+    "Do NOT try to fix the failing call. DELETE it and achieve the same visual "
+    "effect using only the simplest, most common Manim objects and animations. "
+    "A simpler scene that renders is worth far more than an elaborate one that "
+    "does not."
+)
+
+
+def repair_instruction(original_request: str, code: str, result: RenderResult,
+                       repeated: bool = False) -> str:
     parts = [
         "The scene below was written for this request:\n",
         original_request.strip(),
@@ -32,6 +43,8 @@ def repair_instruction(original_request: str, code: str, result: RenderResult) -
     briefing = api_briefing(code, result.stderr)
     if briefing:
         parts.append(briefing + "\n")
+    if repeated:
+        parts.append(ESCALATION + "\n")
     parts.append(
         "Rewrite the complete scene so it renders, keeping the beat structure, "
         "the narration= arguments and the computed values. "
@@ -71,10 +84,11 @@ def generate_and_repair(teacher: Teacher, harness: RenderHarness, request: str,
         if result.is_environment_failure or not is_repairable(result.error_kind):
             break
         rounds += 1
+        repeated = len(history) >= 2 and history[-1] == history[-2]
         code = extract_code(teacher._gemini_rest(
-            repair_instruction(request, code, result), 16000)
+            repair_instruction(request, code, result, repeated), 16000)
             if teacher.native else
-            teacher.generate(repair_instruction(request, code, result),
+            teacher.generate(repair_instruction(request, code, result, repeated),
                              n_beats, length_hint))
         code, more = lint(code)
         rules += more

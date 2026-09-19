@@ -44,8 +44,28 @@ def extract_code(text: str) -> str:
     return (max(blocks, key=len) if blocks else text).strip()
 
 
-def repair_prompt(description: str, code: str, result: RenderResult) -> str:
-    """The retry message: what was asked, what was written, what broke, what's true."""
+#: Sent when a round repeats the previous round's error kind. Re-sending the
+#: same briefing gets the same wrong answer back — the benchmark's surviving
+#: failures cycle api_misuse -> api_misuse -> api_misuse — so a repeat escalates
+#: from "here is the correct signature" to "stop using this construct".
+ESCALATION = (
+    "You have now failed twice with the same kind of error, so the approach "
+    "itself is wrong, not the details.\n"
+    "Do NOT try to fix the failing call. DELETE it and achieve the same visual "
+    "effect using only the simplest, most common Manim objects: Circle, Square, "
+    "Rectangle, Line, Arrow, Dot, Text, MathTex, VGroup, and the animations "
+    "Create, Write, FadeIn, FadeOut, Transform. A simpler scene that renders is "
+    "worth far more than an elaborate one that does not."
+)
+
+
+def repair_prompt(description: str, code: str, result: RenderResult,
+                  repeated: bool = False) -> str:
+    """The retry message: what was asked, what was written, what broke, what's true.
+
+    ``repeated`` marks a round whose error kind matches the previous one, which
+    switches the instruction from correction to simplification.
+    """
     parts = [
         f"This Manim scene was meant to do the following:\n{description}\n",
         f"The code below failed to render.\n\n```python\n{code}\n```\n",
@@ -54,6 +74,8 @@ def repair_prompt(description: str, code: str, result: RenderResult) -> str:
     briefing = api_briefing(code, result.stderr)
     if briefing:
         parts.append(briefing + "\n")
+    if repeated:
+        parts.append(ESCALATION + "\n")
     parts.append("Rewrite the complete scene so it renders. Output only code in one ``` block.")
     return "\n".join(parts)
 
@@ -107,7 +129,11 @@ class RepairLoop:
             if result.is_environment_failure or not is_repairable(result.error_kind):
                 break
             rounds += 1
-            code = extract_code(self._generate(repair_prompt(description, code, result)))
+            # Same error kind as last round means the briefing is not landing;
+            # escalate to simplification rather than repeating it.
+            repeated = len(history) >= 2 and history[-1] == history[-2]
+            code = extract_code(self._generate(
+                repair_prompt(description, code, result, repeated=repeated)))
             code, more = lint(code)
             rules += more
             result = self.harness.render(code, quality="low", frames=4)
