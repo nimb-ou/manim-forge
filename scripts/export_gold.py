@@ -26,6 +26,15 @@ GOLD = [
                   "too small and never arrives",
         "tags": ["machine-learning", "optimisation", "plot"],
     },
+    {
+        "module": "forge/gold/dot_product.py",
+        "scene": "DotProduct",
+        "prompt": "explain the dot product as a projection — show two vectors, "
+                  "drop a perpendicular so one casts a shadow on the other, and "
+                  "show that the shadow times the length gives the dot product, "
+                  "then swing past ninety degrees so the sign goes negative",
+        "tags": ["vectors", "geometry", "projection"],
+    },
 ]
 
 out = Path("data/gold/gold.jsonl")
