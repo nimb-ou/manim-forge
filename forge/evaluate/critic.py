@@ -31,19 +31,35 @@ from forge.synth.teacher import GEMINI_REST, _load_dotenv
 
 _load_dotenv()
 
-RUBRIC = """You are reviewing a single frame from a mathematical animation.
+RUBRIC = """You are a harsh reviewer checking a frame from a mathematical
+animation for defects. Your job is to FIND PROBLEMS, not to be encouraging.
 
-The frame should look like a 3Blue1Brown explainer: dark background, few
-elements, generous spacing, one idea visible at a time.
+First look for these specific defects:
+  - text or shapes clipped by the frame edge
+  - anything drawn on top of anything else it obscures
+  - text too small or too faint to read comfortably
+  - elements crowded together with no breathing room
+  - labels detached from, or ambiguous about, what they label
+  - leftover elements from an earlier moment that no longer belong
 
-Score each 1-5 and reply with ONLY a JSON object, no prose:
+Then score. Use the FULL range — most frames are not 5s:
+  5 = a professional would publish this frame unchanged
+  4 = minor imperfection, a careful reviewer would mention it
+  3 = a viewer would notice something is off
+  2 = a real defect that interferes with reading it
+  1 = broken; the frame fails to communicate
 
-{"readable": n,     // is all text legible and unobstructed? 5 = perfectly
- "in_frame": n,     // is anything clipped by the edges? 5 = nothing clipped
- "uncluttered": n,  // is there breathing room? 5 = calm, 1 = crowded
- "overlap": n,      // do elements collide or sit on top of each other? 5 = none
- "communicates": n, // does the frame convey the stated intent? 5 = clearly
- "worst_problem": "one short phrase, or empty string if none"}"""
+If you find ANY defect from the list above, the relevant score is at most 3.
+A frame with text sitting on top of a diagram is not a 4.
+
+Reply with ONLY a JSON object, no prose:
+
+{"readable": n,     // is all text legible and unobstructed?
+ "in_frame": n,     // is anything clipped by the edges?
+ "uncluttered": n,  // is there breathing room?
+ "overlap": n,      // do elements collide or sit on top of each other?
+ "communicates": n, // does the frame convey the stated intent?
+ "worst_problem": "one short phrase naming the single worst defect, or empty string if genuinely none"}"""
 
 
 @dataclass
@@ -63,9 +79,12 @@ class FrameVerdict:
 
     @property
     def is_broken(self) -> bool:
-        """Any single dimension at 1-2 is a real defect, however good the rest.
-        Averaging would let a badly clipped frame hide behind four good scores."""
-        return min(self.readable, self.in_frame, self.overlap) <= 2
+        """Any single dimension at 3 or below is a real defect, however good
+        the rest. Averaging would let a badly clipped frame hide behind four
+        good scores — and the rubric defines 3 as "a viewer would notice
+        something is off", which is already too low to ship."""
+        return min(self.readable, self.in_frame, self.overlap,
+                   self.uncluttered, self.communicates) <= 3
 
 
 def geometric_report(frame_path: str | Path) -> dict:
