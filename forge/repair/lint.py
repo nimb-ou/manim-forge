@@ -59,9 +59,53 @@ def strip_prose(code: str) -> str:
     return code
 
 
+#: Standard-library modules generated scenes reach for and forget to import.
+#: These surface as NameError and look like API misuse in the failure
+#: breakdown, but no model call is needed — the import is mechanical.
+_STDLIB = ("random", "math", "itertools", "collections", "fractions", "cmath")
+
+
+def missing_stdlib_imports(code: str) -> list[str]:
+    """Modules used by attribute access but never imported.
+
+    Deliberately narrow: only a module-style `name.attr(` usage counts, so a
+    local variable called `random` is not mistaken for the module. `np` is
+    excluded because `from manim import *` already provides numpy as np.
+    """
+    needed = []
+    for mod in _STDLIB:
+        # Attribute access, call or not: `math.pi` is as common as `math.sin(`
+        # in this corpus and an earlier version requiring a call missed it.
+        used = re.search(rf"(?<![\w.]){mod}\.[A-Za-z_]\w*", code)
+        imported = re.search(rf"^\s*(import\s+{mod}\b|from\s+{mod}\s+import)",
+                             code, re.M)
+        # A local of the same name shadows the module, so importing would be
+        # wrong as well as useless.
+        shadowed = re.search(rf"^\s*{mod}\s*=", code, re.M)
+        if used and not imported and not shadowed:
+            needed.append(mod)
+    return needed
+
+
+def add_stdlib_imports(code: str) -> str:
+    """Insert missing imports after the manim import, preserving order."""
+    mods = missing_stdlib_imports(code)
+    if not mods:
+        return code
+    lines = code.split("\n")
+    insert_at = 0
+    for i, ln in enumerate(lines):
+        if re.match(r"^\s*(from|import)\s", ln):
+            insert_at = i + 1
+    for mod in reversed(mods):
+        lines.insert(insert_at, f"import {mod}")
+    return "\n".join(lines)
+
+
 #: (name, applies_when, transform)
 RULES = [
     ("strip_prose", lambda c: not _parses(c), strip_prose),
+    ("add_imports", lambda c: bool(missing_stdlib_imports(c)), add_stdlib_imports),
     ("add_hold", needs_hold, add_hold),
 ]
 
