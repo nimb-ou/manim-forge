@@ -18,3 +18,4 @@ adapters/
 .DS_Store
 data/check/
 .env
+archive/

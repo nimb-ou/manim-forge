@@ -27,6 +27,14 @@ GOLD = [
         "tags": ["machine-learning", "optimisation", "plot"],
     },
     {
+        "module": "forge/gold/sphere_cube.py",
+        "scene": "SphereInCube",
+        "prompt": "show a sphere in 3D built out of dots, fit the largest cube "
+                  "that can fit inside it, and calculate how much volume is "
+                  "left over between the cube and the sphere",
+        "tags": ["shapes-3d", "geometry", "volume"],
+    },
+    {
         "module": "forge/gold/dot_product.py",
         "scene": "DotProduct",
         "prompt": "explain the dot product as a projection — show two vectors, "

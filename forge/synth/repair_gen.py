@@ -54,6 +54,21 @@ def repair_instruction(original_request: str, code: str, result: RenderResult,
 
 
 @dataclass
+class RepairStep:
+    """One failed attempt and what was wrong with it.
+
+    Kept in full because (broken code -> error -> fixed code) is the rarest
+    and most useful training data this pipeline produces: it is what teaches a
+    model to read its own traceback instead of guessing again. Recording only
+    the final code throws it away, which is what an earlier version did while
+    generating hundreds of them.
+    """
+    code: str
+    error_kind: str
+    stderr_tail: str
+
+
+@dataclass
 class GenResult:
     ok: bool
     code: str
@@ -63,6 +78,9 @@ class GenResult:
     lint_rules: list[str] = field(default_factory=list)
     duration_s: float | None = None
     n_frames: int = 0
+    #: Every failed attempt, oldest first. Paired with ``code`` when ``ok``,
+    #: these form the repair training set.
+    attempts: list[RepairStep] = field(default_factory=list)
 
 
 def generate_and_repair(teacher: Teacher, harness: RenderHarness, request: str,
@@ -76,6 +94,7 @@ def generate_and_repair(teacher: Teacher, harness: RenderHarness, request: str,
     code, rules = lint(code)
     result = harness.render(code, quality="low", frames=4)
     history = [result.error_kind.value]
+    attempts: list[RepairStep] = []
 
     rounds = 0
     while not result.ok and rounds < max_rounds:
@@ -84,6 +103,8 @@ def generate_and_repair(teacher: Teacher, harness: RenderHarness, request: str,
         if result.is_environment_failure or not is_repairable(result.error_kind):
             break
         rounds += 1
+        attempts.append(RepairStep(code=code, error_kind=result.error_kind.value,
+                                   stderr_tail=tail(result.stderr, 10)))
         repeated = len(history) >= 2 and history[-1] == history[-2]
         code = extract_code(teacher._gemini_rest(
             repair_instruction(request, code, result, repeated), 16000)
@@ -99,5 +120,5 @@ def generate_and_repair(teacher: Teacher, harness: RenderHarness, request: str,
         ok=result.ok, code=code, rounds=rounds,
         error_kind=result.error_kind.value, history=history,
         lint_rules=rules, duration_s=result.duration_s,
-        n_frames=len(result.frame_paths),
+        n_frames=len(result.frame_paths), attempts=attempts,
     )

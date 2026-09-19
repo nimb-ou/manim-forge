@@ -130,7 +130,13 @@ def main() -> None:
                     "ok": g.ok, "error_kind": g.error_kind,
                     "repair_rounds": g.rounds, "history": g.history,
                     "teacher_model": getattr(teacher, "last_model_used", model),
-                    "video_s": g.duration_s, **task.meta})
+                    "video_s": g.duration_s,
+                    # Failed attempts kept in full: paired with the final code
+                    # these are (broken -> error -> fixed) triples, the data
+                    # that teaches a model to read its own traceback.
+                    "attempts": [{"code": s.code, "error_kind": s.error_kind,
+                                  "stderr_tail": s.stderr_tail} for s in g.attempts],
+                    **task.meta})
         record(rec)
 
     try:
