@@ -16,3 +16,4 @@ adapters/
 
 # os
 .DS_Store
+data/check/

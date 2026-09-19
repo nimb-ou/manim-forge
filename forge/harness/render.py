@@ -189,6 +189,20 @@ class RenderHarness:
         self.workdir.mkdir(parents=True, exist_ok=True)
         self.cache_dir.mkdir(parents=True, exist_ok=True)
 
+    @staticmethod
+    def _child_env() -> dict[str, str]:
+        """Environment for the render subprocess.
+
+        TeX is added explicitly: a GUI-launched app does not inherit the login
+        shell's PATH, so without this every MathTex scene would fail with
+        `latex_missing` on a machine where LaTeX is perfectly well installed.
+        """
+        env = {**os.environ, "PYTHONWARNINGS": "ignore"}
+        texbin = "/Library/TeX/texbin"
+        if Path(texbin).is_dir() and texbin not in env.get("PATH", ""):
+            env["PATH"] = f"{texbin}:{env.get('PATH', '')}"
+        return env
+
     # -- cache ---------------------------------------------------------------
 
     def _cache_slot(self, h: str) -> Path:
@@ -291,7 +305,7 @@ class RenderHarness:
                 # New process group, so a timeout kills ffmpeg children too
                 # rather than orphaning them to spin for the rest of the run.
                 start_new_session=True,
-                env={**os.environ, "PYTHONWARNINGS": "ignore"},
+                env=self._child_env(),
             )
             stdout, stderr = proc.stdout, proc.stderr
         except subprocess.TimeoutExpired as exc:
