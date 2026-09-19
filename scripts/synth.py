@@ -80,6 +80,9 @@ def main() -> None:
                                   tags=[f"domain:{domain}", f"length:{length}", "synthetic"])
             rec = row.to_dict()
             rec.update({"topic": topic, "domain": domain, "length": length,
+                        "teacher_model": getattr(teacher, "last_model_used", ""),
+                        "finish_reason": getattr(teacher, "last_finish_reason", ""),
+                        "usage": getattr(teacher, "last_usage", None),
                         "ok": r.ok, "error_kind": r.error_kind.value,
                         "n_frames": len(r.frame_paths), "video_s": r.duration_s,
                         "lint": rules})

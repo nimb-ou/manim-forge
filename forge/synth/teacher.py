@@ -187,6 +187,8 @@ class Teacher:
     model: str | None = None
     temperature: float = 0.7      # some diversity: identical scenes teach nothing
     last_model_used: str = ""
+    last_finish_reason: str = ""
+    last_usage: dict | None = None
 
     def __post_init__(self):
         cfg = PROVIDERS[self.provider]
@@ -219,11 +221,20 @@ class Teacher:
         import time as _time
         import urllib.error
         import urllib.request
+        # maxOutputTokens is generous and thinking is switched off. On the
+        # 3.x models internal reasoning is billed against the same output
+        # budget, so a nominally ample limit silently truncates the code —
+        # which surfaces downstream as a syntax error and reads as a bad
+        # generation rather than a bad budget. thinkingConfig is ignored by
+        # models that do not support it, so sending it is always safe.
         body = _json.dumps({
             "contents": [{"role": "user", "parts": [{"text": user}]}],
             "systemInstruction": {"parts": [{"text": SYSTEM}]},
-            "generationConfig": {"temperature": self.temperature,
-                                 "maxOutputTokens": max_tokens},
+            "generationConfig": {
+                "temperature": self.temperature,
+                "maxOutputTokens": max_tokens,
+                "thinkingConfig": {"thinkingBudget": 0},
+            },
         }).encode()
         # 503 (overloaded) and 429 (rate limited) are routine on a free tier
         # and are not failures — they mean "try again shortly", or better,
@@ -255,7 +266,14 @@ class Teacher:
         cands = data.get("candidates") or []
         if not cands:
             return ""
-        parts = cands[0].get("content", {}).get("parts") or []
+        cand = cands[0]
+        self.last_finish_reason = cand.get("finishReason", "")
+        usage = data.get("usageMetadata", {})
+        self.last_usage = {
+            "output": usage.get("candidatesTokenCount"),
+            "thoughts": usage.get("thoughtsTokenCount"),
+        }
+        parts = cand.get("content", {}).get("parts") or []
         return "".join(p.get("text", "") for p in parts)
 
     @classmethod
@@ -285,7 +303,7 @@ class Teacher:
         return sorted(m.id for m in client.models.list())
 
     def generate(self, topic: str, n_beats: int, length_hint: str,
-                 max_tokens: int = 6000) -> str:
+                 max_tokens: int = 16000) -> str:
         user = user_prompt(topic, n_beats, length_hint)
         if self.native:
             return extract_code(self._gemini_rest(user, max_tokens))
