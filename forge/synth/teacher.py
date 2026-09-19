@@ -59,6 +59,10 @@ GEMINI_REST = "https://generativelanguage.googleapis.com/v1beta"
 #: 429 immediately, while these serve reliably. Strongest first — the rotation
 #: falls back down the list rather than round-robining blindly, so most
 #: generations come from the best model that will answer.
+#: Per-model memo of whether thinkingConfig is accepted. Populated by the
+#: first 400, so each model is probed at most once per process.
+_THINKING_OK: dict[str, bool] = {}
+
 GEMINI_ROTATION = [
     "gemini-3.7-flash",
     "gemini-3.6-flash",
@@ -227,15 +231,22 @@ class Teacher:
         # which surfaces downstream as a syntax error and reads as a bad
         # generation rather than a bad budget. thinkingConfig is ignored by
         # models that do not support it, so sending it is always safe.
-        body = _json.dumps({
-            "contents": [{"role": "user", "parts": [{"text": user}]}],
-            "systemInstruction": {"parts": [{"text": SYSTEM}]},
-            "generationConfig": {
-                "temperature": self.temperature,
-                "maxOutputTokens": max_tokens,
-                "thinkingConfig": {"thinkingBudget": 0},
-            },
-        }).encode()
+        def _body(with_thinking_off: bool) -> bytes:
+            cfg = {"temperature": self.temperature, "maxOutputTokens": max_tokens}
+            if with_thinking_off:
+                cfg["thinkingConfig"] = {"thinkingBudget": 0}
+            return _json.dumps({
+                "contents": [{"role": "user", "parts": [{"text": user}]}],
+                "systemInstruction": {"parts": [{"text": SYSTEM}]},
+                "generationConfig": cfg,
+            }).encode()
+
+        # Switching thinking off keeps internal reasoning from eating the output
+        # budget and truncating code mid-function. But support is uneven: the
+        # lite models accept thinkingBudget and 3.6-flash rejects the whole
+        # request with a 400. So it is attempted and dropped per model, and the
+        # result cached — a capability discovered once, not guessed.
+        body = _body(_THINKING_OK.get(self.model, True))
         # 503 (overloaded) and 429 (rate limited) are routine on a free tier
         # and are not failures — they mean "try again shortly", or better,
         # "ask a different model".
@@ -246,6 +257,7 @@ class Teacher:
         data = None
         for attempt in range(attempts):
             for m in models:
+                body = _body(_THINKING_OK.get(m, True))
                 req = urllib.request.Request(
                     f"{GEMINI_REST}/models/{m}:generateContent",
                     data=body, headers={"x-goog-api-key": self._key,
@@ -256,6 +268,22 @@ class Teacher:
                     break
                 except urllib.error.HTTPError as e:
                     last = e
+                    if e.code == 400 and _THINKING_OK.get(m, True):
+                        # This model does not accept thinkingConfig. Remember
+                        # that and retry it once without.
+                        _THINKING_OK[m] = False
+                        try:
+                            retry = urllib.request.Request(
+                                f"{GEMINI_REST}/models/{m}:generateContent",
+                                data=_body(False),
+                                headers={"x-goog-api-key": self._key,
+                                         "Content-Type": "application/json"})
+                            data = _json.load(urllib.request.urlopen(retry, timeout=240))
+                            self.last_model_used = m
+                            break
+                        except urllib.error.HTTPError as e2:
+                            last = e2
+                            continue
                     if e.code not in (429, 500, 502, 503, 504):
                         raise
             if data is not None:
