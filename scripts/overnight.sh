@@ -14,6 +14,7 @@ export PATH="/Library/TeX/texbin:$PATH"
 LOG=data/logs/overnight.log
 MIN_FREE_GB=8          # stop generating below this; renders need scratch space
 BACKUP_EVERY=7200      # seconds
+INDEX_EVERY=5400       # rebuild retrieval index; CPU-only, no quota
 
 say() { echo "[$(date '+%H:%M:%S')] $*" | tee -a "$LOG"; }
 
@@ -29,7 +30,7 @@ start_code() {
 
 start_prose() {
   nohup ./.venv/bin/python -u scripts/generate_tasks.py \
-      --per-kind 400 --workers 3 --max-hours 12 >> data/logs/tasks.log 2>&1 &
+      --per-kind 600 --workers 3 --max-hours 12 >> data/logs/tasks.log 2>&1 &
   say "started prose daemon (pid $!)"
 }
 
@@ -37,6 +38,7 @@ say "=== overnight supervisor up ==="
 say "disk: $(free_gb) GB free"
 
 last_backup=$SECONDS
+last_index=$SECONDS
 
 while true; do
   free=$(free_gb)
@@ -56,6 +58,17 @@ while true; do
     ./.venv/bin/python scripts/backup_to_hf.py >> "$LOG" 2>&1 \
       && say "snapshot ok" || say "snapshot FAILED (continuing)"
     last_backup=$SECONDS
+  fi
+
+  # Rebuild the retrieval index periodically. It uses local embeddings and no
+  # API quota, so it is free work for the window while models are cooling —
+  # and an index built on 1,516 scenes goes stale as the corpus doubles.
+  if [ $((SECONDS - last_index)) -ge "$INDEX_EVERY" ]; then
+    say "rebuilding example index ..."
+    ./.venv/bin/python scripts/prepare_training.py >> "$LOG" 2>&1
+    ./.venv/bin/python scripts/build_index.py >> "$LOG" 2>&1 \
+      && say "index rebuilt" || say "index rebuild FAILED (continuing)"
+    last_index=$SECONDS
   fi
 
   # A heartbeat with real counts, so ten hours of silence is distinguishable

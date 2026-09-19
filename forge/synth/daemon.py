@@ -38,7 +38,7 @@ class ModelPool:
     to avoid.
     """
     models: list[str]
-    cooldown_s: float = 900.0
+    cooldown_s: float = 600.0
     _retired: dict[str, float] = field(default_factory=dict)
     _lock: threading.Lock = field(default_factory=threading.Lock)
     _cursor: int = 0
