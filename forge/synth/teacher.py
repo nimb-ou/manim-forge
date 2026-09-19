@@ -140,6 +140,8 @@ Here is a complete example of the format:
 
 RULES, all of which matter:
 1. Subclass ForgeScene, not Scene. Use @beat on every method.
+   For a 3D topic subclass BOTH: `class X(ForgeScene, ThreeDScene)`, then
+   `self.set_camera_orientation(phi=..., theta=...)` inside the first beat.
 2. EVERY beat must animate with self.play(...). Never write a beat that only
    calls self.add() - it renders no video.
 3. Any number shown on screen must be COMPUTED in the code, never hardcoded
@@ -149,7 +151,10 @@ RULES, all of which matter:
 5. Keep objects inside the frame: x in [-7, 7], y in [-4, 4]. Put a board or
    diagram on the left and labels on the right rather than stacking them.
 6. Use only real Manim CE names. Do not invent classes or keyword arguments.
-7. Output ONLY one ```python code block. No explanation before or after."""
+7. Give each beat a `narration=` argument: one or two sentences of what a
+   narrator would say over it, in plain spoken English. This is what makes an
+   explainer rather than a diagram, so write it as if talking to someone.
+8. Output ONLY one ```python code block. No explanation before or after."""
 
 
 def user_prompt(topic: str, n_beats: int, length_hint: str) -> str:
