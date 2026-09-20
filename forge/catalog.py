@@ -145,6 +145,16 @@ CATALOG: list[Dataset] = [
         "<hash>/frames/fNN.jpg plus result.json",
     ),
     Dataset(
+        "data/autopilot",
+        "What the unattended Kaggle-to-evaluation chain did, and why it stopped.",
+        "state.json{phase,outcome,kernel_status} + autopilot.log + "
+        "history/ (one directory per finished run, kernel log included)",
+        "The kernel log of a failed run is the whole diagnosis and Kaggle only "
+        "serves it while the version is current, so it is copied here rather "
+        "than linked. history/ is why run 15's OOM could still be read a day "
+        "later.",
+    ),
+    Dataset(
         "data/bench",
         "Every benchmark run, with per-prompt outcomes.",
         "summary{} + trials[] per run",
