@@ -10,6 +10,23 @@ from pathlib import Path
 
 GOLD = [
     {
+        "module": "forge/gold/gradient_descent_2d.py",
+        "scene": "GradientDescent2D",
+        "prompt": "show gradient descent on a stretched valley rather than a "
+                  "bowl, and explain why a single learning rate cannot be both "
+                  "stable across the steep direction and fast along the shallow "
+                  "one",
+        "tags": ['machine-learning', 'optimisation'],
+    },
+    {
+        "module": "forge/gold/decision_boundary.py",
+        "scene": "DecisionBoundary",
+        "prompt": "show a perceptron learning a straight line that separates two "
+                  "groups of points, moving only when it gets an example wrong, "
+                  "then show that it never settles when the groups overlap",
+        "tags": ['machine-learning', 'classification'],
+    },
+    {
         "module": "forge/gold/projectile.py",
         "scene": "Projectile",
         "prompt": "show that a projectile is two independent motions at once — "

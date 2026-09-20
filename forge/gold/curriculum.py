@@ -182,11 +182,13 @@ CURRICULUM: list[Scene] = [
     Scene("gradient_descent_2d", "Downhill on a surface", "machine-learning", 2,
           "show gradient descent on a two-dimensional loss surface, following "
           "the steepest direction down into a valley",
-          needs=["optimise"], builds_on=["learning_rate"]),
+          needs=["optimise"], builds_on=["learning_rate"],
+          done=True),
     Scene("decision_boundary", "Drawing the line between two classes", "machine-learning", 2,
           "show a classifier learning a boundary between two clouds of points, "
           "and what happens when the clouds overlap",
-          needs=["vectors"]),
+          needs=["vectors"],
+          done=True),
     Scene("neuron", "One neuron, one decision", "machine-learning", 2,
           "show a single neuron taking a weighted sum and squashing it, and how "
           "changing the weights tilts the boundary it draws",
