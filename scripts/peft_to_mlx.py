@@ -65,6 +65,7 @@ def convert(peft_dir: Path, out_dir: Path) -> dict:
 
     out: dict[str, "mx.array"] = {}
     layers: set[int] = set()
+    keys: set[str] = set()
     for key, w in raw.items():
         if ".lora_A" not in key and ".lora_B" not in key:
             continue
@@ -85,12 +86,19 @@ def convert(peft_dir: Path, out_dir: Path) -> dict:
         out[name] = w.astype(mx.float16)
         part = name.split(".")
         if "layers" in part:
-            layers.add(int(part[part.index("layers") + 1]))
+            i = part.index("layers")
+            layers.add(int(part[i + 1]))
+            # MLX matches against `layer.named_modules()`, whose keys are
+            # relative to the transformer block -- "self_attn.q_proj", not
+            # "q_proj". A bare projection name matches nothing,
+            # linear_to_lora_layers silently converts no layers, and
+            # load_weights(strict=False) then loads none of the adapter while
+            # reporting success.
+            keys.add(".".join(part[i + 2:-1]))
 
     if not out:
         raise SystemExit("no LoRA tensors found — is this a PEFT adapter?")
 
-    keys = {k.split(".")[-2] for k in out}     # q_proj, gate_proj, …
     num_layers = max(layers) + 1 if layers else 0
 
     out_dir.mkdir(parents=True, exist_ok=True)

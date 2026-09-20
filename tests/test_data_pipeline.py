@@ -354,3 +354,38 @@ def test_peft_to_mlx_refuses_a_file_that_is_not_an_adapter(tmp_path):
                         {"something.else.weight": mx.zeros((4, 4))})
     with pytest.raises(SystemExit, match="no LoRA tensors"):
         convert(peft, tmp_path / "mlx")
+
+
+def test_mlx_adapter_keys_are_relative_to_the_transformer_block(tmp_path):
+    """MLX matches against `layer.named_modules()`, not against bare names.
+
+    Those keys are relative to the block -- "self_attn.q_proj", not
+    "q_proj". With bare names, linear_to_lora_layers matches nothing,
+    converts no layers, and `load_weights(strict=False)` then loads none of
+    the adapter while reporting success: the benchmark would score the base
+    model and call it tuned.
+
+    Caught by verifying against the real 7B, not by reading the code.
+    """
+    mx = pytest.importorskip("mlx.core")
+    from scripts.peft_to_mlx import convert
+
+    peft = tmp_path / "peft"
+    peft.mkdir()
+    (peft / "adapter_config.json").write_text(json.dumps(
+        {"r": 8, "lora_alpha": 16, "lora_dropout": 0.0}))
+    tensors = {}
+    for mod, proj, d_in, d_out in [("self_attn", "q_proj", 64, 64),
+                                   ("mlp", "gate_proj", 64, 128)]:
+        stem = f"base_model.model.model.layers.2.{mod}.{proj}"
+        tensors[f"{stem}.lora_A.weight"] = mx.zeros((8, d_in))
+        tensors[f"{stem}.lora_B.weight"] = mx.ones((d_out, 8))
+    mx.save_safetensors(str(peft / "adapter_model.safetensors"), tensors)
+
+    convert(peft, tmp_path / "mlx")
+    cfg = json.loads((tmp_path / "mlx" / "adapter_config.json").read_text())
+    keys = cfg["lora_parameters"]["keys"]
+    assert keys == ["mlp.gate_proj", "self_attn.q_proj"], keys
+    assert not any("." not in k for k in keys), \
+        f"bare projection names match nothing in MLX: {keys}"
+    assert cfg["num_layers"] == 3
