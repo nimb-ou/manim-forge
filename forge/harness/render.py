@@ -49,6 +49,61 @@ DEFAULT_TIMEOUT = 90          # seconds; a gating scene that exceeds this is too
 DEFAULT_FRAME_COUNT = 8       # sampled evenly across the video for visual comparison
 
 
+
+
+def _run_bounded(cmd: list[str], timeout: int, cwd, env: dict
+                 ) -> tuple[str, str, bool]:
+    """Run a command, and on timeout kill the whole process group.
+
+    `subprocess.run(timeout=...)` kills only the process it launched. Manim
+    spawns ffmpeg and LaTeX underneath it, so a timeout there leaves those
+    grandchildren running with nobody holding a handle to them -- which is
+    how a laptop with ten cores reaches a load average of 99 while the
+    supervisor reports every job stopped.
+
+    `start_new_session=True` puts the renderer in its own process group, and
+    that is only useful if something signals the group. This does.
+    """
+    proc = subprocess.Popen(
+        cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
+        stdin=subprocess.DEVNULL, cwd=cwd, env=env, start_new_session=True)
+    try:
+        out, err = proc.communicate(timeout=timeout)
+        return out or "", err or "", False
+    except subprocess.TimeoutExpired:
+        _killpg(proc)
+        out, err = proc.communicate()
+        return out or "", err or "", True
+
+
+def _killpg(proc: subprocess.Popen, grace: float = 2.0) -> None:
+    """SIGTERM the group, then SIGKILL it. Unconditionally, both times.
+
+    Escalating only when the *direct child* is still alive is the trap: the
+    parent dies promptly on SIGTERM and its children do not, so the check
+    says "already gone" and the SIGKILL that would have swept them is never
+    sent. Signalling an empty group raises ProcessLookupError and costs
+    nothing, so there is no reason to guess.
+    """
+    try:
+        pgid = os.getpgid(proc.pid)
+    except (ProcessLookupError, PermissionError):
+        return
+    for sig in (signal.SIGTERM, signal.SIGKILL):
+        try:
+            os.killpg(pgid, sig)
+        except (ProcessLookupError, PermissionError):
+            return
+        try:
+            proc.wait(timeout=grace)
+            if sig is signal.SIGTERM:
+                # The leader is gone; sweep the group regardless.
+                continue
+            return
+        except subprocess.TimeoutExpired:
+            continue
+
+
 @dataclass
 class RenderResult:
     ok: bool
@@ -299,19 +354,8 @@ class RenderHarness:
         timed_out = False
         stdout = stderr = ""
         try:
-            proc = subprocess.run(
-                cmd, capture_output=True, text=True, timeout=self.timeout,
-                cwd=run_dir,
-                # New process group, so a timeout kills ffmpeg children too
-                # rather than orphaning them to spin for the rest of the run.
-                start_new_session=True,
-                env=self._child_env(),
-            )
-            stdout, stderr = proc.stdout, proc.stderr
-        except subprocess.TimeoutExpired as exc:
-            timed_out = True
-            stdout = exc.stdout.decode(errors="replace") if isinstance(exc.stdout, bytes) else (exc.stdout or "")
-            stderr = exc.stderr.decode(errors="replace") if isinstance(exc.stderr, bytes) else (exc.stderr or "")
+            stdout, stderr, timed_out = _run_bounded(
+                cmd, timeout=self.timeout, cwd=run_dir, env=self._child_env())
         except OSError as exc:
             # The renderer never started: a machine problem, not a code verdict.
             elapsed = time.monotonic() - started

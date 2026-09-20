@@ -21,6 +21,7 @@ from __future__ import annotations
 import json
 import os
 import shlex
+import signal
 import subprocess
 import time
 from dataclasses import dataclass, field
@@ -121,16 +122,41 @@ class Job:
         self.started_t = self.last_progress_t = time.time()
         self.last_count = self.count()
 
-    def stop(self) -> None:
-        if not self.alive():
+    def stop(self, grace: float = 4.0) -> None:
+        """Terminate the job's whole process group, then kill it.
+
+        Both signals go out unconditionally. The earlier version escalated to
+        SIGKILL only `if self.alive()` -- that is, only if the *supervised
+        process itself* was still running. A generation daemon dies promptly
+        on SIGTERM while its worker pool and the manim renderers those
+        workers launched do not, so the check said "already gone", the
+        SIGKILL was skipped, and the group was left running with no handle
+        on it. Twenty-four orphaned workers accumulated that way across a
+        few restarts.
+
+        Signalling a group that has already exited raises ProcessLookupError
+        and does nothing else, so there is no cost to not guessing.
+        """
+        if self.proc is None:
             return
         try:
-            os.killpg(os.getpgid(self.proc.pid), 15)
-            time.sleep(2)
-            if self.alive():
-                os.killpg(os.getpgid(self.proc.pid), 9)
+            pgid = os.getpgid(self.proc.pid)
         except (ProcessLookupError, PermissionError):
+            self.proc = None
+            return
+        for sig in (signal.SIGTERM, signal.SIGKILL):
+            try:
+                os.killpg(pgid, sig)
+            except (ProcessLookupError, PermissionError):
+                break
+            deadline = time.time() + grace
+            while time.time() < deadline and self.alive():
+                time.sleep(0.2)
+        try:
+            self.proc.wait(timeout=1)
+        except Exception:
             pass
+        self.proc = None
 
 
 def api_is_live(timeout: float = 20.0) -> bool:
