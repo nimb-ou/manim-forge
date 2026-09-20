@@ -74,25 +74,16 @@ jobs:
           KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN }}
         run: python scripts/package_for_kaggle.py
 
-      - name: upload the dataset
+      # Upload only when the mix has actually changed, and prove the new
+      # version is being served before attaching a kernel to it. Run 5
+      # uploaded, "waited" one second on a status that still described the
+      # previous version, and got a kernel with no dataset mounted at all.
+      - name: sync the dataset
         env:
           KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN }}
         run: |
-          # -r zip: the dataset is five files, and Kaggle's default converts
-          # tabular ones to CSV, which would mangle jsonl.
-          kaggle datasets version -p kaggle/manim-forge-data -r zip \
-            -m "mix $(date -u +%F) — ${{ inputs.note }}"
-
-      # A new dataset version is not immediately mountable. Run 4 pushed the
-      # kernel five seconds after uploading, Kaggle was still processing, and
-      # the kernel mounted an incomplete dataset -- load_dataset could not
-      # find train.jsonl, a file the API's own listing showed as present.
-      - name: wait for the dataset to be mountable
-        env:
-          KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN }}
-        run: |
-          python scripts/wait_for_dataset.py nimbou/manim-forge-data \
-            --expect train.jsonl valid.jsonl
+          python scripts/sync_kaggle_dataset.py kaggle/manim-forge-data \
+            --ref nimbou/manim-forge-data --expect train.jsonl valid.jsonl
 
       - name: push the kernel
         env:
