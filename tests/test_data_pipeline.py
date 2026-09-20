@@ -438,6 +438,8 @@ def test_a_wellformed_mlx_adapter_is_accepted(tmp_path):
 
 def test_both_evals_use_the_shared_guard():
     """They had separate behaviour: one guarded, one did not."""
+    from pathlib import Path as _P
+    root = _P(__file__).resolve().parents[1]
     for script in ("run_repair_benchmark.py", "run_hard_eval.py"):
-        src = (ROOT / "scripts" / script).read_text()
+        src = (root / "scripts" / script).read_text()
         assert "check_mlx_adapter" in src, f"{script} loads adapters unguarded"
