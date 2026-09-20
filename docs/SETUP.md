@@ -42,8 +42,18 @@ it is there.
 
 1. Sign up at [kaggle.com](https://kaggle.com) and **verify your phone
    number** — GPU access is gated behind that, and it is easy to miss.
-2. Account → Settings → API → **Create New Token** → downloads `kaggle.json`.
-3. `mkdir -p ~/.kaggle && mv ~/Downloads/kaggle.json ~/.kaggle/ && chmod 600 ~/.kaggle/kaggle.json`
+2. `./.venv/bin/kaggle auth login` — OAuth in a browser, nothing to store.
+
+Kaggle CLI 2.2.x replaced the old username+key `kaggle.json` with a single
+bearer token, and the settings page now shows that token as *selectable
+text* rather than downloading a file — which invites pasting it somewhere it
+should not go. `auth login` avoids handling it at all. If you would rather
+use a token, generate one at
+[kaggle.com/settings/api](https://www.kaggle.com/settings/api) and write it
+to `~/.kaggle/access_token` with `chmod 600`; the CLI also reads
+`KAGGLE_API_TOKEN` from the environment, which is how CI does it.
+
+Verify: `./.venv/bin/kaggle kernels list --mine`
 
 **What it buys:** 30 GPU-hours a week, free, in 9-hour sessions, on a dual
 T4 (2×16 GB) or a P100. Our training mix is about 2.7M tokens an epoch — with
@@ -141,8 +151,7 @@ Repo → Settings → Secrets and variables → Actions → New repository secre
 
 | name | value |
 |---|---|
-| `KAGGLE_USERNAME` | from `kaggle.json` |
-| `KAGGLE_KEY` | from `kaggle.json` |
+| `KAGGLE_API_TOKEN` | a token from [kaggle.com/settings/api](https://www.kaggle.com/settings/api) — CI cannot do the OAuth flow, so this is the one place a token is unavoidable |
 | `HF_TOKEN` | the same token as A3 |
 
 ### C3. Gemini key — already working

@@ -20,23 +20,36 @@ KAGGLE_DIR = Path("kaggle")
 
 
 def kaggle_user() -> str:
-    """Whoever owns the API token, not whoever I guessed.
+    """Whoever owns the credentials, asked of the API rather than guessed.
 
-    The Kaggle handle need not match the Hugging Face one, and a wrong owner
-    in either metadata file fails at push time with a permissions error that
-    does not say which name is wrong.
+    Three different handles are in play on this project -- GitHub `nimb-ou`,
+    Hugging Face `nimitttt`, Kaggle `nimbou` -- and a wrong owner in either
+    descriptor fails at push time with a permissions error that does not say
+    which name is wrong.
+
+    Kaggle CLI 2.2.x replaced the old username+key `kaggle.json` with a single
+    bearer token (`kaggle auth login`, or ~/.kaggle/access_token, or
+    KAGGLE_API_TOKEN), so the username is no longer sitting in a file to be
+    read -- it comes back from authentication.
     """
-    import os
-    if os.environ.get("KAGGLE_USERNAME"):
-        return os.environ["KAGGLE_USERNAME"]
-    token = Path.home() / ".kaggle" / "kaggle.json"
-    if token.exists():
-        return json.loads(token.read_text())["username"]
-    raise SystemExit(
-        "No Kaggle credentials. Either set KAGGLE_USERNAME, or download a\n"
-        "token from kaggle.com/settings -> API -> Create New Token and run:\n"
-        "  mkdir -p ~/.kaggle && mv ~/Downloads/kaggle.json ~/.kaggle/ \\\n"
-        "    && chmod 600 ~/.kaggle/kaggle.json")
+    try:
+        from kaggle.api.kaggle_api_extended import KaggleApi
+    except ImportError:
+        raise SystemExit("pip install kaggle")
+    api = KaggleApi()
+    try:
+        api.authenticate()
+    except Exception as exc:
+        raise SystemExit(
+            f"Kaggle authentication failed ({type(exc).__name__}).\n"
+            "Fix it with either:\n"
+            "  ./.venv/bin/kaggle auth login          # OAuth, nothing to store\n"
+            "or generate a token at kaggle.com/settings/api and save it to\n"
+            "  ~/.kaggle/access_token")
+    user = api.get_config_value("username")
+    if not user:
+        raise SystemExit("authenticated, but Kaggle did not report a username")
+    return user
 
 
 def write_metadata(user: str) -> None:

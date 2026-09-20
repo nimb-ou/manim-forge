@@ -52,45 +52,55 @@ jobs:
           python scripts/prepare_training.py
           python -m forge.doctor || true
 
-      - name: authenticate
+      # Kaggle CLI 2.2.x dropped the username+key kaggle.json for a single
+      # bearer token. KAGGLE_API_TOKEN is read directly, so there is no file
+      # to write and no username to supply -- it comes back from the API.
+      - name: check credentials
         env:
-          KAGGLE_USERNAME: ${{ secrets.KAGGLE_USERNAME }}
-          KAGGLE_KEY: ${{ secrets.KAGGLE_KEY }}
+          KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN }}
         run: |
-          mkdir -p ~/.kaggle
-          printf '{"username":"%s","key":"%s"}' "$KAGGLE_USERNAME" "$KAGGLE_KEY" \
-            > ~/.kaggle/kaggle.json
-          chmod 600 ~/.kaggle/kaggle.json
+          test -n "$KAGGLE_API_TOKEN" || {
+            echo "KAGGLE_API_TOKEN secret is not set — see docs/SETUP.md C2"; exit 1; }
+          kaggle kernels list --mine >/dev/null
+          echo "authenticated as $(python -c "
+          from kaggle.api.kaggle_api_extended import KaggleApi
+          a=KaggleApi(); a.authenticate(); print(a.get_config_value('username'))")"
 
       # After authentication, so the metadata files carry the account that
       # actually owns the token rather than one hard-coded in the repo.
       - name: package for Kaggle
+        env:
+          KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN }}
         run: python scripts/package_for_kaggle.py
 
       - name: upload the dataset
+        env:
+          KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN }}
         run: |
           cd kaggle/manim-forge-data
           kaggle datasets version -m "mix $(date -u +%F) — ${{ inputs.note }}" \
             || kaggle datasets create
 
       - name: push the kernel
+        env:
+          KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN }}
         run: kaggle kernels push -p kaggle/
 
       # Kaggle has no webhook, so this polls. Ten minutes between checks: the
       # job takes hours and a tighter loop only burns runner minutes.
       - name: wait for it
         env:
-          KAGGLE_USERNAME: ${{ secrets.KAGGLE_USERNAME }}
-          KAGGLE_KEY: ${{ secrets.KAGGLE_KEY }}
+          KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN }}
+          KAGGLE_USER: nimbou
         run: |
           for i in $(seq 1 54); do
             sleep 600
-            status=$(kaggle kernels status "$KAGGLE_USERNAME/manim-forge-sft" 2>&1 || true)
+            status=$(kaggle kernels status "$KAGGLE_USER/manim-forge-sft" 2>&1 || true)
             echo "[$i] $status"
             case "$status" in
               *complete*)  echo "finished"; exit 0 ;;
               *error*|*cancel*)
-                kaggle kernels output "$KAGGLE_USERNAME/manim-forge-sft" -p out/ || true
+                kaggle kernels output "$KAGGLE_USER/manim-forge-sft" -p out/ || true
                 tail -100 out/*.log 2>/dev/null || true
                 echo "kernel failed"; exit 1 ;;
             esac
@@ -100,9 +110,9 @@ jobs:
       - name: pull the output
         if: always()
         env:
-          KAGGLE_USERNAME: ${{ secrets.KAGGLE_USERNAME }}
-          KAGGLE_KEY: ${{ secrets.KAGGLE_KEY }}
-        run: kaggle kernels output "$KAGGLE_USERNAME/manim-forge-sft" -p out/ || true
+          KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN }}
+          KAGGLE_USER: nimbou
+        run: kaggle kernels output "$KAGGLE_USER/manim-forge-sft" -p out/ || true
 
       - uses: actions/upload-artifact@v4
         if: always()

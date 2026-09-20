@@ -24,3 +24,6 @@ uvicorn[standard]>=0.32
 
 # --- development -------------------------------------------------------------
 pytest>=8.0              # tests/ — run with ./.venv/bin/python -m pytest -q
+
+# --- training on Kaggle ------------------------------------------------------
+kaggle>=2.2                # CLI 2.2 replaced username+key auth with a bearer token
