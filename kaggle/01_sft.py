@@ -77,6 +77,25 @@ def _add_forge_to_path() -> str:
 print(_add_forge_to_path())
 
 # ── 2. data ────────────────────────────────────────────────────────────────
+# Check the mount before using it. A dataset version that is still processing
+# mounts incomplete, and the failure that produces -- deep inside
+# load_dataset, complaining about a file the API lists as present -- explains
+# nothing. This says what is actually there.
+_need = ["train.jsonl", "valid.jsonl"]
+_missing = [f for f in _need if not (DATA / f).exists()]
+if _missing:
+    print(f"MISSING from the mounted dataset: {_missing}", file=sys.stderr)
+    print(f"{DATA} contains:", file=sys.stderr)
+    if DATA.exists():
+        for f in sorted(DATA.iterdir())[:30]:
+            kind = "dir " if f.is_dir() else f"{f.stat().st_size/1e6:>6.1f}MB"
+            print(f"  {kind}  {f.name}", file=sys.stderr)
+    else:
+        print("  (the directory does not exist at all)", file=sys.stderr)
+    raise SystemExit(
+        "The dataset version was probably still processing when this kernel "
+        "started. scripts/wait_for_dataset.py exists to prevent that.")
+
 from datasets import load_dataset
 
 ds = load_dataset("json", data_files={

@@ -83,6 +83,17 @@ jobs:
           kaggle datasets version -p kaggle/manim-forge-data -r zip \
             -m "mix $(date -u +%F) — ${{ inputs.note }}"
 
+      # A new dataset version is not immediately mountable. Run 4 pushed the
+      # kernel five seconds after uploading, Kaggle was still processing, and
+      # the kernel mounted an incomplete dataset -- load_dataset could not
+      # find train.jsonl, a file the API's own listing showed as present.
+      - name: wait for the dataset to be mountable
+        env:
+          KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN }}
+        run: |
+          python scripts/wait_for_dataset.py nimbou/manim-forge-data \
+            --expect train.jsonl valid.jsonl
+
       - name: push the kernel
         env:
           KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN }}
