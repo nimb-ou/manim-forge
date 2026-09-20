@@ -234,3 +234,88 @@ def test_an_ambiguous_mount_is_refused(tmp_path):
     exec(_find_data_fn(root), ns)
     with pytest.raises(SystemExit, match="several places"):
         ns["find_data"]()
+
+
+def test_no_name_is_used_before_it_exists():
+    """ast.parse is necessary and not sufficient.
+
+    Patching this file, I replaced `trainer.train()` and the first match was
+    inside a comment I had written minutes earlier *describing* a failure at
+    trainer.train(). The result was
+
+        # The step this recipe was missing. Run 8 reached report_memory(...)
+        trainer.train(), completed
+
+    which parses perfectly -- it is a tuple expression -- and dies at runtime
+    with NameError on line 149, three minutes into a GPU run.
+
+    So this walks the module body in order and checks that every name a
+    top-level statement loads has already been bound above it. Approximate
+    by design: it ignores anything inside a function, where order does not
+    work that way.
+    """
+    import ast
+    import builtins
+
+    tree = ast.parse(KERNEL.read_text())
+    bound = set(dir(builtins)) | {"__name__", "__file__"}
+    problems = []
+
+    def bind(target):
+        bound.update(n.id for n in ast.walk(target) if isinstance(n, ast.Name))
+
+    for node in tree.body:
+        # Names bound *within* this statement: comprehension variables and
+        # for-loop targets both bind before their own body runs.
+        local = set()
+        for n in ast.walk(node):
+            if isinstance(n, ast.comprehension):
+                local.update(x.id for x in ast.walk(n.target)
+                             if isinstance(x, ast.Name))
+            elif isinstance(n, (ast.For, ast.AsyncFor)):
+                local.update(x.id for x in ast.walk(n.target)
+                             if isinstance(x, ast.Name))
+            elif isinstance(n, ast.withitem) and n.optional_vars is not None:
+                local.update(x.id for x in ast.walk(n.optional_vars)
+                             if isinstance(x, ast.Name))
+            elif isinstance(n, ast.ExceptHandler) and n.name:
+                local.add(n.name)
+            elif isinstance(n, ast.NamedExpr):
+                local.update(x.id for x in ast.walk(n.target)
+                             if isinstance(x, ast.Name))
+
+        # Names this statement reads, excluding nested function bodies.
+        reads = []
+        for n in ast.walk(node):
+            if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef, ast.Lambda)):
+                continue
+            if (isinstance(n, ast.Name) and isinstance(n.ctx, ast.Load)
+                    and n.id not in local):
+                reads.append(n)
+        if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+            problems += [(n.lineno, n.id) for n in reads if n.id not in bound]
+
+        if isinstance(node, (ast.Import, ast.ImportFrom)):
+            bound.update((a.asname or a.name).split(".")[0] for a in node.names)
+        elif isinstance(node, ast.Assign):
+            for t in node.targets:
+                bind(t)
+        elif isinstance(node, (ast.AnnAssign, ast.AugAssign)):
+            bind(node.target)
+        elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+            bound.add(node.name)
+        elif isinstance(node, ast.For):
+            bind(node.target)
+        elif isinstance(node, ast.With):
+            for item in node.items:
+                if item.optional_vars is not None:
+                    bind(item.optional_vars)
+        elif isinstance(node, (ast.If, ast.Try)):
+            for sub in ast.walk(node):
+                if isinstance(sub, ast.Assign):
+                    for t in sub.targets:
+                        bind(t)
+
+    assert not problems, (
+        "names used before they exist: "
+        + ", ".join(f"{name} (line {ln})" for ln, name in problems))

@@ -145,9 +145,8 @@ model = AutoModelForCausalLM.from_pretrained(
     BASE, quantization_config=bnb, device_map="auto", dtype=torch.float16)
 model.config.use_cache = False
 
-# The step this recipe was missing. Run 8 reached report_memory("before train")
-trainer.train(), completed
-# a forward and a backward pass, and died in gradient clipping:
+# The step this recipe was missing. Run 8 reached the training loop,
+# completed a forward and a backward pass, and died in gradient clipping:
 #
 #   NotImplementedError: "_amp_foreach_non_finite_check_and_unscale_cuda"
 #                        not implemented for 'BFloat16'
