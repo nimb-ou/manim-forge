@@ -47,7 +47,7 @@ CURRICULUM: list[Scene] = [
     Scene("number_line", "The number line and what lives on it", "foundations", 1,
           "show a number line, place integers then fractions then an irrational "
           "on it, and show that between any two there is always another",
-          needs=["numbers"]),
+          needs=["numbers"], done=True),
     Scene("function_machine", "A function as a machine", "foundations", 1,
           "show a function as a machine taking an input and producing an output, "
           "then show the same function as a curve, and connect the two views",
@@ -58,7 +58,7 @@ CURRICULUM: list[Scene] = [
     Scene("area_rearranged", "Area survives rearrangement", "geometry", 1,
           "show that cutting a shape and rearranging the pieces leaves the area "
           "unchanged, and use that to turn a parallelogram into a rectangle",
-          needs=["grid"]),
+          needs=["grid"], done=True),
     Scene("angle_basics", "Why a triangle's angles make a straight line", "geometry", 1,
           "show why the three angles of any triangle add to a straight line, by "
           "tearing off the corners and fitting them together"),

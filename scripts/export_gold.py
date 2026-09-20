@@ -70,6 +70,22 @@ GOLD = [
         "tags": ["probability", "convergence", "statistics"],
     },
     {
+        "module": "forge/gold/number_line.py",
+        "scene": "NumberLine1D",
+        "prompt": "show a number line, place the integers then fractions then "
+                  "an irrational number on it, and show that between any two "
+                  "points there is always another",
+        "tags": ["foundations", "number-theory"],
+    },
+    {
+        "module": "forge/gold/area_rearranged.py",
+        "scene": "AreaRearranged",
+        "prompt": "show that cutting a shape and rearranging the pieces leaves "
+                  "the area unchanged, and use that to turn a parallelogram "
+                  "into a rectangle",
+        "tags": ["foundations", "geometry", "area"],
+    },
+    {
         "module": "forge/gold/dot_product.py",
         "scene": "DotProduct",
         "prompt": "explain the dot product as a projection — show two vectors, "
