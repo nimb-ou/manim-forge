@@ -10,6 +10,23 @@ from pathlib import Path
 
 GOLD = [
     {
+        "module": "forge/gold/wave_interference.py",
+        "scene": "WaveInterference",
+        "prompt": "show two waves travelling in opposite directions, add them "
+                  "point by point to make a standing wave, and work out exactly "
+                  "where the nodes sit and why they never move",
+        "tags": ['physics', 'waves'],
+    },
+    {
+        "module": "forge/gold/field_lines.py",
+        "scene": "FieldLines",
+        "prompt": "show an electric field as an arrow at every point around two "
+                  "charges, trace field lines by walking along those arrows, "
+                  "explain why lines can never cross, then flip one charge and "
+                  "show the null point appear",
+        "tags": ['physics', 'fields'],
+    },
+    {
         "module": "forge/gold/orbit.py",
         "scene": "OrbitScene",
         "prompt": "show a planet orbiting a star on an ellipse, show that it "

@@ -157,11 +157,13 @@ CURRICULUM: list[Scene] = [
     Scene("field_lines", "What a field looks like", "physics", 2,
           "show the field around a charge as arrows, then as field lines, and "
           "show what happens when a second, opposite charge arrives",
-          needs=["vectors"]),
+          needs=["vectors"],
+          done=True),
     Scene("wave_interference", "Two sources, one pattern", "physics", 2,
           "show two wave sources interfering, with bright lines where crests "
           "meet crests and dark lines where they cancel",
-          needs=["oscillation"]),
+          needs=["oscillation"],
+          done=True),
     Scene("orbit", "Falling forever around a planet", "physics", 2,
           "show an orbit as continuous falling, by firing a cannonball faster "
           "and faster until it misses the ground",
