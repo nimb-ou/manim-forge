@@ -44,6 +44,15 @@ GOLD = [
         "tags": ["calculus", "convergence", "plot"],
     },
     {
+        "module": "forge/gold/spring.py",
+        "scene": "SpringTrace",
+        "prompt": "show a mass on a spring oscillating, trace its position "
+                  "over time to reveal a sine wave, show the energy moving "
+                  "between kinetic and potential while the total stays "
+                  "constant, and show how mass and stiffness change the period",
+        "tags": ["physics", "oscillation", "energy"],
+    },
+    {
         "module": "forge/gold/dot_product.py",
         "scene": "DotProduct",
         "prompt": "explain the dot product as a projection — show two vectors, "
