@@ -254,7 +254,24 @@ cfg = SFTConfig(
     eval_steps=60,
     save_steps=120,
     save_total_limit=3,               # Kaggle output quota is finite
-    bf16=False, fp16=True,
+    # No AMP at all. Three runs died in the GradScaler with
+    #     NotImplementedError: _amp_foreach_non_finite_check_and_unscale_cuda
+    #                          not implemented for 'BFloat16'
+    # and the last of them proved the parameters were not the cause: all
+    # 40.4M trainable params were fp32 and it failed anyway. The bf16 is in
+    # the *gradients*, which autocast produces and which casting parameters
+    # cannot reach.
+    #
+    # The scaler exists only because fp16=True. Turning it off removes the
+    # failure rather than chasing it. bf16=True is not the alternative: a T4
+    # is sm_75 and has no native bfloat16.
+    #
+    # The cost is speed, and less than it looks: the 4-bit Linear layers --
+    # which are almost all of the compute -- still run at
+    # bnb_4bit_compute_dtype=float16 regardless of autocast. Only the fp32
+    # norms and the LoRA adapters lose it. Memory is not a concern: 2.55 of
+    # 15.6 GB was in use before training.
+    bf16=False, fp16=False,
     max_length=2048,                  # was max_seq_length before trl 1.x
 
     # trl 1.13 defaults to loss_type="chunked_nll", which patches the LM head
