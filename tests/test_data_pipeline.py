@@ -288,3 +288,69 @@ def test_restore_does_not_require_the_package_to_be_installed():
         f"forge is imported at line {forge_import}, before --restore returns at "
         f"line {restore_return} — a runner with no package installed cannot "
         f"restore the data it needs to install anything")
+
+
+# --- PEFT -> MLX adapter conversion ----------------------------------------
+
+def test_peft_to_mlx_produces_the_same_delta(tmp_path):
+    """The two libraries disagree about shape, scaling and key names.
+
+    PEFT:  A (r, in)   B (out, r)   delta = (alpha/r) · B @ A
+    MLX:   lora_a (in, r)  lora_b (r, out)  delta = scale · lora_bᵀ @ lora_aᵀ
+
+    Get a transpose wrong and the weights still load, still generate, and
+    quietly compute something else. So this asserts on the delta, which is
+    the only thing that affects the model's output.
+    """
+    import numpy as np
+    mx = pytest.importorskip("mlx.core")
+    from scripts.peft_to_mlx import convert
+
+    r, alpha, d_in, d_out = 8, 16, 64, 32
+    rng = np.random.default_rng(0)
+    A = rng.normal(size=(r, d_in)).astype(np.float32)
+    B = rng.normal(size=(d_out, r)).astype(np.float32)
+
+    peft = tmp_path / "peft"
+    peft.mkdir()
+    (peft / "adapter_config.json").write_text(json.dumps({
+        "r": r, "lora_alpha": alpha, "lora_dropout": 0.0,
+        "target_modules": ["q_proj"], "peft_type": "LORA"}))
+    stem = "base_model.model.model.layers.3.self_attn.q_proj"
+    mx.save_safetensors(str(peft / "adapter_model.safetensors"),
+                        {f"{stem}.lora_A.weight": mx.array(A),
+                         f"{stem}.lora_B.weight": mx.array(B)})
+
+    stats = convert(peft, tmp_path / "mlx")
+    assert stats["rank"] == r
+    assert stats["scale"] == alpha / r
+    assert stats["layers"] == 4          # layer index 3 -> 4 layers deep
+
+    got = mx.load(str(tmp_path / "mlx" / "adapters.safetensors"))
+    key_a = "model.layers.3.self_attn.q_proj.lora_a"
+    key_b = "model.layers.3.self_attn.q_proj.lora_b"
+    assert set(got) == {key_a, key_b}, f"unexpected keys: {sorted(got)}"
+    assert got[key_a].shape == (d_in, r)
+    assert got[key_b].shape == (r, d_out)
+
+    peft_delta = (alpha / r) * (B @ A)                       # (out, in)
+    mlx_delta = stats["scale"] * (np.array(got[key_b]).T @ np.array(got[key_a]).T)
+
+    # Relative, not absolute. The adapter is stored in float16 -- which is
+    # what MLX's own trainer writes and what the model runs in -- so on a
+    # delta of magnitude ~32 the absolute error is ~0.016 and means nothing.
+    # A transposition error, by contrast, is order-1 relative.
+    rel = np.abs(peft_delta - mlx_delta).max() / np.abs(peft_delta).max()
+    assert rel < 1e-3, f"deltas differ by {rel:.4%} — check the transposes"
+
+
+def test_peft_to_mlx_refuses_a_file_that_is_not_an_adapter(tmp_path):
+    from scripts.peft_to_mlx import convert
+    mx = pytest.importorskip("mlx.core")
+    peft = tmp_path / "peft"
+    peft.mkdir()
+    (peft / "adapter_config.json").write_text(json.dumps({"r": 8, "lora_alpha": 16}))
+    mx.save_safetensors(str(peft / "adapter_model.safetensors"),
+                        {"something.else.weight": mx.zeros((4, 4))})
+    with pytest.raises(SystemExit, match="no LoRA tensors"):
+        convert(peft, tmp_path / "mlx")

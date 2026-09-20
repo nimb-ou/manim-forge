@@ -13,6 +13,9 @@ ap.add_argument("--n", type=int, default=20)
 ap.add_argument("--rounds", type=int, default=2)
 ap.add_argument("--retrieval", action="store_true", help="add few-shot examples")
 ap.add_argument("--tag", default="", help="label for the output file")
+ap.add_argument("--adapter", default=None,
+                help="MLX LoRA adapter directory. A PEFT adapter from Kaggle "
+                     "must be converted first: scripts/peft_to_mlx.py")
 a = ap.parse_args()
 
 df = pd.read_parquet("https://huggingface.co/datasets/SuienR/ManimBench-v1/resolve/"
@@ -21,7 +24,19 @@ prompts = df["Reviewed Description"].dropna().tolist()[: a.n]
 
 from mlx_lm import load
 print(f"loading {a.model} ...", flush=True)
-model, tok = load(a.model)
+if a.adapter:
+    from pathlib import Path as _P
+    adir = _P(a.adapter)
+    if (adir / "adapter_model.safetensors").exists() and not (
+            adir / "adapters.safetensors").exists():
+        raise SystemExit(
+            f"{adir} is a PEFT adapter; mlx-lm cannot read it, and it loads\n"
+            f"with strict=False so it would silently score the base model.\n"
+            f"Convert it first:\n"
+            f"  ./.venv/bin/python scripts/peft_to_mlx.py \\\n"
+            f"      --peft {adir} --out {adir}-mlx --verify")
+    print(f"  adapter: {a.adapter}", flush=True)
+model, tok = load(a.model, **({"adapter_path": a.adapter} if a.adapter else {}))
 h = RenderHarness(python_bin="./.venv/bin/python", cache_dir="data/frames", timeout=120)
 index = None
 if a.retrieval:
@@ -29,6 +44,13 @@ if a.retrieval:
     index = ExampleIndex.load(Path("data/verified/example_index.jsonl"))
     print(f"retrieval on: {len(index.examples)} verified examples indexed")
 loop = RepairLoop(model, tok, h, max_rounds=a.rounds, index=index)
+
+run_meta = {"model": a.model, "adapter": a.adapter, "rounds": a.rounds,
+            "retrieval": bool(a.retrieval), "n": a.n}
+if a.adapter:
+    rj = Path(a.adapter) / "run.json"
+    if rj.exists():
+        run_meta["training"] = json.loads(rj.read_text())
 
 rows, t0 = [], time.monotonic()
 for i, p in enumerate(prompts):
@@ -46,7 +68,14 @@ first_try = sum(1 for r in rows if r["ok"] and r["rounds"] == 0)
 tag = a.tag or ("retrieval" if a.retrieval else "plain")
 out = Path(f"data/bench/{tag}_n{a.n}_r{a.rounds}.json")
 out.parent.mkdir(parents=True, exist_ok=True)
-out.write_text(json.dumps(rows, indent=2))
+# {meta, trials}, not a bare list. A score with no record of the model,
+# adapter and mix that produced it cannot be compared to anything -- which
+# is how "one variable per experiment" stops being a property and becomes a
+# slogan. Readers should accept either shape; the older files are lists.
+run_meta.update({"render_success": round(n_ok / len(rows), 4),
+                 "n_ok": n_ok, "first_try": first_try,
+                 "finished": time.strftime("%Y-%m-%dT%H:%M:%S")})
+out.write_text(json.dumps({"meta": run_meta, "trials": rows}, indent=2))
 
 print("\n" + "="*60)
 print(f"  {tag.upper()}  ({a.rounds} repair rounds, retrieval={a.retrieval})")
