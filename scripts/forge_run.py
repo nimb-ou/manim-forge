@@ -82,12 +82,13 @@ def roster() -> list[Job]:
             # 3-D one takes longer, so patience here is measured in hours.
             patience_s=7200, max_restarts=40),
 
-        Job(name="gold-verify",
-            command=f"{PY} -u scripts/verify_gold.py --workers 3",
-            resource=Resource.CPU,
-            counter=ROOT / "data/checks/verify_gold.json",
-            log=LOGS / "verify_gold.log",
-            patience_s=2400, max_restarts=3),
+        # gold-verify is deliberately absent. It rendered all 44 scenes at
+        # 480p15 while showcase rendered the same 44 at 1080p60 -- the same
+        # work twice, six manim processes deep, for a load average of 95 on
+        # ten cores. The higher-quality pass proves the scene renders and
+        # produces the asset we actually want; the low-quality pass proved
+        # only the first half. Run verify_gold by hand when iterating on one
+        # scene, where its speed is the point.
     ]
 
 
