@@ -74,7 +74,7 @@ def roster() -> list[Job]:
             patience_s=1800),
 
         Job(name="showcase",
-            command=f"{PY} -u scripts/render_showcase.py --quality -qh",
+            command=f"{PY} -u scripts/render_showcase.py --quality high",
             resource=Resource.CPU,
             counter=ROOT / "data/showcase/rendered.jsonl",
             log=LOGS / "showcase.log",

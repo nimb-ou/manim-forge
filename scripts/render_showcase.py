@@ -32,6 +32,8 @@ ENV = {**os.environ, "PATH": "/Library/TeX/texbin:" + os.environ.get("PATH", "")
 OUT = ROOT / "data" / "showcase"
 LEDGER = OUT / "rendered.jsonl"
 
+QUALITY = {"low": "-ql", "medium": "-qm", "high": "-qh", "4k": "-qk"}
+
 
 def scenes() -> list[tuple[str, str, float]]:
     import forge.gold
@@ -68,8 +70,12 @@ def already_done() -> set[str]:
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--quality", default="-qh",
-                    choices=["-ql", "-qm", "-qh", "-qk"])
+    # Named, not "-qh". argparse reads any value beginning with a dash as
+    # another option, so --quality -qh fails with "expected one argument" --
+    # which is exactly how this crash-looped four times before the supervisor
+    # gave up on it.
+    ap.add_argument("--quality", default="high",
+                    choices=list(QUALITY))
     ap.add_argument("--timeout", type=int, default=5400)
     a = ap.parse_args()
 
@@ -85,7 +91,8 @@ def main() -> None:
             t0 = time.time()
             try:
                 r = subprocess.run(
-                    [PY, "-m", "manim", "render", a.quality, "--disable_caching",
+                    [PY, "-m", "manim", "render", QUALITY[a.quality],
+                     "--disable_caching",
                      "--save_sections", "--media_dir", str(OUT), module, name],
                     capture_output=True, text=True, env=ENV,
                     timeout=a.timeout, stdin=subprocess.DEVNULL, cwd=ROOT)
