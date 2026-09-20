@@ -46,11 +46,35 @@ subprocess.run([sys.executable, "-m", "pip", "install", "-q",
 DATA = Path("/kaggle/input/manim-forge-data")
 WORK = Path("/kaggle/working")
 
+os.chdir(WORK)
+
 # The same forge package that runs locally, so a number measured here means
 # the same thing as a number measured on the laptop.
-with tarfile.open(DATA / "forge.tar.gz") as t:
-    t.extractall(WORK)
-os.chdir(WORK)
+#
+# **Kaggle unpacks archives on upload.** forge.tar.gz was shipped as a
+# tarball and arrives already extracted, as forge/forge/, so opening it
+# raises FileNotFoundError and takes the run with it -- which is how run 3
+# died, one line before it would have loaded any data.
+#
+# SFT does not import forge at all; only the GRPO notebook does, where the
+# reward is a render. So this makes it importable when present and says so
+# when it is not, rather than being a hard dependency of a step that never
+# uses it.
+def _add_forge_to_path() -> str:
+    for candidate in (DATA / "forge", DATA, WORK):
+        if (candidate / "forge" / "__init__.py").exists():
+            sys.path.insert(0, str(candidate))
+            return f"forge importable from {candidate}"
+    tar = DATA / "forge.tar.gz"
+    if tar.exists():                      # if Kaggle ever stops unpacking
+        with tarfile.open(tar) as t:
+            t.extractall(WORK)
+        sys.path.insert(0, str(WORK))
+        return f"forge extracted from {tar}"
+    return ("forge package not found — fine for SFT, which does not use it; "
+            "GRPO will need it")
+
+print(_add_forge_to_path())
 
 # ── 2. data ────────────────────────────────────────────────────────────────
 from datasets import load_dataset

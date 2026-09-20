@@ -115,3 +115,70 @@ def test_consecutive_unreadable_statuses_eventually_fail():
     assert "unparsed" in wf, "no counter for unreadable statuses"
     assert re.search(r'unparsed.*-ge\s*\d+', wf), \
         "unreadable statuses must fail the run after a few in a row"
+
+
+# --- the dataset layout Kaggle actually produces ---------------------------
+
+def _forge_path_fn():
+    """Pull _add_forge_to_path out of the kernel script and make it callable."""
+    import re
+    src = KERNEL.read_text()
+    m = re.search(r'def _add_forge_to_path.*?\n(?=\nprint)', src, re.S)
+    assert m, "the kernel no longer defines _add_forge_to_path"
+    return m.group(0)
+
+
+@pytest.mark.parametrize("layout,build", [
+    # What Kaggle really does: it unpacks forge.tar.gz on upload, so the
+    # package arrives as forge/forge/. Run 3 died opening the tarball that
+    # no longer existed, one line before it would have loaded any data.
+    ("kaggle-extracted", lambda d: (d / "forge" / "forge").mkdir(parents=True)),
+    ("flat", lambda d: (d / "forge").mkdir(parents=True)),
+])
+def test_forge_is_found_in_every_layout_kaggle_produces(tmp_path, layout, build):
+    import sys as _sys, tarfile as _tar
+    data, work = tmp_path / "in", tmp_path / "work"
+    data.mkdir(); work.mkdir()
+    build(data)
+    pkg = next(p for p in data.rglob("forge") if p.is_dir() and
+               not (p / "forge").exists())
+    (pkg / "__init__.py").touch()
+
+    ns = {"DATA": data, "WORK": work, "sys": _sys, "tarfile": _tar,
+          "Path": type(tmp_path)}
+    exec(_forge_path_fn(), ns)
+    before = list(_sys.path)
+    try:
+        msg = ns["_add_forge_to_path"]()
+        assert "importable" in msg, msg
+        root = Path(_sys.path[0])
+        assert (root / "forge" / "__init__.py").exists(), \
+            f"{root} is not the package's parent"
+    finally:
+        _sys.path[:] = before
+
+
+def test_a_missing_forge_package_does_not_kill_the_run(tmp_path):
+    """SFT never imports forge. It must not die because forge is absent."""
+    import sys as _sys, tarfile as _tar
+    data, work = tmp_path / "in", tmp_path / "work"
+    data.mkdir(); work.mkdir()
+    ns = {"DATA": data, "WORK": work, "sys": _sys, "tarfile": _tar,
+          "Path": type(tmp_path)}
+    exec(_forge_path_fn(), ns)
+    msg = ns["_add_forge_to_path"]()
+    assert "not found" in msg and "SFT" in msg
+
+
+def test_sft_does_not_import_forge():
+    """If this ever changes, the tolerant path handling above is not enough."""
+    import ast
+    tree = ast.parse(KERNEL.read_text())
+    for n in ast.walk(tree):
+        mod = (n.module if isinstance(n, ast.ImportFrom) else None)
+        names = ([a.name for a in n.names]
+                 if isinstance(n, (ast.Import, ast.ImportFrom)) else [])
+        assert not (mod or "").startswith("forge"), \
+            "SFT now imports forge — make the package a hard requirement"
+        assert not any(x.startswith("forge") for x in names), \
+            "SFT now imports forge — make the package a hard requirement"
