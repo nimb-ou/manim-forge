@@ -102,13 +102,25 @@ def add_stdlib_imports(code: str) -> str:
     return "\n".join(lines)
 
 
-#: (name, applies_when, transform)
 #: A bare ``%`` inside a Tex/MathTex string starts a LaTeX comment, so the
 #: rest of the line -- the closing brace included -- vanishes and dvisvgm
 #: fails with an unhelpful "installation does not support converting PDF to
-#: SVG". Python makes this easy to hit by accident: f"{x:.1%}" renders
-#: "16.7%", which LaTeX reads as "16.7" followed by a comment. Two of my own
-#: gold scenes shipped with it and neither failed until render time.
+#: SVG". Two of my own gold scenes shipped with it and neither failed until
+#: render time.
+#:
+#: Scope, measured rather than assumed. Across all 4,515 scenes on disk --
+#: the whole scraped corpus, every synthetic row, and the 44 gold scenes --
+#: this rule fires **zero** times. It was written for a bug I introduced and
+#: have since fixed; it is not a failure mode the models produce.
+#:
+#: It also covers less than the obvious case suggests. Only *string literals*
+#: are inspected, so the form that actually bit me, ``f"{x:.1%}"``, is
+#: invisible to it: an f-string is a JoinedStr, and in any case the ``%``
+#: there is produced at runtime by the format spec, not present in the
+#: source, so there is nothing to escape. That one has no mechanical repair
+#: -- the fix is ``f"{x*100:.1f}\\%"`` -- and it does not occur in the
+#: corpus either. Kept because it is cheap and correct for what it covers;
+#: recorded here so nobody credits it with work it is not doing.
 
 
 def _tex_string_args(code: str):
