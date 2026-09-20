@@ -86,6 +86,21 @@ GOLD = [
         "tags": ["foundations", "geometry", "area"],
     },
     {
+        "module": "forge/gold/function_machine.py",
+        "scene": "FunctionMachine",
+        "prompt": "show a function as a machine taking an input and producing "
+                  "an output, then show the same function as a curve, and "
+                  "connect the two views",
+        "tags": ["foundations", "calculus"],
+    },
+    {
+        "module": "forge/gold/angle_sum.py",
+        "scene": "AngleSum",
+        "prompt": "show why the three angles of any triangle add to a straight "
+                  "line, by tearing off the corners and fitting them together",
+        "tags": ["foundations", "geometry"],
+    },
+    {
         "module": "forge/gold/dot_product.py",
         "scene": "DotProduct",
         "prompt": "explain the dot product as a projection — show two vectors, "

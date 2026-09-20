@@ -51,7 +51,7 @@ CURRICULUM: list[Scene] = [
     Scene("function_machine", "A function as a machine", "foundations", 1,
           "show a function as a machine taking an input and producing an output, "
           "then show the same function as a curve, and connect the two views",
-          needs=["calculus"]),
+          needs=["calculus"], done=True),
     Scene("coordinate_plane", "Two numbers locate a point", "foundations", 1,
           "build the coordinate plane from two number lines and show how a pair "
           "of numbers names exactly one point"),
@@ -61,7 +61,7 @@ CURRICULUM: list[Scene] = [
           needs=["grid"], done=True),
     Scene("angle_basics", "Why a triangle's angles make a straight line", "geometry", 1,
           "show why the three angles of any triangle add to a straight line, by "
-          "tearing off the corners and fitting them together"),
+          "tearing off the corners and fitting them together", done=True),
 
     # ── Tier 2 — core ideas, one per field ───────────────────────────────
     Scene("pythagoras", "Pythagoras by rearrangement", "geometry", 2,
