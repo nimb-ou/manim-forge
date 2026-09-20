@@ -138,3 +138,36 @@ def verify_no_exact_fraction(max_den: int = 3000) -> bool:
 def parity_of_square(n: int) -> str:
     """Whether n^2 is even or odd -- the engine of the root-two proof."""
     return "even" if (n * n) % 2 == 0 else "odd"
+
+
+def clock_positions(modulus: int, step: int, count: int) -> list[int]:
+    """Repeatedly add ``step`` on a clock face of size ``modulus``."""
+    out, x = [0], 0
+    for _ in range(count):
+        x = (x + step) % modulus
+        out.append(x)
+    return out
+
+
+def cycle_length(modulus: int, step: int) -> int:
+    """How many steps before the walk returns to zero.
+
+    Equals modulus // gcd(modulus, step), which is why a step sharing a factor
+    with the modulus visits only part of the face. The scene shows that; this
+    computes it so the claim is not merely observed on one example.
+    """
+    seen, x, n = set(), 0, 0
+    while True:
+        x = (x + step) % modulus
+        n += 1
+        if x == 0:
+            return n
+        if x in seen:
+            return n
+        seen.add(x)
+
+
+def verify_cycle_is_m_over_gcd(modulus: int = 12) -> bool:
+    """The cycle length must equal m / gcd(m, step) for every step."""
+    return all(cycle_length(modulus, s) == modulus // math.gcd(modulus, s)
+               for s in range(1, modulus))

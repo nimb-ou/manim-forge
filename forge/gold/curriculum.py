@@ -95,7 +95,8 @@ CURRICULUM: list[Scene] = [
     Scene("chain_rule", "Rates of change, nested", "calculus", 2,
           "show the chain rule as two gears of different sizes, where turning "
           "one turns the other at a multiplied rate",
-          needs=["calculus"], builds_on=["derivative_slope"]),
+          needs=["calculus"], builds_on=["derivative_slope"],
+          done=True),
     Scene("taylor", "Approximating a curve with polynomials", "calculus", 2,
           "show a Taylor series approximating sine, adding one term at a time, "
           "and show the approximation improving then failing far from the centre",
@@ -109,7 +110,8 @@ CURRICULUM: list[Scene] = [
     Scene("modular_clock", "Arithmetic on a clock face", "number-theory", 2,
           "show modular arithmetic as counting around a clock face, and what "
           "happens when you keep adding the same number",
-          needs=["numbers"]),
+          needs=["numbers"],
+          done=True),
     Scene("irrational_sqrt2", "Why root two is not a fraction", "number-theory", 2,
           "show geometrically why the square root of two cannot be written as a "
           "fraction, by infinite descent",

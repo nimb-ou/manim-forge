@@ -10,6 +10,23 @@ from pathlib import Path
 
 GOLD = [
     {
+        "module": "forge/gold/chain_rule.py",
+        "scene": "ChainRule",
+        "prompt": "explain the chain rule as two machines feeding into each "
+                  "other, work out the derivative of sine of three x plus one at "
+                  "a point, and show what goes wrong if the outer derivative is "
+                  "taken at the wrong place",
+        "tags": ['calculus', 'derivatives'],
+    },
+    {
+        "module": "forge/gold/modular_clock.py",
+        "scene": "ModularClock",
+        "prompt": "show arithmetic on a twelve-hour clock face, step around it by "
+                  "five and by four, and explain why one visits every position "
+                  "and the other only three",
+        "tags": ['number-theory', 'modular'],
+    },
+    {
         "module": "forge/gold/bayes.py",
         "scene": "Bayes",
         "prompt": "show why a positive result on a very accurate medical test "

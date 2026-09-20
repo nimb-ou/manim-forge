@@ -165,3 +165,46 @@ def verify_taylor_improves(f: Callable[[float], float],
     errs = [abs(taylor_error(f, derivs[:k + 1], a, x))
             for k in range(len(derivs))]
     return all(b <= a_ + 1e-12 for a_, b in zip(errs, errs[1:]))
+
+
+@dataclass
+class ChainLink:
+    """One stage of a composition, with its own rate."""
+    name: str
+    value: float
+    rate: float
+
+
+def chain_trace(inner: Callable[[float], float],
+                inner_prime: Callable[[float], float],
+                outer: Callable[[float], float],
+                outer_prime: Callable[[float], float],
+                x: float) -> tuple[ChainLink, ChainLink, float]:
+    """Each stage of f(g(x)) with its local rate, and the product.
+
+    Returned as stages rather than a single number because the chain rule is a
+    statement about stages: how fast the inside moves, times how fast the
+    outside moves *at the value the inside currently has*. The second half is
+    the part that gets dropped, and it is the only part that is subtle.
+    """
+    u = inner(x)
+    g = ChainLink("inner", u, inner_prime(x))
+    f = ChainLink("outer", outer(u), outer_prime(u))
+    return g, f, g.rate * f.rate
+
+
+def verify_chain_rule(inner, inner_prime, outer, outer_prime,
+                      xs: list[float], tol: float = 1e-5) -> bool:
+    """The product of rates must equal the numeric derivative of the composite.
+
+    This is the check that catches the classic error: evaluating the outer
+    derivative at x instead of at g(x). That mistake gives a plausible number,
+    and on many functions it is even close.
+    """
+    def composite(t):
+        return outer(inner(t))
+    for x in xs:
+        _, _, product = chain_trace(inner, inner_prime, outer, outer_prime, x)
+        if abs(product - numeric_derivative(composite, x)) > tol:
+            return False
+    return True
