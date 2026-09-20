@@ -53,6 +53,23 @@ GOLD = [
         "tags": ["physics", "oscillation", "energy"],
     },
     {
+        "module": "forge/gold/sieve.py",
+        "scene": "Sieve",
+        "prompt": "show the sieve of Eratosthenes on the numbers up to a "
+                  "hundred — cross out multiples of two, then three, five and "
+                  "seven, and show that what survives is exactly the primes",
+        "tags": ["number-theory", "grid", "algorithm"],
+    },
+    {
+        "module": "forge/gold/law_large_numbers.py",
+        "scene": "LawOfLargeNumbers",
+        "prompt": "show the law of large numbers with coin flips — start with "
+                  "ten flips landing far from a half, then keep flipping and "
+                  "show the proportion wandering in toward it, and show that "
+                  "the error shrinks like one over root n",
+        "tags": ["probability", "convergence", "statistics"],
+    },
+    {
         "module": "forge/gold/dot_product.py",
         "scene": "DotProduct",
         "prompt": "explain the dot product as a projection — show two vectors, "
