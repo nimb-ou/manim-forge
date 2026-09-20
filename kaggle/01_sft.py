@@ -163,292 +163,465 @@ from peft import (LoraConfig, get_peft_model,
 
 BASE = "Qwen/Qwen2.5-Coder-7B-Instruct"
 
-# This block follows a published Kaggle T4 QLoRA recipe pinned to these
-# exact library versions, rather than the variant I arrived at by iterating
-# against the GPU. Twelve runs of one-change-at-a-time is not a method.
-bnb = BitsAndBytesConfig(
-    load_in_4bit=True,
-    bnb_4bit_quant_type="nf4",
-    bnb_4bit_compute_dtype=torch.float16,    # a T4 is sm_75: no bf16
-    bnb_4bit_use_double_quant=True,
-    # Storage dtype of the packed weights. Left unset it follows the model
-    # config, which for Qwen2.5 says bfloat16 -- and that propagates into
-    # gradients no amount of parameter casting reaches.
-    bnb_4bit_quant_storage=torch.float16,
-)
 
-tok = AutoTokenizer.from_pretrained(BASE)
-model = AutoModelForCausalLM.from_pretrained(
-    BASE, quantization_config=bnb,
-    dtype=torch.float16,          # `torch_dtype` still works but warns
-    attn_implementation="sdpa",
-    device_map={"": 0},           # pinned, not "auto" -- see the note above
-)
-model.config.use_cache = False
+def train_once(use_fp16: bool, smoke: bool, tag: str) -> dict:
+    """Build the model and train it once, reporting whether it stayed finite.
 
-# Standard QLoRA preparation: upcasts fp16/bf16 params to fp32, casts the
-# norms, makes the output embedding require grad. use_reentrant=False is the
-# supported checkpointing path.
-model = prepare_model_for_kbit_training(
-    model, use_gradient_checkpointing=True,
-    gradient_checkpointing_kwargs={"use_reentrant": False})
+    This is a function rather than a straight-line script so the kernel can
+    make its own decision and act on it without me. Kaggle gives a GPU
+    session twelve hours; a 20-step smoke costs about fifteen minutes. So the
+    kernel smoke-tests the exact path it is about to spend four hours on,
+    and if the numerics come out NaN it rebuilds from scratch with AMP off
+    and tries again -- which is the one configuration that cannot hit either
+    of the dtype failures, at the cost of T4 throughput.
 
-# Belt and braces on top of that: every norm explicitly fp32. fp16 training
-# overflows in normalisation before it overflows anywhere else.
-import torch.nn as nn
-_n_norm = 0
-for _m in model.modules():
-    if (isinstance(_m, (nn.LayerNorm,))
-            or _m.__class__.__name__.endswith(("RMSNorm", "LayerNorm"))):
-        _m.float()
-        _n_norm += 1
-print(f"[mem] norms forced to fp32: {_n_norm}", flush=True)
-
-
-def report_memory(tag: str) -> None:
-    """Where the 15 GB goes, printed rather than assumed.
-
-    Reading this after run 10 is what ruled out both the memory ceiling and
-    the parameter dtypes, and I still spent two more runs casting parameters.
-    """
-    if not torch.cuda.is_available():
-        return
-    used = torch.cuda.memory_allocated() / 1e9
-    total = torch.cuda.get_device_properties(0).total_memory / 1e9
-    print(f"[mem] {tag}: {used:.2f} / {total:.1f} GB allocated", flush=True)
-
-
-report_memory("after kbit prep")
-_by_dtype = {}
-for _n, _q in model.named_parameters():
-    _by_dtype[str(_q.dtype)] = _by_dtype.get(str(_q.dtype), 0) + _q.numel()
-print("[mem] parameters by dtype: "
-      + ", ".join(f"{k.replace('torch.','')} {v/1e6:.0f}M"
-                  for k, v in sorted(_by_dtype.items())), flush=True)
-
-peft_cfg = LoraConfig(
-    r=16, lora_alpha=32, lora_dropout=0.05, bias="none", task_type="CAUSAL_LM",
-    # Attention *and* MLP projections. Attention-only adapters underfit on a
-    # task this syntactically specific — the model has to learn Manim's
-    # vocabulary, not just where to attend.
-    target_modules=["q_proj", "k_proj", "v_proj", "o_proj",
-                    "gate_proj", "up_proj", "down_proj"],
-)
-
-# Attach the adapters here rather than handing peft_config to SFTTrainer.
-#
-# Run 10 failed the same way run 8 did -- bf16 gradients in the AMP unscale
-# -- *despite* prepare_model_for_kbit_training. The dtype report explained
-# why it was not a contradiction:
-#
-#     [mem] parameters by dtype: float32 1090M, uint8 3263M
-#
-# No bf16 parameter existed at that point. The LoRA adapters did not exist
-# either: SFTTrainer creates them from peft_config, after this report, and
-# PEFT picks their dtype from the base model's config -- which for Qwen2.5
-# says bfloat16. The only parameters carrying gradients were therefore the
-# only ones the report could not see.
-#
-# So: create them here, and cast every trainable parameter to fp32. The
-# GradScaler only ever touches parameters with gradients, and fp32 LoRA
-# weights over a 4-bit base is the standard QLoRA arrangement anyway.
-model = get_peft_model(model, peft_cfg)
-_recast = [n for n, q in model.named_parameters()
-           if q.requires_grad and q.dtype is not torch.float32]
-for _n, _q in model.named_parameters():
-    if _q.requires_grad and _q.dtype is not torch.float32:
-        _q.data = _q.data.to(torch.float32)
-print(f"[mem] recast {len(_recast)} trainable params to fp32", flush=True)
-
-_train_dtypes = {}
-for _n, _q in model.named_parameters():
-    if _q.requires_grad:
-        _train_dtypes[str(_q.dtype)] = _train_dtypes.get(str(_q.dtype), 0) + _q.numel()
-print("[mem] trainable by dtype: "
-      + ", ".join(f"{k.replace('torch.','')} {v/1e6:.1f}M"
-                  for k, v in sorted(_train_dtypes.items())), flush=True)
-assert set(_train_dtypes) == {"torch.float32"}, (
-    f"a trainable parameter is not fp32: {_train_dtypes} — "
-    f"the GradScaler has no bf16 CUDA kernel and training will die at the "
-    f"first gradient clip")
-model.print_trainable_parameters()
-
-
-# ── the bf16 gradient, cornered ────────────────────────────────────────────
-# Five runs died in the GradScaler with
-#   NotImplementedError: _amp_foreach_non_finite_check_and_unscale_cuda
-#                        not implemented for 'BFloat16'
-# and every explanation I had is ruled out by the reports above: no
-# parameter is bf16, all 40.4M trainable ones are fp32, the model is on one
-# pinned GPU, quant_storage is fp16. I also confirmed locally that PyTorch
-# normalises a gradient to its parameter's dtype before storing it, so a
-# backward hook would never even fire.
-#
-# So this stops theorising and looks. on_pre_optimizer_step runs immediately
-# before accelerate unscales, which is the exact frame that raises. It
-# prints what is actually in the optimizer -- and casts anything that is not
-# fp32, which is also the fix if the report turns out to be boring.
-def _normalise_grads(model) -> dict:
-    """Make every gradient match fp32 before anything unscales it.
-
-    torch gives tensors a `grad_dtype` (present on Kaggle's 2.10, confirmed
-    by the [env] line), and when it is set an fp32 parameter legitimately
-    carries a bf16 gradient. torch's AMP unscale has no bf16 CUDA kernel, so
-    five runs died there -- and casting *parameters*, which I did three
-    times, could never reach it.
-    """
-    seen, fixed = {}, 0
-    for prm in model.parameters():
-        if prm.grad is None:
-            continue
-        key = (f"param={str(prm.dtype).replace('torch.', '')} "
-               f"grad={str(prm.grad.dtype).replace('torch.', '')}")
-        seen[key] = seen.get(key, 0) + 1
-        if prm.grad.dtype is not torch.float32:
-            # None means "allow any dtype" -- setting it to torch.float32
-            # does *not* permit the reassignment. Tested; my first attempt
-            # at this fix was exactly that and raised.
-            try:
-                prm.grad_dtype = None
-            except (AttributeError, RuntimeError):
-                pass
-            prm.grad = prm.grad.float()
-            fixed += 1
-    return {"seen": seen, "fixed": fixed}
-
-
-class GradSafeSFTTrainer(SFTTrainer):
-    """SFTTrainer that normalises gradient dtypes in the frame that fails.
-
-    transformers calls, in this order:
-
-        if self.args.max_grad_norm > 0:
-            grad_norm = self._clip_grad_norm(model)          <- raises
-        ...
-        self.callback_handler.on_pre_optimizer_step(...)     <- too late
-
-    My first attempt put the fix in that callback, which is one frame after
-    the exception. The [grad] line simply never printed, which is how I
-    know: an instrument that stays silent is telling you it was not reached.
+    Every attempt rebuilds the model: training mutates it, and a retry that
+    reuses a NaN-poisoned model measures nothing.
     """
 
-    _grad_reported = False
+    # This block follows a published Kaggle T4 QLoRA recipe pinned to these
+    # exact library versions, rather than the variant I arrived at by iterating
+    # against the GPU. Twelve runs of one-change-at-a-time is not a method.
+    bnb = BitsAndBytesConfig(
+        load_in_4bit=True,
+        bnb_4bit_quant_type="nf4",
+        bnb_4bit_compute_dtype=torch.float16,    # a T4 is sm_75: no bf16
+        bnb_4bit_use_double_quant=True,
+        # Storage dtype of the packed weights. Left unset it follows the model
+        # config, which for Qwen2.5 says bfloat16 -- and that propagates into
+        # gradients no amount of parameter casting reaches.
+        bnb_4bit_quant_storage=torch.float16,
+    )
 
-    def _clip_grad_norm(self, model):
-        info = _normalise_grads(model)
-        if not GradSafeSFTTrainer._grad_reported:
-            GradSafeSFTTrainer._grad_reported = True
-            print("[grad] at clip: "
-                  + ", ".join(f"{k} x{v}" for k, v in info["seen"].items())
-                  + (f"  -- cast {info['fixed']} to fp32" if info["fixed"]
-                     else "  -- nothing to cast"), flush=True)
-        return super()._clip_grad_norm(model)
+    tok = AutoTokenizer.from_pretrained(BASE)
+    model = AutoModelForCausalLM.from_pretrained(
+        BASE, quantization_config=bnb,
+        dtype=torch.float16,          # `torch_dtype` still works but warns
+        attn_implementation="sdpa",
+        device_map={"": 0},           # pinned, not "auto" -- see the note above
+    )
+    model.config.use_cache = False
 
+    # Standard QLoRA preparation: upcasts fp16/bf16 params to fp32, casts the
+    # norms, makes the output embedding require grad. use_reentrant=False is the
+    # supported checkpointing path.
+    model = prepare_model_for_kbit_training(
+        model, use_gradient_checkpointing=True,
+        gradient_checkpointing_kwargs={"use_reentrant": False})
 
-# ── 4. train ───────────────────────────────────────────────────────────────
-
-# 3% of total steps, computed rather than declared: trl 1.13 has no
-# warmup_ratio, only warmup_steps.
-# A smoke run exercises every step -- data, model, LoRA, the optimiser step
-# that five runs died on, saving, run.json, and the artefact the workflow
-# collects -- in about eight minutes instead of four hours. Nothing about
-# the resulting adapter is meaningful; the point is that the path works.
-# Set by the workflow rewriting this exact line before `kaggle kernels
-# push`. It cannot be an environment variable: a Kaggle kernel sees none of
-# the runner's environment, which is the same fact that moved the adapter
-# upload out of this file and which I nearly forgot again here.
-SMOKE = False  # workflow-managed
-
-EPOCHS, BATCH, ACCUM = 3, 1, 8
-if SMOKE:
-    ds["train"] = ds["train"].select(range(min(64, len(ds["train"]))))
-    ds["valid"] = ds["valid"].select(range(min(8, len(ds["valid"]))))
-    print(f"[smoke] {len(ds['train'])} train / {len(ds['valid'])} valid rows, "
-          f"20 steps", flush=True)
-
-steps_per_epoch = max(1, len(ds["train"]) // (BATCH * ACCUM))
-total_steps = steps_per_epoch * EPOCHS
-
-cfg = SFTConfig(
-    output_dir=str(WORK / "sft-out"),
-    num_train_epochs=EPOCHS,
-    max_steps=20 if SMOKE else -1,
-    per_device_train_batch_size=BATCH,
-    gradient_accumulation_steps=ACCUM,
-    learning_rate=1e-4,               # LoRA tolerates far more than full FT
-    lr_scheduler_type="cosine",
-    warmup_steps=max(10, int(0.03 * total_steps)),
-    logging_steps=1 if SMOKE else 10,
-    eval_strategy="steps",
-    eval_steps=10 if SMOKE else 60,
-    save_steps=10 if SMOKE else 120,
-    save_total_limit=2,               # Kaggle's output quota is finite
-    max_length=2048,                  # was max_seq_length before trl 1.x
-    packing=False,
-
-    # fp16 with the GradScaler, as the reference recipe does. My previous
-    # run turned AMP off to escape a bf16 unscale error; the real cause was
-    # device_map="auto" and an unset quant_storage, both fixed above. On a
-    # T4 fp16 is most of the speed, so escaping the error by giving it up
-    # was the wrong trade.
-    fp16=True, bf16=False,
-    max_grad_norm=1.0,
-
-    # Paged 8-bit Adam: optimiser state for 40M LoRA params in fp32 would be
-    # ~320 MB of moments, and paging survives a fragmentation spike.
-    optim="paged_adamw_8bit",
-    gradient_checkpointing=True,
-    gradient_checkpointing_kwargs={"use_reentrant": False},
-    dataset_num_proc=2,
-    report_to="none",
-    seed=17,
-
-    # trl 1.13 defaults to chunked_nll, which patches the LM head assuming
-    # `forward` is a bound method. Run 7 proved that fails on this model.
-    # Plain nll costs ~620 MB of logits at seq=2048 over a 152k vocabulary,
-    # and the memory report shows 2.55 of 15.6 GB in use, so it is affordable.
-    loss_type="nll",
-
-    # Loss on the completion only. Training the model to predict prompts it
-    # will always be handed wastes capacity and dilutes the signal.
-    completion_only_loss=True,
-)
+    # Belt and braces on top of that: every norm explicitly fp32. fp16 training
+    # overflows in normalisation before it overflows anywhere else.
+    import torch.nn as nn
+    _n_norm = 0
+    for _m in model.modules():
+        if (isinstance(_m, (nn.LayerNorm,))
+                or _m.__class__.__name__.endswith(("RMSNorm", "LayerNorm"))):
+            _m.float()
+            _n_norm += 1
+    print(f"[mem] norms forced to fp32: {_n_norm}", flush=True)
 
 
-class StabilityGuard(TrainerCallback):
-    """Stop if the loss goes non-finite or runs away.
+    def report_memory(tag: str) -> None:
+        """Where the 15 GB goes, printed rather than assumed.
 
-    fp16 training can diverge quietly and spend the remaining three hours
-    producing an adapter that is worse than no adapter. Better to fail at
-    step 40 than to finish and measure noise.
-    """
-
-    def __init__(self, factor: float = 3.0):
-        self.baseline = None
-        self.factor = factor
-
-    def on_log(self, args, state, control, logs=None, **kwargs):
-        loss = (logs or {}).get("loss")
-        if loss is None:
+        Reading this after run 10 is what ruled out both the memory ceiling and
+        the parameter dtypes, and I still spent two more runs casting parameters.
+        """
+        if not torch.cuda.is_available():
             return
-        if self.baseline is None:
-            self.baseline = loss
-        if loss != loss or loss in (float("inf"), float("-inf")) \
-                or loss > self.factor * self.baseline:
-            print(f"\nSTABILITY GUARD: loss={loss} at step {state.global_step} "
-                  f"(baseline {self.baseline:.4f}). Stopping.", flush=True)
-            control.should_training_stop = True
+        used = torch.cuda.memory_allocated() / 1e9
+        total = torch.cuda.get_device_properties(0).total_memory / 1e9
+        print(f"[mem] {tag}: {used:.2f} / {total:.1f} GB allocated", flush=True)
 
 
-# No peft_config: the model is already a PeftModel, with its adapters
-# created and cast above where their dtype can be checked.
-trainer = GradSafeSFTTrainer(
-    model=model, args=cfg,
-    train_dataset=ds["train"], eval_dataset=ds["valid"], processing_class=tok,
-    callbacks=[StabilityGuard()],
-)
-report_memory("before train")
-trainer.train()
+    report_memory("after kbit prep")
+    _by_dtype = {}
+    for _n, _q in model.named_parameters():
+        _by_dtype[str(_q.dtype)] = _by_dtype.get(str(_q.dtype), 0) + _q.numel()
+    print("[mem] parameters by dtype: "
+          + ", ".join(f"{k.replace('torch.','')} {v/1e6:.0f}M"
+                      for k, v in sorted(_by_dtype.items())), flush=True)
+
+    peft_cfg = LoraConfig(
+        r=16, lora_alpha=32, lora_dropout=0.05, bias="none", task_type="CAUSAL_LM",
+        # Attention *and* MLP projections. Attention-only adapters underfit on a
+        # task this syntactically specific — the model has to learn Manim's
+        # vocabulary, not just where to attend.
+        target_modules=["q_proj", "k_proj", "v_proj", "o_proj",
+                        "gate_proj", "up_proj", "down_proj"],
+    )
+
+    # Attach the adapters here rather than handing peft_config to SFTTrainer.
+    #
+    # Run 10 failed the same way run 8 did -- bf16 gradients in the AMP unscale
+    # -- *despite* prepare_model_for_kbit_training. The dtype report explained
+    # why it was not a contradiction:
+    #
+    #     [mem] parameters by dtype: float32 1090M, uint8 3263M
+    #
+    # No bf16 parameter existed at that point. The LoRA adapters did not exist
+    # either: SFTTrainer creates them from peft_config, after this report, and
+    # PEFT picks their dtype from the base model's config -- which for Qwen2.5
+    # says bfloat16. The only parameters carrying gradients were therefore the
+    # only ones the report could not see.
+    #
+    # So: create them here, and cast every trainable parameter to fp32. The
+    # GradScaler only ever touches parameters with gradients, and fp32 LoRA
+    # weights over a 4-bit base is the standard QLoRA arrangement anyway.
+    model = get_peft_model(model, peft_cfg)
+    _recast = [n for n, q in model.named_parameters()
+               if q.requires_grad and q.dtype is not torch.float32]
+    for _n, _q in model.named_parameters():
+        if _q.requires_grad and _q.dtype is not torch.float32:
+            _q.data = _q.data.to(torch.float32)
+    print(f"[mem] recast {len(_recast)} trainable params to fp32", flush=True)
+
+    _train_dtypes = {}
+    for _n, _q in model.named_parameters():
+        if _q.requires_grad:
+            _train_dtypes[str(_q.dtype)] = _train_dtypes.get(str(_q.dtype), 0) + _q.numel()
+    print("[mem] trainable by dtype: "
+          + ", ".join(f"{k.replace('torch.','')} {v/1e6:.1f}M"
+                      for k, v in sorted(_train_dtypes.items())), flush=True)
+    assert set(_train_dtypes) == {"torch.float32"}, (
+        f"a trainable parameter is not fp32: {_train_dtypes} — "
+        f"the GradScaler has no bf16 CUDA kernel and training will die at the "
+        f"first gradient clip")
+    model.print_trainable_parameters()
+
+
+    # ── the bf16 gradient, cornered ────────────────────────────────────────────
+    # Five runs died in the GradScaler with
+    #   NotImplementedError: _amp_foreach_non_finite_check_and_unscale_cuda
+    #                        not implemented for 'BFloat16'
+    # and every explanation I had is ruled out by the reports above: no
+    # parameter is bf16, all 40.4M trainable ones are fp32, the model is on one
+    # pinned GPU, quant_storage is fp16. I also confirmed locally that PyTorch
+    # normalises a gradient to its parameter's dtype before storing it, so a
+    # backward hook would never even fire.
+    #
+    # So this stops theorising and looks. on_pre_optimizer_step runs immediately
+    # before accelerate unscales, which is the exact frame that raises. It
+    # prints what is actually in the optimizer -- and casts anything that is not
+    # fp32, which is also the fix if the report turns out to be boring.
+    def _normalise_grads(model) -> dict:
+        """Make every gradient match fp32 before anything unscales it.
+
+        torch gives tensors a `grad_dtype` (present on Kaggle's 2.10, confirmed
+        by the [env] line), and when it is set an fp32 parameter legitimately
+        carries a bf16 gradient. torch's AMP unscale has no bf16 CUDA kernel, so
+        five runs died there -- and casting *parameters*, which I did three
+        times, could never reach it.
+        """
+        seen, fixed = {}, 0
+        for prm in model.parameters():
+            if prm.grad is None:
+                continue
+            key = (f"param={str(prm.dtype).replace('torch.', '')} "
+                   f"grad={str(prm.grad.dtype).replace('torch.', '')}")
+            seen[key] = seen.get(key, 0) + 1
+            if prm.grad.dtype is not torch.float32:
+                # None means "allow any dtype" -- setting it to torch.float32
+                # does *not* permit the reassignment. Tested; my first attempt
+                # at this fix was exactly that and raised.
+                try:
+                    prm.grad_dtype = None
+                except (AttributeError, RuntimeError):
+                    pass
+                prm.grad = prm.grad.float()
+                fixed += 1
+        return {"seen": seen, "fixed": fixed}
+
+
+    class GradSafeSFTTrainer(SFTTrainer):
+        """SFTTrainer that normalises gradient dtypes in the frame that fails.
+
+        transformers calls, in this order:
+
+            if self.args.max_grad_norm > 0:
+                grad_norm = self._clip_grad_norm(model)          <- raises
+            ...
+            self.callback_handler.on_pre_optimizer_step(...)     <- too late
+
+        My first attempt put the fix in that callback, which is one frame after
+        the exception. The [grad] line simply never printed, which is how I
+        know: an instrument that stays silent is telling you it was not reached.
+        """
+
+        _grad_reported = False
+
+        def _clip_grad_norm(self, model):
+            info = _normalise_grads(model)
+            if not GradSafeSFTTrainer._grad_reported:
+                GradSafeSFTTrainer._grad_reported = True
+                print("[grad] at clip: "
+                      + ", ".join(f"{k} x{v}" for k, v in info["seen"].items())
+                      + (f"  -- cast {info['fixed']} to fp32" if info["fixed"]
+                         else "  -- nothing to cast"), flush=True)
+            return super()._clip_grad_norm(model)
+
+
+    # ── 4. train ───────────────────────────────────────────────────────────────
+
+    # 3% of total steps, computed rather than declared: trl 1.13 has no
+    # warmup_ratio, only warmup_steps.
+    # A smoke run exercises every step -- data, model, LoRA, the optimiser step
+    # that five runs died on, saving, run.json, and the artefact the workflow
+    # collects -- in about eight minutes instead of four hours. Nothing about
+    # the resulting adapter is meaningful; the point is that the path works.
+    # Set by the workflow rewriting this exact line before `kaggle kernels
+    # push`. It cannot be an environment variable: a Kaggle kernel sees none of
+    # the runner's environment, which is the same fact that moved the adapter
+    # upload out of this file and which I nearly forgot again here.
+
+    EPOCHS, BATCH, ACCUM = 3, 1, 8
+
+    # Local names, not `ds[...] = ds[...].select(...)`. The smoke attempt used
+    # to assign back into the module-level DatasetDict, which meant the full
+    # run that follows it in the same kernel would have trained on the 64
+    # rows the smoke left behind -- and finished, and saved, and reported
+    # success. A four-hour run against 1.5% of the corpus is worse than a
+    # crash, because nothing about the log would say so.
+    train_ds, valid_ds = ds["train"], ds["valid"]
+    if smoke:
+        train_ds = train_ds.select(range(min(64, len(train_ds))))
+        valid_ds = valid_ds.select(range(min(8, len(valid_ds))))
+        print(f"[smoke] {len(train_ds)} train / {len(valid_ds)} valid rows, "
+              f"20 steps", flush=True)
+    print(f"[data] training on {len(train_ds)} rows, "
+          f"evaluating on {len(valid_ds)}", flush=True)
+
+    steps_per_epoch = max(1, len(train_ds) // (BATCH * ACCUM))
+    total_steps = steps_per_epoch * EPOCHS
+
+    cfg = SFTConfig(
+        output_dir=str(WORK / f"sft-out-{tag}"),
+        num_train_epochs=EPOCHS,
+        max_steps=20 if smoke else -1,
+        per_device_train_batch_size=BATCH,
+        per_device_eval_batch_size=1,
+        eval_accumulation_steps=1,
+        gradient_accumulation_steps=ACCUM,
+        learning_rate=1e-4,               # LoRA tolerates far more than full FT
+        lr_scheduler_type="cosine",
+        warmup_steps=max(10, int(0.03 * total_steps)),
+        logging_steps=1 if smoke else 10,
+        eval_strategy="steps",
+        eval_steps=10 if smoke else 60,
+        save_steps=10 if smoke else 120,
+        save_total_limit=2,               # Kaggle's output quota is finite
+        max_length=2048,                  # was max_seq_length before trl 1.x
+        packing=False,
+
+        # fp16 with the GradScaler, as the reference recipe does. My previous
+        # run turned AMP off to escape a bf16 unscale error; the real cause was
+        # device_map="auto" and an unset quant_storage, both fixed above. On a
+        # T4 fp16 is most of the speed, so escaping the error by giving it up
+        # was the wrong trade.
+        fp16=use_fp16, bf16=False,
+        max_grad_norm=1.0,
+
+        # Paged 8-bit Adam: optimiser state for 40M LoRA params in fp32 would be
+        # ~320 MB of moments, and paging survives a fragmentation spike.
+        optim="paged_adamw_8bit",
+        gradient_checkpointing=True,
+        gradient_checkpointing_kwargs={"use_reentrant": False},
+        dataset_num_proc=2,
+        report_to="none",
+        seed=17,
+
+        # trl 1.13 defaults to chunked_nll, which patches the LM head assuming
+        # `forward` is a bound method. Run 7 proved that fails on this model.
+        # Plain nll costs ~620 MB of logits at seq=2048 over a 152k vocabulary,
+        # and the memory report shows 2.55 of 15.6 GB in use, so it is affordable.
+        loss_type="nll",
+
+        # Loss on the completion only. Training the model to predict prompts it
+        # will always be handed wastes capacity and dilutes the signal.
+        completion_only_loss=True,
+    )
+
+
+    class StabilityGuard(TrainerCallback):
+        """Stop if the loss goes non-finite or runs away.
+
+        fp16 training can diverge quietly and spend the remaining three hours
+        producing an adapter that is worse than no adapter. Better to fail at
+        step 40 than to finish and measure noise.
+        """
+
+        def __init__(self, factor: float = 3.0):
+            self.baseline = None
+            self.factor = factor
+            self.failed = False
+
+        def on_log(self, args, state, control, logs=None, **kwargs):
+            loss = (logs or {}).get("loss")
+            if loss is None:
+                return
+            # transformers 5.x formats logged scalars as *strings*:
+            #   {'loss': '0', 'grad_norm': 'nan', 'entropy': 'nan', ...}
+            # so `loss != loss` is False for a NaN and `loss > 3 * baseline`
+            # compares str to float. This guard was a silent no-op while eight
+            # consecutive NaN steps went past it. Coerce, and treat an
+            # uncoercible value as a reason to stop rather than to continue.
+            try:
+                loss = float(loss)
+            except (TypeError, ValueError):
+                print(f"\nSTABILITY GUARD: uninterpretable loss {loss!r} at step "
+                      f"{state.global_step}. Stopping.", flush=True)
+                control.should_training_stop = True
+                self.failed = True
+                return
+            if self.baseline is None:
+                self.baseline = loss
+            if loss != loss or loss in (float("inf"), float("-inf")) \
+                    or loss > self.factor * self.baseline:
+                print(f"\nSTABILITY GUARD: loss={loss} at step {state.global_step} "
+                      f"(baseline {self.baseline:.4f}). Stopping.", flush=True)
+                control.should_training_stop = True
+                self.failed = True
+
+
+    guard = StabilityGuard()
+
+    # No peft_config: the model is already a PeftModel, with its adapters
+    # created and cast above where their dtype can be checked.
+    trainer = GradSafeSFTTrainer(
+        model=model, args=cfg,
+        train_dataset=train_ds, eval_dataset=valid_ds, processing_class=tok,
+        callbacks=[guard],
+    )
+    # The assert above passed -- all 40.4M trainable parameters were fp32 -- and
+    # yet the run reported, from inside the training loop:
+    #
+    #     [grad] at clip: param=bfloat16 grad=bfloat16 x392  -- cast 392 to fp32
+    #
+    # 392 is 28 layers x 7 target modules x {A, B}: every LoRA parameter. So
+    # something between get_peft_model and the first optimiser step casts them,
+    # and bfloat16 appears nowhere in this file -- it is the dtype in Qwen2.5's
+    # own config, which some layer of Trainer/accelerate/peft applies on the way
+    # in. On a T4 (sm_75, no bf16) with fp16 AMP that is incoherent, and the run
+    # went NaN at step 3 and stayed there.
+    #
+    # I am not going to spend another run identifying which library does it.
+    # Checking once before construction was the mistake; check at every boundary
+    # and fix at the last one that still has a fix available.
+    def _force_fp32_trainables(model, where: str) -> None:
+        bad = {}
+        for _n, _q in model.named_parameters():
+            if _q.requires_grad and _q.dtype is not torch.float32:
+                bad[str(_q.dtype)] = bad.get(str(_q.dtype), 0) + 1
+                _q.data = _q.data.to(torch.float32)
+        print(f"[dtype] {where}: recast {sum(bad.values())} trainable params"
+              + (f" from {bad}" if bad else " (none needed)"), flush=True)
+
+
+    _force_fp32_trainables(trainer.model, "after trainer construction")
+
+
+    class Fp32Trainables(TrainerCallback):
+        """Re-assert fp32 trainables once the accelerator has prepared the model.
+
+        on_train_begin fires after Trainer.train() has called
+        accelerator.prepare, which is the last frame before the first forward
+        and therefore the last place a cast can still land ahead of the
+        optimiser reading these tensors.
+        """
+
+        def on_train_begin(self, args, state, control, model=None, **kwargs):
+            if model is not None:
+                _force_fp32_trainables(model, "on_train_begin")
+
+
+    trainer.add_callback(Fp32Trainables())
+    report_memory("before train")
+    trainer.train()
+
+    return {
+        "ok": not guard.failed,
+        "trainer": trainer, "cfg": cfg, "peft_cfg": peft_cfg,
+        "guard": guard, "tok": tok,
+        "train_rows": len(train_ds), "valid_rows": len(valid_ds),
+    }
+
+# ── 4c. the kernel decides, and the decision is on the record ──────────────
+# Thirteen runs of this project ended with me reading a log and pushing a
+# slightly different kernel. That loop is the bottleneck, not the GPU, and
+# it stops here: the plan below is executed by the kernel itself.
+#
+#   1. smoke with AMP on   -- 20 steps, ~15 min, exercises every frame that
+#                             has ever failed: data, 4-bit load, LoRA, the
+#                             clip that five runs died in, eval, saving.
+#   2. if that stayed finite, train for real with AMP on.
+#   3. if it did not, smoke again with AMP off and, if *that* is finite,
+#      train for real without AMP. fp16=False cannot hit the unscale kernel
+#      or the bf16/fp16 mismatch at all; it costs T4 throughput, which is a
+#      price worth paying for an adapter that exists.
+#
+# If step 3's smoke also goes NaN the fault is not AMP, and a four-hour run
+# would only produce an expensive version of the same information -- so the
+# kernel stops and says so.
+import gc
+
+RESULT = None
+ATTEMPTS = []
+
+for _use_fp16 in (True, False):
+    _label = "fp16" if _use_fp16 else "fp32"
+    print(f"\n{'=' * 74}\n[plan] smoke, AMP {'on' if _use_fp16 else 'off'}"
+          f"\n{'=' * 74}", flush=True)
+    _smoke = train_once(use_fp16=_use_fp16, smoke=True, tag=f"smoke-{_label}")
+    ATTEMPTS.append({"phase": "smoke", "amp": _use_fp16, "ok": _smoke["ok"]})
+
+    # The next attempt loads a second 7B model into a 15 GB card, so the
+    # first one has to be genuinely gone -- not merely out of scope. Trainer,
+    # model and callbacks reference each other, so a plain del leaves a cycle
+    # that only gc.collect() breaks, and empty_cache() before that frees
+    # nothing. The number is printed because "I freed it" is a claim and
+    # 0.1 GB is evidence.
+    del _smoke
+    gc.collect()
+    torch.cuda.empty_cache()
+    print(f"[mem] after releasing the smoke model: "
+          f"{torch.cuda.memory_allocated() / 1e9:.2f} GB still allocated",
+          flush=True)
+    if not ATTEMPTS[-1]["ok"]:
+        print(f"[plan] smoke with AMP {'on' if _use_fp16 else 'off'} went "
+              f"non-finite; not spending four hours on it", flush=True)
+        continue
+
+    print(f"\n{'=' * 74}\n[plan] full run, AMP {'on' if _use_fp16 else 'off'}"
+          f"\n{'=' * 74}", flush=True)
+    RESULT = train_once(use_fp16=_use_fp16, smoke=False, tag=f"full-{_label}")
+    ATTEMPTS.append({"phase": "full", "amp": _use_fp16, "ok": RESULT["ok"]})
+    if RESULT["ok"]:
+        break
+    # A smoke run that stayed finite for 20 steps and a full run that did not
+    # is the case worth handling rather than asserting away: divergence
+    # arrives with the learning rate, and the smoke barely leaves warmup. Fall
+    # through to the AMP-off attempt instead of saving the diverged adapter.
+    print("[plan] the full run went non-finite after a clean smoke; "
+          "falling through to AMP off", flush=True)
+    RESULT = None
+    gc.collect()
+    torch.cuda.empty_cache()
+
+print("\n[plan] attempts: " + json.dumps(ATTEMPTS), flush=True)
+if RESULT is None:
+    raise SystemExit(
+        "both smoke runs went non-finite -- AMP is not the cause. The next "
+        "thing to look at is the LoRA parameter dtype report ([dtype] lines "
+        "above), not another training config.")
+
+# The tokenizer comes back out with the rest of it. It used to be a module
+# global; wrapping the build in a function made it a local, and the three
+# places below that save and use it would each have raised NameError --
+# after the four-hour run had already succeeded. scripts/check_kernel.py
+# found that, which is the entire reason that file exists.
+trainer = RESULT["trainer"]
+cfg, peft_cfg, tok = RESULT["cfg"], RESULT["peft_cfg"], RESULT["tok"]
+
 trainer.save_model(str(WORK / "adapter"))
 tok.save_pretrained(str(WORK / "adapter"))
 print("adapter saved to /kaggle/working/adapter")
@@ -461,11 +634,14 @@ mix = hashlib.sha256(
     (DATA / "train.jsonl").read_bytes()).hexdigest()[:16]
 (WORK / "adapter" / "run.json").write_text(json.dumps({
     "base": BASE, "mix_sha256": mix,
-    "train_rows": len(ds["train"]), "valid_rows": len(ds["valid"]),
+    "train_rows": RESULT["train_rows"],
+    "valid_rows": RESULT["valid_rows"],
     "epochs": cfg.num_train_epochs, "lr": cfg.learning_rate,
     "lora_r": peft_cfg.r, "lora_alpha": peft_cfg.lora_alpha,
     "target_modules": peft_cfg.target_modules,
-    "max_seq_length": cfg.max_seq_length,
+    "max_length": cfg.max_length,
+    "amp_fp16": cfg.fp16,
+    "attempts": ATTEMPTS,
 }, indent=2))
 print(json.dumps(json.loads((WORK / "adapter" / "run.json").read_text()), indent=2))
 

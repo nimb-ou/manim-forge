@@ -90,16 +90,16 @@ jobs:
           python scripts/sync_kaggle_dataset.py kaggle/manim-forge-data \
             --ref nimbou/manim-forge-data --expect train.jsonl valid.jsonl
 
-      # A Kaggle kernel sees none of this environment, so the flag has to go
-      # into the file before it is pushed.
-      - name: select smoke or full run
-        run: |
-          if [ "${{ inputs.smoke }}" = "true" ]; then
-            sed -i 's/^SMOKE = False  # workflow-managed/SMOKE = True  # workflow-managed/' kaggle/01_sft.py
-            grep -n '^SMOKE' kaggle/01_sft.py
-            python -c "import ast;ast.parse(open('kaggle/01_sft.py').read())"
-          fi
-          grep -c '^SMOKE = ' kaggle/01_sft.py
+      # There is no smoke flag to rewrite any more. The kernel smokes itself
+      # first and only then commits to the long run, because the flag meant
+      # a human had to read a log and push a second kernel, and that human
+      # was the slowest part of thirteen runs.
+      #
+      # What this step does instead is refuse to push a kernel that will
+      # raise NameError. `ast.parse` passed on both files that cost a GPU
+      # session; check_kernel.py is order-aware and catches them.
+      - name: check the kernel before spending a GPU session on it
+        run: python scripts/check_kernel.py kaggle/01_sft.py
 
       - name: push the kernel
         env:
