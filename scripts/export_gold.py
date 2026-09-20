@@ -10,6 +10,22 @@ from pathlib import Path
 
 GOLD = [
     {
+        "module": "forge/gold/convolution.py",
+        "scene": "Convolution",
+        "prompt": "show convolution as sliding a small window of weights along a "
+                  "signal, and show that the same operation blurs, finds edges, "
+                  "or sharpens depending only on what the three weights are",
+        "tags": ['machine-learning', 'signals'],
+    },
+    {
+        "module": "forge/gold/neuron.py",
+        "scene": "Neuron",
+        "prompt": "show what a single neuron does — weights, a sum, a bias and an "
+                  "activation — and prove that without the activation two stacked "
+                  "layers collapse into one",
+        "tags": ['machine-learning', 'neural-networks'],
+    },
+    {
         "module": "forge/gold/gradient_descent_2d.py",
         "scene": "GradientDescent2D",
         "prompt": "show gradient descent on a stretched valley rather than a "

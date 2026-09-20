@@ -30,6 +30,9 @@ import time
 from pathlib import Path
 
 PY = "./.venv/bin/python"
+#: A scene that cannot render at 480p15 inside this is not a scene
+#: anyone can iterate on, whatever it looks like when it finishes.
+TIMEOUT_S = 1800
 ENV = {**os.environ, "PATH": "/Library/TeX/texbin:" + os.environ.get("PATH", "")}
 
 
@@ -65,11 +68,20 @@ def render(spec) -> dict:
     out = Path("data/checks") / name
     out.mkdir(parents=True, exist_ok=True)
     t0 = time.time()
-    r = subprocess.run(
-        [PY, "-m", "manim", "render", "-ql", "--disable_caching",
-         "--media_dir", str(out), module, name],
-        capture_output=True, text=True, env=ENV, timeout=1800,
-        stdin=subprocess.DEVNULL)
+    try:
+        r = subprocess.run(
+            [PY, "-m", "manim", "render", "-ql", "--disable_caching",
+             "--media_dir", str(out), module, name],
+            capture_output=True, text=True, env=ENV, timeout=TIMEOUT_S,
+            stdin=subprocess.DEVNULL)
+    except subprocess.TimeoutExpired:
+        # A timeout is a result about that scene, not a reason to abandon the
+        # other nineteen. SphereInCube blew the limit once and took the whole
+        # run down with it, losing every verdict already computed.
+        return {"scene": name, "module": module, "ok": False,
+                "render_s": round(time.time() - t0, 1),
+                "declared_s": round(declared, 1), "actual_s": 0.0,
+                "error": f"timed out after {TIMEOUT_S}s -- too expensive to render"}
     took = time.time() - t0
     vids = list(out.rglob(f"{name}.mp4"))
     vids = [v for v in vids if "partial" not in str(v)]

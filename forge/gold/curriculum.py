@@ -192,11 +192,13 @@ CURRICULUM: list[Scene] = [
     Scene("neuron", "One neuron, one decision", "machine-learning", 2,
           "show a single neuron taking a weighted sum and squashing it, and how "
           "changing the weights tilts the boundary it draws",
-          needs=["vectors"], builds_on=["decision_boundary"]),
+          needs=["vectors"], builds_on=["decision_boundary"],
+          done=True),
     Scene("convolution", "A kernel sliding over an image", "machine-learning", 2,
           "show a convolution kernel sliding across a grid of pixels and what "
           "different kernels detect",
-          needs=["grid"]),
+          needs=["grid"],
+          done=True),
     Scene("platonic_solids", "The only five", "shapes-3d", 2,
           "show the five Platonic solids and why there cannot be a sixth",
           needs=["solids"]),
