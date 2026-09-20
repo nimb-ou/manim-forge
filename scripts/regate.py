@@ -30,16 +30,34 @@ def _init(python_bin: str, cache: str, timeout: int) -> None:
 
 def _one(payload):
     rid, code, scene = payload
-    from forge.repair.lint import lint
+    from forge.repair.lint import RULES, lint
     fixed, rules = lint(code)
     if not rules:
-        return {"id": rid, "retried": False}
+        # Record which rules were *available*, not just which fired. A row
+        # that no rule touched is not finished with -- it is finished with
+        # under this rule set, and adding a rule must bring it back.
+        return {"id": rid, "retried": False,
+                "ruleset": _ruleset_id(RULES)}
     # use_cache=False: the cached verdict is for the unlinted source.
     r = _H.render(fixed, scene_class=scene, quality="low", frames=4, use_cache=False)
+    from forge.repair.lint import RULES as _R
     return {"id": rid, "retried": True, "ok": r.ok,
             "error_kind": r.error_kind.value, "lint": rules,
+            "ruleset": _ruleset_id(_R),
             "code": fixed if r.ok else None,
             "duration_s": r.duration_s, "n_frames": len(r.frame_paths)}
+
+
+def _ruleset_id(rules) -> str:
+    """A short stable name for the current lint rule set.
+
+    Stored on every record so a later run can tell whether a row was judged
+    under the same rules. 1,859 rows here were recorded as 'no rule fired'
+    when only three rules existed; the percent-escape rule landed afterwards
+    and none of them had ever been tested against it, while the resume set
+    counted every one as done.
+    """
+    return ",".join(sorted(name for name, _, _ in rules))
 
 
 def main() -> None:
@@ -60,12 +78,26 @@ def main() -> None:
             if r:
                 failed.append((r["id"], r["code"], r.get("scene_class")))
 
+    from forge.repair.lint import RULES
+    current = _ruleset_id(RULES)
+
     out = Path(a.out)
-    done = set()
+    done, stale = set(), 0
     if out.exists():
-        done = {json.loads(l)["id"] for l in out.open()}
+        for l in out.open():
+            try:
+                rec = json.loads(l)
+            except json.JSONDecodeError:
+                continue
+            if rec.get("ruleset") == current:
+                done.add(rec["id"])
+            else:
+                stale += 1
     todo = [f for f in failed if f[0] not in done]
-    print(f"{len(failed)} previously failed | {len(todo)} to retry", flush=True)
+    print(f"{len(failed)} previously failed | {len(done)} settled under the "
+          f"current rules | {stale} judged under older rules | "
+          f"{len(todo)} to retry", flush=True)
+    print(f"ruleset: {current}", flush=True)
 
     n = ok = retried = 0
     t0 = time.monotonic()

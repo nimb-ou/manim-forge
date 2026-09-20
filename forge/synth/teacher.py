@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import os
 import re
+import time
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -99,7 +100,49 @@ PROVIDERS = {
         "key_env": "OPENAI_API_KEY",
         "model": "gpt-4o-mini",
     },
+    # Every entry below speaks the OpenAI chat format, so they cost nothing to
+    # add beyond a base URL. They exist because Gemini's free tier is roughly
+    # 944 calls a day in practice and runs out by mid-afternoon, leaving the
+    # code daemon parked for ten hours. Teacher diversity is also worth having
+    # on its own: a corpus written entirely by one model inherits that model's
+    # habits, including its mistakes.
+    "mistral": {
+        "base_url": "https://api.mistral.ai/v1",
+        "key_env": "MISTRAL_API_KEY",
+        "model": "codestral-latest",
+        "rotation": ["codestral-latest", "mistral-large-latest",
+                     "mistral-medium-latest", "mistral-small-latest"],
+    },
+    "groq": {
+        "base_url": "https://api.groq.com/openai/v1",
+        "key_env": "GROQ_API_KEY",
+        "model": "openai/gpt-oss-120b",
+        "rotation": ["openai/gpt-oss-120b", "qwen/qwen3.8-27b",
+                     "openai/gpt-oss-20b"],
+    },
+    "cerebras": {
+        "base_url": "https://api.cerebras.ai/v1",
+        "key_env": "CEREBRAS_API_KEY",
+        "model": "llama-3.3-70b",
+    },
+    "together": {
+        "base_url": "https://api.together.xyz/v1",
+        "key_env": "TOGETHER_API_KEY",
+        "model": "Qwen/Qwen2.5-Coder-32B-Instruct",
+    },
 }
+
+
+def available_providers() -> list[str]:
+    """Providers whose key is actually present in the environment.
+
+    Used by the daemons to spread work across everything configured rather
+    than hammering one quota to exhaustion and then idling. Reads .env the
+    same way the Teacher does, so it agrees with what a Teacher would find.
+    """
+    _load_dotenv()
+    return [name for name, cfg in PROVIDERS.items()
+            if os.environ.get(cfg["key_env"])]
 
 # The teacher is shown our beat format by example rather than described it —
 # few-shot works far better than specification for an API it has never seen.
@@ -351,14 +394,40 @@ class Teacher:
         user = user_prompt(topic, n_beats, length_hint)
         if self.native:
             return extract_code(self._gemini_rest(user, max_tokens))
-        r = self._client.chat.completions.create(
-            model=self.model,
-            messages=[{"role": "system", "content": SYSTEM},
-                      {"role": "user", "content": user}],
-            temperature=self.temperature,
-            max_tokens=max_tokens,
-        )
-        return extract_code(r.choices[0].message.content)
+        return extract_code(self._openai_chat(SYSTEM, user, max_tokens))
+
+    def _openai_chat(self, system: str, user: str, max_tokens: int,
+                     attempts: int = 4) -> str:
+        """One chat completion, rotating models on a rate limit.
+
+        Same shape as the Gemini path: a 429 is about this minute and this
+        model, never about the request, so it moves to the next model rather
+        than surfacing an error the caller would treat as a failed job.
+        """
+        cfg = PROVIDERS[self.provider]
+        models = [self.model] + [m for m in cfg.get("rotation", [])
+                                 if m != self.model]
+        last = None
+        for attempt in range(attempts):
+            for m in models:
+                try:
+                    r = self._client.chat.completions.create(
+                        model=m,
+                        messages=[{"role": "system", "content": system},
+                                  {"role": "user", "content": user}],
+                        temperature=self.temperature,
+                        max_tokens=max_tokens,
+                    )
+                    self.last_model_used = m
+                    self.last_finish_reason = r.choices[0].finish_reason
+                    return r.choices[0].message.content or ""
+                except Exception as e:  # noqa: BLE001 - provider SDKs vary
+                    last = e
+                    if not any(t in str(e) for t in ("429", "rate", "capacity",
+                                                     "503", "overloaded")):
+                        raise
+            time.sleep(min(2 ** attempt, 20))
+        raise RuntimeError(f"{self.provider}: all models rate-limited ({last})")
 
 
 #: Prompt wrapper for turning a passage of 3Blue1Brown narration into a scene.
