@@ -47,7 +47,8 @@ def main() -> None:
     a = ap.parse_args()
 
     from forge.synth.teacher import Teacher, GEMINI_ROTATION
-    from forge.synth.daemon import ModelPool, build_queue, load_done
+    from forge.synth.teacher import pool_entries, teacher_for
+    from forge.synth.daemon import GATE, ModelPool, build_queue, load_done
     from forge.synth.repair_gen import generate_and_repair
     from forge.harness import RenderHarness
     from forge.ingest.schema import CorpusRow
@@ -61,7 +62,11 @@ def main() -> None:
     print(f"queue: {len(queue)} pending ({len(done)} already done)")
     print(f"models: {len(GEMINI_ROTATION)} in rotation | workers: {a.workers}\n", flush=True)
 
-    pool = ModelPool(list(GEMINI_ROTATION), cooldown_s=a.cooldown)
+    # Every provider with a key, interleaved. Gemini's free tier runs
+    # out by mid-afternoon and stays out for ten hours; Mistral's does
+    # not. One flat rotation means the daemon simply keeps working
+    # instead of parking whenever one provider's day is done.
+    pool = ModelPool(pool_entries(), cooldown_s=a.cooldown)
     harness = RenderHarness(python_bin="./.venv/bin/python",
                             cache_dir="data/frames", timeout=90)
 
@@ -117,7 +122,11 @@ def main() -> None:
                 time.sleep(min(nap, max(5.0, pool.seconds_until_any())))
                 continue
 
-            teacher = Teacher(provider="gemini", model=model)
+            # Wait for this provider's slot before calling it. A 429 from
+            # going too fast is indistinguishable from one from being out
+            # of quota, and the pool would retire a healthy model for it.
+            GATE.wait(model.split(':', 1)[0])
+            teacher = teacher_for(model)
             try:
                 g = generate_and_repair(teacher, harness, task.request,
                                         task.n_beats, task.length_hint,

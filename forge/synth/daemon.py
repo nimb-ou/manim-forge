@@ -24,6 +24,52 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 
+#: Requests per second a provider will tolerate before returning 429.
+#: Mistral's free tier is one per second, flatly; five workers hitting it
+#: concurrently get 429s on four of them and the pool retires models that
+#: were never actually out of quota. Gemini's limit is per model per minute
+#: and the rotation already spreads that, so it needs no gate.
+PROVIDER_RPS = {
+    "mistral": 1.0,
+    "groq": 0.5,
+    "cerebras": 1.0,
+}
+
+
+class RateGate:
+    """Blocks callers so a provider is not called faster than it allows.
+
+    A gate per provider, shared by every worker. The wait happens before the
+    request rather than as a retry afterwards, because a 429 costs a round
+    trip and — worse — is indistinguishable from real quota exhaustion, which
+    is what makes the pool retire a healthy model for ten minutes.
+    """
+
+    def __init__(self) -> None:
+        self._next: dict[str, float] = {}
+        self._lock = threading.Lock()
+
+    def wait(self, provider: str) -> None:
+        rps = PROVIDER_RPS.get(provider)
+        if not rps:
+            return
+        gap = 1.0 / rps
+        while True:
+            with self._lock:
+                now = time.monotonic()
+                ready = self._next.get(provider, 0.0)
+                if now >= ready:
+                    self._next[provider] = now + gap
+                    return
+                sleep_for = ready - now
+            time.sleep(min(sleep_for, 5.0))
+
+
+#: One gate for the process. Both daemons import it rather than each making
+#: their own, since the limit is per key, not per script.
+GATE = RateGate()
+
+
 @dataclass
 class ModelPool:
     """Which models still answer, and when a retired one may be retried.

@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import os
 import re
+import threading
 import time
 from dataclasses import dataclass
 from pathlib import Path
@@ -84,6 +85,9 @@ GEMINI_ROTATION = [
     "gemini-flash-lite-latest",
 ]
 
+#: Guards the module-global SYSTEM swap the Gemini path still needs.
+_SYSTEM_LOCK = threading.Lock()
+
 PROVIDERS = {
     "gemini": {
         "native": True,
@@ -131,6 +135,40 @@ PROVIDERS = {
         "model": "Qwen/Qwen2.5-Coder-32B-Instruct",
     },
 }
+
+
+def pool_entries(providers: list[str] | None = None) -> list[str]:
+    """Every (provider, model) worth rotating through, as "provider:model".
+
+    The daemons hold one flat rotation rather than one per provider, because
+    what they need at any moment is simply *something that will answer*. Split
+    on the first colon: model names contain slashes and dots, never colons.
+
+    Ordering interleaves providers instead of listing each in turn, so a
+    round-robin cursor spreads load across providers rather than draining one
+    quota before touching the next.
+    """
+    names = providers if providers is not None else available_providers()
+    per: list[list[str]] = []
+    for name in names:
+        cfg = PROVIDERS[name]
+        if name == "gemini":
+            models = list(GEMINI_ROTATION)
+        else:
+            models = cfg.get("rotation") or [cfg["model"]]
+        per.append([f"{name}:{m}" for m in models])
+    out: list[str] = []
+    for i in range(max((len(x) for x in per), default=0)):
+        for group in per:
+            if i < len(group):
+                out.append(group[i])
+    return out
+
+
+def teacher_for(entry: str, **kw) -> "Teacher":
+    """Build a Teacher from a "provider:model" pool entry."""
+    provider, _, model = entry.partition(":")
+    return Teacher(provider=provider, model=model, **kw)
 
 
 def available_providers() -> list[str]:
@@ -388,6 +426,36 @@ class Teacher:
         from openai import OpenAI
         client = OpenAI(api_key=key, base_url=cfg["base_url"])
         return sorted(m.id for m in client.models.list())
+
+    def ask(self, user: str, max_tokens: int = 3000,
+            system: str | None = None, attempts: int = 1) -> str:
+        """Raw completion, whichever provider this Teacher is for.
+
+        Exists because callers that are not generating scene code -- the prose
+        tasks, mainly -- were reaching into ``_gemini_rest`` directly, which
+        silently restricted them to one provider. Passing ``system`` here also
+        replaces the module-global swap those callers were doing, which was
+        not thread-safe: two workers wanting different system prompts would
+        race, and the loser would get the other's.
+        """
+        # attempts=1 by default, deliberately. Retrying inside the call takes
+        # minutes on an exhausted Gemini key, and every second of that is a
+        # worker not trying the provider that *would* have answered. The
+        # caller's ModelPool already retires and rotates; that is its job, and
+        # it cannot do it while this method is still sleeping.
+        if self.native:
+            if system is None:
+                return self._gemini_rest(user, max_tokens, attempts=attempts)
+            import forge.synth.teacher as _self
+            with _SYSTEM_LOCK:
+                original = _self.SYSTEM
+                _self.SYSTEM = system
+                try:
+                    return self._gemini_rest(user, max_tokens, attempts=attempts)
+                finally:
+                    _self.SYSTEM = original
+        return self._openai_chat(system or SYSTEM, user, max_tokens,
+                                 attempts=attempts)
 
     def generate(self, topic: str, n_beats: int, length_hint: str,
                  max_tokens: int = 16000) -> str:

@@ -67,7 +67,8 @@ def main() -> None:
 
     from forge.synth.teacher import Teacher, GEMINI_ROTATION, PROVIDERS
     from forge.synth.tasks import SPECS, PROSE_SYSTEM
-    from forge.synth.daemon import ModelPool
+    from forge.synth.teacher import pool_entries, teacher_for
+    from forge.synth.daemon import GATE, ModelPool
     from forge.synth.topics import ALL
 
     verified = [json.loads(l) for p in
@@ -122,7 +123,11 @@ def main() -> None:
     print(f"{len(jobs)} prose tasks | {len(code_samples)} verified scenes to draw on")
     print(f"kinds: {kinds}\n", flush=True)
 
-    pool = ModelPool(list(GEMINI_ROTATION))
+    # Every provider with a key, interleaved. Gemini's free tier runs
+    # out by mid-afternoon and stays out for ten hours; Mistral's does
+    # not. One flat rotation means the daemon simply keeps working
+    # instead of parking whenever one provider's day is done.
+    pool = ModelPool(pool_entries())
     lock = threading.Lock()
     sink = out.open("a")
     t0 = time.monotonic()
@@ -144,15 +149,17 @@ def main() -> None:
         if model is None:
             time.sleep(20)
             return False                    # everything cooling down; keep the job
-        t = Teacher(provider="gemini", model=model)
+        # Wait for this provider's slot before calling it. A 429 from
+        # going too fast is indistinguishable from one from being out
+        # of quota, and the pool would retire a healthy model for it.
+        GATE.wait(model.split(':', 1)[0])
+        t = teacher_for(model)
         try:
-            import forge.synth.teacher as T
-            original = T.SYSTEM
-            T.SYSTEM = PROSE_SYSTEM          # code system prompt corrupts prose
-            try:
-                text = t._gemini_rest(job["prompt"], 3000)
-            finally:
-                T.SYSTEM = original
+            # The code system prompt corrupts prose, so the prose one is passed
+            # per call rather than swapped into the module global -- two
+            # workers wanting different system prompts used to race, and the
+            # loser silently got the other's.
+            text = t.ask(job["prompt"], 3000, system=PROSE_SYSTEM)
         except Exception as e:
             msg = str(e)
             if "429" in msg or "503" in msg or "500" in msg:
