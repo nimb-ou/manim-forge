@@ -126,7 +126,7 @@ print("\nexample:\n", textwrap.shorten(ds["train"][0]["messages"][1]["content"],
 # ── 3. model ───────────────────────────────────────────────────────────────
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
-from peft import LoraConfig
+from peft import LoraConfig, prepare_model_for_kbit_training
 
 BASE = "Qwen/Qwen2.5-Coder-7B-Instruct"
 
@@ -139,9 +139,51 @@ bnb = BitsAndBytesConfig(
 )
 
 tok = AutoTokenizer.from_pretrained(BASE)
+# `dtype`, not `torch_dtype`: transformers 5 still honours the old name but
+# warns, and the warning was sitting in run 7's log while I read past it.
 model = AutoModelForCausalLM.from_pretrained(
-    BASE, quantization_config=bnb, device_map="auto", torch_dtype=torch.float16)
+    BASE, quantization_config=bnb, device_map="auto", dtype=torch.float16)
 model.config.use_cache = False
+
+# The step this recipe was missing. Run 8 reached report_memory("before train")
+trainer.train(), completed
+# a forward and a backward pass, and died in gradient clipping:
+#
+#   NotImplementedError: "_amp_foreach_non_finite_check_and_unscale_cuda"
+#                        not implemented for 'BFloat16'
+#
+# Qwen2.5's config declares bfloat16, fp16=True turns on a GradScaler, and
+# torch's AMP unscale has no bf16 CUDA kernel. prepare_model_for_kbit_training
+# is the standard QLoRA preparation and it resolves exactly this: it upcasts
+# every fp16/bf16 parameter to fp32, casts the layer norms, and makes the
+# output embedding require grad. Skipping it is what left bf16 gradients for
+# the scaler to choke on.
+model = prepare_model_for_kbit_training(model, use_gradient_checkpointing=True)
+
+
+def report_memory(tag: str) -> None:
+    """Where the 15 GB went, before anything has a chance to run out of it.
+
+    Upcasting to fp32 is not free: Qwen's embedding table is 152k x 3584, so
+    it costs ~2.2 GB there that it did not cost in fp16, and the un-chunked
+    cross-entropy this recipe is forced into wants another ~620 MB of logits
+    at seq=2048. If this OOMs, the answer is max_length=1024 -- and this
+    print is what makes that a decision rather than a guess.
+    """
+    if not torch.cuda.is_available():
+        return
+    used = torch.cuda.memory_allocated() / 1e9
+    total = torch.cuda.get_device_properties(0).total_memory / 1e9
+    print(f"[mem] {tag}: {used:.2f} / {total:.1f} GB allocated", flush=True)
+
+
+report_memory("after kbit prep")
+by_dtype = {}
+for _n, _p in model.named_parameters():
+    by_dtype[str(_p.dtype)] = by_dtype.get(str(_p.dtype), 0) + _p.numel()
+print("[mem] parameters by dtype: "
+      + ", ".join(f"{k.replace('torch.','')} {v/1e6:.0f}M"
+                  for k, v in sorted(by_dtype.items())), flush=True)
 
 peft_cfg = LoraConfig(
     r=16, lora_alpha=32, lora_dropout=0.05, bias="none", task_type="CAUSAL_LM",
@@ -204,6 +246,7 @@ trainer = SFTTrainer(
     model=model, args=cfg, peft_config=peft_cfg,
     train_dataset=ds["train"], eval_dataset=ds["valid"], processing_class=tok,
 )
+report_memory("before train")
 trainer.train()
 trainer.save_model(str(WORK / "adapter"))
 tok.save_pretrained(str(WORK / "adapter"))
