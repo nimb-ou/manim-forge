@@ -56,10 +56,19 @@ def scenes() -> list[tuple[str, str, float]]:
     return sorted(found, key=lambda t: t[2])
 
 
-def already_done() -> set[str]:
+def already_done(quality: str, timeout: int) -> set[str]:
+    """Scenes not worth attempting again this pass.
+
+    Rendered ones, obviously -- and also ones that have already exhausted a
+    timeout at least as long as this one. SphereInCube is a 3-D scene with a
+    600-point cloud; at 1080p60 it ran the full 90 minutes and was killed,
+    and the pool then restarted the job every half hour to spend another 90
+    minutes discovering the same thing. Retrying an identical attempt is not
+    resumption, it is a loop.
+    """
     if not LEDGER.exists():
         return set()
-    out = set()
+    out, hopeless = set(), set()
     for line in LEDGER.open():
         try:
             rec = json.loads(line)
@@ -67,7 +76,15 @@ def already_done() -> set[str]:
             continue
         if rec.get("ok"):
             out.add(rec["scene"])
-    return out
+        elif (not rec.get("interrupted")
+              and "timed out" in (rec.get("error") or "")
+              and rec.get("quality") == quality
+              and rec.get("timeout", 0) >= timeout):
+            hopeless.add(rec["scene"])
+    for s in hopeless - out:
+        print(f"  skipping {s}: already timed out at >={timeout}s, "
+              f"{quality} quality — raise --timeout to retry", flush=True)
+    return out | hopeless
 
 
 def main() -> None:
@@ -82,7 +99,7 @@ def main() -> None:
     a = ap.parse_args()
 
     OUT.mkdir(parents=True, exist_ok=True)
-    done = already_done()
+    done = already_done(a.quality, a.timeout)
     todo = [s for s in scenes() if s[1] not in done]
     print(f"{len(scenes())} scenes | {len(done)} already rendered at "
           f"presentation quality | {len(todo)} to go", flush=True)
@@ -127,7 +144,8 @@ def main() -> None:
             ledger.write(json.dumps({
                 "scene": name, "module": module, "quality": a.quality,
                 "ok": ok, "seconds": round(took, 1),
-                "declared_s": declared, "error": err}) + "\n")
+                "declared_s": declared, "timeout": a.timeout,
+                "error": err}) + "\n")
             ledger.flush()
             print(f"    {'ok' if ok else 'FAILED'} in {took/60:.1f} min"
                   + (f"\n    {err}" if err else ""), flush=True)

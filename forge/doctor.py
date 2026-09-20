@@ -313,6 +313,13 @@ def backlog() -> list[Work]:
     showcase = _rows(d / "showcase" / "rendered.jsonl")
     n_gold = sum(1 for c in CURRICULUM if c.done)
     rendered = len({r["scene"] for r in showcase if r.get("ok")})
+    # A scene that has exhausted the clock is not outstanding work until
+    # something about it changes; counting it as such keeps the pool busy
+    # re-proving it.
+    timed_out = {r["scene"] for r in showcase
+                 if not r.get("ok") and not r.get("interrupted")
+                 and "timed out" in (r.get("error") or "")}
+    timed_out -= {r["scene"] for r in showcase if r.get("ok")}
 
     from forge.repair.lint import RULES
     current = ",".join(sorted(n for n, _, _ in RULES))
@@ -322,9 +329,15 @@ def backlog() -> list[Work]:
               if not r.get("ok") and not r.get("is_env_failure")}
 
     return [
-        Work("showcase renders", "cpu", max(0, n_gold - rendered), "scenes",
+        Work("showcase renders", "cpu",
+             max(0, n_gold - rendered - len(timed_out)), "scenes",
              worker=r"render_showcase",
-             command="./.venv/bin/python -u scripts/render_showcase.py --quality high"),
+             command="./.venv/bin/python -u scripts/render_showcase.py "
+                     "--quality high --timeout 14400"),
+        Work("showcase renders that exhausted the clock", "cpu",
+             len(timed_out), "scenes", worker=r"(?!)",
+             blocked_by=f"{sorted(timed_out)} timed out; needs a longer "
+                        f"--timeout or a cheaper scene" if timed_out else ""),
         Work("re-gate under current lint", "cpu", len(failed - settled), "rows",
              worker=r"regate\.py",
              command="./.venv/bin/python scripts/regate.py --workers 4"),
