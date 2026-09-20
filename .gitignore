@@ -23,3 +23,5 @@ archive/
 # generated from whoever owns the Kaggle token
 kaggle/kernel-metadata.json
 kaggle/manim-forge-data/
+data/autopilot/nohup.out
+data/autopilot/autopilot.log
