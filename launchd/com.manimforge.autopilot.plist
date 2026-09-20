@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.manimforge.autopilot</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/Users/nimitjain/Desktop/My Mac/Projects/manim-forge/.venv/bin/python</string>
+    <string>-u</string>
+    <string>/Users/nimitjain/Desktop/My Mac/Projects/manim-forge/scripts/autopilot.py</string>
+  </array>
+  <key>WorkingDirectory</key><string>/Users/nimitjain/Desktop/My Mac/Projects/manim-forge</string>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <!-- LaTeX and ffmpeg: the eval renders every scene it generates, and a
+         launchd job inherits none of a login shell's PATH. -->
+    <key>PATH</key>
+    <string>/Library/TeX/texbin:/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+    <key>PYTHONUNBUFFERED</key><string>1</string>
+    <key>PYTHONPATH</key><string>/Users/nimitjain/Desktop/My Mac/Projects/manim-forge</string>
+  </dict>
+  <key>RunAtLoad</key><true/>
+  <!-- Restart only on a crash. Every outcome the script reaches on purpose
+       exits 0, including "the kernel failed" -- relaunching that every
+       sixty seconds for thirty hours would re-poll a kernel that is not
+       going to un-fail. The script is also sticky: once it has recorded an
+       outcome, a relaunch reads state.json and stops, so a reboot cannot
+       re-run the ninety-minute eval over the top of its own numbers. -->
+  <key>KeepAlive</key>
+  <dict><key>SuccessfulExit</key><false/></dict>
+  <key>ThrottleInterval</key><integer>300</integer>
+  <key>StandardOutPath</key><string>/Users/nimitjain/Desktop/My Mac/Projects/manim-forge/data/autopilot/launchd.log</string>
+  <key>StandardErrorPath</key><string>/Users/nimitjain/Desktop/My Mac/Projects/manim-forge/data/autopilot/launchd.log</string>
+  <!-- The renders share this machine with its owner. -->
+  <key>ProcessType</key><string>Background</string>
+  <key>Nice</key><integer>5</integer>
+</dict>
+</plist>

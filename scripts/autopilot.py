@@ -15,8 +15,16 @@ Resumable on purpose: every phase checks whether its output already exists,
 so a laptop that slept, or a run interrupted at hour six, restarts by being
 run again rather than by starting over.
 
-Exit codes: 0 evaluated, 1 the kernel failed, 2 timed out waiting, 3 the
-adapter arrived but was unusable.
+The exit code answers one question, because launchd is the only thing that
+reads it: *should something restart me?* So every outcome this script
+reaches on purpose -- evaluated, kernel failed, adapter unusable -- exits 0,
+and a non-zero exit means it crashed. Returning "the kernel errored" as a
+failure would have launchd relaunch it every sixty seconds for thirty hours
+to re-poll a kernel that is not going to un-fail, which is the busy-loop
+this project has already built once.
+
+What actually happened is in data/autopilot/state.json under "outcome", and
+in the log. Read those, not $?.
 """
 from __future__ import annotations
 
@@ -170,11 +178,28 @@ def main() -> int:
     ap.add_argument("--max-hours", type=float, default=14.0,
                     help="give up waiting after this long (Kaggle's GPU "
                          "session limit is 12h)")
+    ap.add_argument("--force", action="store_true",
+                    help="run even if a previous run reached an outcome")
     ap.add_argument("--skip-wait", action="store_true",
                     help="the kernel is already done; collect and evaluate")
     args = ap.parse_args()
 
     STATE_DIR.mkdir(parents=True, exist_ok=True)
+
+    # launchd relaunches this on crash and at login, so it has to be safe to
+    # start when the work is already finished. A terminal outcome is sticky:
+    # re-running the ninety-minute eval every time the laptop reboots would
+    # overwrite the numbers with a second measurement of the same adapter.
+    if STATE.exists() and not args.force:
+        try:
+            done = json.loads(STATE.read_text()).get("outcome")
+        except json.JSONDecodeError:
+            done = None
+        if done:
+            say(f"already finished: {done}. Nothing to do — pass --force to "
+                f"run it again anyway.")
+            return 0
+
     say("=" * 70)
     say(f"autopilot: {args.kernel}")
     note(phase="starting", kernel=args.kernel)
@@ -185,38 +210,40 @@ def main() -> int:
             say(f"still not finished after {args.max_hours}h — giving up "
                 f"waiting. The kernel may still be running; re-run with "
                 f"--skip-wait once it is done.")
-            note(phase="timeout")
-            return 2
+            note(phase="timeout", outcome="timeout")
+            return 0
         if status in BAD:
             say(f"kernel finished as {status}")
-            note(phase="failed", kernel_status=status)
+            note(phase="failed", kernel_status=status, outcome="kernel-failed")
             dest = STATE_DIR / "kernel-output"
             dest.mkdir(parents=True, exist_ok=True)
             subprocess.run([str(KAGGLE), "kernels", "output", args.kernel,
                             "-p", str(dest)], capture_output=True, text=True)
             dump_log(dest)
-            return 1
+            say("the log above is the whole diagnosis; nothing here can fix "
+                "the kernel, so this stops rather than re-polling it")
+            return 0
         say("kernel complete")
 
     note(phase="collecting")
     peft_dir = collect(args.kernel, RAW)
     dump_log(RAW)
     if peft_dir is None:
-        note(phase="no-adapter")
-        return 3
+        note(phase="no-adapter", outcome="no-adapter")
+        return 0
 
     note(phase="collected", adapter=str(peft_dir))
     code = evaluate(peft_dir)
     if code != 0:
         say(f"evaluation exited {code} — see the log above. The adapter is "
             f"kept at {peft_dir} either way.")
-        note(phase="eval-failed", exit_code=code)
-        return 3
+        note(phase="eval-failed", eval_exit_code=code, outcome="eval-failed")
+        return 0
 
     say("evaluated. The numbers to read are length ratio and concept "
         "coverage, not render rate: the untuned model already renders 85%, "
         "and docs/PLAN.md predicts the other two will not move.")
-    note(phase="done", exit_code=0)
+    note(phase="done", outcome="evaluated")
     return 0
 
 

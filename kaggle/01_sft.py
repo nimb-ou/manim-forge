@@ -33,6 +33,19 @@ from pathlib import Path
 # read at initialisation.
 os.environ.setdefault("CUDA_VISIBLE_DEVICES", "0")
 
+# Run 15 died in backward at step 3, trying to allocate 1.16 GiB with 208 MB
+# free and **2.39 GB reserved but unallocated** -- the card was not full, it
+# was fragmented. 1.16 GiB is not a mystery either: 2048 tokens x 151936
+# vocab x 4 bytes is the logits tensor, to the byte, which is the one
+# allocation in this model that is both huge and short-lived, and so the one
+# that a fragmented pool cannot find room for.
+#
+# expandable_segments lets the allocator grow a segment instead of hunting
+# for a contiguous block of exactly the right size. torch's own error
+# message recommends it for this signature. Like CUDA_VISIBLE_DEVICES it is
+# read when the allocator initialises, so it has to be set before the import.
+os.environ.setdefault("PYTORCH_ALLOC_CONF", "expandable_segments:True")
+
 # Pinned, not floated. trl renamed max_seq_length -> max_length and dropped
 # warmup_ratio between the version this was written against and the one pip
 # installs today; an unpinned `trl>=0.12` therefore means the training
@@ -164,7 +177,8 @@ from peft import (LoraConfig, get_peft_model,
 BASE = "Qwen/Qwen2.5-Coder-7B-Instruct"
 
 
-def train_once(use_fp16: bool, smoke: bool, tag: str) -> dict:
+def train_once(use_fp16: bool, smoke: bool, tag: str,
+               max_len: int = 2048) -> dict:
     """Build the model and train it once, reporting whether it stayed finite.
 
     This is a function rather than a straight-line script so the kernel can
@@ -410,7 +424,14 @@ def train_once(use_fp16: bool, smoke: bool, tag: str) -> dict:
         eval_steps=10 if smoke else 60,
         save_steps=10 if smoke else 120,
         save_total_limit=2,               # Kaggle's output quota is finite
-        max_length=2048,                  # was max_seq_length before trl 1.x
+        # Not lowered by default, and that is a measurement rather than a
+        # preference: 2048 already truncates 9.1% of the corpus and 1536
+        # truncates 18.4%. Truncation here does not trim padding, it cuts
+        # the *end off a scene* -- so the cheap memory saving teaches the
+        # model to emit code that stops mid-construct, on a task whose gate
+        # is whether the code renders. It is the last lever to pull, not the
+        # first, which is why it is a retry below rather than a constant.
+        max_length=max_len,               # was max_seq_length before trl 1.x
         packing=False,
 
         # fp16 with the GradScaler, as the reference recipe does. My previous
@@ -567,12 +588,51 @@ import gc
 RESULT = None
 ATTEMPTS = []
 
-for _use_fp16 in (True, False):
-    _label = "fp16" if _use_fp16 else "fp32"
-    print(f"\n{'=' * 74}\n[plan] smoke, AMP {'on' if _use_fp16 else 'off'}"
+# Two independent things kill an attempt here, and they want opposite
+# remedies, so the next attempt is chosen from *why* the last one failed
+# rather than read off a fixed list.
+#
+#   non-finite -> turn AMP off. Costs T4 throughput and nothing else.
+#   oom        -> shorten the sequence. Costs corpus, permanently, in the
+#                 adapter, so it is the lever of last resort.
+#
+# Marching down a fixed list would answer an OOM by turning AMP off, which
+# makes activations fp32 and therefore uses *more* memory -- twenty minutes
+# spent proving something already known.
+def next_attempt(use_fp16: bool, max_len: int, why: str):
+    if why == "oom":
+        # 2048 already truncates 9.1% of the corpus and 1536 truncates 18.4%.
+        # Below that the cure is worse than the disease: at 1024 it is 56%,
+        # and an adapter trained on half-scenes is not worth a GPU session.
+        return (use_fp16, 1536) if max_len > 1536 else None
+    if use_fp16:
+        return (False, max_len)
+    return None
+
+
+_attempt, _seen = (True, 2048), set()
+
+while _attempt is not None and _attempt not in _seen:
+    _seen.add(_attempt)
+    _use_fp16, _max_len = _attempt
+    _label = f"{'fp16' if _use_fp16 else 'fp32'}-{_max_len}"
+    print(f"\n{'=' * 74}\n[plan] smoke {_label} "
+          f"(AMP {'on' if _use_fp16 else 'off'}, max_len {_max_len})"
           f"\n{'=' * 74}", flush=True)
-    _smoke = train_once(use_fp16=_use_fp16, smoke=True, tag=f"smoke-{_label}")
-    ATTEMPTS.append({"phase": "smoke", "amp": _use_fp16, "ok": _smoke["ok"]})
+    try:
+        _smoke = train_once(use_fp16=_use_fp16, smoke=True,
+                            tag=f"smoke-{_label}", max_len=_max_len)
+        _ok, _why = _smoke["ok"], None if _smoke["ok"] else "non-finite"
+    except torch.OutOfMemoryError as _exc:
+        # Caught rather than allowed to end the kernel, because an OOM is
+        # information about *this* combination and not about the next one,
+        # and because the whole point of the plan is that a failure costs
+        # fifteen minutes instead of a day.
+        _smoke, _ok, _why = {"ok": False}, False, "oom"
+        print(f"[plan] {_label} smoke ran out of memory: "
+              f"{str(_exc).splitlines()[0]}", flush=True)
+    ATTEMPTS.append({"phase": "smoke", "amp": _use_fp16, "max_len": _max_len,
+                     "ok": _ok, "why": _why})
 
     # The next attempt loads a second 7B model into a 15 GB card, so the
     # first one has to be genuinely gone -- not merely out of scope. Trainer,
@@ -586,23 +646,35 @@ for _use_fp16 in (True, False):
     print(f"[mem] after releasing the smoke model: "
           f"{torch.cuda.memory_allocated() / 1e9:.2f} GB still allocated",
           flush=True)
-    if not ATTEMPTS[-1]["ok"]:
-        print(f"[plan] smoke with AMP {'on' if _use_fp16 else 'off'} went "
-              f"non-finite; not spending four hours on it", flush=True)
+    if not _ok:
+        _attempt = next_attempt(_use_fp16, _max_len, _why)
+        print(f"[plan] smoke {_label} failed ({_why}); not spending four "
+              f"hours on it. Next: {_attempt or 'nothing left to try'}",
+              flush=True)
         continue
 
-    print(f"\n{'=' * 74}\n[plan] full run, AMP {'on' if _use_fp16 else 'off'}"
-          f"\n{'=' * 74}", flush=True)
-    RESULT = train_once(use_fp16=_use_fp16, smoke=False, tag=f"full-{_label}")
-    ATTEMPTS.append({"phase": "full", "amp": _use_fp16, "ok": RESULT["ok"]})
-    if RESULT["ok"]:
+    print(f"\n{'=' * 74}\n[plan] full run, {_label}\n{'=' * 74}", flush=True)
+    try:
+        RESULT = train_once(use_fp16=_use_fp16, smoke=False,
+                            tag=f"full-{_label}", max_len=_max_len)
+        _full_ok, _full_why = RESULT["ok"], None if RESULT["ok"] else "non-finite"
+    except torch.OutOfMemoryError as _exc:
+        # A smoke that fit and a full run that did not is a real case: the
+        # smoke sees 64 rows and the longest scenes are in the other 2946.
+        RESULT, _full_ok, _full_why = None, False, "oom"
+        print(f"[plan] {_label} full run ran out of memory: "
+              f"{str(_exc).splitlines()[0]}", flush=True)
+    ATTEMPTS.append({"phase": "full", "amp": _use_fp16, "max_len": _max_len,
+                     "ok": _full_ok, "why": _full_why})
+    if _full_ok:
         break
-    # A smoke run that stayed finite for 20 steps and a full run that did not
-    # is the case worth handling rather than asserting away: divergence
-    # arrives with the learning rate, and the smoke barely leaves warmup. Fall
-    # through to the AMP-off attempt instead of saving the diverged adapter.
-    print("[plan] the full run went non-finite after a clean smoke; "
-          "falling through to AMP off", flush=True)
+    # A smoke that held for 20 steps and a full run that did not is a real
+    # case rather than a contradiction: divergence arrives with the learning
+    # rate and the smoke barely leaves warmup, and the longest scenes in the
+    # corpus are in the 2946 rows the smoke never sees.
+    _attempt = next_attempt(_use_fp16, _max_len, _full_why)
+    print(f"[plan] the full run failed ({_full_why}) after a clean smoke. "
+          f"Next: {_attempt or 'nothing left to try'}", flush=True)
     RESULT = None
     gc.collect()
     torch.cuda.empty_cache()
@@ -610,9 +682,11 @@ for _use_fp16 in (True, False):
 print("\n[plan] attempts: " + json.dumps(ATTEMPTS), flush=True)
 if RESULT is None:
     raise SystemExit(
-        "both smoke runs went non-finite -- AMP is not the cause. The next "
-        "thing to look at is the LoRA parameter dtype report ([dtype] lines "
-        "above), not another training config.")
+        "every combination in the plan failed; see the 'why' field above. "
+        "All non-finite means AMP is not the cause and the [dtype] lines are "
+        "the next thing to read. All oom at 1536 means the logits tensor is "
+        "not the binding constraint and the next lever is the optimiser or "
+        "chunked loss, not another sequence length.")
 
 # The tokenizer comes back out with the rest of it. It used to be a module
 # global; wrapping the build in a function made it a local, and the three
