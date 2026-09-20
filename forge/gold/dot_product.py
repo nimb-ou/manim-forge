@@ -46,7 +46,7 @@ class DotProduct(ForgeScene):
         return VGroup(*mobs).arrange(DOWN, buff=0.28,
                                      aligned_edge=LEFT).move_to([PANEL_X, y, 0])
 
-    @beat("Draw two vectors from a shared origin", seconds=5,
+    @beat("Draw two vectors from a shared origin", seconds=14,
           narration="Take two vectors sharing an origin. The dot product is "
                     "usually introduced as an arithmetic rule, but it has a "
                     "shape — and once you see the shape, the formula stops "
@@ -71,7 +71,7 @@ class DotProduct(ForgeScene):
         self.play(GrowArrow(self.vec_b), Write(self.lab_b), run_time=0.9)
         self.wait(0.4)
 
-    @beat("Drop a perpendicular to cast a's shadow on b", seconds=6,
+    @beat("Drop a perpendicular to cast a's shadow on b", seconds=11,
           narration="Shine a light straight down onto b, and a casts a shadow. "
                     "That shadow is the part of a that points along b — "
                     "everything perpendicular is discarded.")
@@ -97,7 +97,7 @@ class DotProduct(ForgeScene):
         self.play(FadeIn(self.shadow_label, shift=UP * 0.15), run_time=0.8)
         self.wait(0.5)
 
-    @beat("Shadow length times the length of b is the dot product", seconds=8,
+    @beat("Shadow length times the length of b is the dot product", seconds=14,
           narration="Multiply that shadow by the length of b, and you get the "
                     "dot product. Not by convention — this is what the dot "
                     "product is. The arithmetic rule is a shortcut to this "
@@ -135,7 +135,7 @@ class DotProduct(ForgeScene):
                   run_time=0.6)
         self.eq = eq
 
-    @beat("Past ninety degrees the shadow flips and the sign goes negative", seconds=8,
+    @beat("Past ninety degrees the shadow flips and the sign goes negative", seconds=16,
           narration="Now swing a past ninety degrees. The shadow falls on the "
                     "other side of the origin, its length is negative, and so "
                     "is the dot product. The sign was never arbitrary — it is "
@@ -196,7 +196,7 @@ class DotProduct(ForgeScene):
         self.wait(1.0)
         self.play(FadeOut(note), run_time=0.4)
 
-    @beat("What the sign tells you", seconds=6,
+    @beat("What the sign tells you", seconds=11,
           narration="Positive means the vectors broadly agree. Zero means they "
                     "are perpendicular — no shadow at all. Negative means they "
                     "oppose. One number, and it carries the whole relationship.")

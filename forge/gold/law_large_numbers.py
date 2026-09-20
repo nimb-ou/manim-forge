@@ -30,7 +30,7 @@ class LawOfLargeNumbers(ForgeScene):
 
     run = CoinRun(n=N, p=0.5, seed=7)
 
-    @beat("Flip a coin ten times and look at the proportion", seconds=8,
+    @beat("Flip a coin ten times and look at the proportion", seconds=14,
           narration="Flip a fair coin ten times. You might expect five heads. "
                     "This run gave seven — a proportion of zero point seven, "
                     "nowhere near a half. Small samples are not gently wrong. "
@@ -66,7 +66,7 @@ class LawOfLargeNumbers(ForgeScene):
         self.first, self.note = first, note
         self.wait(1.2)
 
-    @beat("Keep flipping and watch it wander inward", seconds=12,
+    @beat("Keep flipping and watch it wander inward", seconds=16,
           narration="Keep going. It does not march politely to a half — it "
                     "wanders, overshooting and correcting. But the wandering "
                     "gets smaller. Not because later flips correct earlier "
@@ -94,7 +94,7 @@ class LawOfLargeNumbers(ForgeScene):
         self.marks = marks
         self.wait(1.0)
 
-    @beat("The wander shrinks like one over root n", seconds=10,
+    @beat("The wander shrinks like one over root n", seconds=19,
           narration="And the shrinking has a shape. The typical distance from "
                     "a half falls like one over the square root of the number "
                     "of flips — so to halve your error you need four times the "

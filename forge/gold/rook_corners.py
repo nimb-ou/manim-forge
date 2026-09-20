@@ -79,7 +79,7 @@ class RookCorners(ForgeScene):
 
     # -- beats ---------------------------------------------------------------
 
-    @beat("Lay out the board and drop a rook on it", seconds=6,
+    @beat("Lay out the board and drop a rook on it", seconds=11,
           narration="Here is a chessboard, and a rook sitting somewhere on it. "
                     "I want to ask a simple question about this piece: does it "
                     "matter where it stands?")
@@ -99,7 +99,7 @@ class RookCorners(ForgeScene):
         self.play(FadeIn(self.rook, shift=UP * 0.45, rate_func=EASE), run_time=1.0)
         self.wait(0.5)
 
-    @beat("Count the squares it can reach", seconds=6,
+    @beat("Count the squares it can reach", seconds=9,
           narration="A rook moves along its rank and its file. Light those up "
                     "and count them: fourteen squares it can reach from here.")
     def first_count(self):
@@ -113,7 +113,7 @@ class RookCorners(ForgeScene):
                   run_time=1.0)
         self.wait(0.8)
 
-    @beat("Move it twice more - the count refuses to change", seconds=10,
+    @beat("Move it twice more - the count refuses to change", seconds=14,
           narration="Now move it. To the edge — still fourteen. Into the "
                     "corner, the most cramped square on the board — still "
                     "fourteen. Whatever you do to a rook's position, its reach "
@@ -143,7 +143,7 @@ class RookCorners(ForgeScene):
         self.play(FadeIn(self.verdict, shift=UP * 0.15), run_time=0.8)
         self.wait(1.0)
 
-    @beat("So ask the opposite question", seconds=5,
+    @beat("So ask the opposite question", seconds=16,
           narration="So position does not matter — at least not for reach. But "
                     "some squares really are different from others. The four "
                     "corners are the most cramped places on the board. How "
@@ -163,7 +163,7 @@ class RookCorners(ForgeScene):
                               lag_ratio=0.18, run_time=1.5))
         self.wait(0.4)
 
-    @beat("Count both sets and divide", seconds=9,
+    @beat("Count both sets and divide", seconds=15,
           narration="Four corners. Sixty-four squares in total. So the chance "
                     "is four in sixty-four, which is one in sixteen — a little "
                     "over six percent. One question about this board ignores "

@@ -47,7 +47,7 @@ class SphereInCube(ForgeScene, ThreeDScene):
         self.add_fixed_in_frame_mobjects(mob)
         return mob
 
-    @beat("Build a sphere out of points", seconds=9,
+    @beat("Build a sphere out of points", seconds=15,
           narration="Start with a sphere — not a solid surface, but a few "
                     "hundred points scattered evenly across it. Every one of "
                     "them sits at exactly the same distance from the centre. "
@@ -75,7 +75,7 @@ class SphereInCube(ForgeScene, ThreeDScene):
         self.begin_ambient_camera_rotation(rate=0.10)
         self.wait(1.6)
 
-    @beat("Fit the biggest possible cube inside it", seconds=8,
+    @beat("Fit the biggest possible cube inside it", seconds=11,
           narration="Now slide the biggest cube you can inside. It cannot grow "
                     "any further, because its eight corners have reached the "
                     "surface. Those corners are what limit it.")
@@ -97,7 +97,7 @@ class SphereInCube(ForgeScene, ThreeDScene):
         self.play(FadeIn(self.corner_dots), run_time=0.6)
         self.wait(1.4)
 
-    @beat("The space diagonal is the diameter", seconds=8,
+    @beat("The space diagonal is the diameter", seconds=22,
           narration="Here is the key. Draw the line from one corner of the cube "
                     "to the corner furthest away. It passes through the centre, "
                     "and both ends are on the sphere — so that diagonal is the "
@@ -118,7 +118,7 @@ class SphereInCube(ForgeScene, ThreeDScene):
         self.formula = formula
         self.wait(2.0)
 
-    @beat("Compare the two volumes", seconds=10,
+    @beat("Compare the two volumes", seconds=19,
           narration="Now the volumes. The sphere is four thirds pi R cubed — "
                     "about four point one nine. The cube is its edge cubed — "
                     "about one point five four. So the cube, for all that it "
@@ -151,7 +151,7 @@ class SphereInCube(ForgeScene, ThreeDScene):
         self.rows, self.frac = rows, frac
         self.wait(1.6)
 
-    @beat("Fill the sphere with points and count them", seconds=12,
+    @beat("Fill the sphere with points and count them", seconds=19,
           narration="Rather than trust the formulas, count. Scatter eight "
                     "hundred points evenly through the whole sphere, then ask "
                     "each one whether it landed inside the cube or outside it. "
@@ -204,7 +204,7 @@ class SphereInCube(ForgeScene, ThreeDScene):
         self.tally = tally
         self.wait(1.4)
 
-    @beat("The counted answer and the exact one", seconds=10,
+    @beat("The counted answer and the exact one", seconds=24,
           narration="Counting gives the cube a little over thirty-seven percent "
                     "of the sphere. The formulas give thirty-six point eight. "
                     "They agree, because they are measuring the same thing — "

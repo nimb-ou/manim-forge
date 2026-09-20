@@ -54,7 +54,7 @@ class SpringTrace(ForgeScene):
     def mass_pos(self, x: float) -> np.ndarray:
         return np.array([REST_X + x * SCALE, 1.3, 0.0])
 
-    @beat("Pull a mass on a spring and let go", seconds=7,
+    @beat("Pull a mass on a spring and let go", seconds=13,
           narration="A mass on a spring. Pull it aside and the spring pulls "
                     "back — harder the further you stretch it. Let go, and it "
                     "does not simply return to the middle. It overshoots.")
@@ -79,7 +79,7 @@ class SpringTrace(ForgeScene):
         self.play(Indicate(self.block, color=MASS_C, scale_factor=1.15), run_time=0.9)
         self.wait(0.8)
 
-    @beat("Let it run, and trace its position against time", seconds=11,
+    @beat("Let it run, and trace its position against time", seconds=14,
           narration="Now record where it is, moment by moment, and lay those "
                     "positions out along a time axis. A shape appears — and it "
                     "is not something we drew. It is what the motion leaves "
@@ -113,7 +113,7 @@ class SpringTrace(ForgeScene):
         self.curve, self.traj = curve, traj
         self.wait(0.8)
 
-    @beat("The shape is exactly a cosine", seconds=8,
+    @beat("The shape is exactly a cosine", seconds=15,
           narration="That shape is a cosine wave. Not approximately — the "
                     "motion, solved step by step from the force alone, agrees "
                     "with the cosine to five decimal places. The wave was "
@@ -136,7 +136,7 @@ class SpringTrace(ForgeScene):
         self.wait(1.4)
         self.play(FadeOut(overlay), FadeOut(label), run_time=0.6)
 
-    @beat("Energy sloshes between two forms and the total holds still", seconds=9,
+    @beat("Energy sloshes between two forms and the total holds still", seconds=14,
           narration="And watch the energy. At the edges it is all stored in "
                     "the stretched spring. Through the middle it is all motion. "
                     "Each one rises exactly as the other falls, and their sum "
@@ -173,7 +173,7 @@ class SpringTrace(ForgeScene):
         self.wait(1.6)
         self.play(*[FadeOut(m) for m in (ke, pe, tot, key)], run_time=0.6)
 
-    @beat("Heavier is slower, stiffer is faster", seconds=8,
+    @beat("Heavier is slower, stiffer is faster", seconds=19,
           narration="Change the spring and the wave changes with it. Four times "
                     "the mass takes twice as long to swing. Four times the "
                     "stiffness takes half. The period depends on the square "

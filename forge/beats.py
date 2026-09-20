@@ -126,11 +126,51 @@ class ForgeScene(Scene):
     fraction of the tokens that re-sending every previous beat's source would.
     """
 
+    #: Words a narrator says per second. 3blue1brown sits near here; faster
+    #: than this and a listener stops following the picture to keep up.
+    NARRATION_WPS = 2.6
+
+    #: Held frame after a beat's last animation, when the beat finished early.
+    #:
+    #: Not silence -- the narration is still running over it, and holding a
+    #: diagram while explaining it is what an explainer does. The cap exists
+    #: so a mis-declared beat cannot stall the video outright, and a beat that
+    #: hits it is under-animated rather than over-declared: it has more to say
+    #: than to show, and wants another visual step, not a longer pause.
+    MAX_PAD_S = 12.0
+
     def construct(self) -> None:
         for fn in beats_of(type(self)):
             spec = fn._forge_beat
             self.next_section(spec.name)
+            started = self.renderer.time
             fn(self)
+            self._hold_for(spec, self.renderer.time - started)
+
+    def _hold_for(self, spec: "BeatSpec", elapsed: float) -> None:
+        """Pad a beat out to the duration it declared.
+
+        ``seconds=`` used to be documentation: a number in the decorator that
+        nothing enforced, so the animation ran at whatever speed its run_times
+        happened to sum to. That is how every scene in the corpus ended up
+        with narration too long to say over it -- the script was written for
+        the declared length and the picture ran short.
+
+        The beat now waits out the difference, so the declared length is the
+        real one and the narration has room. A beat that overruns its
+        declaration is left alone; shortening it would cut an animation.
+        """
+        target = spec.seconds
+        if not target:
+            return
+        # Whichever is longer: what the beat declared, or what its own
+        # narration needs at a speakable pace.
+        words = len((spec.narration or "").split())
+        if words:
+            target = max(target, words / self.NARRATION_WPS)
+        pad = min(target - elapsed, self.MAX_PAD_S)
+        if pad > 0.05:
+            self.wait(pad)
 
     # -- stage state ---------------------------------------------------------
 

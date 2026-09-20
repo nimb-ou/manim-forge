@@ -13,6 +13,7 @@ sequence of events rather than reconstruct a plausible one.
 from __future__ import annotations
 
 import heapq
+import math
 from collections import deque
 from dataclasses import dataclass, field
 
@@ -108,3 +109,174 @@ def verify_bfs_is_shortest_unweighted(g: Graph, start: str) -> bool:
     unit = Graph(g.nodes, [(a, b, 1.0) for a, b, _ in g.edges])
     dist, _ = dijkstra(unit, start)
     return all(s.depth == dist[s.node] for s in bfs(unit, start))
+
+
+# --------------------------------------------------------------- colouring
+
+
+def greedy_colouring(g: Graph, order: list[str] | None = None) -> dict[str, int]:
+    """Colour each node with the lowest colour none of its neighbours uses.
+
+    Greedy, and therefore *not* guaranteed optimal -- which is the point of
+    the scene that uses it. The result depends on the order nodes are taken
+    in, and the caller may supply one to show that dependence.
+    """
+    colours: dict[str, int] = {}
+    for n in (order or sorted(g.nodes)):
+        used = {colours[m] for m, _ in g.neighbours(n) if m in colours}
+        c = 0
+        while c in used:
+            c += 1
+        colours[n] = c
+    return colours
+
+
+def verify_colouring(g: Graph, colours: dict[str, int]) -> bool:
+    """No edge may join two nodes of the same colour."""
+    return all(colours[a] != colours[b] for a, b, _ in g.edges if a != b)
+
+
+def chromatic_number(g: Graph) -> int:
+    """The true minimum number of colours, by exhaustive search.
+
+    Exponential, and deliberately so: this is the honest answer against which
+    the greedy result is compared, and a scene claiming greedy "sometimes uses
+    one more than necessary" needs the necessary number to actually be known.
+    Only safe for the small graphs these scenes draw.
+    """
+    nodes = sorted(g.nodes)
+    n = len(nodes)
+    for k in range(1, n + 1):
+        assignment: dict[str, int] = {}
+
+        def extend(i: int) -> bool:
+            if i == n:
+                return True
+            node = nodes[i]
+            for c in range(k):
+                if all(assignment.get(m) != c for m, _ in g.neighbours(node)):
+                    assignment[node] = c
+                    if extend(i + 1):
+                        return True
+                    del assignment[node]
+            return False
+
+        if extend(0):
+            return k
+    return n
+
+
+# ------------------------------------------------------------ euler paths
+
+
+def odd_degree_nodes(g: Graph) -> list[str]:
+    """Nodes touched by an odd number of edge-ends.
+
+    Degree counts multiplicities, because two bridges between the same pair of
+    banks are two ways across and Konigsberg has exactly that.
+    """
+    return sorted(n for n in g.nodes if g.degree(n) % 2 == 1)
+
+
+def euler_path_exists(g: Graph) -> bool:
+    """A walk using every edge exactly once exists iff 0 or 2 nodes are odd.
+
+    Every visit to a node uses one edge in and one out, so an odd node can
+    only be an end of the walk -- and a walk has two ends.
+    """
+    return len(odd_degree_nodes(g)) in (0, 2)
+
+
+#: The seven bridges, as Euler posed them in 1736. N and S are the banks,
+#: A is the island, B the far quarter. Four of the seven are doubled pairs.
+KONIGSBERG = Graph(
+    nodes={"N": (0.0, 1.8), "A": (-1.6, 0.0), "B": (1.9, 0.0), "S": (0.0, -1.8)},
+    edges=[("N", "A", 1.0), ("N", "A", 1.0),      # two northern bridges
+           ("S", "A", 1.0), ("S", "A", 1.0),      # two southern bridges
+           ("N", "B", 1.0), ("S", "B", 1.0),      # one each to the far quarter
+           ("A", "B", 1.0)],                      # the island to the quarter
+)
+
+
+def verify_konigsberg_has_no_walk() -> bool:
+    """All four land masses are odd, so no such walk exists. Checked, not told."""
+    return (len(odd_degree_nodes(KONIGSBERG)) == 4
+            and not euler_path_exists(KONIGSBERG))
+
+
+# --------------------------------------------------------- dijkstra, traced
+
+
+@dataclass
+class Relax:
+    """One edge examined by Dijkstra, and what it changed."""
+    frm: str
+    to: str
+    weight: float
+    old: float
+    new: float
+    improved: bool
+
+
+@dataclass
+class Settle:
+    """One node fixed for good, with the relaxations that followed."""
+    node: str
+    dist: float
+    relaxations: list[Relax]
+
+
+def dijkstra_steps(g: Graph, start: str) -> list[Settle]:
+    """Dijkstra with its working shown.
+
+    The plain version returns distances; an animation needs the order nodes
+    were settled in and which edges failed to improve anything, because the
+    edges that change nothing are what make the algorithm look greedy and
+    still be correct.
+    """
+    dist = {n: math.inf for n in g.nodes}
+    dist[start] = 0.0
+    done: set[str] = set()
+    out: list[Settle] = []
+    heap = [(0.0, start)]
+    while heap:
+        d, n = heapq.heappop(heap)
+        if n in done:
+            continue
+        done.add(n)
+        relaxations: list[Relax] = []
+        for m, w in g.neighbours(n):
+            if m in done:
+                continue
+            old, new = dist[m], d + w
+            better = new < old
+            relaxations.append(Relax(n, m, w, old, new, better))
+            if better:
+                dist[m] = new
+                heapq.heappush(heap, (new, m))
+        out.append(Settle(n, d, relaxations))
+    return out
+
+
+def verify_dijkstra_matches_bruteforce(g: Graph, start: str,
+                                       tol: float = 1e-9) -> bool:
+    """Dijkstra's answer must equal the cheapest path found by enumeration.
+
+    Greedy algorithms are exactly the kind that look right while being wrong
+    on a case the drawing does not happen to contain, so the scene's claim
+    that the greedy choice is safe is checked against every simple path.
+    """
+    best: dict[str, float] = {start: 0.0}
+
+    def walk(node: str, cost: float, seen: frozenset[str]) -> None:
+        for m, w in g.neighbours(node):
+            if m in seen:
+                continue
+            c = cost + w
+            if c < best.get(m, math.inf):
+                best[m] = c
+            walk(m, c, seen | {m})
+
+    walk(start, 0.0, frozenset({start}))
+    dist, _ = dijkstra(g, start)
+    return all(abs(dist[n] - best.get(n, math.inf)) < tol for n in g.nodes)

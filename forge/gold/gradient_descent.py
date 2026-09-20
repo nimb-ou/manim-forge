@@ -54,7 +54,7 @@ class LearningRate(ForgeScene):
 
     # -- beats ---------------------------------------------------------------
 
-    @beat("Draw the loss curve and mark its true minimum", seconds=5,
+    @beat("Draw the loss curve and mark its true minimum", seconds=14,
           narration="Here is a loss curve. Every point along it is one setting of our parameter, and the height is how badly the model does there. Somewhere down in that valley is the best setting.")
     def setup_curve(self):
         self.axes = self.make_axes()
@@ -75,7 +75,7 @@ class LearningRate(ForgeScene):
         self.play(FadeIn(self.min_dot, scale=0.5), Write(self.min_label), run_time=0.8)
         self.wait(0.3)
 
-    @beat("Place a ball on the slope and show the gradient", seconds=5,
+    @beat("Place a ball on the slope and show the gradient", seconds=10,
           narration="Start anywhere. The slope under your feet tells you which way is downhill — and how steep it is tells you how far to step.")
     def show_gradient(self):
         d = self.run_descent(lr=0.55)
@@ -96,7 +96,7 @@ class LearningRate(ForgeScene):
         self.wait(0.6)
         self.play(FadeOut(tangent), FadeOut(self.rule), run_time=0.5)
 
-    @beat("A good learning rate walks the ball to the minimum", seconds=8,
+    @beat("A good learning rate walks the ball to the minimum", seconds=10,
           narration="Step a fraction of that slope, again and again. That fraction is the learning rate. Get it right and you walk straight into the valley.")
     def good_rate(self):
         d = self.run_descent(lr=0.55)
@@ -118,7 +118,7 @@ class LearningRate(ForgeScene):
         self.wait(0.7)
         self.play(FadeOut(trail), FadeOut(label), FadeOut(verdict), run_time=0.6)
 
-    @beat("Too large a step and it climbs out of the valley", seconds=8,
+    @beat("Too large a step and it climbs out of the valley", seconds=12,
           narration="But make that fraction too big and each step overshoots the bottom, landing further up the other side. The steps grow, and you climb out of the valley entirely.")
     def too_large(self):
         d = self.run_descent(lr=3.5)
@@ -146,7 +146,7 @@ class LearningRate(ForgeScene):
         self.play(FadeOut(arrow), FadeOut(gone), FadeOut(label), FadeOut(verdict),
                   self.ball.animate.set_opacity(1.0), run_time=0.6)
 
-    @beat("Too small and it never arrives", seconds=7,
+    @beat("Too small and it never arrives", seconds=10,
           narration="Too small, and every step is timid. You are heading the right way, but you will run out of patience long before you arrive.")
     def too_small(self):
         d = self.run_descent(lr=0.15)
@@ -168,7 +168,7 @@ class LearningRate(ForgeScene):
         self.wait(0.8)
         self.play(FadeOut(trail), FadeOut(label), FadeOut(verdict), run_time=0.6)
 
-    @beat("The three rates side by side", seconds=6,
+    @beat("The three rates side by side", seconds=12,
           narration="Too small crawls. Too large diverges. The whole art is finding the step that is just big enough to make progress, and just small enough to stay in the valley.")
     def compare(self):
         rows = VGroup()

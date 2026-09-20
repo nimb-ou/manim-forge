@@ -25,7 +25,7 @@ BASE, HEIGHT, SKEW = 6, 3, 2      # parallelogram, in grid squares
 
 class AreaRearranged(ForgeScene):
 
-    @beat("A parallelogram, and the awkward question of its area", seconds=7,
+    @beat("A parallelogram, and the awkward question of its area", seconds=13,
           narration="A parallelogram. How much area is inside it? The formula "
                     "is easy enough to look up, but where does it come from? "
                     "It leans, so we cannot simply count rows of squares.")
@@ -44,7 +44,7 @@ class AreaRearranged(ForgeScene):
         self.play(Create(self.para), run_time=1.5)
         self.wait(1.0)
 
-    @beat("Cut the leaning triangle off one end", seconds=8,
+    @beat("Cut the leaning triangle off one end", seconds=14,
           narration="So cut. Drop a vertical line from the top-left corner, and "
                     "the parallelogram splits into a triangle and a "
                     "quadrilateral. Nothing has been added and nothing removed "
@@ -75,7 +75,7 @@ class AreaRearranged(ForgeScene):
         self.play(self.tri.animate.set_fill(opacity=0.6), run_time=0.5)
         self.wait(0.7)
 
-    @beat("Slide it round to the other side", seconds=9,
+    @beat("Slide it round to the other side", seconds=12,
           narration="Now slide that triangle across to the far end. It fits "
                     "exactly, because the two slanted edges were parallel and "
                     "the same length. And what is left is a rectangle.")
@@ -88,7 +88,7 @@ class AreaRearranged(ForgeScene):
                   run_time=0.9)
         self.wait(0.9)
 
-    @beat("A rectangle we can measure by counting", seconds=10,
+    @beat("A rectangle we can measure by counting", seconds=18,
           narration="And a rectangle we can measure by counting: six squares "
                     "across, three up, eighteen in total. That number belonged "
                     "to the parallelogram all along — base times height, not "

@@ -34,7 +34,7 @@ class AngleSum(ForgeScene):
                 (a - b).angle_to(c - b),
                 (a - c).angle_to(b - c)]
 
-    @beat("Any triangle at all", seconds=6,
+    @beat("Any triangle at all", seconds=10,
           narration="Any triangle. Not a special one — this has no equal sides "
                     "and no right angle. It has three corners, and each corner "
                     "has an angle.")
@@ -60,7 +60,7 @@ class AngleSum(ForgeScene):
                               lag_ratio=0.25, run_time=1.5))
         self.wait(0.7)
 
-    @beat("Measure them", seconds=7,
+    @beat("Measure them", seconds=13,
           narration="Measure each one and add them up. One hundred and eighty "
                     "degrees — a straight line. Try it with a different "
                     "triangle, any triangle at all, and you get the same "
@@ -91,7 +91,7 @@ class AngleSum(ForgeScene):
         self.total = VGroup(rows, plus, total)
         self.wait(0.8)
 
-    @beat("Tear the corners off and fit them together", seconds=11,
+    @beat("Tear the corners off and fit them together", seconds=20,
           narration="But why? Tear the three corners off and bring them "
                     "together at a point. They fit, with no gap and no overlap, "
                     "along a single straight edge. The angles were always going "

@@ -46,7 +46,7 @@ class CoordinatePlane(ForgeScene):
         g.move_to(RIGHT * 3.9).align_to(UP * 2.1, UP)
         return g
 
-    @beat("Two lines, crossing at zero", seconds=8,
+    @beat("Two lines, crossing at zero", seconds=15,
           narration="Take a number line, and stand a second one up through its "
                     "zero. That crossing point is the origin. Everything on "
                     "this page is now described by how far right you go, and "
@@ -83,7 +83,7 @@ class CoordinatePlane(ForgeScene):
         self.axis_labels = VGroup(x_lab, y_lab, origin, o_lab)
         self.wait(0.8)
 
-    @beat("A point needs two numbers, in that order", seconds=11,
+    @beat("A point needs two numbers, in that order", seconds=19,
           narration="Here is a point. To say where it is, walk three to the "
                     "right, then one up: three, one. Now swap them — one "
                     "right, three up — and you land somewhere else entirely. "
@@ -139,7 +139,7 @@ class CoordinatePlane(ForgeScene):
                     (dot_p, dot_q, gx, gy, lab_p, lab_q, steps, swap)],
                   run_time=0.7)
 
-    @beat("Distance falls out of a right triangle", seconds=11,
+    @beat("Distance falls out of a right triangle", seconds=18,
           narration="Two points, and the gap between them. Going across is "
                     "three; going up is four. Those two legs and the straight "
                     "line between the points form a right triangle — so the "
@@ -189,7 +189,7 @@ class CoordinatePlane(ForgeScene):
                     (da, db, la, lb, run, rise, hyp, run_l, rise_l, calc)],
                   run_time=0.7)
 
-    @beat("A rule picks out a shape", seconds=13,
+    @beat("A rule picks out a shape", seconds=26,
           narration="Now turn it around. Instead of naming one point, name a "
                     "rule: every point exactly five from the origin. Twelve of "
                     "them land on grid corners — three four, four three, five "

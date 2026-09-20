@@ -26,7 +26,7 @@ class FunctionMachine(ForgeScene):
 
     samples = [-2.0, -1.0, 0.0, 1.0, 2.0]
 
-    @beat("A machine that takes a number and returns one", seconds=8,
+    @beat("A machine that takes a number and returns one", seconds=13,
           narration="Think of a function as a machine. A number goes in, the "
                     "machine does something to it, and one number comes out. "
                     "The rule here is: square it, halve it, subtract one.")
@@ -48,7 +48,7 @@ class FunctionMachine(ForgeScene):
         self.play(GrowArrow(self.in_arrow), GrowArrow(self.out_arrow), run_time=0.9)
         self.wait(0.8)
 
-    @beat("Feed it numbers and watch what comes out", seconds=10,
+    @beat("Feed it numbers and watch what comes out", seconds=15,
           narration="Put in minus two, and four comes back — no, one. Put in "
                     "zero and you get minus one. Each input produces exactly "
                     "one output. That is the whole requirement: never two "
@@ -73,7 +73,7 @@ class FunctionMachine(ForgeScene):
                               lag_ratio=0.15, run_time=1.2))
         self.wait(0.7)
 
-    @beat("Plot each pair as a point", seconds=9,
+    @beat("Plot each pair as a point", seconds=13,
           narration="Now plot each pair. The input along the bottom, the output "
                     "up the side. Five inputs, five points. Nothing new has "
                     "happened — this is the same list, drawn instead of "
@@ -93,7 +93,7 @@ class FunctionMachine(ForgeScene):
         self.dots = dots
         self.wait(0.8)
 
-    @beat("Fill in every input between and a curve appears", seconds=9,
+    @beat("Fill in every input between and a curve appears", seconds=15,
           narration="Feed it every number in between, not just five, and the "
                     "points merge into a curve. The curve is not a different "
                     "object from the machine. It is a record of every answer "

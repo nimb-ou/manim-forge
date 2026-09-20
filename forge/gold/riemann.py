@@ -71,7 +71,7 @@ class RiemannConvergence(ForgeScene):
 
     # -- beats ---------------------------------------------------------------
 
-    @beat("Draw the curve and shade the area we want", seconds=6,
+    @beat("Draw the curve and shade the area we want", seconds=14,
           narration="Here is a curve, and the area beneath it between zero and "
                     "four. That area is a single number — but there is no "
                     "obvious way to measure it, because the top edge keeps "
@@ -88,7 +88,7 @@ class RiemannConvergence(ForgeScene):
         self.play(FadeIn(self.area), run_time=1.1)
         self.wait(0.6)
 
-    @beat("Approximate it crudely with two rectangles", seconds=7,
+    @beat("Approximate it crudely with two rectangles", seconds=14,
           narration="So approximate it with something we can measure. Two "
                     "rectangles, each as tall as the curve at its left edge. "
                     "It is clearly too small — every rectangle falls short "
@@ -125,7 +125,7 @@ class RiemannConvergence(ForgeScene):
             self.wait(0.5)
         self.wait(0.6)
 
-    @beat("Name the limit it is climbing towards", seconds=7,
+    @beat("Name the limit it is climbing towards", seconds=12,
           narration="That something is the integral: the exact area, equal to "
                     "eight. The rectangles never reach it with any finite "
                     "count — but they get as close as you care to ask.")
@@ -141,7 +141,7 @@ class RiemannConvergence(ForgeScene):
         self.target = target
         self.wait(1.0)
 
-    @beat("Sampling the middle instead converges far faster", seconds=10,
+    @beat("Sampling the middle instead converges far faster", seconds=20,
           narration="One change makes this dramatically better. Take each "
                     "rectangle's height from the middle of its interval rather "
                     "than the left edge. The overshoot on one side now cancels "

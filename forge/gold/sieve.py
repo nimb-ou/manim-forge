@@ -34,7 +34,7 @@ class Sieve(ForgeScene):
         return np.array([GRID_X + (c - (COLS - 1) / 2) * CELL,
                          2.4 - r * CELL, 0.0])
 
-    @beat("Lay out every number up to a hundred", seconds=6,
+    @beat("Lay out every number up to a hundred", seconds=15,
           narration="Every whole number from one to a hundred. Somewhere in "
                     "here are the primes — the numbers with no factors but "
                     "themselves and one. Rather than testing each one, we can "
@@ -59,7 +59,7 @@ class Sieve(ForgeScene):
                   self.labels[1].animate.set_opacity(0.25), run_time=0.6)
         self.wait(0.5)
 
-    @beat("Strike every multiple of two, then three, five and seven", seconds=16,
+    @beat("Strike every multiple of two, then three, five and seven", seconds=18,
           narration="Take the first survivor, two. Every multiple of two after "
                     "it is composite, so cross them all out. Then the next "
                     "survivor, three. Then five, then seven. Notice we start "
@@ -91,7 +91,7 @@ class Sieve(ForgeScene):
             self.play(FadeOut(head), run_time=0.3)
         self.wait(0.6)
 
-    @beat("What survives is exactly the primes", seconds=9,
+    @beat("What survives is exactly the primes", seconds=12,
           narration="Four passes, and everything composite is gone. What is "
                     "left are the twenty-five primes below a hundred — not "
                     "tested one by one, but whatever the sieve failed to "

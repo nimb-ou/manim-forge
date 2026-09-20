@@ -24,7 +24,7 @@ DIM = GREY_B
 
 class NumberLine1D(ForgeScene):
 
-    @beat("Draw the line and mark the whole numbers", seconds=7,
+    @beat("Draw the line and mark the whole numbers", seconds=17,
           narration="A line, and a point on it we agree to call zero. Step the "
                     "same distance right, again and again, and you have the "
                     "whole numbers. Step left instead and you have the "
@@ -48,7 +48,7 @@ class NumberLine1D(ForgeScene):
             for k in range(-4, 5) if k != 0], lag_ratio=0.12, run_time=2.0))
         self.wait(0.6)
 
-    @beat("Fill the gaps with fractions", seconds=8,
+    @beat("Fill the gaps with fractions", seconds=12,
           narration="Between any two whole numbers there is space, and "
                     "fractions fill it. Halves, then thirds, then fifths — and "
                     "however fine you go, there is still room between them.")
@@ -72,7 +72,7 @@ class NumberLine1D(ForgeScene):
         self.marks, self.frac_label = marks, label
         self.wait(0.8)
 
-    @beat("Some points are no fraction at all", seconds=8,
+    @beat("Some points are no fraction at all", seconds=15,
           narration="But not every point is a fraction. The diagonal of a unit "
                     "square lands here — root two — and no fraction, however "
                     "finely chosen, lands exactly on it. The line is fuller "
@@ -97,7 +97,7 @@ class NumberLine1D(ForgeScene):
         self.sq_group = VGroup(dot, lab)
         self.wait(0.9)
 
-    @beat("Between any two points there is always another", seconds=9,
+    @beat("Between any two points there is always another", seconds=19,
           narration="And here is the strange part. Take any two points, however "
                     "close. Their midpoint sits between them. Take that "
                     "midpoint and one of the originals — there is another one "
