@@ -136,6 +136,22 @@ print("\nexample:\n", textwrap.shorten(ds["train"][0]["messages"][1]["content"],
 
 # ── 3. model ───────────────────────────────────────────────────────────────
 import torch
+
+# Print what actually got installed. `grad_dtype` -- the attribute that lets
+# an fp32 parameter carry a bf16 gradient, and the mechanism behind five
+# failed runs -- is a torch 2.14 feature, and Kaggle's torch is whatever
+# Kaggle ships. Better to see it than to assume it.
+import transformers as _tf, trl as _trl, peft as _peft, accelerate as _acc
+print(f"[env] torch {torch.__version__} | transformers {_tf.__version__} | "
+      f"trl {_trl.__version__} | peft {_peft.__version__} | "
+      f"accelerate {_acc.__version__}", flush=True)
+print(f"[env] grad_dtype attribute present: "
+      f"{hasattr(torch.empty(1), 'grad_dtype')}", flush=True)
+if torch.cuda.is_available():
+    _p = torch.cuda.get_device_properties(0)
+    print(f"[env] {torch.cuda.device_count()}x {_p.name}, "
+          f"{_p.total_memory/1e9:.1f} GB, bf16 supported: "
+          f"{torch.cuda.is_bf16_supported()}", flush=True)
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 from peft import (LoraConfig, get_peft_model,
                   prepare_model_for_kbit_training)
@@ -252,6 +268,76 @@ assert set(_train_dtypes) == {"torch.float32"}, (
     f"first gradient clip")
 model.print_trainable_parameters()
 
+
+# ── the bf16 gradient, cornered ────────────────────────────────────────────
+# Five runs died in the GradScaler with
+#   NotImplementedError: _amp_foreach_non_finite_check_and_unscale_cuda
+#                        not implemented for 'BFloat16'
+# and every explanation I had is ruled out by the reports above: no
+# parameter is bf16, all 40.4M trainable ones are fp32, the model is on one
+# pinned GPU, quant_storage is fp16. I also confirmed locally that PyTorch
+# normalises a gradient to its parameter's dtype before storing it, so a
+# backward hook would never even fire.
+#
+# So this stops theorising and looks. on_pre_optimizer_step runs immediately
+# before accelerate unscales, which is the exact frame that raises. It
+# prints what is actually in the optimizer -- and casts anything that is not
+# fp32, which is also the fix if the report turns out to be boring.
+class GradDtypeGuard(TrainerCallback):
+    """Report and normalise gradient dtypes at the point the scaler reads them."""
+
+    def __init__(self):
+        self.reported = False
+
+    def on_pre_optimizer_step(self, args, state, control, optimizer=None, **kwargs):
+        opt = optimizer
+        for _ in range(4):                     # unwrap AcceleratedOptimizer
+            inner = getattr(opt, "optimizer", None)
+            if inner is None:
+                break
+            opt = inner
+        groups = getattr(opt, "param_groups", None)
+        if not groups:
+            if not self.reported:
+                self.reported = True
+                print(f"[grad] no param_groups on {type(optimizer).__name__}",
+                      flush=True)
+            return
+
+        seen, fixed = {}, 0
+        for g in groups:
+            for prm in g["params"]:
+                if prm.grad is None:
+                    continue
+                key = f"param={str(prm.dtype).replace('torch.','')} " \
+                      f"grad={str(prm.grad.dtype).replace('torch.','')}"
+                seen[key] = seen.get(key, 0) + 1
+                if prm.grad.dtype is not torch.float32:
+                    # torch 2.14 gives tensors a `grad_dtype`, and assigning
+                    # a gradient that disagrees with it raises. So clear it
+                    # first -- that attribute is how an fp32 parameter comes
+                    # to hold a bf16 gradient at all, which is the thing five
+                    # runs died on and which no amount of casting parameters
+                    # could have reached.
+                    # `None` means "allow any dtype", which is what the
+                    # error message itself recommends. Setting it to
+                    # torch.float32 does *not* permit the reassignment --
+                    # tested, and my first attempt at this fix was exactly
+                    # that and failed.
+                    try:
+                        prm.grad_dtype = None
+                    except (AttributeError, RuntimeError):
+                        pass
+                    prm.grad = prm.grad.float()
+                    fixed += 1
+        if not self.reported:
+            self.reported = True
+            print(f"[grad] at unscale: " + ", ".join(f"{k} x{v}"
+                                                     for k, v in seen.items())
+                  + (f"  -- cast {fixed} to fp32" if fixed else ""), flush=True)
+
+
+
 # ── 4. train ───────────────────────────────────────────────────────────────
 from trl import SFTConfig, SFTTrainer
 from transformers import TrainerCallback
@@ -337,7 +423,7 @@ class StabilityGuard(TrainerCallback):
 trainer = SFTTrainer(
     model=model, args=cfg,
     train_dataset=ds["train"], eval_dataset=ds["valid"], processing_class=tok,
-    callbacks=[StabilityGuard()],
+    callbacks=[GradDtypeGuard(), StabilityGuard()],
 )
 report_memory("before train")
 trainer.train()
