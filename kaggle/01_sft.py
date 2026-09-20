@@ -22,6 +22,17 @@
 import json, os, subprocess, sys, tarfile, textwrap
 from pathlib import Path
 
+# Kaggle gives two T4s, and `device_map="auto"` splits a model across both.
+# That is a different accelerate path -- dispatch hooks, a forward that is a
+# functools.partial rather than a bound method, and gradients that do not
+# keep the dtype of their parameters. Five runs of this project died in
+# those two symptoms (trl could not patch the LM head; the GradScaler met
+# bf16 gradients while every trainable parameter was fp32).
+#
+# One GPU, chosen before torch is imported, because CUDA_VISIBLE_DEVICES is
+# read at initialisation.
+os.environ.setdefault("CUDA_VISIBLE_DEVICES", "0")
+
 # Pinned, not floated. trl renamed max_seq_length -> max_length and dropped
 # warmup_ratio between the version this was written against and the one pip
 # installs today; an unpinned `trl>=0.12` therefore means the training
@@ -131,44 +142,53 @@ from peft import (LoraConfig, get_peft_model,
 
 BASE = "Qwen/Qwen2.5-Coder-7B-Instruct"
 
-# 4-bit so a 7B fits a single T4 with room for activations.
+# This block follows a published Kaggle T4 QLoRA recipe pinned to these
+# exact library versions, rather than the variant I arrived at by iterating
+# against the GPU. Twelve runs of one-change-at-a-time is not a method.
 bnb = BitsAndBytesConfig(
     load_in_4bit=True,
     bnb_4bit_quant_type="nf4",
-    bnb_4bit_compute_dtype=torch.float16,
+    bnb_4bit_compute_dtype=torch.float16,    # a T4 is sm_75: no bf16
     bnb_4bit_use_double_quant=True,
+    # Storage dtype of the packed weights. Left unset it follows the model
+    # config, which for Qwen2.5 says bfloat16 -- and that propagates into
+    # gradients no amount of parameter casting reaches.
+    bnb_4bit_quant_storage=torch.float16,
 )
 
 tok = AutoTokenizer.from_pretrained(BASE)
-# `dtype`, not `torch_dtype`: transformers 5 still honours the old name but
-# warns, and the warning was sitting in run 7's log while I read past it.
 model = AutoModelForCausalLM.from_pretrained(
-    BASE, quantization_config=bnb, device_map="auto", dtype=torch.float16)
+    BASE, quantization_config=bnb,
+    dtype=torch.float16,          # `torch_dtype` still works but warns
+    attn_implementation="sdpa",
+    device_map={"": 0},           # pinned, not "auto" -- see the note above
+)
 model.config.use_cache = False
 
-# The step this recipe was missing. Run 8 reached the training loop,
-# completed a forward and a backward pass, and died in gradient clipping:
-#
-#   NotImplementedError: "_amp_foreach_non_finite_check_and_unscale_cuda"
-#                        not implemented for 'BFloat16'
-#
-# Qwen2.5's config declares bfloat16, fp16=True turns on a GradScaler, and
-# torch's AMP unscale has no bf16 CUDA kernel. prepare_model_for_kbit_training
-# is the standard QLoRA preparation and it resolves exactly this: it upcasts
-# every fp16/bf16 parameter to fp32, casts the layer norms, and makes the
-# output embedding require grad. Skipping it is what left bf16 gradients for
-# the scaler to choke on.
-model = prepare_model_for_kbit_training(model, use_gradient_checkpointing=True)
+# Standard QLoRA preparation: upcasts fp16/bf16 params to fp32, casts the
+# norms, makes the output embedding require grad. use_reentrant=False is the
+# supported checkpointing path.
+model = prepare_model_for_kbit_training(
+    model, use_gradient_checkpointing=True,
+    gradient_checkpointing_kwargs={"use_reentrant": False})
+
+# Belt and braces on top of that: every norm explicitly fp32. fp16 training
+# overflows in normalisation before it overflows anywhere else.
+import torch.nn as nn
+_n_norm = 0
+for _m in model.modules():
+    if (isinstance(_m, (nn.LayerNorm,))
+            or _m.__class__.__name__.endswith(("RMSNorm", "LayerNorm"))):
+        _m.float()
+        _n_norm += 1
+print(f"[mem] norms forced to fp32: {_n_norm}", flush=True)
 
 
 def report_memory(tag: str) -> None:
-    """Where the 15 GB went, before anything has a chance to run out of it.
+    """Where the 15 GB goes, printed rather than assumed.
 
-    Upcasting to fp32 is not free: Qwen's embedding table is 152k x 3584, so
-    it costs ~2.2 GB there that it did not cost in fp16, and the un-chunked
-    cross-entropy this recipe is forced into wants another ~620 MB of logits
-    at seq=2048. If this OOMs, the answer is max_length=1024 -- and this
-    print is what makes that a decision rather than a guess.
+    Reading this after run 10 is what ruled out both the memory ceiling and
+    the parameter dtypes, and I still spent two more runs casting parameters.
     """
     if not torch.cuda.is_available():
         return
@@ -178,12 +198,12 @@ def report_memory(tag: str) -> None:
 
 
 report_memory("after kbit prep")
-by_dtype = {}
-for _n, _p in model.named_parameters():
-    by_dtype[str(_p.dtype)] = by_dtype.get(str(_p.dtype), 0) + _p.numel()
+_by_dtype = {}
+for _n, _q in model.named_parameters():
+    _by_dtype[str(_q.dtype)] = _by_dtype.get(str(_q.dtype), 0) + _q.numel()
 print("[mem] parameters by dtype: "
       + ", ".join(f"{k.replace('torch.','')} {v/1e6:.0f}M"
-                  for k, v in sorted(by_dtype.items())), flush=True)
+                  for k, v in sorted(_by_dtype.items())), flush=True)
 
 peft_cfg = LoraConfig(
     r=16, lora_alpha=32, lora_dropout=0.05, bias="none", task_type="CAUSAL_LM",
@@ -234,6 +254,7 @@ model.print_trainable_parameters()
 
 # ── 4. train ───────────────────────────────────────────────────────────────
 from trl import SFTConfig, SFTTrainer
+from transformers import TrainerCallback
 
 # 3% of total steps, computed rather than declared: trl 1.13 has no
 # warmup_ratio, only warmup_steps.
@@ -243,7 +264,7 @@ total_steps = steps_per_epoch * EPOCHS
 
 cfg = SFTConfig(
     output_dir=str(WORK / "sft-out"),
-    num_train_epochs=EPOCHS,          # 3,010 examples, ~900 tokens each
+    num_train_epochs=EPOCHS,
     per_device_train_batch_size=BATCH,
     gradient_accumulation_steps=ACCUM,
     learning_rate=1e-4,               # LoRA tolerates far more than full FT
@@ -253,55 +274,70 @@ cfg = SFTConfig(
     eval_strategy="steps",
     eval_steps=60,
     save_steps=120,
-    save_total_limit=3,               # Kaggle output quota is finite
-    # No AMP at all. Three runs died in the GradScaler with
-    #     NotImplementedError: _amp_foreach_non_finite_check_and_unscale_cuda
-    #                          not implemented for 'BFloat16'
-    # and the last of them proved the parameters were not the cause: all
-    # 40.4M trainable params were fp32 and it failed anyway. The bf16 is in
-    # the *gradients*, which autocast produces and which casting parameters
-    # cannot reach.
-    #
-    # The scaler exists only because fp16=True. Turning it off removes the
-    # failure rather than chasing it. bf16=True is not the alternative: a T4
-    # is sm_75 and has no native bfloat16.
-    #
-    # The cost is speed, and less than it looks: the 4-bit Linear layers --
-    # which are almost all of the compute -- still run at
-    # bnb_4bit_compute_dtype=float16 regardless of autocast. Only the fp32
-    # norms and the LoRA adapters lose it. Memory is not a concern: 2.55 of
-    # 15.6 GB was in use before training.
-    bf16=False, fp16=False,
+    save_total_limit=2,               # Kaggle's output quota is finite
     max_length=2048,                  # was max_seq_length before trl 1.x
+    packing=False,
 
-    # trl 1.13 defaults to loss_type="chunked_nll", which patches the LM head
-    # for a chunked cross-entropy. That patch does
-    #     inspect.signature(original_forward.__func__)
-    # and on a bitsandbytes-quantised model `forward` is a functools.partial
-    # with no __func__, so constructing the trainer raises AttributeError.
-    # Run 7 died there, after successfully loading all 339 weight tensors and
-    # tokenising the whole corpus.
-    #
-    # "nll" is plain negative log-likelihood and skips the patch. The cost is
-    # real: chunked CE exists to keep the logits tensor small, and Qwen's
-    # vocabulary is 152k, so one un-chunked forward at seq=2048 materialises
-    # ~620 MB of logits plus the same again for gradients. That should fit
-    # beside a 5 GB 4-bit model on a 15 GB T4, but it is the most likely
-    # place for this to OOM -- and if it does, the fix is max_length=1024,
-    # not a different loss.
-    loss_type="nll",
+    # fp16 with the GradScaler, as the reference recipe does. My previous
+    # run turned AMP off to escape a bf16 unscale error; the real cause was
+    # device_map="auto" and an unset quant_storage, both fixed above. On a
+    # T4 fp16 is most of the speed, so escaping the error by giving it up
+    # was the wrong trade.
+    fp16=True, bf16=False,
+    max_grad_norm=1.0,
+
+    # Paged 8-bit Adam: optimiser state for 40M LoRA params in fp32 would be
+    # ~320 MB of moments, and paging survives a fragmentation spike.
+    optim="paged_adamw_8bit",
     gradient_checkpointing=True,
+    gradient_checkpointing_kwargs={"use_reentrant": False},
+    dataset_num_proc=2,
     report_to="none",
+    seed=17,
+
+    # trl 1.13 defaults to chunked_nll, which patches the LM head assuming
+    # `forward` is a bound method. Run 7 proved that fails on this model.
+    # Plain nll costs ~620 MB of logits at seq=2048 over a 152k vocabulary,
+    # and the memory report shows 2.55 of 15.6 GB in use, so it is affordable.
+    loss_type="nll",
+
     # Loss on the completion only. Training the model to predict prompts it
     # will always be handed wastes capacity and dilutes the signal.
     completion_only_loss=True,
 )
+
+
+class StabilityGuard(TrainerCallback):
+    """Stop if the loss goes non-finite or runs away.
+
+    fp16 training can diverge quietly and spend the remaining three hours
+    producing an adapter that is worse than no adapter. Better to fail at
+    step 40 than to finish and measure noise.
+    """
+
+    def __init__(self, factor: float = 3.0):
+        self.baseline = None
+        self.factor = factor
+
+    def on_log(self, args, state, control, logs=None, **kwargs):
+        loss = (logs or {}).get("loss")
+        if loss is None:
+            return
+        if self.baseline is None:
+            self.baseline = loss
+        if loss != loss or loss in (float("inf"), float("-inf")) \
+                or loss > self.factor * self.baseline:
+            print(f"\nSTABILITY GUARD: loss={loss} at step {state.global_step} "
+                  f"(baseline {self.baseline:.4f}). Stopping.", flush=True)
+            control.should_training_stop = True
+
 
 # No peft_config: the model is already a PeftModel, with its adapters
 # created and cast above where their dtype can be checked.
 trainer = SFTTrainer(
     model=model, args=cfg,
     train_dataset=ds["train"], eval_dataset=ds["valid"], processing_class=tok,
+    callbacks=[StabilityGuard()],
 )
 report_memory("before train")
 trainer.train()
