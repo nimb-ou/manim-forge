@@ -118,6 +118,30 @@ Scored on render success, duration against the real runtime, beat count, and
 concept coverage — whether the generated narration mentions the terms the real
 video spends its time on.
 
+### Full run — untuned model, all 81 tasks, repair budget 4
+
+| metric | value |
+|--------|-------|
+| render success | **85%** (69/81) |
+| mean duration | **16.3s** |
+| real videos average | **16 min** |
+| length ratio | **1.76%** |
+| concept coverage | 8.8% |
+| mean play calls | 5.0 |
+
+Render success is 85% here against 93% on the single-scene benchmark, and the
+drop is the point: the same model, the same repair budget, asked for something
+eight times longer. The length ratio is the number that matters. **1.76%** —
+the model answers a sixteen-minute chapter with a sixteen-second clip, and
+does it consistently: the mean is 5.0 play calls, which is one beat of a
+scene, not a structure.
+
+Note the direction of the two gaps. Coverage is 8.8% and falling slightly
+against the 15-task baseline, while length is flat. The model is not getting
+the subject wrong; it is answering a different, much smaller question. No
+amount of inference-time repair fixes that, because nothing the repair loop
+sees is broken.
+
 ### Baseline — untuned model, 15 tasks
 
 | metric | value |
