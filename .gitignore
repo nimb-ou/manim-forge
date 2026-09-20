@@ -19,3 +19,7 @@ adapters/
 data/check/
 .env
 archive/
+
+# generated from whoever owns the Kaggle token
+kaggle/kernel-metadata.json
+kaggle/manim-forge-data/

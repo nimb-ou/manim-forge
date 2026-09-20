@@ -1,5 +1,5 @@
 {
-  "id": "nimitttt/manim-forge-sft",
+  "id": "someaccount/manim-forge-sft",
   "title": "Manim Forge - SFT",
   "code_file": "01_sft.py",
   "language": "python",
@@ -8,7 +8,7 @@
   "enable_gpu": true,
   "enable_internet": true,
   "dataset_sources": [
-    "nimitttt/manim-forge-data"
+    "someaccount/manim-forge-data"
   ],
   "competition_sources": [],
   "kernel_sources": []

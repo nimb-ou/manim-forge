@@ -16,6 +16,53 @@ import tarfile
 from pathlib import Path
 
 OUT = Path("kaggle/manim-forge-data")
+KAGGLE_DIR = Path("kaggle")
+
+
+def kaggle_user() -> str:
+    """Whoever owns the API token, not whoever I guessed.
+
+    The Kaggle handle need not match the Hugging Face one, and a wrong owner
+    in either metadata file fails at push time with a permissions error that
+    does not say which name is wrong.
+    """
+    import os
+    if os.environ.get("KAGGLE_USERNAME"):
+        return os.environ["KAGGLE_USERNAME"]
+    token = Path.home() / ".kaggle" / "kaggle.json"
+    if token.exists():
+        return json.loads(token.read_text())["username"]
+    raise SystemExit(
+        "No Kaggle credentials. Either set KAGGLE_USERNAME, or download a\n"
+        "token from kaggle.com/settings -> API -> Create New Token and run:\n"
+        "  mkdir -p ~/.kaggle && mv ~/Downloads/kaggle.json ~/.kaggle/ \\\n"
+        "    && chmod 600 ~/.kaggle/kaggle.json")
+
+
+def write_metadata(user: str) -> None:
+    """The two descriptors the Kaggle CLI needs to push without a browser.
+
+    Generated rather than committed, because both embed the account name and
+    a hand-written guess at it is a push-time failure nobody can read.
+    """
+    (OUT / "dataset-metadata.json").write_text(json.dumps({
+        "title": "Manim Forge data",
+        "id": f"{user}/manim-forge-data",
+        "licenses": [{"name": "CC-BY-NC-SA-4.0"}],
+    }, indent=2) + "\n")
+    (KAGGLE_DIR / "kernel-metadata.json").write_text(json.dumps({
+        "id": f"{user}/manim-forge-sft",
+        "title": "Manim Forge - SFT",
+        "code_file": "01_sft.py",
+        "language": "python",
+        "kernel_type": "script",
+        "is_private": True,
+        "enable_gpu": True,
+        "enable_internet": True,
+        "dataset_sources": [f"{user}/manim-forge-data"],
+        "competition_sources": [],
+        "kernel_sources": [],
+    }, indent=2) + "\n")
 
 
 def main() -> None:
@@ -51,6 +98,10 @@ def main() -> None:
     with tarfile.open(OUT / "forge.tar.gz", "w:gz") as tar:
         tar.add("forge", arcname="forge",
                 filter=lambda t: None if "__pycache__" in t.name else t)
+
+    user = kaggle_user()
+    write_metadata(user)
+    print(f"kaggle account: {user}")
 
     sizes = {p.name: f"{p.stat().st_size/1e6:.1f} MB" for p in sorted(OUT.iterdir())}
     print(f"packaged -> {OUT}")

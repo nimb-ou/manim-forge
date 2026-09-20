@@ -52,9 +52,6 @@ jobs:
           python scripts/prepare_training.py
           python -m forge.doctor || true
 
-      - name: package for Kaggle
-        run: python scripts/package_for_kaggle.py
-
       - name: authenticate
         env:
           KAGGLE_USERNAME: ${{ secrets.KAGGLE_USERNAME }}
@@ -64,6 +61,11 @@ jobs:
           printf '{"username":"%s","key":"%s"}' "$KAGGLE_USERNAME" "$KAGGLE_KEY" \
             > ~/.kaggle/kaggle.json
           chmod 600 ~/.kaggle/kaggle.json
+
+      # After authentication, so the metadata files carry the account that
+      # actually owns the token rather than one hard-coded in the repo.
+      - name: package for Kaggle
+        run: python scripts/package_for_kaggle.py
 
       - name: upload the dataset
         run: |
@@ -77,15 +79,18 @@ jobs:
       # Kaggle has no webhook, so this polls. Ten minutes between checks: the
       # job takes hours and a tighter loop only burns runner minutes.
       - name: wait for it
+        env:
+          KAGGLE_USERNAME: ${{ secrets.KAGGLE_USERNAME }}
+          KAGGLE_KEY: ${{ secrets.KAGGLE_KEY }}
         run: |
           for i in $(seq 1 54); do
             sleep 600
-            status=$(kaggle kernels status nimitttt/manim-forge-sft 2>&1 || true)
+            status=$(kaggle kernels status "$KAGGLE_USERNAME/manim-forge-sft" 2>&1 || true)
             echo "[$i] $status"
             case "$status" in
               *complete*)  echo "finished"; exit 0 ;;
               *error*|*cancel*)
-                kaggle kernels output nimitttt/manim-forge-sft -p out/ || true
+                kaggle kernels output "$KAGGLE_USERNAME/manim-forge-sft" -p out/ || true
                 tail -100 out/*.log 2>/dev/null || true
                 echo "kernel failed"; exit 1 ;;
             esac
@@ -94,7 +99,10 @@ jobs:
 
       - name: pull the output
         if: always()
-        run: kaggle kernels output nimitttt/manim-forge-sft -p out/ || true
+        env:
+          KAGGLE_USERNAME: ${{ secrets.KAGGLE_USERNAME }}
+          KAGGLE_KEY: ${{ secrets.KAGGLE_KEY }}
+        run: kaggle kernels output "$KAGGLE_USERNAME/manim-forge-sft" -p out/ || true
 
       - uses: actions/upload-artifact@v4
         if: always()
