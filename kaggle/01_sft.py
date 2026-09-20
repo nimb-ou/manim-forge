@@ -176,6 +176,23 @@ cfg = SFTConfig(
     save_total_limit=3,               # Kaggle output quota is finite
     bf16=False, fp16=True,
     max_length=2048,                  # was max_seq_length before trl 1.x
+
+    # trl 1.13 defaults to loss_type="chunked_nll", which patches the LM head
+    # for a chunked cross-entropy. That patch does
+    #     inspect.signature(original_forward.__func__)
+    # and on a bitsandbytes-quantised model `forward` is a functools.partial
+    # with no __func__, so constructing the trainer raises AttributeError.
+    # Run 7 died there, after successfully loading all 339 weight tensors and
+    # tokenising the whole corpus.
+    #
+    # "nll" is plain negative log-likelihood and skips the patch. The cost is
+    # real: chunked CE exists to keep the logits tensor small, and Qwen's
+    # vocabulary is 152k, so one un-chunked forward at seq=2048 materialises
+    # ~620 MB of logits plus the same again for gradients. That should fit
+    # beside a 5 GB 4-bit model on a 15 GB T4, but it is the most likely
+    # place for this to OOM -- and if it does, the fix is max_length=1024,
+    # not a different loss.
+    loss_type="nll",
     gradient_checkpointing=True,
     report_to="none",
     # Loss on the completion only. Training the model to predict prompts it
