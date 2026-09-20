@@ -54,7 +54,8 @@ CURRICULUM: list[Scene] = [
           needs=["calculus"], done=True),
     Scene("coordinate_plane", "Two numbers locate a point", "foundations", 1,
           "build the coordinate plane from two number lines and show how a pair "
-          "of numbers names exactly one point"),
+          "of numbers names exactly one point",
+          needs=["plane"], done=True),
     Scene("area_rearranged", "Area survives rearrangement", "geometry", 1,
           "show that cutting a shape and rearranging the pieces leaves the area "
           "unchanged, and use that to turn a parallelogram into a rectangle",

@@ -94,6 +94,16 @@ GOLD = [
         "tags": ["foundations", "calculus"],
     },
     {
+        "module": "forge/gold/coordinate_plane.py",
+        "scene": "CoordinatePlane",
+        "prompt": "build the coordinate plane from two number lines, show how a "
+                  "pair of numbers names exactly one point and that the order "
+                  "matters, work out the distance between two points with a "
+                  "right triangle, then show that a rule like x squared plus y "
+                  "squared equals 25 traces out a circle",
+        "tags": ["foundations", "geometry", "plot"],
+    },
+    {
         "module": "forge/gold/angle_sum.py",
         "scene": "AngleSum",
         "prompt": "show why the three angles of any triangle add to a straight "
