@@ -20,6 +20,7 @@ denominator.
 | 20 | 85% | 14 | 3 | + few-shot retrieval over verified scenes |
 | **100** | **83.0%** | 75 | 8 | same configuration, full split — the first defensible number |
 | **100** | **89.0%** | 77 | 12 | + repair escalation, + stdlib import lint |
+| **100** | **93.0%** | 77 | 16 | repair budget 2 rounds -> 4 |
 
 Nothing above is trained. Every point came from inference-time work.
 
@@ -32,6 +33,35 @@ Nothing above is trained. Every point came from inference-time work.
   for small models.
 - **Escalation** added ~4 (rescued 8 → 12). **Import lint** added ~2
   (measured at +1 in isolation).
+
+### The repair budget: the one clean experiment so far
+
+Raising `max_rounds` from 2 to 4 took the rate from **89.0% to 93.0%**. Only
+the round count changed, and this comparison does not depend on trusting that:
+the two runs agree on **77 first-try passes**, and within the rounds=4 run
+exactly **4 successes used a round beyond the second** —
+
+```
+rounds used by the 93 successes:  0:77   1:6   2:6   3:3   4:1
+the 4 late rescues, by error history:
+  api_misuse, api_misuse, api_misuse            -> none
+  name, api_misuse, api_misuse                  -> none
+  name, api_misuse, api_misuse, api_misuse      -> none
+  name, api_misuse, api_misuse                  -> none
+```
+
+Truncate that run at 2 rounds and it scores 89 — the control's exact number.
+The effect is recoverable *inside* a single run, which is what the earlier
+confounded experiments could not offer.
+
+Every late rescue is an `api_misuse` chain ending in a pass, which is the
+escalation prompt working: after two identical error kinds it tells the model
+to delete the offending construct and rebuild with the simplest objects
+available. It needs a third and fourth attempt to land.
+
+**Not comparable:** wall clock. Rounds=4 finished in 41.5 min against the
+control's 46.6, which is backwards for strictly more work — the control shared
+the machine with two generation daemons. Time here measures load, not method.
 
 ### Confounds — stated, not hidden
 
@@ -48,10 +78,16 @@ costs a week of compute and yields a number that cannot be trusted.
 
 ### What is left
 
-11 failures at 89%, of which **9 are `api_misuse`** — the model using a real
-Manim class with arguments that do not exist. That class has now survived the
-system prompt, introspected API briefings, retrieval, escalation and linting.
-It is what fine-tuning is for.
+7 failures at 93%: **5 `api_misuse`**, 1 syntax, 1 unknown. `api_misuse` is
+the model calling a real Manim class with arguments that do not exist. It has
+now survived the system prompt, introspected API briefings, retrieval,
+escalation, linting, and a doubled repair budget — each of which removed some
+of it and none of which removed the rest.
+
+That is the residue fine-tuning has to attack. It is also the reason the
+corpus is render-gated: a model that has seen 1,760 examples of constructors
+being called correctly is the only intervention left that acts on the model's
+priors rather than on its output.
 
 ---
 

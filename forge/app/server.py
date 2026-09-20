@@ -38,7 +38,7 @@ _state: dict = {}
 class Job(BaseModel):
     prompt: str
     backend: str = "gemini"      # "gemini" | "local"
-    max_rounds: int = 2
+    max_rounds: int = 4
     quality: str = "low"
 
 

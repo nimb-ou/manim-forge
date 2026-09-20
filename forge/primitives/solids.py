@@ -102,3 +102,78 @@ def fibonacci_sphere(n: int, radius: float = 1.0) -> list[tuple[float, float, fl
                     y * radius,
                     math.sin(theta) * r_at_y * radius))
     return pts
+
+
+@dataclass
+class BallSample:
+    """One uniformly-random point inside the ball, and where it landed."""
+    x: float
+    y: float
+    z: float
+    inside_cube: bool
+
+
+def sample_ball(n: int, radius: float = 1.0, *, seed: int = 0) -> list[BallSample]:
+    """``n`` points spread uniformly through the *volume* of the ball.
+
+    Rejection sampling from the enclosing box: draw uniformly in
+    [-R, R]^3 and keep the point only if it falls within the sphere. The
+    survivors are exactly uniform over the ball, which the tempting shortcut
+    -- uniform radius with a uniform direction -- is not; that one piles points
+    towards the centre, because a shell at radius r has area growing as r^2.
+    Acceptance rate here is the volume ratio pi/6, about 52%.
+
+    Each point is tagged with whether it also lies inside the inscribed cube,
+    so a scene can *count* the split rather than assert it.
+    """
+    import random
+
+    rng = random.Random(seed)
+    half = inscribed_cube_side(radius) / 2.0
+    out: list[BallSample] = []
+    while len(out) < n:
+        x = rng.uniform(-radius, radius)
+        y = rng.uniform(-radius, radius)
+        z = rng.uniform(-radius, radius)
+        if x * x + y * y + z * z > radius * radius:
+            continue                      # outside the sphere: reject
+        out.append(BallSample(
+            x, y, z,
+            inside_cube=max(abs(x), abs(y), abs(z)) <= half,
+        ))
+    return out
+
+
+def counted_cube_fraction(samples: list[BallSample]) -> float:
+    """The share of sampled points that landed inside the cube."""
+    if not samples:
+        return 0.0
+    return sum(1 for s in samples if s.inside_cube) / len(samples)
+
+
+def verify_sample_converges(radius: float = 1.0, n: int = 40000,
+                            tol: float = 0.01) -> bool:
+    """The counted fraction must approach the exact one.
+
+    This is the check that keeps the Monte Carlo honest: if the sampler were
+    biased towards the centre, the count would overstate the cube's share and
+    the scene would display a wrong number with complete confidence.
+    """
+    exact = SphereCube(radius=radius).cube_fraction
+    got = counted_cube_fraction(sample_ball(n, radius, seed=7))
+    return abs(got - exact) < tol
+
+
+def verify_sample_unbiased(radius: float = 1.0, n: int = 800, trials: int = 40,
+                           tol_pp: float = 1.0) -> bool:
+    """Averaged over independent seeds, the count must sit on the exact value.
+
+    A single sample is allowed to miss -- that is what sampling error *is* --
+    so checking one seed would either pass by luck or fail by luck. Averaging
+    many independent seeds tests the thing that actually matters: that the
+    estimator is centred on the truth rather than leaning one way.
+    """
+    exact = SphereCube(radius=radius).cube_fraction
+    mean = sum(counted_cube_fraction(sample_ball(n, radius, seed=s))
+               for s in range(trials)) / trials
+    return abs(mean - exact) * 100.0 < tol_pp

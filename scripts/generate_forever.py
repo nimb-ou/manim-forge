@@ -41,7 +41,7 @@ def main() -> None:
     ap.add_argument("--max-tasks", type=int, default=1000000)
     ap.add_argument("--max-hours", type=float, default=20.0)
     ap.add_argument("--variations", type=int, default=1)
-    ap.add_argument("--repair-rounds", type=int, default=2)
+    ap.add_argument("--repair-rounds", type=int, default=4)
     ap.add_argument("--cooldown", type=float, default=900.0)
     ap.add_argument("--workers", type=int, default=5)
     a = ap.parse_args()

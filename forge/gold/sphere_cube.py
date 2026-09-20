@@ -22,7 +22,8 @@ import math
 from manim import *
 
 from forge.beats import ForgeScene, beat
-from forge.primitives.solids import SphereCube, fibonacci_sphere
+from forge.primitives.solids import (SphereCube, counted_cube_fraction,
+                                     fibonacci_sphere, sample_ball)
 
 DOT_C = BLUE_C
 CUBE_C = "#F0AC5F"
@@ -30,7 +31,8 @@ GAP_C = "#5CD0B3"
 DIM = GREY_B
 
 SCALE = 2.2          # world units per unit radius
-N_DOTS = 320
+N_DOTS = 320         # points on the surface, to say what a sphere is
+N_SAMPLE = 800       # points through the volume, to count the split
 
 
 class SphereInCube(ForgeScene, ThreeDScene):
@@ -55,7 +57,10 @@ class SphereInCube(ForgeScene, ThreeDScene):
 
         pts = fibonacci_sphere(N_DOTS, self.solid.radius)
         self.dots = VGroup(*[
-            Dot3D(self.p3(*p), radius=0.028, color=DOT_C).set_opacity(0.85)
+            # resolution=(3,3) not the default (8,8): at this radius the dot is
+            # ~6px and the two are pixel-identical, but the cloud builds 10x faster.
+            Dot3D(self.p3(*p), radius=0.028, color=DOT_C,
+                  resolution=(3, 3)).set_opacity(0.85)
             for p in pts])
 
         self.title = self.label(
@@ -146,28 +151,97 @@ class SphereInCube(ForgeScene, ThreeDScene):
         self.rows, self.frac = rows, frac
         self.wait(1.6)
 
-    @beat("What is left over", seconds=9,
-          narration="Which leaves two point six five cubic units of empty space "
-                    "between the flat faces of the cube and the curve of the "
-                    "sphere. Nearly two thirds of the sphere is in that gap — "
-                    "far more than the cube that looked like it filled it.")
-    def leftover(self):
+    @beat("Fill the sphere with points and count them", seconds=12,
+          narration="Rather than trust the formulas, count. Scatter eight "
+                    "hundred points evenly through the whole sphere, then ask "
+                    "each one whether it landed inside the cube or outside it. "
+                    "Three hundred fell inside. Five hundred — well over half — "
+                    "landed in the space the cube never reaches.")
+    def count_it(self):
         sc = self.solid
-        self.play(self.dots.animate.set_opacity(0.3),
-                  self.cube.animate.set_fill(opacity=0.45), run_time=1.2)
-
-        gap = self.label(
-            VGroup(
-                MathTex(rf"{sc.v_sphere:.2f} - {sc.v_cube:.2f} = {sc.v_gap:.2f}",
-                        font_size=40, color=GAP_C),
-                Text("left over between cube and sphere", font_size=22, color=DIM),
-                Text(f"{1 - sc.cube_fraction:.0%} of the sphere", font_size=26, color=GAP_C),
-            ).arrange(DOWN, buff=0.25).to_edge(DOWN, buff=0.55))
-
         self.play(FadeOut(self.rows), FadeOut(self.frac), run_time=0.5)
-        self.play(Write(gap[0]), run_time=1.4)
-        self.play(FadeIn(gap[1]), run_time=0.6)
-        self.play(FadeIn(gap[2], shift=UP * 0.12), run_time=0.8)
-        self.begin_ambient_camera_rotation(rate=0.12)
-        self.wait(2.4)
+        # Clear the stage for the sample: the shell has said what a sphere is,
+        # and the cube's fill would hide every point sitting behind it.
+        self.play(self.dots.animate.set_opacity(0.10),
+                  self.cube.animate.set_fill(opacity=0.03),
+                  FadeOut(self.corner_dots),
+                  run_time=1.0)
+        self.move_camera(phi=66 * DEGREES, theta=-42 * DEGREES, zoom=0.82,
+                         run_time=1.2)
+
+        samples = sample_ball(N_SAMPLE, sc.radius, seed=0)
+        self.n_in = sum(1 for p in samples if p.inside_cube)
+        self.n_out = N_SAMPLE - self.n_in
+        self.counted = counted_cube_fraction(samples)
+
+        cloud = VGroup(*[
+            Dot3D(self.p3(p.x, p.y, p.z), radius=0.021, color=GREY_B,
+                  resolution=(2, 2)).set_opacity(0.55)
+            for p in samples])
+        # Eight chunks, not eight hundred animations: the sweep reads the same
+        # and LaggedStart over 800 submobjects is ruinous to build.
+        chunks = [cloud[i::8] for i in range(8)]
+        self.play(LaggedStart(*[FadeIn(c, scale=0.7) for c in chunks],
+                              lag_ratio=0.3, run_time=2.6))
+        self.wait(0.6)
+
+        inside = VGroup(*[d for d, p in zip(cloud, samples) if p.inside_cube])
+        outside = VGroup(*[d for d, p in zip(cloud, samples) if not p.inside_cube])
+        self.play(inside.animate.set_color(CUBE_C).set_opacity(0.95), run_time=1.0)
+        self.play(outside.animate.set_color(GAP_C).set_opacity(0.8), run_time=1.0)
+        self.cloud = cloud
+
+        tally = self.label(VGroup(
+            VGroup(Text(f"{self.n_in}", font_size=40, color=CUBE_C),
+                   Text("inside the cube", font_size=21, color=DIM)
+                   ).arrange(RIGHT, buff=0.3, aligned_edge=DOWN),
+            VGroup(Text(f"{self.n_out}", font_size=40, color=GAP_C),
+                   Text("in the gap", font_size=21, color=DIM)
+                   ).arrange(RIGHT, buff=0.3, aligned_edge=DOWN),
+        ).arrange(DOWN, buff=0.35, aligned_edge=LEFT).to_corner(UR, buff=0.6))
+        self.play(LaggedStart(*[FadeIn(t, shift=LEFT * 0.2) for t in tally],
+                              lag_ratio=0.35, run_time=1.4))
+        self.tally = tally
+        self.wait(1.4)
+
+    @beat("The counted answer and the exact one", seconds=10,
+          narration="Counting gives the cube a little over thirty-seven percent "
+                    "of the sphere. The formulas give thirty-six point eight. "
+                    "They agree, because they are measuring the same thing — "
+                    "and the gap, four point one nine minus one point five "
+                    "four, is two point six five cubic units. Nearly two thirds "
+                    "of the sphere is space the cube can never fill.")
+    def exact(self):
+        sc = self.solid
+        self.begin_ambient_camera_rotation(rate=0.10)
+
+        # Both numbers on screen at once, labelled for what they are. The
+        # sample is allowed to miss the exact value; hiding that would teach
+        # the wrong lesson about what a count of 800 points can tell you.
+        compare = self.label(VGroup(
+            VGroup(Text("counted", font_size=20, color=DIM),
+                   Text(f"{self.counted:.1%}", font_size=32, color=GREY_A)
+                   ).arrange(RIGHT, buff=0.35, aligned_edge=DOWN),
+            VGroup(Text("exact", font_size=20, color=DIM),
+                   Text(f"{sc.cube_fraction:.1%}", font_size=32, color=CUBE_C)
+                   ).arrange(RIGHT, buff=0.35, aligned_edge=DOWN),
+        ).arrange(DOWN, buff=0.3, aligned_edge=RIGHT).to_corner(UR, buff=0.6))
+
+        self.play(FadeOut(self.tally), run_time=0.4)
+        self.play(FadeIn(compare, shift=DOWN * 0.15), run_time=1.0)
+        self.wait(1.2)
+
+        # The volume arithmetic lives bottom-LEFT, clear of the figure, which
+        # is centred and reaches the bottom of the frame.
+        gap = self.label(VGroup(
+            MathTex(rf"{sc.v_sphere:.2f} - {sc.v_cube:.2f} = {sc.v_gap:.2f}",
+                    font_size=34, color=GAP_C),
+            Text("left over between cube and sphere", font_size=19, color=DIM),
+            Text(f"{1 - sc.cube_fraction:.1%} of the sphere", font_size=24, color=GAP_C),
+        ).arrange(DOWN, buff=0.22, aligned_edge=LEFT).to_corner(DL, buff=0.6))
+
+        self.play(Write(gap[0]), run_time=1.3)
+        self.play(FadeIn(gap[1]), run_time=0.5)
+        self.play(FadeIn(gap[2], shift=UP * 0.1), run_time=0.7)
+        self.wait(2.6)
         self.stop_ambient_camera_rotation()

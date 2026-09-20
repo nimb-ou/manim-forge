@@ -87,7 +87,7 @@ def main() -> None:
                 continue
 
             g = generate_and_repair(teacher, harness, request, 6,
-                                    "matching the passage", max_rounds=2,
+                                    "matching the passage", max_rounds=4,
                                     first_code=code)
             row = CorpusRow.build(source="synth-narration", license="CC-BY-NC-SA-4.0",
                                   prompt=s["text"], code=g.code, index=i,

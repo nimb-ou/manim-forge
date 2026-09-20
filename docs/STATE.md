@@ -63,6 +63,16 @@ uvicorn forge.app.server:app --port 8765    # the platform
 - **Rate limits are per model.** Rotation reaches the daily ceiling; it does
   not raise it. More workers made throughput *worse* (10/min → 5.7/min).
 - **`Dot3D` costs 100× a flat `Dot`** — 19.3s vs 0.2s for 200 points.
+  `resolution=` buys most of it back and costs nothing visible. 200 dots,
+  build time: (2,2) 0.27s · (3,3) 0.52s · (4,4) 0.76s · (6,6) 1.60s ·
+  default (8,8) 5.22s. At `radius=0.03` each dot is ~6px and all five are
+  pixel-indistinguishable at -qh. **Use `resolution=(3,3)` for point clouds**
+  — 10× faster to build, 4.6× faster end-to-end.
+- **Manim finds scenes by `__name__`, not by module attribute.** A factory
+  that returns `type("P", ...)` for every variant produces four classes all
+  called `P`; asking for `R2` makes manim print a numbered menu and **block
+  on stdin forever** at 0% CPU. Always `</dev/null` a batch render, so this
+  fails in a second instead of hanging for hours.
 - **Animations leave stage copies** the tracked reference no longer points at.
   `FadeOut(self.x)` is not enough; sweep by type or colour.
 - **`set_opacity` on a VMobject dims fill too** — use `set_stroke(opacity=…)`.

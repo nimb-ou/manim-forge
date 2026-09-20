@@ -26,7 +26,7 @@ def main() -> None:
     ap.add_argument("--delay", type=float, default=4.0,
                     help="seconds between calls; free tier is ~15 req/min")
     ap.add_argument("--lengths", default="short,medium,long")
-    ap.add_argument("--repair-rounds", type=int, default=2,
+    ap.add_argument("--repair-rounds", type=int, default=4,
                     help="retry failures with the real API signature injected")
     a = ap.parse_args()
 

@@ -92,7 +92,7 @@ class LoopResult:
 
 class RepairLoop:
     def __init__(self, model, tokenizer, harness: RenderHarness,
-                 max_rounds: int = 2, max_tokens: int = 900, index=None):
+                 max_rounds: int = 4, max_tokens: int = 900, index=None):
         self.model, self.tok, self.harness = model, tokenizer, harness
         self.max_rounds, self.max_tokens = max_rounds, max_tokens
         # Optional example index. Retrieval is a variable under test, not an

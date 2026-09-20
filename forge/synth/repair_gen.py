@@ -85,7 +85,7 @@ class GenResult:
 
 def generate_and_repair(teacher: Teacher, harness: RenderHarness, request: str,
                         n_beats: int, length_hint: str,
-                        max_rounds: int = 2,
+                        max_rounds: int = 4,
                         first_code: str | None = None) -> GenResult:
     """``first_code`` lets a caller supply a generation it already made, so a
     pipeline that probes before committing does not pay for the same call twice."""
