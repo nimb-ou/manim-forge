@@ -389,3 +389,55 @@ def test_mlx_adapter_keys_are_relative_to_the_transformer_block(tmp_path):
     assert not any("." not in k for k in keys), \
         f"bare projection names match nothing in MLX: {keys}"
     assert cfg["num_layers"] == 3
+
+
+# --- refusing an adapter mlx-lm would silently ignore -----------------------
+
+def _mlx_adapter(d, keys=("self_attn.q_proj",), num_layers=2):
+    mx = pytest.importorskip("mlx.core")
+    d.mkdir(parents=True, exist_ok=True)
+    mx.save_safetensors(str(d / "adapters.safetensors"),
+                        {"model.layers.1.self_attn.q_proj.lora_a": mx.zeros((4, 2))})
+    (d / "adapter_config.json").write_text(json.dumps({
+        "fine_tune_type": "lora", "num_layers": num_layers,
+        "lora_parameters": {"rank": 8, "scale": 2.0, "dropout": 0.0,
+                            "keys": list(keys)}}))
+    return d
+
+
+def test_a_peft_adapter_is_refused_with_the_conversion_command(tmp_path):
+    from forge.adapters import check_mlx_adapter
+    mx = pytest.importorskip("mlx.core")
+    d = tmp_path / "peft"; d.mkdir()
+    (d / "adapter_config.json").write_text(json.dumps({"r": 8}))
+    mx.save_safetensors(str(d / "adapter_model.safetensors"), {"x": mx.zeros((2, 2))})
+    with pytest.raises(SystemExit, match="peft_to_mlx"):
+        check_mlx_adapter(d)
+
+
+def test_bare_projection_names_are_refused(tmp_path):
+    """They match nothing in MLX, so the adapter loads as a no-op."""
+    from forge.adapters import check_mlx_adapter
+    d = _mlx_adapter(tmp_path / "bare", keys=("q_proj", "v_proj"))
+    with pytest.raises(SystemExit, match="bare projection names"):
+        check_mlx_adapter(d)
+
+
+def test_an_adapter_with_no_layers_is_refused(tmp_path):
+    from forge.adapters import check_mlx_adapter
+    d = _mlx_adapter(tmp_path / "nolayers", num_layers=0)
+    with pytest.raises(SystemExit, match="num_layers"):
+        check_mlx_adapter(d)
+
+
+def test_a_wellformed_mlx_adapter_is_accepted(tmp_path):
+    from forge.adapters import check_mlx_adapter
+    check_mlx_adapter(_mlx_adapter(tmp_path / "good"))
+    check_mlx_adapter(None)          # no adapter at all is fine
+
+
+def test_both_evals_use_the_shared_guard():
+    """They had separate behaviour: one guarded, one did not."""
+    for script in ("run_repair_benchmark.py", "run_hard_eval.py"):
+        src = (ROOT / "scripts" / script).read_text()
+        assert "check_mlx_adapter" in src, f"{script} loads adapters unguarded"

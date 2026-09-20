@@ -40,6 +40,10 @@ def main() -> None:
 
     if a.backend == "local":
         from mlx_lm import load
+        from forge.adapters import check_mlx_adapter
+        # Refuse before loading, not after the numbers are in: mlx-lm loads
+        # adapters with strict=False and scores the base model in silence.
+        check_mlx_adapter(a.adapter)
         model, tok = load("mlx-community/Qwen2.5-Coder-7B-Instruct-4bit",
                           **({"adapter_path": a.adapter} if a.adapter else {}))
         loop = RepairLoop(model, tok, harness, max_rounds=a.rounds,

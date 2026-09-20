@@ -24,17 +24,9 @@ prompts = df["Reviewed Description"].dropna().tolist()[: a.n]
 
 from mlx_lm import load
 print(f"loading {a.model} ...", flush=True)
+from forge.adapters import check_mlx_adapter
+check_mlx_adapter(a.adapter)
 if a.adapter:
-    from pathlib import Path as _P
-    adir = _P(a.adapter)
-    if (adir / "adapter_model.safetensors").exists() and not (
-            adir / "adapters.safetensors").exists():
-        raise SystemExit(
-            f"{adir} is a PEFT adapter; mlx-lm cannot read it, and it loads\n"
-            f"with strict=False so it would silently score the base model.\n"
-            f"Convert it first:\n"
-            f"  ./.venv/bin/python scripts/peft_to_mlx.py \\\n"
-            f"      --peft {adir} --out {adir}-mlx --verify")
     print(f"  adapter: {a.adapter}", flush=True)
 model, tok = load(a.model, **({"adapter_path": a.adapter} if a.adapter else {}))
 h = RenderHarness(python_bin="./.venv/bin/python", cache_dir="data/frames", timeout=120)
