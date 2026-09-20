@@ -126,7 +126,8 @@ print("\nexample:\n", textwrap.shorten(ds["train"][0]["messages"][1]["content"],
 # ── 3. model ───────────────────────────────────────────────────────────────
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
-from peft import LoraConfig, prepare_model_for_kbit_training
+from peft import (LoraConfig, get_peft_model,
+                  prepare_model_for_kbit_training)
 
 BASE = "Qwen/Qwen2.5-Coder-7B-Instruct"
 
@@ -193,6 +194,44 @@ peft_cfg = LoraConfig(
                     "gate_proj", "up_proj", "down_proj"],
 )
 
+# Attach the adapters here rather than handing peft_config to SFTTrainer.
+#
+# Run 10 failed the same way run 8 did -- bf16 gradients in the AMP unscale
+# -- *despite* prepare_model_for_kbit_training. The dtype report explained
+# why it was not a contradiction:
+#
+#     [mem] parameters by dtype: float32 1090M, uint8 3263M
+#
+# No bf16 parameter existed at that point. The LoRA adapters did not exist
+# either: SFTTrainer creates them from peft_config, after this report, and
+# PEFT picks their dtype from the base model's config -- which for Qwen2.5
+# says bfloat16. The only parameters carrying gradients were therefore the
+# only ones the report could not see.
+#
+# So: create them here, and cast every trainable parameter to fp32. The
+# GradScaler only ever touches parameters with gradients, and fp32 LoRA
+# weights over a 4-bit base is the standard QLoRA arrangement anyway.
+model = get_peft_model(model, peft_cfg)
+_recast = [n for n, q in model.named_parameters()
+           if q.requires_grad and q.dtype is not torch.float32]
+for _n, _q in model.named_parameters():
+    if _q.requires_grad and _q.dtype is not torch.float32:
+        _q.data = _q.data.to(torch.float32)
+print(f"[mem] recast {len(_recast)} trainable params to fp32", flush=True)
+
+_train_dtypes = {}
+for _n, _q in model.named_parameters():
+    if _q.requires_grad:
+        _train_dtypes[str(_q.dtype)] = _train_dtypes.get(str(_q.dtype), 0) + _q.numel()
+print("[mem] trainable by dtype: "
+      + ", ".join(f"{k.replace('torch.','')} {v/1e6:.1f}M"
+                  for k, v in sorted(_train_dtypes.items())), flush=True)
+assert set(_train_dtypes) == {"torch.float32"}, (
+    f"a trainable parameter is not fp32: {_train_dtypes} — "
+    f"the GradScaler has no bf16 CUDA kernel and training will die at the "
+    f"first gradient clip")
+model.print_trainable_parameters()
+
 # ── 4. train ───────────────────────────────────────────────────────────────
 from trl import SFTConfig, SFTTrainer
 
@@ -241,8 +280,10 @@ cfg = SFTConfig(
     completion_only_loss=True,
 )
 
+# No peft_config: the model is already a PeftModel, with its adapters
+# created and cast above where their dtype can be checked.
 trainer = SFTTrainer(
-    model=model, args=cfg, peft_config=peft_cfg,
+    model=model, args=cfg,
     train_dataset=ds["train"], eval_dataset=ds["valid"], processing_class=tok,
 )
 report_memory("before train")
