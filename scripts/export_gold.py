@@ -10,6 +10,38 @@ from pathlib import Path
 
 GOLD = [
     {
+        "module": "forge/gold/irrational_sqrt2.py",
+        "scene": "IrrationalSqrt2",
+        "prompt": "prove that the square root of two cannot be written as a "
+                  "fraction, by assuming it can and following the parity argument "
+                  "to a contradiction",
+        "tags": ['number-theory', 'proof'],
+    },
+    {
+        "module": "forge/gold/euclid_gcd.py",
+        "scene": "EuclidGcd",
+        "prompt": "show Euclid's algorithm for the greatest common divisor as "
+                  "cutting the largest possible squares off a rectangle until one "
+                  "fits exactly",
+        "tags": ['number-theory', 'algorithms'],
+    },
+    {
+        "module": "forge/gold/recursion_hanoi.py",
+        "scene": "TowerOfHanoi",
+        "prompt": "solve the Tower of Hanoi with four discs and show that the "
+                  "method is just the same problem one size smaller, then explain "
+                  "why the number of moves is two to the n minus one",
+        "tags": ['discrete', 'recursion'],
+    },
+    {
+        "module": "forge/gold/binary_search.py",
+        "scene": "BinarySearch",
+        "prompt": "show binary search finding a number in a sorted list of "
+                  "sixty-four by halving the range each look, and compare the "
+                  "number of looks to checking one at a time",
+        "tags": ['discrete', 'algorithms'],
+    },
+    {
         "module": "forge/gold/derivative_slope.py",
         "scene": "DerivativeSlope",
         "prompt": "show the derivative as a limit of slopes — draw a secant line "

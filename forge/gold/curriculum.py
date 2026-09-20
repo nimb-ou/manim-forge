@@ -104,7 +104,8 @@ CURRICULUM: list[Scene] = [
     Scene("euclid_gcd", "Euclid's algorithm as shrinking rectangles", "number-theory", 2,
           "show Euclid's algorithm for the greatest common divisor as repeatedly "
           "cutting the largest possible square from a rectangle",
-          needs=["numbers"], builds_on=["area_rearranged"]),
+          needs=["numbers"], builds_on=["area_rearranged"],
+          done=True),
     Scene("modular_clock", "Arithmetic on a clock face", "number-theory", 2,
           "show modular arithmetic as counting around a clock face, and what "
           "happens when you keep adding the same number",
@@ -112,7 +113,8 @@ CURRICULUM: list[Scene] = [
     Scene("irrational_sqrt2", "Why root two is not a fraction", "number-theory", 2,
           "show geometrically why the square root of two cannot be written as a "
           "fraction, by infinite descent",
-          needs=["numbers"]),
+          needs=["numbers"],
+          done=True),
     Scene("bayes", "Belief as area", "probability", 2,
           "show Bayes' theorem as areas in a rectangle, where evidence shrinks "
           "the space of possibilities",
@@ -137,10 +139,12 @@ CURRICULUM: list[Scene] = [
           done=True),
     Scene("binary_search", "Halving the haystack", "discrete", 2,
           "show binary search discarding half the remaining possibilities each "
-          "step, and count how few steps that takes"),
+          "step, and count how few steps that takes",
+          done=True),
     Scene("recursion_hanoi", "A problem that contains itself", "discrete", 2,
           "solve the Towers of Hanoi recursively and show the move count "
-          "doubling with each disc"),
+          "doubling with each disc",
+          done=True),
     Scene("projectile", "Two motions at once", "physics", 2,
           "show projectile motion as horizontal motion and vertical motion "
           "happening independently, and combine them into a parabola",
