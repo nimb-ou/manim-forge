@@ -94,35 +94,45 @@ def main() -> None:
                       f"[{pool.status()}]", flush=True)
 
     def do_task(task):
-        if expired():
-            return
-        model = pool.next_model()
-        idle_since = None
-        while model is None:
-            if expired():
-                return
-            # Every model cooling at once means the key's daily quota is gone,
-            # not that one model is busy. Retrying every 30s then burns hours
-            # of 429s; the quota resets on a daily boundary, so back off to
-            # long sleeps and let the run resume when it actually can.
-            if idle_since is None:
-                idle_since = time.monotonic()
-            starved_min = (time.monotonic() - idle_since) / 60
-            nap = 30.0 if starved_min < 10 else 600.0
-            time.sleep(min(nap, max(5.0, pool.seconds_until_any())))
-            model = pool.next_model()
+        """One task, retried until it succeeds or the run ends.
 
-        teacher = Teacher(provider="gemini", model=model)
-        try:
-            g = generate_and_repair(teacher, harness, task.request,
-                                    task.n_beats, task.length_hint,
-                                    max_rounds=a.repair_rounds)
-        except Exception as e:
-            msg = str(e)
-            if "429" in msg or "503" in msg:
-                pool.retire(model)
-            with lock:
-                counters["errors"] += 1
+        A rate-limited task must be *retried*, never consumed. An earlier
+        version dropped it: when the daily quota ran out, every one of 5,790
+        queued tasks hit a 429 and was discarded in seconds, and the run
+        reported "0 verified, 5790 API errors" in 0.0 minutes. Exhaustion is a
+        reason to wait, not a reason to give up on the work.
+        """
+        idle_since = None
+        while not expired():
+            model = pool.next_model()
+            if model is None:
+                # Every model cooling at once means the key's daily quota is
+                # gone, not that one model is busy. The quota resets on a daily
+                # boundary, so back off to long sleeps rather than spending
+                # hours on 429s.
+                if idle_since is None:
+                    idle_since = time.monotonic()
+                starved_min = (time.monotonic() - idle_since) / 60
+                nap = 30.0 if starved_min < 10 else 600.0
+                time.sleep(min(nap, max(5.0, pool.seconds_until_any())))
+                continue
+
+            teacher = Teacher(provider="gemini", model=model)
+            try:
+                g = generate_and_repair(teacher, harness, task.request,
+                                        task.n_beats, task.length_hint,
+                                        max_rounds=a.repair_rounds)
+                idle_since = None
+                break
+            except Exception as e:
+                msg = str(e)
+                if "429" in msg or "503" in msg:
+                    pool.retire(model)
+                    continue          # try another model, keep the task
+                with lock:
+                    counters["errors"] += 1
+                return                # a real error: this task is bad, drop it
+        else:
             return
 
         if g.code.strip().upper().startswith("SKIP") or len(g.code) < 120:
