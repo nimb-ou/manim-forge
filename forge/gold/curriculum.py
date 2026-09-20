@@ -152,7 +152,8 @@ CURRICULUM: list[Scene] = [
     Scene("projectile", "Two motions at once", "physics", 2,
           "show projectile motion as horizontal motion and vertical motion "
           "happening independently, and combine them into a parabola",
-          needs=["oscillation"]),
+          needs=["oscillation"],
+          done=True),
     Scene("field_lines", "What a field looks like", "physics", 2,
           "show the field around a charge as arrows, then as field lines, and "
           "show what happens when a second, opposite charge arrives",

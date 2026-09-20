@@ -166,7 +166,8 @@ class Bayes(ForgeScene):
         frac = VGroup(
             MathTex(rf"\frac{{{T.true_positive}}}{{{T.positive}}}",
                     font_size=44, color=TP_C),
-            MathTex(rf"= {T.posterior:.1%}", font_size=36, color=WHITE),
+            MathTex(rf"= {T.posterior:.1%}".replace("%", r"\%"),
+                    font_size=36, color=WHITE),
         ).arrange(RIGHT, buff=0.35)
         frac.move_to(RIGHT * 3.3 + UP * 1.4)
         self.play(Write(frac[0]), run_time=1.2)

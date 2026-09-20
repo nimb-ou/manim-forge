@@ -142,7 +142,8 @@ class CircleArea(ForgeScene):
 
         gap = VGroup(
             Text("short by", font_size=20, color=DIM),
-            MathTex(rf"{geo.error / geo.exact:.1%}", font_size=30, color=ERR_C),
+            MathTex(rf"{geo.error / geo.exact:.1%}".replace("%", r"\%"),
+                    font_size=30, color=ERR_C),
         ).arrange(RIGHT, buff=0.3, aligned_edge=DOWN)
 
         self.play(FadeOut(self.goal), run_time=0.3)
@@ -168,7 +169,7 @@ class CircleArea(ForgeScene):
         for n, area, err in sector_convergence(STAGES + [512], R):
             rows.add(VGroup(
                 MathTex(rf"n = {n}", font_size=22, color=DIM),
-                MathTex(rf"{err / (PI * R ** 2):.2%}", font_size=24,
+                MathTex(rf"{err / (PI * R ** 2):.2%}".replace("%", r"\%"), font_size=24,
                         color=ERR_C if n < 100 else EXACT_C),
                 Text("short", font_size=17, color=DIM),
             ).arrange(RIGHT, buff=0.22))

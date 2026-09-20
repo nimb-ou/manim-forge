@@ -10,6 +10,15 @@ from pathlib import Path
 
 GOLD = [
     {
+        "module": "forge/gold/projectile.py",
+        "scene": "Projectile",
+        "prompt": "show that a projectile is two independent motions at once — "
+                  "constant sideways drift and a ball thrown straight up — then "
+                  "show that two complementary launch angles land in the same "
+                  "place and forty-five degrees goes furthest",
+        "tags": ['physics', 'motion'],
+    },
+    {
         "module": "forge/gold/chain_rule.py",
         "scene": "ChainRule",
         "prompt": "explain the chain rule as two machines feeding into each "

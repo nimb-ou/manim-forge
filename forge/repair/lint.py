@@ -103,10 +103,76 @@ def add_stdlib_imports(code: str) -> str:
 
 
 #: (name, applies_when, transform)
+#: A bare ``%`` inside a Tex/MathTex string starts a LaTeX comment, so the
+#: rest of the line -- the closing brace included -- vanishes and dvisvgm
+#: fails with an unhelpful "installation does not support converting PDF to
+#: SVG". Python makes this easy to hit by accident: f"{x:.1%}" renders
+#: "16.7%", which LaTeX reads as "16.7" followed by a comment. Two of my own
+#: gold scenes shipped with it and neither failed until render time.
+
+
+def _tex_string_args(code: str):
+    """Every string literal passed positionally to a Tex/MathTex call."""
+    try:
+        tree = ast.parse(code)
+    except SyntaxError:
+        return []
+    out = []
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        name = getattr(node.func, "id", None) or getattr(node.func, "attr", None)
+        if name not in ("Tex", "MathTex"):
+            continue
+        for arg in node.args:
+            if isinstance(arg, ast.Constant) and isinstance(arg.value, str):
+                out.append(arg)
+    return out
+
+
+def has_bare_percent(code: str) -> bool:
+    """True if a Tex literal contains an unescaped ``%``."""
+    return any(re.search(r"(?<!\\)%", a.value) for a in _tex_string_args(code))
+
+
+def escape_tex_percent(code: str) -> str:
+    """Escape bare percents inside Tex/MathTex literals only.
+
+    Edits each literal's own source span, so a ``%`` in a comment, a format
+    spec, or an ordinary string is left alone. Multi-line literals are
+    skipped rather than guessed at.
+    """
+    lines = code.splitlines(keepends=True)
+    offsets, total = [], 0
+    for ln in lines:
+        offsets.append(total)
+        total += len(ln)
+
+    edits = []
+    for node in _tex_string_args(code):
+        if node.lineno != node.end_lineno:
+            continue
+        start = offsets[node.lineno - 1] + node.col_offset
+        end = offsets[node.end_lineno - 1] + node.end_col_offset
+        seg = code[start:end]
+        # In a raw literal one backslash is one backslash. In an ordinary one
+        # a single "\\%" is an invalid escape -- Python keeps it, but warns --
+        # so the replacement has to be doubled there.
+        raw = seg[:2].lower().startswith("r")
+        repl = r"\\%" if raw else r"\\\\%"
+        fixed = re.sub(r"(?<!\\)%", repl, seg)
+        if fixed != seg:
+            edits.append((start, end, fixed))
+    for start, end, fixed in sorted(edits, reverse=True):
+        code = code[:start] + fixed + code[end:]
+    return code
+
+
 RULES = [
     ("strip_prose", lambda c: not _parses(c), strip_prose),
     ("add_imports", lambda c: bool(missing_stdlib_imports(c)), add_stdlib_imports),
     ("add_hold", needs_hold, add_hold),
+    ("escape_percent", has_bare_percent, escape_tex_percent),
 ]
 
 

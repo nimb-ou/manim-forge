@@ -167,10 +167,10 @@ class MontyHall(ForgeScene):
                            fill_color=GOAT_C, fill_opacity=0.65, stroke_width=2)
         rows = VGroup(
             VGroup(Text("switch", font_size=20, color=CAR_C), sw_bar,
-                   MathTex(rf"{sw:.1%}", font_size=24, color=CAR_C)
+                   MathTex(rf"{sw:.1%}".replace("%", r"\%"), font_size=24, color=CAR_C)
                    ).arrange(RIGHT, buff=0.25),
             VGroup(Text("stay", font_size=20, color=GOAT_C), st_bar,
-                   MathTex(rf"{st:.1%}", font_size=24, color=GOAT_C)
+                   MathTex(rf"{st:.1%}".replace("%", r"\%"), font_size=24, color=GOAT_C)
                    ).arrange(RIGHT, buff=0.25),
         ).arrange(DOWN, buff=0.4, aligned_edge=LEFT)
         rows.move_to(DOWN * 1.9)
