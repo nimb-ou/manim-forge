@@ -35,6 +35,15 @@ GOLD = [
         "tags": ["shapes-3d", "geometry", "volume"],
     },
     {
+        "module": "forge/gold/riemann.py",
+        "scene": "RiemannConvergence",
+        "prompt": "show how Riemann sums converge to the area under a curve — "
+                  "start with a couple of rectangles, keep doubling them, and "
+                  "show the total approaching the exact integral, then show "
+                  "that sampling the midpoint converges much faster",
+        "tags": ["calculus", "convergence", "plot"],
+    },
+    {
         "module": "forge/gold/dot_product.py",
         "scene": "DotProduct",
         "prompt": "explain the dot product as a projection — show two vectors, "
