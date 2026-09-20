@@ -82,10 +82,14 @@ def kaggle_status(kernel: str) -> str:
     r = subprocess.run([str(KAGGLE), "kernels", "status", kernel],
                        capture_output=True, text=True)
     out = (r.stdout + r.stderr).strip()
-    # The CLI prints: <slug> has status "complete". Match the quoted word
+    # The CLI prints: <slug> has status "KernelWorkerStatus.RUNNING" --
+    # enum repr, not the bare word I first wrote this against, so the strict
+    # pattern never matched and every poll was silently falling through to
+    # the substring scan below. Match the enum member rather than the whole
+    # line
     # rather than scanning the whole line for "error" -- a transient message
     # that merely contains the word would otherwise abandon a healthy run.
-    m = re.search(r'status\s+"([a-zA-Z]+)"', out)
+    m = re.search(r'status\s+"?(?:KernelWorkerStatus\.)?([a-zA-Z]+)"?', out)
     if m:
         return m.group(1).lower()
     for word in sorted(GOOD | BAD | RUNNING):
