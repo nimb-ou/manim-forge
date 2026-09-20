@@ -307,7 +307,18 @@ def test_no_name_is_used_before_it_exists():
             if (isinstance(n, ast.Name) and isinstance(n.ctx, ast.Load)
                     and n.id not in local):
                 reads.append(n)
-        if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+        if isinstance(node, ast.ClassDef):
+            # A class body is deferred, but its *bases* and decorators are
+            # evaluated the moment the class statement runs. The smoke run
+            # died on exactly that -- `class GradDtypeGuard(TrainerCallback)`
+            # above the import of TrainerCallback -- and this check skipped
+            # ClassDef wholesale, so it never looked.
+            here = []
+            for b in list(node.bases) + list(node.decorator_list):
+                here += [n.id for n in ast.walk(b)
+                         if isinstance(n, ast.Name) and n.id not in bound]
+            problems += [(node.lineno, nm) for nm in here]
+        elif not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
             problems += [(n.lineno, n.id) for n in reads if n.id not in bound]
 
         if isinstance(node, (ast.Import, ast.ImportFrom)):

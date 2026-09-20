@@ -152,7 +152,8 @@ if torch.cuda.is_available():
     print(f"[env] {torch.cuda.device_count()}x {_p.name}, "
           f"{_p.total_memory/1e9:.1f} GB, bf16 supported: "
           f"{torch.cuda.is_bf16_supported()}", flush=True)
-from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
+from transformers import (AutoModelForCausalLM, AutoTokenizer,
+                          BitsAndBytesConfig, TrainerCallback)
 from peft import (LoraConfig, get_peft_model,
                   prepare_model_for_kbit_training)
 
@@ -340,7 +341,6 @@ class GradDtypeGuard(TrainerCallback):
 
 # ── 4. train ───────────────────────────────────────────────────────────────
 from trl import SFTConfig, SFTTrainer
-from transformers import TrainerCallback
 
 # 3% of total steps, computed rather than declared: trl 1.13 has no
 # warmup_ratio, only warmup_steps.
