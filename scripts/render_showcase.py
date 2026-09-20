@@ -25,6 +25,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+from forge.harness.render import _killpg  # noqa: E402
+
 ROOT = Path(__file__).resolve().parents[1]
 PY = "./.venv/bin/python"
 ENV = {**os.environ, "PATH": "/Library/TeX/texbin:" + os.environ.get("PATH", ""),
@@ -89,19 +91,39 @@ def main() -> None:
         for module, name, declared in todo:
             print(f"\n  {name}  ({declared:.0f}s declared)", flush=True)
             t0 = time.time()
+            proc = subprocess.Popen(
+                [PY, "-m", "manim", "render", QUALITY[a.quality],
+                 "--disable_caching",
+                 "--save_sections", "--media_dir", str(OUT), module, name],
+                stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
+                env=ENV, stdin=subprocess.DEVNULL, cwd=ROOT,
+                start_new_session=True)
             try:
-                r = subprocess.run(
-                    [PY, "-m", "manim", "render", QUALITY[a.quality],
-                     "--disable_caching",
-                     "--save_sections", "--media_dir", str(OUT), module, name],
-                    capture_output=True, text=True, env=ENV,
-                    timeout=a.timeout, stdin=subprocess.DEVNULL, cwd=ROOT)
-                ok = r.returncode == 0
-                err = "" if ok else " | ".join(
-                    (r.stderr or r.stdout).strip().splitlines()[-2:])[:240]
+                out, _ = proc.communicate(timeout=a.timeout)
+                rc = proc.returncode
             except subprocess.TimeoutExpired:
-                ok, err = False, f"timed out after {a.timeout}s"
+                _killpg(proc)
+                out, _ = proc.communicate()
+                rc = None
             took = time.time() - t0
+
+            if rc is not None and rc < 0:
+                # Killed by a signal, which here means the supervisor stopped
+                # us -- not a verdict on the scene. Writing "ok": false for
+                # this is how the ledger came to hold five failed scenes, four
+                # of which had already rendered successfully and one of which
+                # had simply never been allowed to finish. An interrupted
+                # attempt records nothing and is retried next run.
+                print(f"    interrupted by signal {-rc} after "
+                      f"{took/60:.1f} min -- not recorded", flush=True)
+                raise SystemExit(128 - rc)
+
+            ok = rc == 0
+            if rc is None:
+                err = f"timed out after {a.timeout}s"
+            else:
+                err = "" if ok else " | ".join(
+                    (out or "").strip().splitlines()[-2:])[:240]
             ledger.write(json.dumps({
                 "scene": name, "module": module, "quality": a.quality,
                 "ok": ok, "seconds": round(took, 1),

@@ -45,9 +45,17 @@ def roster() -> list[Job]:
     """Every job, with how to tell whether it is doing anything.
 
     The CPU jobs exist so that ten cores are not idle for the ten hours a day
-    the Gemini quota is exhausted. Re-gating alone has 1,859 corpus rows
-    outstanding, and they have never been tested against the LaTeX percent
-    rule, which did not exist when they failed.
+    the Gemini quota is exhausted.
+
+    regate is **not** here, and the reason is worth stating. It has now run
+    the full 1,920 previously-failed rows against the current four lint
+    rules: a rule fired on 122 of them and 8 rows were recovered. It is
+    finished until a new rule lands. Left in the roster it found nothing to
+    do, exited cleanly, and got restarted every thirty ticks forever -- work
+    that looked like work. Run it by hand after adding a lint rule, which is
+    the only moment it can produce anything:
+
+        ./.venv/bin/python scripts/regate.py --workers 4
     """
     return [
         Job(name="code-synth",
@@ -65,13 +73,6 @@ def roster() -> list[Job]:
             counter=ROOT / "data/synthetic/tasks.jsonl",
             log=LOGS / "tasks.log",
             patience_s=1200, parks_when_blocked=True),
-
-        Job(name="regate",
-            command=f"{PY} -u scripts/regate.py --workers 4 --timeout 75",
-            resource=Resource.CPU,
-            counter=ROOT / "data/verified/regate.jsonl",
-            log=LOGS / "regate.log",
-            patience_s=1800),
 
         Job(name="showcase",
             command=f"{PY} -u scripts/render_showcase.py --quality high",
@@ -183,13 +184,22 @@ def main() -> None:
                     print(f"     restarted {j.name} "
                           f"(#{j.restarts}, pid {j.proc.pid})", flush=True)
                 elif h is Health.DONE:
-                    # Finished cleanly. Re-running regate is useful -- new lint
-                    # rules land often -- but re-running it instantly is not.
-                    if j.resource is Resource.CPU and tick % 30 == 0:
+                    # Finished cleanly. Start another pass only if the last
+                    # one actually produced something -- a job that exits at
+                    # once because its queue is empty will do so again, and
+                    # respawning it on a timer is a busy loop wearing the
+                    # costume of a worker.
+                    produced = j.count() > j.last_count_at_start
+                    if (j.resource is Resource.CPU and tick % 30 == 0
+                            and produced):
                         j.restarts += 1
                         j.start(ROOT, env)
                         print(f"     {j.name} finished; started another pass",
                               flush=True)
+                    elif not produced and not j.exhausted_logged:
+                        j.exhausted_logged = True
+                        print(f"     {j.name} finished with nothing to do; "
+                              f"leaving it down", flush=True)
             print(flush=True)
     finally:
         for j in jobs:

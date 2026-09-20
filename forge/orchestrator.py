@@ -65,6 +65,10 @@ class Job:
 
     proc: subprocess.Popen | None = field(default=None, repr=False)
     restarts: int = 0
+    #: count at the moment of the last start, so "did this pass produce
+    #: anything" is answerable without trusting the job's own reporting.
+    last_count_at_start: int = 0
+    exhausted_logged: bool = False
     last_count: int = -1
     last_progress_t: float = 0.0
     started_t: float = 0.0
@@ -120,7 +124,8 @@ class Job:
             stdout=handle, stderr=subprocess.STDOUT,
             stdin=subprocess.DEVNULL, start_new_session=True)
         self.started_t = self.last_progress_t = time.time()
-        self.last_count = self.count()
+        self.last_count = self.last_count_at_start = self.count()
+        self.exhausted_logged = False
 
     def stop(self, grace: float = 4.0) -> None:
         """Terminate the job's whole process group, then kill it.

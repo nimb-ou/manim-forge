@@ -173,6 +173,33 @@ CATALOG: list[Dataset] = [
         "videos/<scene>/<quality>/*.mp4 plus per-beat sections",
         archive=False,   # regenerable from code, and large
     ),
+    Dataset(
+        "data/showcase/rendered.jsonl",
+        "Presentation-quality render ledger: one verdict per gold scene at 1080p60.",
+        "scene, module, quality, ok, seconds, declared_s, error, interrupted?",
+        "Declared-versus-actual runtime is the only place the beat timings are "
+        "checked against a real render rather than against the word count. "
+        "`interrupted` marks an attempt killed by a signal -- not a verdict on "
+        "the scene.",
+        archive=True,
+    ),
+    Dataset(
+        "data/showcase/videos",
+        "The reference renders themselves: every gold scene at 1080p60, with sections.",
+        "videos/<scene>/1080p60/*.mp4 plus sections/<Scene>.json per beat",
+        "Regenerable in principle, but each one costs minutes of CPU and these "
+        "are the artefacts the style is actually judged against -- the gallery, "
+        "and the reference a human compares a generated scene to. Uncatalogued "
+        "until now, which meant 73 MB of finished product was outside every "
+        "backup.",
+        archive=True,
+    ),
+    Dataset(
+        "data/checks",
+        "Per-scene render check output from verify_gold and the smoke harness.",
+        "<Scene>/ render artefacts and verdicts",
+        archive=False,   # regenerable, and superseded by the showcase ledger
+    ),
 ]
 
 
