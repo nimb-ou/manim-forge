@@ -42,55 +42,57 @@ def _stop(*_):
 
 
 def roster() -> list[Job]:
-    """Every job, with how to tell whether it is doing anything.
+    """Every job worth running, derived from the same backlog the doctor reads.
 
-    The CPU jobs exist so that ten cores are not idle for the ten hours a day
-    the Gemini quota is exhausted.
+    Not a hand-maintained list. The two drifted before: the doctor knew
+    twenty-five showcase renders were outstanding while the pool -- which I
+    had emptied that morning -- was not running at all, and the gap survived
+    an entire training run because nothing compared them.
 
-    regate is **not** here, and the reason is worth stating. It has now run
-    the full 1,920 previously-failed rows against the current four lint
-    rules: a rule fired on 122 of them and 8 rows were recovered. It is
-    finished until a new rule lands. Left in the roster it found nothing to
-    do, exited cleanly, and got restarted every thirty ticks forever -- work
-    that looked like work. Run it by hand after adding a lint rule, which is
-    the only moment it can produce anything:
+    `forge.doctor.backlog()` is now the single definition of what work
+    exists, what resource it needs, how to start it, and why it is parked if
+    it is. A job appears here when it has outstanding units, a command, and
+    no `blocked_by`.
 
-        ./.venv/bin/python scripts/regate.py --workers 4
+    The pool is deliberately small right now -- one job. Corpus generation is
+    parked until Phase 2 gives us a measure for whether a generated row is
+    worth keeping, because more rows from the same teacher is the specific
+    thing docs/PLAN.md says makes the model worse. A one-job pool that is
+    honest beats a four-job pool where two are doing nothing, which is what
+    this was yesterday.
     """
-    return [
-        Job(name="code-synth",
-            command=f"{PY} -u scripts/generate_forever.py --max-hours 24 "
-                    f"--workers 5 --repair-rounds 4",
-            resource=Resource.API,
-            counter=ROOT / "data/synthetic/stream.jsonl",
-            log=LOGS / "stream.log",
-            patience_s=1200, parks_when_blocked=True),
+    from forge.doctor import backlog
 
-        Job(name="prose-synth",
-            command=f"{PY} -u scripts/generate_tasks.py --per-kind 600 "
-                    f"--workers 3 --max-hours 24",
-            resource=Resource.API,
-            counter=ROOT / "data/synthetic/tasks.jsonl",
-            log=LOGS / "tasks.log",
-            patience_s=1200, parks_when_blocked=True),
+    patience = {"cpu": 7200, "api": 1200}
+    jobs = []
+    for w in backlog():
+        if w.blocked_by or not w.command or w.outstanding == 0:
+            continue
+        resource = Resource(w.resource) if w.resource in ("cpu", "api", "gpu") \
+            else None
+        if resource is None:
+            continue                      # "claude" work: mine, not a process
+        name = w.name.split()[0]
+        jobs.append(Job(
+            name=name,
+            command=w.command.replace("./.venv/bin/python", PY),
+            resource=resource,
+            counter=ROOT / _COUNTER[name],
+            log=LOGS / f"{name}.log",
+            patience_s=patience.get(w.resource, 1800),
+            max_restarts=40,
+            parks_when_blocked=(resource is Resource.API),
+        ))
+    return jobs
 
-        Job(name="showcase",
-            command=f"{PY} -u scripts/render_showcase.py --quality high",
-            resource=Resource.CPU,
-            counter=ROOT / "data/showcase/rendered.jsonl",
-            log=LOGS / "showcase.log",
-            # One 1080p60 scene can legitimately take half an hour, and the
-            # 3-D one takes longer, so patience here is measured in hours.
-            patience_s=7200, max_restarts=40),
 
-        # gold-verify is deliberately absent. It rendered all 44 scenes at
-        # 480p15 while showcase rendered the same 44 at 1080p60 -- the same
-        # work twice, six manim processes deep, for a load average of 95 on
-        # ten cores. The higher-quality pass proves the scene renders and
-        # produces the asset we actually want; the low-quality pass proved
-        # only the first half. Run verify_gold by hand when iterating on one
-        # scene, where its speed is the point.
-    ]
+#: Where each job's output accumulates, so progress is measured rather than
+#: assumed. A job whose line count is not moving is stalled even if its
+#: process is perfectly alive.
+_COUNTER = {
+    "showcase": "data/showcase/rendered.jsonl",
+    "re-gate": "data/verified/regate.jsonl",
+}
 
 
 def child_env() -> dict:

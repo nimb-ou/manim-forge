@@ -16,11 +16,16 @@
 # same machine. This notebook does SFT; the GRPO one reuses its output.
 
 # ── 1. environment ─────────────────────────────────────────────────────────
-!pip -q install -U "transformers>=4.45" "trl>=0.12" "peft>=0.13" \
-                   "bitsandbytes>=0.44" "accelerate>=1.0" datasets
-
-import json, os, tarfile, textwrap
+# subprocess, not `!pip`. This is pushed as kernel_type "script", which is
+# plain Python -- IPython's ! magic is a SyntaxError there, and the whole
+# first run died on line 19 before importing anything.
+import json, os, subprocess, sys, tarfile, textwrap
 from pathlib import Path
+
+subprocess.run([sys.executable, "-m", "pip", "install", "-q", "-U",
+                "transformers>=4.45", "trl>=0.12", "peft>=0.13",
+                "bitsandbytes>=0.44", "accelerate>=1.0", "datasets",
+                "huggingface_hub"], check=True)
 
 DATA = Path("/kaggle/input/manim-forge-data")
 WORK = Path("/kaggle/working")

@@ -27,6 +27,7 @@ from __future__ import annotations
 import argparse
 import ast
 import json
+import os
 import pkgutil
 import re
 import subprocess
@@ -266,6 +267,78 @@ def invariants() -> list[Check]:
     return out
 
 
+@dataclass
+class Work:
+    """A kind of outstanding work, and whether anything is doing it.
+
+    The invariants above ask whether the data is consistent. This asks the
+    other question, which nothing was asking: **is there work to do and
+    nobody doing it?**
+
+    That gap is not hypothetical. The whole of Phase 1's training run went by
+    with twenty-five showcase renders outstanding and the CPU at idle,
+    because starting them depended on me remembering to. A pool that is busy
+    and useless is one failure; no pool at all is the other, and this project
+    has now managed both in two days.
+
+    `blocked_by` is the honest third state. API generation is outstanding and
+    deliberately not running -- more rows from the same teacher is the thing
+    docs/PLAN.md says not to do until Phase 2 defines what a good row is.
+    Parked-with-a-reason is a decision; parked-by-forgetting is a bug, and a
+    report that cannot tell them apart is useless.
+    """
+    name: str
+    resource: str
+    outstanding: int
+    unit: str
+    worker: str                 # regex matching a process doing this work
+    command: str = ""
+    blocked_by: str = ""
+
+    def busy(self, procs: list[str]) -> bool:
+        return any(re.search(self.worker, p) for p in procs)
+
+    def state(self, procs: list[str]) -> str:
+        if self.outstanding == 0:
+            return "done"
+        if self.busy(procs):
+            return "working"
+        return "parked" if self.blocked_by else "IDLE"
+
+
+def backlog() -> list[Work]:
+    from forge.gold.curriculum import CURRICULUM
+    d = ROOT / "data"
+
+    showcase = _rows(d / "showcase" / "rendered.jsonl")
+    n_gold = sum(1 for c in CURRICULUM if c.done)
+    rendered = len({r["scene"] for r in showcase if r.get("ok")})
+
+    from forge.repair.lint import RULES
+    current = ",".join(sorted(n for n, _, _ in RULES))
+    regate = _rows(d / "verified" / "regate.jsonl")
+    settled = {r["id"] for r in regate if r.get("ruleset") == current}
+    failed = {r["id"] for r in _rows(d / "verified" / "gate.jsonl")
+              if not r.get("ok") and not r.get("is_env_failure")}
+
+    return [
+        Work("showcase renders", "cpu", max(0, n_gold - rendered), "scenes",
+             worker=r"render_showcase",
+             command="./.venv/bin/python -u scripts/render_showcase.py --quality high"),
+        Work("re-gate under current lint", "cpu", len(failed - settled), "rows",
+             worker=r"regate\.py",
+             command="./.venv/bin/python scripts/regate.py --workers 4"),
+        Work("gold scenes to author", "claude",
+             sum(1 for c in CURRICULUM if not c.done), "scenes",
+             worker=r"(?!)",          # only I do this; never matches a process
+             blocked_by="Phase 1 measurement — docs/PLAN.md §3"),
+        Work("corpus generation", "api", 1, "daemon",
+             worker=r"generate_forever|generate_tasks",
+             blocked_by="Phase 2 — no measure yet for whether a row is worth "
+                        "keeping; more slideware makes the model worse"),
+    ]
+
+
 def running() -> list[str]:
     try:
         ps = subprocess.run(["ps", "-Ao", "pid,command"], capture_output=True,
@@ -373,10 +446,41 @@ def main() -> None:
         print(f"      {l}")
 
     print()
+    print("=" * 66)
+    print("  WORK")
+    print("=" * 66)
+    # On a CI runner the backlog counts still mean something -- they come
+    # from the data -- but "is anything working on it" does not: the runner
+    # cannot see this laptop's processes and would report every job idle.
+    # Report the numbers, never fail on them.
+    blind = bool(os.environ.get("CI"))
+    work = backlog()
+    idle = []
+    for w in work:
+        st = w.state(live)
+        if blind and st == "IDLE":
+            st = "unknown"
+        mark = {"done": "ok ", "working": ">> ", "parked": "-- ",
+                "IDLE": "XX ", "unknown": "?? "}[st]
+        print(f"  {mark} {w.name:<28} {w.resource:<6} "
+              f"{w.outstanding:>5} {w.unit}")
+        if st == "parked":
+            print(f"        parked: {w.blocked_by}")
+        elif st == "unknown":
+            print(f"        outstanding; cannot see workers from CI")
+        elif st == "IDLE":
+            idle.append(w)
+            print(f"        nothing is doing this")
+            if w.command:
+                print(f"        start: {w.command}")
+
+    print()
     if skipped:
         print(f"  {len(skipped)} check(s) need data/ and did not run")
     if warns:
         print(f"  {len(warns)} note(s) about data already on disk — not faults")
+    if idle:
+        print(f"  {len(idle)} kind(s) of work outstanding with no worker")
     if bad:
         print(f"  {len(bad)} invariant(s) broken")
     if drift:
@@ -384,9 +488,9 @@ def main() -> None:
     if not have_data:
         print("  no data/ — figures not checked "
               "(restore with scripts/backup_to_hf.py --restore)")
-    if not bad and not drift:
+    if not bad and not drift and not idle:
         print("  clean")
-    sys.exit(1 if (bad or drift) else 0)
+    sys.exit(1 if (bad or drift or idle) else 0)
 
 
 if __name__ == "__main__":

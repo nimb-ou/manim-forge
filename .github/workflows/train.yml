@@ -90,24 +90,46 @@ jobs:
 
       # Kaggle has no webhook, so this polls. Ten minutes between checks: the
       # job takes hours and a tighter loop only burns runner minutes.
+      # Kaggle has no webhook, so this polls. Ten minutes between checks:
+      # the job runs for hours and a tighter loop only burns runner minutes.
+      #
+      # The classification is tested in tests/test_kaggle_poll.py against all
+      # seven KernelWorkerStatus values and against the two ways this went
+      # wrong before: a case-sensitive match that could not see ERROR, and a
+      # substring match over the whole message, which includes the kernel's
+      # own slug.
       - name: wait for it
         env:
           KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN }}
           KAGGLE_USER: nimbou
         run: |
+          unparsed=0
           for i in $(seq 1 54); do
             sleep 600
-            status=$(kaggle kernels status "$KAGGLE_USER/manim-forge-sft" 2>&1 || true)
-            echo "[$i] $status"
-            case "$status" in
-              *complete*)  echo "finished"; exit 0 ;;
-              *error*|*cancel*)
+            raw=$(kaggle kernels status "$KAGGLE_USER/manim-forge-sft" 2>&1 || true)
+            token=$(printf '%s' "$raw" \
+              | sed -n 's/.*KernelWorkerStatus\.\([A-Z_]*\).*/\1/p')
+            echo "[$i] ${token:-unparsed}  ($raw)"
+            case "${token:-}" in
+              COMPLETE)
+                echo "kernel finished"; exit 0 ;;
+              ERROR|CANCEL_REQUESTED|CANCEL_ACKNOWLEDGED)
+                echo "::error::kernel ended as $token"
                 kaggle kernels output "$KAGGLE_USER/manim-forge-sft" -p out/ || true
-                tail -100 out/*.log 2>/dev/null || true
-                echo "kernel failed"; exit 1 ;;
+                python scripts/read_kaggle_log.py out/ || true
+                exit 1 ;;
+              QUEUED|RUNNING|NEW_SCRIPT)
+                unparsed=0 ;;
+              *)
+                # A transient CLI or network failure is not a verdict on the
+                # kernel; several in a row is a verdict on the poller.
+                unparsed=$((unparsed + 1))
+                if [ "$unparsed" -ge 5 ]; then
+                  echo "::error::5 consecutive unreadable statuses"; exit 1
+                fi ;;
             esac
           done
-          echo "still running after 9 hours — check Kaggle"; exit 1
+          echo "::error::still running after 9 hours — check Kaggle"; exit 1
 
       - name: pull the output
         if: always()
