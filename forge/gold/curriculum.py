@@ -68,11 +68,13 @@ CURRICULUM: list[Scene] = [
     Scene("pythagoras", "Pythagoras by rearrangement", "geometry", 2,
           "prove the Pythagorean theorem by rearranging four right triangles "
           "inside a square, twice, and comparing what is left",
-          needs=["grid"], builds_on=["area_rearranged"]),
+          needs=["grid"], builds_on=["area_rearranged"],
+          done=True),
     Scene("circle_area", "Unrolling a circle", "geometry", 2,
           "derive the area of a circle by slicing it into thin wedges and "
           "rearranging them into something that approaches a rectangle",
-          builds_on=["area_rearranged"]),
+          builds_on=["area_rearranged"],
+          done=True),
     Scene("linear_transform", "A matrix moves the whole plane", "vectors", 2,
           "show a linear transformation as the entire grid moving, with the "
           "basis vectors landing where the matrix columns say",
@@ -88,7 +90,8 @@ CURRICULUM: list[Scene] = [
     Scene("derivative_slope", "The derivative as a limit of slopes", "calculus", 2,
           "show the derivative as the slope of a line through two points on a "
           "curve, as those points slide together",
-          needs=["calculus"], builds_on=["function_machine"]),
+          needs=["calculus"], builds_on=["function_machine"],
+          done=True),
     Scene("chain_rule", "Rates of change, nested", "calculus", 2,
           "show the chain rule as two gears of different sizes, where turning "
           "one turns the other at a multiplied rate",
@@ -96,7 +99,8 @@ CURRICULUM: list[Scene] = [
     Scene("taylor", "Approximating a curve with polynomials", "calculus", 2,
           "show a Taylor series approximating sine, adding one term at a time, "
           "and show the approximation improving then failing far from the centre",
-          needs=["calculus"]),
+          needs=["calculus"],
+          done=True),
     Scene("euclid_gcd", "Euclid's algorithm as shrinking rectangles", "number-theory", 2,
           "show Euclid's algorithm for the greatest common divisor as repeatedly "
           "cutting the largest possible square from a rectangle",

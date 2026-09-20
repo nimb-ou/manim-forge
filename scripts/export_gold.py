@@ -10,6 +10,39 @@ from pathlib import Path
 
 GOLD = [
     {
+        "module": "forge/gold/derivative_slope.py",
+        "scene": "DerivativeSlope",
+        "prompt": "show the derivative as a limit of slopes — draw a secant line "
+                  "between two points on a curve, shrink the gap and show the "
+                  "computed slopes settling on a single value, then draw the "
+                  "tangent",
+        "tags": ['calculus', 'plot', 'limits'],
+    },
+    {
+        "module": "forge/gold/taylor.py",
+        "scene": "Taylor",
+        "prompt": "approximate the sine curve with polynomials, adding one term "
+                  "at a time and showing the error shrink near the centre, then "
+                  "show the same polynomial diverging far from it",
+        "tags": ['calculus', 'plot', 'series'],
+    },
+    {
+        "module": "forge/gold/pythagoras.py",
+        "scene": "Pythagoras",
+        "prompt": "prove Pythagoras by rearrangement — pack four copies of the "
+                  "same right triangle into a square two different ways and show "
+                  "the leftover areas must be equal",
+        "tags": ['geometry', 'proof'],
+    },
+    {
+        "module": "forge/gold/circle_area.py",
+        "scene": "CircleArea",
+        "prompt": "show why the area of a circle is pi r squared by cutting it "
+                  "into wedges and interleaving them into a rectangle, and show "
+                  "the approximation improving as the wedges get thinner",
+        "tags": ['geometry', 'limits'],
+    },
+    {
         "module": "forge/gold/electron_shells.py",
         "scene": "ElectronShells",
         "prompt": "show electrons filling shells around a nucleus and why the "

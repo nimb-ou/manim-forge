@@ -91,3 +91,77 @@ def convergence(f: Callable[[float], float], a: float, b: float,
     return [(n, s.total, abs(s.total - exact))
             for n in counts
             for s in (RiemannSum(f, a, b, n, rule),)]
+
+
+# ------------------------------------------------- derivatives and Taylor
+
+
+def secant_slope(f: Callable[[float], float], x: float, h: float) -> float:
+    """Slope of the line through (x, f(x)) and (x+h, f(x+h))."""
+    return (f(x + h) - f(x)) / h
+
+
+def secant_sequence(f: Callable[[float], float], x: float,
+                    hs: list[float]) -> list[tuple[float, float]]:
+    """(h, slope) as h shrinks -- the sequence the limit is taken along.
+
+    Returned as data so a scene animates the *actual* convergence rather than
+    a smooth interpolation towards a known answer. The whole idea of the
+    derivative is that this sequence settles; staging it would skip the point.
+    """
+    return [(h, secant_slope(f, x, h)) for h in hs]
+
+
+def numeric_derivative(f: Callable[[float], float], x: float,
+                       h: float = 1e-6) -> float:
+    """Central difference: error falls as h^2 rather than h.
+
+    Used to *check* an analytic derivative, never to display one -- finite
+    differences are accurate enough to catch a wrong formula and not accurate
+    enough to be quoted.
+    """
+    return (f(x + h) - f(x - h)) / (2 * h)
+
+
+def verify_derivative(f: Callable[[float], float],
+                      fprime: Callable[[float], float],
+                      xs: list[float], tol: float = 1e-5) -> bool:
+    """An analytic derivative must agree with the numeric one everywhere tested."""
+    return all(abs(fprime(x) - numeric_derivative(f, x)) < tol for x in xs)
+
+
+def taylor_poly(derivs: list[Callable[[float], float]], a: float
+                ) -> Callable[[float], float]:
+    """The Taylor polynomial about ``a`` built from the supplied derivatives.
+
+    ``derivs[0]`` is f itself, ``derivs[k]`` its k-th derivative. Coefficients
+    are f^(k)(a)/k!, computed here rather than written down, so adding a term
+    to a scene cannot silently use the wrong factorial.
+    """
+    import math as _m
+    coeffs = [d(a) / _m.factorial(k) for k, d in enumerate(derivs)]
+
+    def p(x: float) -> float:
+        return sum(c * (x - a) ** k for k, c in enumerate(coeffs))
+    return p
+
+
+def taylor_error(f: Callable[[float], float],
+                 derivs: list[Callable[[float], float]],
+                 a: float, x: float) -> float:
+    """How far the polynomial misses at ``x``. Signed, because the sign matters."""
+    return taylor_poly(derivs, a)(x) - f(x)
+
+
+def verify_taylor_improves(f: Callable[[float], float],
+                           derivs: list[Callable[[float], float]],
+                           a: float, x: float) -> bool:
+    """Each extra term must bring the approximation closer at ``x``.
+
+    Not a general truth about Taylor series -- it fails outside the radius of
+    convergence, and that is exactly why a scene claiming "more terms, better
+    fit" has to check it on the interval it actually draws.
+    """
+    errs = [abs(taylor_error(f, derivs[:k + 1], a, x))
+            for k in range(len(derivs))]
+    return all(b <= a_ + 1e-12 for a_, b in zip(errs, errs[1:]))
