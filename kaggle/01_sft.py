@@ -22,10 +22,26 @@
 import json, os, subprocess, sys, tarfile, textwrap
 from pathlib import Path
 
-subprocess.run([sys.executable, "-m", "pip", "install", "-q", "-U",
-                "transformers>=4.45", "trl>=0.12", "peft>=0.13",
-                "bitsandbytes>=0.44", "accelerate>=1.0", "datasets",
-                "huggingface_hub"], check=True)
+# Pinned, not floated. trl renamed max_seq_length -> max_length and dropped
+# warmup_ratio between the version this was written against and the one pip
+# installs today; an unpinned `trl>=0.12` therefore means the training
+# config is a different config every run, which is the opposite of one
+# variable per experiment. These are the versions verified locally.
+# Pinned to the versions the configs below were actually constructed
+# against, locally, before this was pushed. trl renamed max_seq_length ->
+# max_length and dropped warmup_ratio between the version this was first
+# written for and the one pip installs today, so an unpinned `trl>=0.12`
+# means a different training config every run -- the opposite of one
+# variable per experiment.
+#
+# torch is not pinned: Kaggle ships a build matched to its CUDA driver and
+# replacing it is how a working GPU becomes a CPU. bitsandbytes is not
+# pinned either, and that is the one thing here I could not verify -- it has
+# no macOS build, so it is the only dependency going in untested.
+subprocess.run([sys.executable, "-m", "pip", "install", "-q",
+                "transformers==5.17.0", "trl==1.13.0", "peft==0.21.0",
+                "accelerate==1.15.0", "datasets==5.0.1",
+                "bitsandbytes>=0.48", "huggingface_hub"], check=True)
 
 DATA = Path("/kaggle/input/manim-forge-data")
 WORK = Path("/kaggle/working")
@@ -78,21 +94,27 @@ peft_cfg = LoraConfig(
 # ── 4. train ───────────────────────────────────────────────────────────────
 from trl import SFTConfig, SFTTrainer
 
+# 3% of total steps, computed rather than declared: trl 1.13 has no
+# warmup_ratio, only warmup_steps.
+EPOCHS, BATCH, ACCUM = 3, 1, 8
+steps_per_epoch = max(1, len(ds["train"]) // (BATCH * ACCUM))
+total_steps = steps_per_epoch * EPOCHS
+
 cfg = SFTConfig(
     output_dir=str(WORK / "sft-out"),
-    num_train_epochs=3,               # 3,010 examples, ~900 tokens each
-    per_device_train_batch_size=1,
-    gradient_accumulation_steps=8,
+    num_train_epochs=EPOCHS,          # 3,010 examples, ~900 tokens each
+    per_device_train_batch_size=BATCH,
+    gradient_accumulation_steps=ACCUM,
     learning_rate=1e-4,               # LoRA tolerates far more than full FT
     lr_scheduler_type="cosine",
-    warmup_ratio=0.03,
+    warmup_steps=max(10, int(0.03 * total_steps)),
     logging_steps=10,
     eval_strategy="steps",
     eval_steps=60,
     save_steps=120,
     save_total_limit=3,               # Kaggle output quota is finite
     bf16=False, fp16=True,
-    max_seq_length=2048,
+    max_length=2048,                  # was max_seq_length before trl 1.x
     gradient_checkpointing=True,
     report_to="none",
     # Loss on the completion only. Training the model to predict prompts it
@@ -125,20 +147,19 @@ mix = hashlib.sha256(
 }, indent=2))
 print(json.dumps(json.loads((WORK / "adapter" / "run.json").read_text()), indent=2))
 
-# ── 4b. publish, so nothing depends on a human downloading a file ──────────
-# The whole point of pushing this kernel by API is that the loop closes
-# without anyone at a browser. An adapter that has to be downloaded by hand
-# is the step where that stops being true.
-HF_TOKEN = os.environ.get("HF_TOKEN") or ""
-if HF_TOKEN:
-    from huggingface_hub import HfApi
-    repo = "nimitttt/manim-forge-sft"
-    api = HfApi(token=HF_TOKEN)
-    api.create_repo(repo, private=True, exist_ok=True)
-    api.upload_folder(folder_path=str(WORK / "adapter"), repo_id=repo)
-    print(f"adapter pushed to https://huggingface.co/{repo}")
-else:
-    print("no HF_TOKEN in Kaggle secrets -- adapter stays in /kaggle/working")
+# ── 4b. the adapter leaves via /kaggle/working ─────────────────────────────
+# Not pushed to Hugging Face from here. A Kaggle kernel has no access to the
+# runner's environment: HF_TOKEN would have to be attached as a Kaggle
+# Secret through the web UI, which is a manual step, and the `or ""` fallback
+# above would have skipped the upload silently when it was missing -- the
+# adapter would sit in /kaggle/working and the loop would look like it
+# worked.
+#
+# The workflow already runs `kaggle kernels output`, and it already holds
+# HF_TOKEN. So it does the push. One secret, in one place.
+print(f"adapter is in {WORK / 'adapter'} — the workflow collects it")
+for f in sorted((WORK / "adapter").iterdir()):
+    print(f"  {f.name}  {f.stat().st_size/1e6:.1f} MB")
 
 # ── 5. sanity check: generate one scene ────────────────────────────────────
 from transformers import pipeline

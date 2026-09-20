@@ -136,7 +136,19 @@ jobs:
         env:
           KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN }}
           KAGGLE_USER: nimbou
-        run: kaggle kernels output "$KAGGLE_USER/manim-forge-sft" -p out/ || true
+        run: |
+          kaggle kernels output "$KAGGLE_USER/manim-forge-sft" -p out/ || true
+          python scripts/read_kaggle_log.py out/ || true
+
+      # The kernel cannot push this itself: a Kaggle notebook sees none of
+      # the runner's environment, so HF_TOKEN would have to be attached as a
+      # Kaggle Secret through the web UI -- a manual step in a loop whose
+      # point is having none. This refuses to publish an adapter with no
+      # weights rather than reporting a successful upload of nothing.
+      - name: publish the adapter
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: python scripts/publish_adapter.py out/
 
       - uses: actions/upload-artifact@v4
         if: always()
