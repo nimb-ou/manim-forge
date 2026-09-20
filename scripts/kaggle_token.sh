@@ -68,6 +68,32 @@ if user=$(install_from "$tmp"); then
     exit 0
 fi
 
+# 3. type it in. Kaggle's newer settings page shows the token as a string to
+#    copy rather than downloading a file, and a key pasted into a chat window
+#    has to be treated as burnt -- so read it here, with echo off, and write
+#    the file locally.
+if [ "${1:-}" = "--manual" ] || [ -t 0 ]; then
+    echo
+    echo "No kaggle.json found. Entering it directly instead."
+    echo "Nothing you type here is echoed or logged."
+    echo
+    printf '  Kaggle username: '
+    read -r KU
+    printf '  Kaggle key (hidden): '
+    read -rs KK
+    echo
+    if [ -n "$KU" ] && [ -n "$KK" ]; then
+        printf '{"username":"%s","key":"%s"}' "$KU" "$KK" > "$tmp"
+        if user=$(install_from "$tmp"); then
+            echo
+            echo "installed to $DEST"
+            echo "Kaggle account: $user"
+            exit 0
+        fi
+        echo "  that did not parse as a valid token"
+    fi
+fi
+
 cat <<'MSG'
 No token found.
 
