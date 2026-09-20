@@ -10,6 +10,15 @@ from pathlib import Path
 
 GOLD = [
     {
+        "module": "forge/gold/orbit.py",
+        "scene": "OrbitScene",
+        "prompt": "show a planet orbiting a star on an ellipse, show that it "
+                  "moves much faster near the star, then shade equal-time wedges "
+                  "at both ends and show they have the same area because nothing "
+                  "twists the orbit",
+        "tags": ['physics', 'orbits'],
+    },
+    {
         "module": "forge/gold/convolution.py",
         "scene": "Convolution",
         "prompt": "show convolution as sliding a small window of weights along a "

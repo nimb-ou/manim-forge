@@ -165,7 +165,8 @@ CURRICULUM: list[Scene] = [
     Scene("orbit", "Falling forever around a planet", "physics", 2,
           "show an orbit as continuous falling, by firing a cannonball faster "
           "and faster until it misses the ground",
-          needs=["oscillation"]),
+          needs=["oscillation"],
+          done=True),
     Scene("electron_shells", "Why atoms fill up in layers", "chemistry", 2,
           "show electrons filling shells around a nucleus and why the shells "
           "hold two, eight and eight",
