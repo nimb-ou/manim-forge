@@ -29,6 +29,7 @@ in the log. Read those, not $?.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import re
 import subprocess
@@ -79,6 +80,32 @@ def note(**fields) -> None:
     prior.update(fields)
     prior["updated"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
     STATE.write_text(json.dumps(prior, indent=2) + "\n")
+
+
+def kernel_fingerprint() -> str:
+    """Hash the kernel source, so an outcome knows which code it describes."""
+    src = ROOT / "kaggle" / "01_sft.py"
+    if not src.exists():
+        return "missing"
+    return hashlib.sha256(src.read_bytes()).hexdigest()[:16]
+
+
+def archive_state(prior: dict) -> None:
+    """Keep the finished run rather than overwriting it.
+
+    Nothing here is big and the failures are the useful part -- run 15's OOM
+    was only still readable a day later because its log had been copied out
+    of Kaggle, which serves a log only while that version is current.
+    """
+    stamp = prior.get("updated", "unknown").replace(":", "").replace("-", "")
+    where = STATE_DIR / "history" / f"state-{stamp}-{prior.get('outcome')}.json"
+    where.parent.mkdir(parents=True, exist_ok=True)
+    where.write_text(json.dumps(prior, indent=2) + "\n")
+    out = STATE_DIR / "kernel-output"
+    if out.exists():
+        out.rename(where.with_name(f"kernel-output-{stamp}"))
+    STATE.unlink(missing_ok=True)
+    say(f"    archived the previous run to {where.name}")
 
 
 def kaggle_status(kernel: str) -> str:
@@ -190,19 +217,33 @@ def main() -> int:
     # start when the work is already finished. A terminal outcome is sticky:
     # re-running the ninety-minute eval every time the laptop reboots would
     # overwrite the numbers with a second measurement of the same adapter.
+    #
+    # But sticky against *which* kernel? Three times now a run has failed,
+    # I have pushed a fixed kernel, and then had to clear this file by hand
+    # before the autopilot would look at it -- a manual step in the middle
+    # of the thing whose whole purpose is not needing me. So the outcome
+    # carries the hash of the kernel source it describes, and an outcome
+    # about a kernel that has since been edited is history rather than an
+    # answer.
+    fingerprint = kernel_fingerprint()
     if STATE.exists() and not args.force:
         try:
-            done = json.loads(STATE.read_text()).get("outcome")
+            prior = json.loads(STATE.read_text())
         except json.JSONDecodeError:
-            done = None
-        if done:
-            say(f"already finished: {done}. Nothing to do — pass --force to "
-                f"run it again anyway.")
+            prior = {}
+        done = prior.get("outcome")
+        if done and prior.get("kernel_sha") == fingerprint:
+            say(f"already finished: {done}, for this exact kernel source. "
+                f"Nothing to do — pass --force to run it again anyway.")
             return 0
+        if done:
+            say(f"previous outcome ({done}) was for a different kernel "
+                f"source; archiving it and watching the new one")
+            archive_state(prior)
 
     say("=" * 70)
     say(f"autopilot: {args.kernel}")
-    note(phase="starting", kernel=args.kernel)
+    note(phase="starting", kernel=args.kernel, kernel_sha=fingerprint)
 
     if not args.skip_wait:
         status = wait_for_kernel(args.kernel, args.poll, args.max_hours)
