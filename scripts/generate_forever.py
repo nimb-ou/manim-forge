@@ -151,7 +151,7 @@ def main() -> None:
         row = CorpusRow.build(
             source=f"stream-{task.kind}", license="CC-BY-NC-SA-4.0",
             prompt=task.request if task.kind == "topic" else task.request[-1400:],
-            code=g.code, index=0,
+            code=g.code, index=None,
             tags=["synthetic", task.kind, f"domain:{task.meta.get('domain','?')}"])
         rec = row.to_dict()
         rec.update({"task_key": task.key, "kind": task.kind,

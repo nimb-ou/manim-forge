@@ -380,13 +380,17 @@ GOLD = [
 out = Path("data/gold/gold.jsonl")
 out.parent.mkdir(parents=True, exist_ok=True)
 with out.open("w") as f:
-    for i, g in enumerate(GOLD):
+    for g in GOLD:
         code = Path(g["module"]).read_text()
+        # Keyed by module, not by position in this list. register_gold.py
+        # prepends, so an index-based id renamed every existing scene each
+        # time a new one was added -- an id that moves identifies nothing.
         f.write(json.dumps({
             "prompt": g["prompt"],
             "code": code,
-            "meta": {"id": f"gold:{i:03d}", "source": "gold",
+            "meta": {"id": f"gold:{Path(g['module']).stem}", "source": "gold",
                      "scene": g["scene"], "tags": g["tags"],
+                     "n_beats": code.count("@beat"),
                      "n_play_calls": code.count("self.play(")},
         }) + "\n")
 print(f"{len(GOLD)} gold scenes -> {out}")

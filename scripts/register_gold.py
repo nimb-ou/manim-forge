@@ -83,6 +83,13 @@ def main() -> None:
     print()
     subprocess.run([py, "scripts/retime_beats.py", "--apply"])
     print()
+    # Writing the scene into the GOLD list is not the same as writing it into
+    # the dataset. This step was missing, so data/gold/gold.jsonl sat at 12
+    # rows while 44 scenes existed on disk -- 32 of them finished, committed,
+    # audited, and invisible to training, which is the exact failure the
+    # module docstring says this script exists to prevent.
+    subprocess.run([py, "scripts/export_gold.py"], check=True)
+    print()
     subprocess.run([py, "scripts/audit_narration.py", "--strict"], check=True)
     subprocess.run([py, "-c",
                     "from forge.gold import curriculum as c;"

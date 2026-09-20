@@ -123,15 +123,28 @@ class CorpusRow:
 
     @classmethod
     def build(cls, *, source: str, license: str, prompt: str, code: str,
-              index: int, tags: list[str] | None = None) -> "CorpusRow":
+              index: int | None = None,
+              tags: list[str] | None = None) -> "CorpusRow":
+        """Build a row. `index` is the row's position in its source file.
+
+        Pass `index=None` for generated rows, which have no position in
+        anything: the id is then the content hash, which is stable, unique,
+        and does not depend on a counter that a caller has to remember to
+        advance. `generate_forever.py` passed a literal 0 for every row it
+        ever wrote, so 399 distinct scenes in stream.jsonl carried 10 ids
+        between them and any join keyed on id silently discarded 97% of
+        them.
+        """
         from .clean import repair
         code, repair_used = repair(code or "")
         tags = list(tags or [])
         if repair_used:
             tags.append(f"repaired:{repair_used}")
         scenes = scene_classes(code)
+        key = normalized_hash(code or "")
+        ident = f"{source}:{index:06d}" if index is not None else f"{source}:{key[:12]}"
         return cls(
-            id=f"{source}:{index:06d}",
+            id=ident,
             source=source,
             license=license,
             prompt=(prompt or "").strip(),
@@ -142,7 +155,7 @@ class CorpusRow:
             n_waits=count_waits(code),
             code_chars=len(code or ""),
             parses=bool(scenes) or _parses(code),
-            dedupe_key=normalized_hash(code or ""),
+            dedupe_key=key,
             tags=tags,
         )
 
