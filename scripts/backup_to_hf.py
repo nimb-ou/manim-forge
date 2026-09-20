@@ -53,7 +53,7 @@ Air. Project: https://github.com/nimb-ou/manim-forge
 """
 
 
-def restore(api, repo: str, dest: Path) -> None:
+def restore(api, repo: str, dest: Path, include_frames: bool = False) -> None:
     """Pull the backup down into ./data.
 
     A backup with no restore path is a hope, not a backup — and this one had
@@ -63,12 +63,21 @@ def restore(api, repo: str, dest: Path) -> None:
     anything that matters without them.
     """
     from huggingface_hub import snapshot_download
-    print(f"restoring {repo} -> {dest}")
+    # data/frames is 16,000 sampled PNGs and 153 MB. The upload already makes
+    # it opt-in; the restore did not, so every CI job would have spent
+    # minutes pulling images that no training step reads. Symmetry with
+    # --include-frames, and CI gets the jsonl it actually needs.
+    ignore = None if include_frames else ["data/frames/**", "data/renders/**",
+                                          "data/showcase/videos/**"]
+    print(f"restoring {repo} -> {dest}"
+          + ("" if include_frames else "  (frames and videos skipped)"))
     got = snapshot_download(repo_id=repo, repo_type="dataset",
                             local_dir=str(dest.parent),
-                            allow_patterns=["data/**"])
-    n = sum(1 for _ in Path(got).rglob("*") if _.is_file())
-    print(f"  {n} files restored")
+                            allow_patterns=["data/**"],
+                            ignore_patterns=ignore)
+    files = [p for p in Path(got).rglob("*") if p.is_file()]
+    mb = sum(p.stat().st_size for p in files) / 1e6
+    print(f"  {len(files)} files, {mb:.0f} MB restored")
 
 
 def main() -> None:
@@ -92,7 +101,7 @@ def main() -> None:
     repo = a.repo or f"{me}/manim-forge-corpus"
     api = HfApi()
     if a.restore:
-        restore(api, repo, Path("data"))
+        restore(api, repo, Path("data"), include_frames=a.include_frames)
         return
     api.create_repo(repo, repo_type="dataset", private=not a.public, exist_ok=True)
     print(f"repo: https://huggingface.co/datasets/{repo} "

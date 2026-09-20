@@ -77,9 +77,10 @@ jobs:
         env:
           KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN }}
         run: |
-          cd kaggle/manim-forge-data
-          kaggle datasets version -m "mix $(date -u +%F) — ${{ inputs.note }}" \
-            || kaggle datasets create
+          # -r zip: the dataset is five files, and Kaggle's default converts
+          # tabular ones to CSV, which would mangle jsonl.
+          kaggle datasets version -p kaggle/manim-forge-data -r zip \
+            -m "mix $(date -u +%F) — ${{ inputs.note }}"
 
       - name: push the kernel
         env:
