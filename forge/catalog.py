@@ -46,10 +46,14 @@ class Dataset:
                 for line in f:
                     rows += 1
                     try:
-                        if json.loads(line).get("ok"):
-                            ok += 1
+                        rec = json.loads(line)
                     except json.JSONDecodeError:
-                        pass
+                        continue
+                    # Not every catalogued file is JSONL — a plain .json file's
+                    # lines parse as fragments or bare strings, and asking them
+                    # for .get crashed the whole report.
+                    if isinstance(rec, dict) and rec.get("ok"):
+                        ok += 1
         except OSError:
             pass
         return {"exists": True, "rows": rows, "verified": ok,
@@ -90,6 +94,34 @@ CATALOG: list[Dataset] = [
         "code these are (broken -> error -> fixed) triples, the rarest data here.",
     ),
     Dataset(
+        "data/synthetic/generated.jsonl",
+        "First-generation topic synthesis, before the continuous daemon.",
+        "id, source, prompt, code, ok, error_kind, topic, domain, length, teacher_model",
+        "Failures carry error_kind, which is how the 61%-to-94% yield jump was diagnosed.",
+    ),
+    Dataset(
+        "data/synthetic/from_narration.jsonl",
+        "Scenes generated from 3b1b narration passages, before the daemon merged the two.",
+        "id, prompt (the passage), code, ok, video_id, title, seg_index, teacher_model",
+    ),
+    Dataset(
+        "data/verified/regate.jsonl",
+        "Second pass over previously-failed rows after the lint improved.",
+        "id, retried, ok, error_kind, lint, code",
+        "Records which rows were retried and which recovered — without it the same "
+        "rows would be re-attempted on every future lint change.",
+    ),
+    Dataset(
+        "data/train",
+        "Final training splits, grouped by prompt so paraphrases cannot straddle them.",
+        "train.jsonl / valid.jsonl — messages[system,user,assistant]",
+    ),
+    Dataset(
+        "data/verified/bench_prompts.json",
+        "The held-out benchmark prompts, frozen so scores stay comparable across machines.",
+        "prompts[]",
+    ),
+    Dataset(
         "data/synthetic/tasks.jsonl",
         "Non-code skills: planning, narration, paraphrase, explanation, critique, decomposition.",
         "kind, prompt, output, valid, model, meta",
@@ -128,12 +160,40 @@ CATALOG: list[Dataset] = [
         archive=True,
     ),
     Dataset(
+        "data/verified/gate_smoke.jsonl",
+        "Thirty-row smoke test used to validate the gate before committing hours to it.",
+        "same shape as gate.jsonl",
+        "Kept rather than deleted, but not archived: it is a throwaway from one "
+        "afternoon and carries nothing the full gate run does not.",
+        archive=False,
+    ),
+    Dataset(
         "data/renders",
         "Rendered mp4s for gold scenes and platform output.",
         "videos/<scene>/<quality>/*.mp4 plus per-beat sections",
         archive=False,   # regenerable from code, and large
     ),
 ]
+
+
+def orphans() -> list[str]:
+    """Data files on disk that no Dataset entry covers.
+
+    The catalogue only prevents drift if it notices what it is missing. Five
+    datasets went uncatalogued — and therefore unarchived and unuploaded —
+    simply because adding a pipeline and adding its entry are separate acts and
+    the second is easy to forget. This makes forgetting visible.
+    """
+    declared = {Path(d.path) for d in CATALOG}
+    found = set()
+    for pattern in ("*.jsonl", "*.json"):
+        found |= {p for p in Path("data").rglob(pattern)}
+    missing = []
+    for f in sorted(found):
+        if any(f == d or d in f.parents for d in declared):
+            continue
+        missing.append(str(f))
+    return missing
 
 
 def report() -> None:
@@ -155,6 +215,13 @@ def report() -> None:
     print("-" * 82)
     print(f"{'TOTAL':<38} {'':>8} {'':>9} {total_mb:>8.1f}")
     print(f"{'to archive':<38} {'':>8} {'':>9} {arch_mb:>8.1f}")
+    missing = orphans()
+    if missing:
+        print(f"\nUNCATALOGUED — not archived, not uploaded ({len(missing)}):")
+        for m in missing:
+            print(f"  {m}")
+    else:
+        print("\nno uncatalogued data files")
 
 
 if __name__ == "__main__":
