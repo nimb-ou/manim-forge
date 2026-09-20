@@ -63,12 +63,23 @@ GEMINI_REST = "https://generativelanguage.googleapis.com/v1beta"
 #: first 400, so each model is probed at most once per process.
 _THINKING_OK: dict[str, bool] = {}
 
+#: Models to rotate across, newest first. Rate limits are per model, so the
+#: rotation reaches the daily ceiling sooner; it does not raise it.
+#:
+#: Checked against the live model list rather than remembered: gemini-2.5-flash
+#: and gemini-2.5-flash-lite now 404, and gemini-3.8-flash and
+#: gemini-3-flash-preview had been missing from this list entirely. A stale
+#: entry costs a retry cycle per call, every call.
 GEMINI_ROTATION = [
+    "gemini-3.8-flash",
     "gemini-3.7-flash",
     "gemini-3.6-flash",
     "gemini-3.5-flash",
+    "gemini-3-flash-preview",
+    "gemini-flash-latest",
     "gemini-3.5-flash-lite",
     "gemini-3.1-flash-lite",
+    "gemini-3.1-flash-lite-preview",
     "gemini-flash-lite-latest",
 ]
 

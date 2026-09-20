@@ -15,7 +15,9 @@ import re
 import signal
 import threading
 import time
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from collections import deque
+from concurrent.futures import (FIRST_COMPLETED, ThreadPoolExecutor,
+                                wait)
 from pathlib import Path
 
 STOP = False
@@ -124,15 +126,24 @@ def main() -> None:
     lock = threading.Lock()
     sink = out.open("a")
     t0 = time.monotonic()
-    counts = {"done": 0, "kept": 0}
+    counts = {"done": 0, "kept": 0, "retried": 0, "dropped": 0}
 
     def run(job):
+        """Attempt one prose task. Returns True if the job is finished with.
+
+        Returning False means *retry*, not *fail*. A 429 says the model is
+        busy, which is a fact about the minute, not about the job -- and a
+        daemon that treats the two the same eats its whole queue the first
+        time the quota runs out. That is exactly what happened here: 5,789
+        tasks consumed, 0 rows written, and a log that called it "API errors"
+        rather than "queue destroyed".
+        """
         if STOP or (time.monotonic() - t0) / 3600 > a.max_hours:
-            return
+            return True                     # out of time: genuinely done
         model = pool.next_model()
-        while model is None:
-            if STOP: return
-            time.sleep(20); model = pool.next_model()
+        if model is None:
+            time.sleep(20)
+            return False                    # everything cooling down; keep the job
         t = Teacher(provider="gemini", model=model)
         try:
             import forge.synth.teacher as T
@@ -143,31 +154,58 @@ def main() -> None:
             finally:
                 T.SYSTEM = original
         except Exception as e:
-            if "429" in str(e) or "503" in str(e):
+            msg = str(e)
+            if "429" in msg or "503" in msg or "500" in msg:
                 pool.retire(model)
-            return
+                with lock:
+                    counts["retried"] += 1
+                return False                 # transient: put it back
+            with lock:
+                counts["dropped"] += 1       # a real error; record and move on
+            return True
         ok = VALIDATORS[job["kind"]](text, job["meta"])
         with lock:
             sink.write(json.dumps({**job, "output": text.strip(),
                                    "valid": ok, "model": model}) + "\n")
             sink.flush()
-            counts["done"] += 1; counts["kept"] += int(ok)
+            counts["done"] += 1
+            counts["kept"] += int(ok)
             if counts["done"] % 10 == 0:
-                el = max((time.monotonic()-t0)/60, .01)
+                el = max((time.monotonic() - t0) / 60, .01)
                 print(f"  [{counts['done']:>5}] kept {counts['kept']:>5} "
-                      f"({counts['kept']/counts['done']:5.1%})  {counts['done']/el:4.1f}/min",
+                      f"({counts['kept'] / counts['done']:5.1%})  "
+                      f"{counts['done'] / el:4.1f}/min  "
+                      f"retried {counts['retried']}  dropped {counts['dropped']}",
                       flush=True)
+        return True
 
     try:
+        # A real queue, not a fixed list of futures: a job that comes back
+        # False goes to the end and is tried again later, so a rate limit
+        # costs time rather than data.
+        pending = deque(jobs)
         with ThreadPoolExecutor(max_workers=a.workers) as ex:
-            fs = [ex.submit(run, j) for j in jobs]
-            for _ in as_completed(fs):
-                if STOP:
-                    for f in fs: f.cancel()
+            inflight = {}
+            while (pending or inflight) and not STOP:
+                while pending and len(inflight) < a.workers:
+                    j = pending.popleft()
+                    inflight[ex.submit(run, j)] = j
+                if not inflight:
                     break
-    finally:
-        sink.close()
-    print(f"\n{counts['kept']}/{counts['done']} valid -> {out}")
+                done_fs, _ = wait(inflight, return_when=FIRST_COMPLETED)
+                for f in done_fs:
+                    j = inflight.pop(f)
+                    try:
+                        finished = f.result()
+                    except Exception:
+                        finished = False
+                    if not finished and not STOP:
+                        pending.append(j)
+    except KeyboardInterrupt:
+        pass
+
+    print(f"\n{counts['kept']}/{counts['done']} valid -> {out}"
+      f"   ({counts['retried']} retried, {counts['dropped']} dropped)")
 
 
 if __name__ == "__main__":
