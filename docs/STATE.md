@@ -3,8 +3,8 @@
 Everything needed to resume with no prior context. If this file and the repo
 disagree, the repo is right and this file is stale — fix it.
 
-*Last verified against the repo: 2026-09-20, by re-deriving every number below
-from the data files rather than copying it forward.*
+*Every figure here is produced by `python -m forge.doctor`. If this file and
+the repo disagree, the repo is right — and the doctor will say so.*
 
 ## What this is
 
@@ -21,17 +21,30 @@ component that serves as the evaluation metric and the product's repair loop.
 
 ## Numbers that matter
 
-| metric | value | where |
-|---|---|---|
-| Benchmark, single scenes | **93%** at repair rounds=4 | `docs/RESULTS.md` |
-| Hard eval, whole explainer | 85% render · 16.3s vs 16 min · 8.8% coverage | same |
-| Scraped corpus | 3,680 deduplicated rows | `data/normalized/` |
-| — verified by the gate | **1,760** (47.8%) | `data/verified/gate.jsonl` |
-| Synthetic, verified | **667** unique | three files under `data/synthetic/` |
-| Gold scenes, authored | **44 of 61** · 182 beats · 781 play calls | `forge/gold/` |
-| Gold rendered at 1080p60 | **19 of 44** | `data/showcase/rendered.jsonl` |
-| Training mix | **2,989** train / 125 valid | `data/train/` |
-| Free-tier budget | ~900–1,000 calls/day *total*, not per model | measured |
+Re-derived, never copied forward. `python -m forge.doctor` regenerates
+the block below and exits non-zero if it has drifted; `--write` updates it.
+
+<!-- doctor:begin -->
+
+| metric | value |
+|---|---|
+| Scraped corpus | 3,680 deduplicated rows |
+| — verified by the gate | **1,798** (48.9%) |
+| — of those, rescued by lint | 38 (no API cost) |
+| Synthetic, verified | **667** unique |
+| Gold scenes, authored | **44 of 61** · 182 beats |
+| Gold rendered at 1080p60 | **19 of 44** |
+| Training mix | **3,010** train / 131 valid |
+| 3b1b narration segments | 5,825 |
+
+*Re-derived by `python -m forge.doctor`. Do not edit by hand.*
+<!-- doctor:end -->
+
+| | |
+|---|---|
+| Benchmark, single scenes | **93%** at repair rounds=4 |
+| Hard eval, whole explainer | 85% render · 16.3s vs 16 min · 8.8% coverage |
+| Free-tier budget | ~900–1,000 calls/day *total*, not per model |
 
 **Nothing has been trained yet.** Every number above is the untuned
 Qwen2.5-Coder-7B with inference-time scaffolding. That is the single largest

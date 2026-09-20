@@ -205,3 +205,49 @@ def test_no_prompt_appears_on_both_sides_of_the_split(mix):
         return {json.loads(l)["messages"][1]["content"]
                 for l in (out / "d" / f"{name}.jsonl").open()}
     assert not (prompts("train") & prompts("valid"))
+
+
+# --- the recovered rows have to arrive too ---------------------------------
+
+def test_lint_recoveries_supersede_the_failure_they_came_from(tmp_path):
+    """regate.py wrote its recoveries to a file nothing ever read.
+
+    The same defect as the gold export, the colliding synthetic ids and the
+    unread synthetic files: a step that produced, and a step that never
+    collected. Every hour of CPU regate consumed produced nothing.
+    """
+    from forge.gate.export import build as gate_build
+
+    code = scene("A", "Dot", 2)
+    corpus = tmp_path / "corpus.jsonl"
+    corpus.write_text(json.dumps({
+        "id": "r1", "code": "class A(Scene):\n    pass\n",
+        "prompt": "a prompt long enough to survive the filter",
+        "source": "t", "license": "x", "n_play_calls": 2, "flavor": "ce"}) + "\n")
+    gate = _write(tmp_path / "gate.jsonl", [{"id": "r1", "ok": False}])
+    regate = _write(tmp_path / "regate.jsonl",
+                    [{"id": "r1", "ok": True, "code": code, "retried": True}])
+
+    out = tmp_path / "verified.jsonl"
+    stats = gate_build(corpus, gate, out, regate=regate)
+    assert stats["recovered_by_lint"] == 1
+    assert stats["unique_verified"] == 1
+
+    rows = [json.loads(l) for l in out.open()]
+    assert rows, "the recovered row never reached the export"
+    # The repaired source is the training target, not the broken original.
+    assert "self.play(" in rows[0]["messages"][-1]["content"]
+
+
+def test_a_row_that_already_passes_is_not_superseded(tmp_path):
+    from forge.gate.export import build as gate_build
+    corpus = tmp_path / "corpus.jsonl"
+    corpus.write_text(json.dumps({
+        "id": "r1", "code": scene("A", "Dot", 2),
+        "prompt": "a prompt long enough to survive the filter",
+        "source": "t", "license": "x", "n_play_calls": 2, "flavor": "ce"}) + "\n")
+    gate = _write(tmp_path / "gate.jsonl", [{"id": "r1", "ok": True}])
+    regate = _write(tmp_path / "regate.jsonl",
+                    [{"id": "r1", "ok": True, "code": "WRONG", "retried": True}])
+    stats = gate_build(corpus, gate, tmp_path / "v.jsonl", regate=regate)
+    assert stats["recovered_by_lint"] == 0

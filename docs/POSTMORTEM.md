@@ -77,6 +77,26 @@ default mix.
 there were three. Nothing compared "files that exist" against "files that are
 read."
 
+### A4. Every row `regate` ever recovered went nowhere
+
+`scripts/regate.py` re-runs previously-failed corpus rows through the current
+lint rules and records the ones that now render, with the repaired source. It
+has consumed hours of CPU across the project.
+
+**Nothing read the file.** `forge/gate/export.py` reads `gate.jsonl` only.
+`grep -rn regate` over the whole repo finds the script itself, the catalogue,
+and a comment — no consumer. Every recovery it has ever produced sat in
+`data/verified/regate.jsonl` and never reached training.
+
+**Cost:** 8 rows under the original rules, and 34 more after
+`add_manim_import` landed during this repair. Recoveries are now folded over
+the gate verdicts, a recovery supersedes the failure it came from, and the
+repaired source is the training target.
+
+**The shape:** identical to A1, A2 and A3 — a step that produced, and a step
+that never collected. Four independent instances of one pattern, which is
+what makes it a design problem rather than four mistakes.
+
 ---
 
 ## B. Defects that quietly degraded quality
@@ -273,7 +293,9 @@ file that was dropping two thirds of it on the floor (A1–A3).
 | B2 | `meta` written alongside `messages` | `bffb1dc` |
 | C4 | finished jobs restart only if the last pass produced something | `796fc4d` |
 | C5 | signal deaths record nothing; existing records annotated | `796fc4d` |
-| D1 | `STATE.md` re-derived from the data | this commit |
+| D1 | `STATE.md` re-derived from the data | `83ff933` |
+| A4 | lint recoveries folded into the verified export | `pending` |
+| D2 | 43 tests, and `python -m forge.doctor` | `pending` |
 
 Measured effect on the training mix:
 

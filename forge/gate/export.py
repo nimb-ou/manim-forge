@@ -33,7 +33,8 @@ SYSTEM = (
 
 
 def build(corpus: Path, gate: Path, out: Path,
-          animated_weight: int = 2, min_prompt_chars: int = 20) -> dict:
+          animated_weight: int = 2, min_prompt_chars: int = 20,
+          regate: Path | None = None) -> dict:
     rows = {json.loads(l)["id"]: json.loads(l) for l in corpus.open()}
 
     verdicts: dict[str, dict] = {}
@@ -44,6 +45,31 @@ def build(corpus: Path, gate: Path, out: Path,
             continue
         if not v.get("is_env_failure"):
             verdicts[v["id"]] = v
+
+    # A recovery supersedes the failure it recovered from. scripts/regate.py
+    # re-runs previously-failed rows through the current lint rules and
+    # records the ones that now render, along with the repaired source --
+    # and until now **nothing read that file**. Every hour of CPU it has ever
+    # consumed produced a ledger no consumer opened: 8 rows under the old
+    # rules, 34 more after add_manim_import landed, none of which reached
+    # training. It is the same defect as the gold export, the synthetic ids
+    # and the unread synthetic files: a step that produced, and a step that
+    # never collected.
+    recovered = 0
+    if regate is not None and regate.exists():
+        for line in regate.open():
+            try:
+                v = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if not v.get("ok") or not v.get("code"):
+                continue
+            prior = verdicts.get(v["id"])
+            if prior is not None and prior.get("ok"):
+                continue          # already passing; nothing to supersede
+            verdicts[v["id"]] = {**(prior or {}), **v, "ok": True,
+                                 "recovered": True}
+            recovered += 1
 
     kept, stats = [], Counter()
     for rid, v in verdicts.items():
@@ -87,6 +113,7 @@ def build(corpus: Path, gate: Path, out: Path,
 
     return {
         "unique_verified": stats["kept"],
+        "recovered_by_lint": recovered,
         "animated": stats["animated"],
         "static": stats["static"],
         "training_examples_after_weighting": len(kept),

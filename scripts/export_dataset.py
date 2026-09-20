@@ -8,8 +8,11 @@ def main():
     ap.add_argument("--gate", default="data/verified/gate.jsonl")
     ap.add_argument("--out", default="data/verified/train.jsonl")
     ap.add_argument("--animated-weight", type=int, default=2)
+    ap.add_argument("--regate", default="data/verified/regate.jsonl",
+                    help="rows the lint recovered after they first failed")
     a = ap.parse_args()
-    s = build(Path(a.corpus), Path(a.gate), Path(a.out), a.animated_weight)
+    s = build(Path(a.corpus), Path(a.gate), Path(a.out), a.animated_weight,
+              regate=Path(a.regate))
     print("="*58); print("  VERIFIED TRAINING SET"); print("="*58)
     for k, v in s.items(): print(f"{k:>34}: {v}")
     print("="*58)

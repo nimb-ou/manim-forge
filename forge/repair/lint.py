@@ -180,8 +180,76 @@ def escape_tex_percent(code: str) -> str:
     return code
 
 
+#: Manim's own namespace, forgotten. 1,070 of the 1,920 corpus rows that
+#: failed the gate declare a Scene subclass with no manim import at all, and
+#: **zero** passing rows do. Most of those 1,070 are truncated fragments that
+#: do not even parse -- the missing import is a symptom there, not the cause.
+#: The 103 that *do* parse and failed with NameError are a different matter:
+#: for those the import is the whole defect, and supplying it costs no model
+#: call.
+#:
+#: Deliberately narrow. It fires only when the file parses, names a manim
+#: base class, and imports neither manim nor manimlib -- so a ManimGL row
+#: (a different, incompatible library) is never handed a Community import,
+#: and a fragment that cannot be parsed is left for strip_prose or the model.
+
+_SCENE_BASES = ("Scene", "ThreeDScene", "MovingCameraScene", "ZoomedScene",
+                "VectorScene", "LinearTransformationScene", "SpecialThreeDScene")
+
+
+def _imports_a_manim(code: str) -> bool:
+    return bool(re.search(r"^\s*(from\s+manim(lib|_imports|ce)?\b|import\s+manim)",
+                          code, re.M))
+
+
+def needs_manim_import(code: str) -> bool:
+    """Declares a manim Scene subclass but never imports the namespace."""
+    if _imports_a_manim(code):
+        return False
+    try:
+        tree = ast.parse(code)
+    except SyntaxError:
+        return False       # a fragment: not ours to fix
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.ClassDef):
+            continue
+        for base in node.bases:
+            name = getattr(base, "id", None) or getattr(base, "attr", None)
+            if name in _SCENE_BASES:
+                return True
+    return False
+
+
+def add_manim_import(code: str) -> str:
+    """Insert ``from manim import *`` above the first statement.
+
+    Above the *first statement*, not at line 0: a module docstring has to stay
+    first to remain a docstring, and `from __future__` imports are a syntax
+    error anywhere else.
+    """
+    try:
+        tree = ast.parse(code)
+    except SyntaxError:
+        return code
+    lines = code.split("\n")
+    at = 0
+    for node in tree.body:
+        is_docstring = (isinstance(node, ast.Expr)
+                        and isinstance(node.value, ast.Constant)
+                        and isinstance(node.value.value, str))
+        is_future = (isinstance(node, ast.ImportFrom)
+                     and node.module == "__future__")
+        if is_docstring or is_future:
+            at = node.end_lineno
+            continue
+        break
+    lines.insert(at, "from manim import *")
+    return "\n".join(lines)
+
+
 RULES = [
     ("strip_prose", lambda c: not _parses(c), strip_prose),
+    ("add_manim_import", needs_manim_import, add_manim_import),
     ("add_imports", lambda c: bool(missing_stdlib_imports(c)), add_stdlib_imports),
     ("add_hold", needs_hold, add_hold),
     ("escape_percent", has_bare_percent, escape_tex_percent),
