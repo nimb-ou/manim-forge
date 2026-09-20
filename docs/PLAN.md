@@ -1,187 +1,307 @@
 # Plan
 
-Written 2026-09-20 after the audit in `docs/POSTMORTEM.md`. Supersedes the
-"Next" list in `STATE.md`, which was a queue of tasks rather than a sequence
-with reasons.
+Written 2026-09-20, after the audit in `docs/POSTMORTEM.md` and a round of
+research into every service this project would depend on. Supersedes the
+"Next" list in `STATE.md`, which was a queue rather than a sequence — which
+is how four jobs ended up running at once and confounding each other.
 
 The project is two days old. There is no deadline pressure; there was a
-sequencing failure. This plan fixes the sequencing.
+sequencing failure. Companion document: `docs/SETUP.md`, which is the list of
+things only Nimit can do.
 
 ---
 
-## The one thing that is actually wrong
+## 1. Where we stand
 
-Every measurement points at the same place from a different side.
+`python -m forge.doctor` for the live figures. At the time of writing:
 
-**From the eval:** the hard eval asks for a 16-minute explainer and gets 16.3
-seconds — a length ratio of 1.76%, with 5.0 play calls, flat across 81 tasks.
-Concept coverage is 8.8% and drifting down. The verdict written at the time:
-*"the model is not getting the subject wrong; it is answering a different,
-much smaller question."*
+| | |
+|---|---|
+| Scraped corpus | 3,680 deduplicated → **1,798 verified** (48.9%) |
+| Synthetic | **667** verified |
+| Gold scenes | **44 of 61** · 182 beats · all importing, audit clean |
+| Gold at 1080p60 | **19 of 44** |
+| Training mix | **3,010** train / 131 valid |
+| Benchmark, single scene | **93%** render, repair rounds=4 |
+| Hard eval, whole explainer | 85% render · 16.3s vs 16 min · 8.8% coverage |
+| Models trained | **zero** |
 
-**From the corpus, measured for the first time during this audit:**
+The pipeline is complete end to end — ingest, gate, lint, repair, retrieve,
+evaluate, and a local platform — and every number on record describes an
+untuned Qwen2.5-Coder-7B with scaffolding around it.
+
+---
+
+## 2. The one thing that is actually wrong
+
+Two measurements, taken from opposite ends, that say the same thing.
+
+**From the eval:** asked for a 16-minute explainer, the model returns 16.3
+seconds — a 1.76% length ratio with 5.0 play calls, flat across 81 tasks.
+*"Not getting the subject wrong; answering a different, much smaller
+question."*
+
+**From the corpus, measured during the audit:**
 
 | | corpus | gold |
 |---|---|---|
 | mean `self.play()` calls | 10.6 | 17.8 |
-| share of visual vocabulary that is text | 41% | 36% |
+| text share of visual vocabulary | 41% | 36% |
 | uses `ValueTracker` | **1.3%** | 9.1% |
 | uses `always_redraw` | **0.9%** | 9.1% |
 | asserts its own numbers | 2.7% | 95.5% |
 
 `ValueTracker` and `always_redraw` are what make an animation continuous
 rather than a sequence of slides. They are effectively absent. The three
-commonest objects are `FadeOut`, `Text` and `Write`.
+commonest objects are `FadeOut`, `Text`, `Write`.
 
-**These are the same fact.** The model answers a smaller question because the
-corpus asks a smaller question. The render gate filters for *executes*, which
-is necessary and is not sufficient. Nothing in the pipeline has ever filtered
+**The model answers a smaller question because the corpus asks a smaller
+question.** The render gate filters for *executes*. Nothing has ever filtered
 for *animates*, and nothing has ever filtered for *explains*.
 
-The consequence for planning is sharp: **generating more rows from the same
-teacher with the same prompts makes this worse, not better.** More slideware
-is more slideware. Any plan whose first move is "produce more data" is
-building on the defect.
+Consequence for planning: **generating more rows from the same teacher with
+the same prompts makes this worse.** Any plan whose first move is "produce
+more data" builds on the defect.
 
 ---
 
-## Sequence
+## 3. The five phases
 
-Four phases. Each ends in a number that decides whether the next one is worth
-doing. Nothing runs in parallel with something it could confound.
+Each ends in a number that decides whether the next is worth doing. Nothing
+runs in parallel with something it could confound.
 
-### Phase 0 — Foundations (mostly done)
+### Phase 0 — Foundations · **done**
 
-*Purpose: make the pipeline honest before trusting any measurement from it.*
-
-| | state |
+| | |
 |---|---|
-| Process groups killed properly | done — `45c98d6`, tested |
-| Gold export reaches the dataset | done — `bffb1dc`, tested |
-| Generated rows have unique ids | done — `bffb1dc`, tested |
-| Static rows out of training | done — `bffb1dc`, tested |
-| Ledgers distinguish killed from failed | done — `796fc4d` |
-| Every artefact catalogued | done — `796fc4d` |
-| Docs re-derived from data | done — `83ff933` |
-| Test suite | done — `90e20bb`, 22 tests |
+| Process groups killed properly, tested | `45c98d6` |
+| Gold export reaches the dataset | `bffb1dc` |
+| Generated ids identify their row | `bffb1dc` |
+| Static rows out of training | `bffb1dc` |
+| Ledgers distinguish killed from failed | `796fc4d` |
+| Every artefact catalogued | `796fc4d` |
+| Docs re-derived from data | `83ff933` |
+| 43 tests | `90e20bb` |
+| `add_manim_import`, +38 rows recovered | `6131bb1` |
+| Lint recoveries reach the export | `6131bb1` |
+| `python -m forge.doctor` — 9 invariants | `6131bb1` |
 
-Remaining, small:
+### Phase 1 — Train, finally · **~1 week**
 
-- **`forge doctor`** — one command that re-derives every number in `STATE.md`
-  and diffs it against the file. The staleness in D1 was not caused by
-  carelessness; it was caused by the check being manual.
-- **`add_manim_import` lint rule.** 103 failed corpus rows parse cleanly,
-  declare a `Scene` subclass, have no manim import, and failed with a
-  NameError. Zero *passing* rows lack the import. This is mechanical, costs
-  no API quota, and is the one remaining thing `regate` could recover.
-  Expected yield: up to 103 rows (5.4% of the failed set). Cost: ~20 minutes
-  of CPU. **This is the measurement that tells us whether the number is real.**
+The project's entire premise — that a render-gated corpus beats a scraped one
+— has never been tested. This was blocked on "the corpus isn't large enough",
+a threshold nobody defined and which the audit shows was measuring the wrong
+thing anyway.
 
-*Exit condition: `pytest` green, `forge doctor` clean, regate run once against
-the new rule with the recovery counted.*
+**Setup**
+1. `kaggle/kernel-metadata.json` so the notebook can be pushed by API rather
+   than by hand. This is what makes training automatable later.
+2. Switch `kaggle/01_sft.py` to **Unsloth + QLoRA**. A 7B in 4-bit is ~5 GB
+   against a T4's 15 GB, and Unsloth is roughly 2× faster at ~60% of the
+   memory. Our mix is ~2.7M tokens per epoch: minutes, not hours.
+3. Upload the dataset to HF (private) and mirror it as a Kaggle dataset.
 
-### Phase 1 — Train something, finally
+**The run.** Three epochs, LoRA r=16, on the current 3,010-example mix.
+**One variable** — nothing else changes. Not the repair budget, not
+retrieval, not the system prompt, not the base model. That rule has been
+broken three times already and each break cost a result.
 
-*Purpose: the entire project rests on the claim that a render-gated corpus
-beats a scraped one. That claim has never been tested. Every number on record
-is the untuned model plus inference scaffolding.*
+**Evaluation.** Both existing benchmarks, unchanged, against the two
+baselines already on record: 100-row single-scene (93%) and 81-task hard eval
+(85% render, 1.76% length, 8.8% coverage).
 
-This is the single most overdue item and it is not close. It was blocked on
-"the corpus is not large enough yet", which was never a threshold anyone
-defined, and which the audit shows was measuring the wrong thing anyway.
+**What makes this interesting is not the render rate.** It will probably rise
+a few points, and that is the least important number. The question is whether
+**length ratio and concept coverage move at all.** The corpus analysis
+predicts they will not. If that prediction holds, Phase 1 is the experiment
+that proves Phase 2 is the whole project — which is worth a week.
 
-- Train **once**, on the current 2,989-example mix, on Kaggle. `kaggle/01_sft.py`
-  exists; the packaging script exists.
-- Evaluate on **both** existing benchmarks, unchanged: the 100-row single-scene
-  benchmark (untuned: 93% at rounds=4) and the 81-task hard eval (untuned: 85%
-  render, 1.76% length ratio, 8.8% coverage).
-- **One variable.** Nothing else changes — not the repair budget, not
-  retrieval, not the system prompt. That rule has been broken three times
-  already and each break cost an experiment.
+*Exit: two numbers against two baselines in `RESULTS.md`, with the hash of
+the mix that produced them.*
 
-The interesting outcome is not "did the render rate go up". It probably will,
-slightly, and it is the least important number. The question is whether the
-**length ratio and concept coverage move at all.** If they do not — and the
-corpus analysis above predicts they will not — then Phase 2 is the whole
-project and Phase 1 was the experiment that proved it.
+### Phase 2 — A gate that judges animation · **~2 weeks**
 
-*Exit condition: two eval numbers against two baselines, recorded in
-`RESULTS.md` with the mix hash that produced them.*
+The real work. Everything before it is preparation.
 
-### Phase 2 — Make the gate judge animation, not just execution
+The render gate answers *did this produce a video file*. A second gate has to
+answer *is this an explanation*. Structure first, not a model-judge — things
+that can be measured, argued about, and cheated only by actually improving:
 
-*Purpose: this is the real work, and everything before it is preparation.*
-
-The render gate answers "did this produce a video file". A second gate has to
-answer "is this an explanation". Not with a model-judge first — with
-structure that can be measured and argued about:
-
-- play calls and their spacing over the scene's duration
-- presence of continuous constructs (`ValueTracker`, `always_redraw`,
-  `.animate`, updaters) versus discrete `Write`/`FadeOut` pairs
+- play calls and their spacing across the scene's duration
+- continuous constructs (`ValueTracker`, `always_redraw`, `.animate`,
+  updaters) against discrete `Write`/`FadeOut` pairs
 - ratio of text mobjects to geometric ones
 - whether any displayed number is computed rather than typed
-- beat structure and declared-vs-actual duration
+- beat structure, and declared duration against actual
 
-The 44 gold scenes are the labelled positive set — that is what they are
-*for*, and it is the first time they would be used as anything but training
-weight. Anything the measure scores below the gold floor is not a training
-row, whatever the render gate said.
+**The 44 gold scenes are the labelled positive set.** That is what they are
+for, and it would be the first use of them as anything but training weight.
+The measure has to separate them from a random corpus sample without
+squinting, or it is not measuring anything.
 
-Then the corpus gets rebuilt against it, and the synthetic prompts get
-rewritten to ask for the thing the measure rewards.
+Then: rebuild the mix against it, and rewrite the synthetic prompts to ask
+for what the measure rewards. This is where new generation restarts — and
+not before, because until the measure exists there is no way to tell whether
+a generated row is worth keeping.
 
-*Exit condition: a measure that separates the 44 gold scenes from a random
-sample of corpus rows with the gap visible without squinting, and a rebuilt
-mix whose profile sits between the two.*
+*Exit: a measure with a visible gap between gold and corpus, and a rebuilt
+mix whose profile sits between them.*
 
-### Phase 3 — Length and structure
+### Phase 3 — Length, structure, and GRPO · **~2 weeks**
 
-*Purpose: the 1.76% problem, which Phase 2 does not address.*
+Two things Phase 2 does not address.
 
-A 16-minute explainer is not one scene. The `decompose` task type was written
-for exactly this and has never been evaluated. This phase is: plan → several
-scenes → render → concatenate, with the beat system already in place as the
-unit.
+**Length.** A 16-minute explainer is not one scene. The `decompose` task type
+was written for this and has never been evaluated: plan → several scenes →
+render → concatenate, with the beat system as the unit. Deliberately after
+Phase 2, because a chapter made of eight slideware scenes is worse than one.
 
-Deliberately after Phase 2, because a chapter made of eight slideware scenes
-is worse than one slideware scene, not better.
+**GRPO.** The render gate is a verifiable reward — exactly the RLVR setup
+that GRPO is designed around, and the reason to have kept reward and
+verification in the same package. The Phase 2 measure becomes a second,
+denser reward term. Runs on Kaggle, where the gate can execute alongside
+training; the 30h/week quota is the constraint, and a long run has to
+checkpoint across 9-hour sessions.
 
-### Phase 4 — Serve it
+*Exit: length ratio and coverage against the Phase 1 numbers.*
 
-`docs/ARCHITECTURE.md` is written and costed against measured latency:
-separated inference and render services, ~$0.007 per video, Modal's free tier
-covering roughly 4,000 videos a month. Nothing is built.
+### Phase 4 — Serve it · **~1 week**
 
-Last on purpose. There is no point serving a model that answers a smaller
-question than the one asked, and the architecture does not change based on
-what Phases 1–3 find.
+`docs/ARCHITECTURE.md` is written and costed against measured latency.
+Nothing is built. Last on purpose: there is no point serving a model that
+answers a smaller question than the one asked, and nothing in Phases 1–3
+changes the architecture.
+
+- Inference and render as **separate** Modal functions. They must not share a
+  container: one wants a GPU for 13 seconds, the other wants CPU cores for
+  minutes, and scaling them together wastes whichever is idle.
+- Videos to Cloudflare R2. Egress is free there, which for a video product is
+  the whole decision — the same bytes out of S3 would dominate the bill.
+- Frontend on Cloudflare Pages. Static assets are unmetered.
+- A queue, because a render is minutes: submit, poll, notify.
+
+### Phase 5 — Autonomy · **ongoing, starts after Phase 1**
+
+See §5. Built incrementally — every phase that works by hand gets automated
+once, and not before.
 
 ---
 
-## What is explicitly not happening
+## 4. Infrastructure — researched, costed, decided
 
-- **No always-on daemon pool until Phase 2.** The pool's job was to keep the
-  API busy producing rows, and more rows of the current kind is the thing this
-  plan says not to do. `forge_run.py` stays fixed and stays stopped.
-- **No new gold scenes until Phase 1 is measured.** 44 of 61 is enough to
-  train on and enough to use as the Phase 2 positive set. The remaining 17 are
-  Tier 3, they cost hours each, and they are not on the critical path for any
-  question currently open.
-- **No more corpus generation** until there is a measure that can tell whether
-  a generated row is worth keeping.
-- **No parallel phases.** Every confound on record came from running two
-  things at once and attributing the result to one of them.
+Everything below was checked in September 2026. Free tiers move fast: four
+providers (Cerebras, GitHub Models, Together, SambaNova) dropped or gated
+their free LLM tiers between June and September alone, so the teacher layer
+is built to rotate and to survive any one of them vanishing.
+
+### Decided
+
+| need | choice | cost | why |
+|---|---|---|---|
+| **SFT + GRPO training** | Kaggle notebooks | free | 30 h/week GPU, 9 h sessions, dual T4 (2×16 GB) or P100; root access so LaTeX and ffmpeg install and the render gate runs *in the same place as training* — which GRPO requires, since the reward is a render |
+| **Training overflow** | Modal | $30/mo credit | ≈ 50 GPU-hours of T4, or 37 of L4. The escape hatch when Kaggle's quota is gone mid-experiment |
+| **Model + dataset storage** | Hugging Face | free | 100 GB private, effectively unlimited public. Our data is 460 MB |
+| **Inference serving** | Modal | within $30/mo | L4 at $0.000222/s; median generation 13.4 s ⇒ **$0.003/video**. Scale-to-zero, per-second billing, custom images |
+| **Render serving** | Modal, separate function | within $30/mo | CPU at $0.0000131/core-s; a 1080p scene ≈ 120 core-s ⇒ **$0.0016/video** |
+| **Video storage + CDN** | Cloudflare R2 | free to 10 GB | **zero egress**, which for video is the entire decision |
+| **Frontend** | Cloudflare Pages | free | unlimited bandwidth on static assets; 100 k Worker requests/day |
+| **Domain** | Cloudflare Registrar | ~$8.50–10.50/yr | at-cost — wholesale plus the ICANN fee, no markup, no renewal trap |
+| **Scheduler / CI** | GitHub Actions | free **if the repo is public** | unlimited minutes and working `schedule:` on public repos. On a free *private* repo: 2,000 min/month and **cron is disabled** — see §5 |
+| **Teacher models** | Gemini + Mistral, rotating | free tiers | ~900–1,000 Gemini calls/day *total*, measured, not the documented 1,500/model |
+
+**Running cost of the whole product: roughly $0.005 per video**, against
+Modal's $30/month credit — about **4,000–6,000 videos a month at zero
+marginal cost**, plus ~$10/year for the domain. That is the entire budget.
+
+### Rejected, and why
+
+- **HF Spaces for inference** — free ZeroGPU is 3.5 minutes of GPU per *day*.
+  Fine for a demo, unusable as the product. Free CPU Spaces sleep after 48 h.
+- **Replicate** — fastest to a working endpoint, roughly 2× Modal per
+  GPU-hour at scale, and no free credit.
+- **Baseten** — more depth for custom models than Replicate, but H100-class
+  pricing with no free tier.
+- **RunPod serverless** — cheapest per-second on A100/H100 and sub-200 ms
+  cold starts, but we are L4-class and spiky; Modal's free credit decides it.
+- **S3 / GCS for video** — egress would be the dominant line item. R2 is free.
+- **Supabase** — 500 MB Postgres free, but projects **pause after one week of
+  inactivity**, which is disqualifying for something meant to run unattended.
+- **A database at all, initially** — Modal's own Dict and Queue cover a job
+  queue and a session log. Add Neon (scale-to-zero, no pausing) when there is
+  a reason.
+- **Qwen3-Coder-Next as the base model** — it is the current flagship small
+  coder and it is 80B total / 3B active. Too large to fine-tune on any free
+  tier. A dense 7B stays right. *Qwen3-Coder 7B* is a legitimate upgrade
+  candidate, but changing the base model is its own experiment and must not
+  ride along with Phase 1.
+- **Cerebras / Together / SambaNova / GitHub Models as teachers** — all
+  dropped or gated their free tiers this year. Kept in the provider rotation
+  as optional, never depended on.
 
 ---
 
-## Standing rules this plan is built on
+## 5. The autonomous loop
+
+The goal: after the setup in `docs/SETUP.md`, the project advances without
+anyone at a keyboard. Three tiers, because the three resources fail
+differently.
+
+### Tier 1 — GitHub Actions, the heartbeat
+
+**This requires the repository to be public.** On a free private repo,
+scheduled workflows do not run at all, and the choice between "pay $4/month
+for Pro" and "publish the code" is not close for a project whose stated end
+is free and educational. Only code goes public; `data/` stays gitignored and
+lives on Hugging Face.
+
+Scheduled jobs, all cheap and all CPU:
+
+- **`doctor`** — nightly. Re-derives every figure, checks nine invariants,
+  opens an issue if one breaks. This is the thing that would have caught four
+  of the defects in the postmortem on the day they landed.
+- **`tests`** — on every push.
+- **`train`** — pushes the Kaggle notebook by API, polls `kernels status`,
+  pulls the output, commits the eval numbers. This is the piece that makes
+  training autonomous rather than a thing someone remembers to do.
+- **`backup`** — corpus and renders to HF on a schedule.
+
+### Tier 2 — the Mac, under launchd
+
+CPU work that wants the local machine and no quota: showcase renders,
+re-gating after a lint rule lands, the render side of any eval. Driven by
+`scripts/forge_run.py`, which is now honest about what a job has produced —
+but **not restarted until Phase 2**, because its job was to generate more
+rows of the kind this plan says not to generate.
+
+### Tier 3 — Modal, on demand
+
+Inference and render for real users. Scale-to-zero, so it costs nothing when
+nobody is asking.
+
+### What keeps it honest
+
+The audit's lesson, built in rather than remembered:
+
+1. **Every producer names its consumer.** Four separate times, a step wrote a
+   file nothing read. A `doctor` invariant now asserts arrival, not
+   production, for gold scenes and lint recoveries; any new producer adds one.
+2. **Health is progress, never existence** — already in `orchestrator.py`.
+3. **A job that finishes with nothing to do stays down** and says so once.
+4. **Budget guards.** Modal has a hard spend cap; the free credit is the
+   budget and the cap is set at it. An autonomous system with a credit card
+   attached and no ceiling is the one failure mode that costs real money.
+5. **One variable per experiment**, enforced by recording the mix hash and
+   config with every eval number.
+
+---
+
+## 6. Standing rules
 
 - One variable per experiment. Broken three times; each break cost a result.
 - Preserve every artefact, failures included. (`data/raw/` is empty — the
-  3,753 rows the dedupe discarded were never kept, so the dedupe's cost
-  cannot be audited without re-downloading. Worth fixing the next time
-  ingestion runs.)
+  3,753 rows the dedupe discarded were never kept, so its cost cannot be
+  audited without re-downloading. Fix when ingestion next runs.)
 - Busy is not the metric. Produced-and-arrived is the metric.
-- Do not ship something that merely renders. That is now also the definition
-  of the Phase 2 gate.
+- Never commercial. CC BY-NC-SA 4.0.
+- Do not ship something that merely renders — which is now also the
+  definition of the Phase 2 gate.
