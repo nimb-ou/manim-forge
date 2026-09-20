@@ -283,6 +283,16 @@ def test_no_name_is_used_before_it_exists():
             elif isinstance(n, ast.NamedExpr):
                 local.update(x.id for x in ast.walk(n.target)
                              if isinstance(x, ast.Name))
+            elif isinstance(n, ast.Assign):
+                # A compound statement -- if/try/with/for -- can assign a
+                # name and use it in the same statement, which this walk
+                # sees as one unit. Treat anything assigned inside it as
+                # bound. Slightly weaker, and it still catches the case this
+                # test exists for: a name that is never assigned anywhere
+                # above.
+                for t in n.targets:
+                    local.update(x.id for x in ast.walk(t)
+                                 if isinstance(x, ast.Name))
 
         # Names this statement reads, excluding nested function bodies.
         reads = []
