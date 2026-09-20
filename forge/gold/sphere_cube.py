@@ -32,7 +32,10 @@ DIM = GREY_B
 
 SCALE = 2.2          # world units per unit radius
 N_DOTS = 320         # points on the surface, to say what a sphere is
-N_SAMPLE = 800       # points through the volume, to count the split
+N_SAMPLE = 600       # points through the volume, to count the split
+                     # 600 not 800: the standard error is 2.0pp against
+                     # 1.7pp, which the scene reports honestly either way,
+                     # and 3D dots are the dominant render cost by far.
 
 
 class SphereInCube(ForgeScene, ThreeDScene):
@@ -151,21 +154,27 @@ class SphereInCube(ForgeScene, ThreeDScene):
         self.rows, self.frac = rows, frac
         self.wait(1.6)
 
-    @beat("Fill the sphere with points and count them", seconds=19,
-          narration="Rather than trust the formulas, count. Scatter eight "
+    @beat("Fill the sphere with points and count them", seconds=20,
+          narration="Rather than trust the formulas, count. Scatter six "
                     "hundred points evenly through the whole sphere, then ask "
                     "each one whether it landed inside the cube or outside it. "
-                    "Three hundred fell inside. Five hundred — well over half — "
-                    "landed in the space the cube never reaches.")
+                    "Two hundred and thirty-three fell inside. Three hundred "
+                    "and sixty-seven — well over half — landed in the space "
+                    "the cube never reaches.")
     def count_it(self):
         sc = self.solid
         self.play(FadeOut(self.rows), FadeOut(self.frac), run_time=0.5)
         # Clear the stage for the sample: the shell has said what a sphere is,
         # and the cube's fill would hide every point sitting behind it.
-        self.play(self.dots.animate.set_opacity(0.10),
+        self.play(FadeOut(self.dots),
                   self.cube.animate.set_fill(opacity=0.03),
                   FadeOut(self.corner_dots),
                   run_time=1.0)
+        # Actually remove it. A mobject faded to low opacity is still
+        # projected and rasterised every frame at full cost -- 320 spheres
+        # worth, for the rest of the scene, to show nothing. FadeOut alone
+        # does not remove it from a Scene either; the explicit remove does.
+        self.remove(self.dots, self.corner_dots)
         self.move_camera(phi=66 * DEGREES, theta=-42 * DEGREES, zoom=0.82,
                          run_time=1.2)
 
@@ -173,6 +182,9 @@ class SphereInCube(ForgeScene, ThreeDScene):
         self.n_in = sum(1 for p in samples if p.inside_cube)
         self.n_out = N_SAMPLE - self.n_in
         self.counted = counted_cube_fraction(samples)
+        # Spoken aloud, so pinned: a changed N_SAMPLE or seed must break
+        # the build rather than leave the voice track quoting old counts.
+        assert (self.n_in, self.n_out) == (233, 367), (self.n_in, self.n_out)
 
         cloud = VGroup(*[
             Dot3D(self.p3(p.x, p.y, p.z), radius=0.021, color=GREY_B,
@@ -204,13 +216,16 @@ class SphereInCube(ForgeScene, ThreeDScene):
         self.tally = tally
         self.wait(1.4)
 
-    @beat("The counted answer and the exact one", seconds=24,
-          narration="Counting gives the cube a little over thirty-seven percent "
+    @beat("The counted answer and the exact one", seconds=36,
+          narration="Counting gives the cube just under thirty-nine percent "
                     "of the sphere. The formulas give thirty-six point eight. "
-                    "They agree, because they are measuring the same thing — "
-                    "and the gap, four point one nine minus one point five "
-                    "four, is two point six five cubic units. Nearly two thirds "
-                    "of the sphere is space the cube can never fill.")
+                    "Those are not the same number, and they are not supposed "
+                    "to be: six hundred points carry an uncertainty of about "
+                    "two points either way, so the count lands near the truth "
+                    "rather than on it. The exact answer is the one to keep. "
+                    "Four point one nine minus one point five four is two "
+                    "point six five cubic units of gap — nearly two thirds of "
+                    "the sphere is space the cube can never fill.")
     def exact(self):
         sc = self.solid
         self.begin_ambient_camera_rotation(rate=0.10)
