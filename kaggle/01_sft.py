@@ -1,6 +1,14 @@
 # ── Manim Forge · SFT on Kaggle ────────────────────────────────────────────
-# Paste into a Kaggle notebook. Settings -> Accelerator: GPU T4 x2,
-# Internet: ON. Attach the "manim-forge-data" dataset.
+# Pushed by `kaggle kernels push -p kaggle/` (see kernel-metadata.json), or
+# pasted into a notebook: Accelerator GPU T4 x2, Internet ON, with the
+# "manim-forge-data" dataset attached.
+#
+# NOT UNSLOTH, deliberately. Unsloth is roughly 2x faster at ~60% of the
+# memory and it is the right answer eventually -- but this run exists to
+# measure whether a render-gated corpus is worth anything, and swapping the
+# trainer in the same run would put two variables in one experiment. The
+# job is about four hours on a T4 against a nine-hour session limit, so
+# speed is not the constraint. Switch after the first number is on record.
 #
 # Kaggle gives 30 GPU-hours a week free and runs notebooks as root, so LaTeX
 # and ffmpeg install cleanly. That second part matters more than the GPU:
@@ -67,7 +75,7 @@ from trl import SFTConfig, SFTTrainer
 
 cfg = SFTConfig(
     output_dir=str(WORK / "sft-out"),
-    num_train_epochs=2,               # more overfits ~1.8k examples
+    num_train_epochs=3,               # 3,010 examples, ~900 tokens each
     per_device_train_batch_size=1,
     gradient_accumulation_steps=8,
     learning_rate=1e-4,               # LoRA tolerates far more than full FT
@@ -93,7 +101,39 @@ trainer = SFTTrainer(
 )
 trainer.train()
 trainer.save_model(str(WORK / "adapter"))
+tok.save_pretrained(str(WORK / "adapter"))
 print("adapter saved to /kaggle/working/adapter")
+
+# Record what produced this. Every eval number has to be traceable to the mix
+# and the config that made it, or "one variable per experiment" is a slogan
+# rather than a property -- and it has already been broken three times.
+import hashlib
+mix = hashlib.sha256(
+    (DATA / "train.jsonl").read_bytes()).hexdigest()[:16]
+(WORK / "adapter" / "run.json").write_text(json.dumps({
+    "base": BASE, "mix_sha256": mix,
+    "train_rows": len(ds["train"]), "valid_rows": len(ds["valid"]),
+    "epochs": cfg.num_train_epochs, "lr": cfg.learning_rate,
+    "lora_r": peft_cfg.r, "lora_alpha": peft_cfg.lora_alpha,
+    "target_modules": peft_cfg.target_modules,
+    "max_seq_length": cfg.max_seq_length,
+}, indent=2))
+print(json.dumps(json.loads((WORK / "adapter" / "run.json").read_text()), indent=2))
+
+# ── 4b. publish, so nothing depends on a human downloading a file ──────────
+# The whole point of pushing this kernel by API is that the loop closes
+# without anyone at a browser. An adapter that has to be downloaded by hand
+# is the step where that stops being true.
+HF_TOKEN = os.environ.get("HF_TOKEN") or ""
+if HF_TOKEN:
+    from huggingface_hub import HfApi
+    repo = "nimitttt/manim-forge-sft"
+    api = HfApi(token=HF_TOKEN)
+    api.create_repo(repo, private=True, exist_ok=True)
+    api.upload_folder(folder_path=str(WORK / "adapter"), repo_id=repo)
+    print(f"adapter pushed to https://huggingface.co/{repo}")
+else:
+    print("no HF_TOKEN in Kaggle secrets -- adapter stays in /kaggle/working")
 
 # ── 5. sanity check: generate one scene ────────────────────────────────────
 from transformers import pipeline
@@ -106,7 +146,25 @@ out = gen(tok.apply_chat_template(msg, tokenize=False, add_generation_prompt=Tru
           max_new_tokens=400, do_sample=False)[0]["generated_text"]
 print(out[-900:])
 
-# Download /kaggle/working/adapter, then locally:
+# ── 6. what happens next, and what would make this a failure ───────────────
+#
 #   ./.venv/bin/python scripts/run_repair_benchmark.py --n 100 --retrieval \
 #       --adapter adapters/kaggle-sft --tag tuned100
-# It has to beat the untuned baseline or it has not earned its place.
+#   ./.venv/bin/python scripts/run_hard_eval.py --n 81 --backend local \
+#       --retrieval --adapter adapters/kaggle-sft --tag tuned81
+#
+# Baselines to beat, both untuned, both already in docs/RESULTS.md:
+#
+#   benchmark   93% render at repair rounds=4
+#   hard eval   85% render | 16.3s mean | 1.76% length ratio | 8.8% coverage
+#
+# The render rate is the *least* interesting of those. It will probably rise
+# a few points and that proves little -- the untuned model already renders.
+# The question this run exists to answer is whether **length ratio and
+# concept coverage move at all**, because the corpus analysis in
+# docs/PLAN.md §2 predicts they will not: ValueTracker appears in 1.3% of
+# training rows against 9.1% of the gold scenes.
+#
+# If they do not move, this run was not wasted -- it is the evidence that
+# Phase 2 (a gate that judges animation, not execution) is the whole
+# project. Record the numbers either way.

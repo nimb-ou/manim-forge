@@ -53,12 +53,32 @@ Air. Project: https://github.com/nimb-ou/manim-forge
 """
 
 
+def restore(api, repo: str, dest: Path) -> None:
+    """Pull the backup down into ./data.
+
+    A backup with no restore path is a hope, not a backup — and this one had
+    none for the whole life of the project. It is also what makes CI possible
+    at all: `data/` is gitignored, so a checkout on a runner has no corpus,
+    no gate verdicts and no gold rows, and `forge.doctor` cannot check
+    anything that matters without them.
+    """
+    from huggingface_hub import snapshot_download
+    print(f"restoring {repo} -> {dest}")
+    got = snapshot_download(repo_id=repo, repo_type="dataset",
+                            local_dir=str(dest.parent),
+                            allow_patterns=["data/**"])
+    n = sum(1 for _ in Path(got).rglob("*") if _.is_file())
+    print(f"  {n} files restored")
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--repo", default=None, help="default: <user>/manim-forge-corpus")
     ap.add_argument("--public", action="store_true",
                     help="NOT default — see the licensing note in this file")
     ap.add_argument("--include-frames", action="store_true")
+    ap.add_argument("--restore", action="store_true",
+                    help="download the backup into ./data instead of uploading")
     a = ap.parse_args()
 
     from huggingface_hub import HfApi, whoami
@@ -71,6 +91,9 @@ def main() -> None:
 
     repo = a.repo or f"{me}/manim-forge-corpus"
     api = HfApi()
+    if a.restore:
+        restore(api, repo, Path("data"))
+        return
     api.create_repo(repo, repo_type="dataset", private=not a.public, exist_ok=True)
     print(f"repo: https://huggingface.co/datasets/{repo} "
           f"({'PUBLIC' if a.public else 'private'})")

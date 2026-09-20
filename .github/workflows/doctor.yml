@@ -1,0 +1,62 @@
+# Nightly consistency check against the real data.
+#
+# docs/STATE.md drifted to claiming 10 gold scenes when there were 44, 89%
+# when the measured figure was 93%, and a corpus of ~2,300 against an honest
+# 1,759. That was never carelessness -- the check was manual. This is the
+# check, on a timer.
+#
+# Requires: the repo to be public (cron does not fire on free private repos)
+# and an HF_TOKEN secret, since data/ lives on Hugging Face, not in git.
+name: doctor
+
+on:
+  schedule:
+    - cron: "0 3 * * *"        # 03:00 UTC daily
+  workflow_dispatch:
+
+jobs:
+  doctor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: install
+        run: |
+          python -m pip install -q --upgrade pip
+          python -m pip install -q huggingface-hub
+
+      - name: restore the corpus
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: python scripts/backup_to_hf.py --restore
+
+      - name: doctor
+        id: doctor
+        run: |
+          python -m forge.doctor | tee doctor.txt
+
+      # An invariant that breaks silently is the same as no invariant. Four
+      # of the defects in docs/POSTMORTEM.md sat undetected for the whole
+      # life of the project because nothing was watching.
+      - name: open an issue if anything is broken
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            let body = "The nightly doctor failed.\n\n```\n";
+            try { body += fs.readFileSync('doctor.txt', 'utf8').slice(0, 55000); }
+            catch (e) { body += "(no output captured — the restore step may have failed)"; }
+            body += "\n```\n";
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `doctor: broken invariant (${new Date().toISOString().slice(0,10)})`,
+              body,
+              labels: ['doctor'],
+            });

@@ -109,3 +109,24 @@ def test_every_gold_scene_imports_and_declares_beats():
         elif not any(beats_of(s) for s in scenes):
             broken.append(f"{name}: no beats")
     assert not broken, "\n".join(broken)
+
+
+# --- the doctor itself -----------------------------------------------------
+
+def test_doctor_distinguishes_a_missing_input_from_a_broken_invariant(tmp_path, monkeypatch):
+    """CI has no data/ -- it is gitignored and lives on Hugging Face.
+
+    A check that cannot see its input has not failed; it has not run. Saying
+    otherwise turns a green build red for the wrong reason, and then people
+    stop reading it.
+    """
+    import forge.doctor as doc
+    monkeypatch.setattr(doc, "ROOT", tmp_path)
+    (tmp_path / "scripts").mkdir()
+    (tmp_path / "scripts" / "export_gold.py").write_text(
+        (ROOT / "scripts" / "export_gold.py").read_text())
+
+    checks = doc.invariants()
+    assert any(c.skipped for c in checks), "nothing was marked as not-run"
+    assert not [c for c in checks if not c.ok and not c.warn_only and not c.skipped], \
+        "a check with no input was reported as broken"

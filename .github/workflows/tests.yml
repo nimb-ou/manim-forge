@@ -1,0 +1,58 @@
+# Dormant until the repository is public: Actions minutes are unlimited on
+# public repos, and a free private repo gets 2,000 a month with scheduled
+# workflows disabled outright. See docs/SETUP.md A1.
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      # Manim's own dependencies. The gold-scene import test loads all 44
+      # modules, and every one of them starts `from manim import *`.
+      - name: system dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            libcairo2-dev libpango1.0-dev pkg-config ffmpeg
+
+      - name: install
+        run: |
+          python -m pip install -q --upgrade pip
+          python -m pip install -q manim==0.21.0 pytest
+
+      # No TeX here on purpose. Nothing in the suite renders -- the tests
+      # that would need a GPU-less hour are the ones the render gate does
+      # locally. A LaTeX install would triple this job for no assertion.
+      - name: pytest
+        run: python -m pytest -q
+
+      # data/ is gitignored, so a runner has no corpus. The invariants that
+      # do not need one still hold, and these are exactly the ones that
+      # would have caught the gold-export defect on the day it landed.
+      - name: source-level invariants
+        run: |
+          python - <<'PY'
+          from forge.doctor import invariants
+          checks = invariants()
+          bad = [c for c in checks if not c.ok and not c.warn_only and not c.skipped]
+          for c in checks:
+              mark = "··" if c.skipped else "ok" if c.ok else "XX"
+              print(f"  {mark} {c.name}")
+              if c is not None and not c.ok and not c.skipped:
+                  print(f"       {c.detail}")
+          raise SystemExit(1 if bad else 0)
+          PY

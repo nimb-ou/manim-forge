@@ -152,12 +152,19 @@ class Check:
     #: produces *now*. Conflating the two gives a doctor that is never clean,
     #: which is a doctor nobody runs.
     warn_only: bool = False
+    #: True when the check reads data/, which is gitignored and lives on
+    #: Hugging Face. A CI runner has no corpus, and a check that cannot see
+    #: its input has not failed -- it has not run. Saying otherwise turns a
+    #: green build red for the wrong reason, and people stop reading it.
+    needs_data: bool = False
+    skipped: bool = False
 
 
 def invariants() -> list[Check]:
     from forge.gold.curriculum import CURRICULUM
     out: list[Check] = []
     d = ROOT / "data"
+    have_data = (d / "train" / "train.jsonl").exists()
 
     mods = gold_modules()
     listed = {Path(g["module"]).stem for g in gold_export_list()}
@@ -172,7 +179,9 @@ def invariants() -> list[Check]:
     miss = sorted(listed - exported)
     out.append(Check("every listed scene reached gold.jsonl", not miss,
                      f"{len(miss)} missing: {miss[:6]}" if miss else "",
-                     "./.venv/bin/python scripts/export_gold.py"))
+                     "./.venv/bin/python scripts/export_gold.py",
+                     needs_data=True,
+                     skipped=not (d / "gold" / "gold.jsonl").exists()))
 
     known = {c.key for c in CURRICULUM}
     unmarked = sorted((mods & known) - {c.key for c in CURRICULUM if c.done})
@@ -189,7 +198,8 @@ def invariants() -> list[Check]:
     train = _rows(d / "train" / "train.jsonl")
     out.append(Check("training rows carry their metadata",
                      bool(train) and all("meta" in r for r in train),
-                     "meta missing", "scripts/prepare_training.py"))
+                     "meta missing", "scripts/prepare_training.py",
+                     needs_data=True, skipped=not have_data))
 
     def plays(r):
         c = r["messages"][-1]["content"]
@@ -197,11 +207,13 @@ def invariants() -> list[Check]:
     static = sum(1 for r in train if plays(r) == 0)
     out.append(Check("no training row is a still image", static == 0,
                      f"{static} rows never call self.play()",
-                     "scripts/prepare_training.py"))
+                     "scripts/prepare_training.py",
+                     needs_data=True, skipped=not have_data))
 
     gold_in_train = sum(1 for r in train if r.get("meta", {}).get("tier") == "gold")
     out.append(Check("gold scenes reached the training mix", gold_in_train > 0,
-                     f"{gold_in_train} gold rows", "scripts/prepare_training.py"))
+                     f"{gold_in_train} gold rows", "scripts/prepare_training.py",
+                     needs_data=True, skipped=not have_data))
 
     # Rows the lint rescued must reach the verified export. They did not,
     # for the whole life of the project: regate.py wrote its recoveries to a
@@ -214,12 +226,14 @@ def invariants() -> list[Check]:
         lost = sorted(rec - exported)
         out.append(Check("lint recoveries reached the verified export", not lost,
                          f"{len(lost)} recovered row(s) never exported: {lost[:4]}",
-                         "./.venv/bin/python scripts/export_dataset.py"))
+                         "./.venv/bin/python scripts/export_dataset.py",
+                         needs_data=True, skipped=not have_data))
 
     from forge.catalog import orphans
     orph = orphans()
     out.append(Check("every data file is catalogued", not orph,
-                     f"{len(orph)} uncatalogued: {orph[:3]}", "forge/catalog.py"))
+                     f"{len(orph)} uncatalogued: {orph[:3]}", "forge/catalog.py",
+                     needs_data=True, skipped=not d.exists()))
 
     # The invariant that matters is about rows minted now, not rows already
     # on disk. generate_forever.py passed index=0 for every row it ever
@@ -291,16 +305,19 @@ def main() -> None:
 
     f = measure()
     checks = invariants()
-    bad = [c for c in checks if not c.ok and not c.warn_only]
-    warns = [c for c in checks if not c.ok and c.warn_only]
+    bad = [c for c in checks if not c.ok and not c.warn_only and not c.skipped]
+    warns = [c for c in checks if not c.ok and c.warn_only and not c.skipped]
+    skipped = [c for c in checks if c.skipped]
 
     print("=" * 66)
     print("  INVARIANTS")
     print("=" * 66)
     for c in checks:
-        mark = "ok " if c.ok else ("-- " if c.warn_only else "XX ")
-        print(f"  {mark} {c.name}")
-        if not c.ok:
+        mark = ("·· " if c.skipped else
+                "ok " if c.ok else "-- " if c.warn_only else "XX ")
+        print(f"  {mark} {c.name}"
+              + ("   (no data/ — not run)" if c.skipped else ""))
+        if not c.ok and not c.skipped:
             print(f"        {c.detail}")
             if c.fix:
                 print(f"        fix: {c.fix}")
@@ -315,7 +332,11 @@ def main() -> None:
 
     state = ROOT / "docs" / "STATE.md"
     drift = False
-    if state.exists():
+    # With no data/ every figure is zero, so the block would always look
+    # stale. A runner that cannot see the corpus has nothing to say about
+    # whether the corpus numbers are current.
+    have_data = (ROOT / "data" / "train" / "train.jsonl").exists()
+    if state.exists() and have_data:
         s = state.read_text()
         block = render_block(f)
         if BEGIN in s and END in s:
@@ -343,12 +364,17 @@ def main() -> None:
         print(f"      {l}")
 
     print()
+    if skipped:
+        print(f"  {len(skipped)} check(s) need data/ and did not run")
     if warns:
         print(f"  {len(warns)} note(s) about data already on disk — not faults")
     if bad:
         print(f"  {len(bad)} invariant(s) broken")
     if drift:
         print("  docs/STATE.md is stale — run with --write")
+    if not have_data:
+        print("  no data/ — figures not checked "
+              "(restore with scripts/backup_to_hf.py --restore)")
     if not bad and not drift:
         print("  clean")
     sys.exit(1 if (bad or drift) else 0)

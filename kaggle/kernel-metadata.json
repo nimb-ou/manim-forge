@@ -1,0 +1,15 @@
+{
+  "id": "nimitttt/manim-forge-sft",
+  "title": "Manim Forge - SFT",
+  "code_file": "01_sft.py",
+  "language": "python",
+  "kernel_type": "script",
+  "is_private": true,
+  "enable_gpu": true,
+  "enable_internet": true,
+  "dataset_sources": [
+    "nimitttt/manim-forge-data"
+  ],
+  "competition_sources": [],
+  "kernel_sources": []
+}

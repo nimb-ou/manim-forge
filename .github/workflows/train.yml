@@ -1,0 +1,103 @@
+# Fine-tune on Kaggle without anyone at a browser.
+#
+# Kaggle gives 30 GPU-hours a week free, 9-hour sessions, and root -- which
+# matters more than the GPU, because GRPO's reward is a render and training
+# and verification have to live in the same machine.
+#
+# The loop: package the mix -> upload it as a Kaggle dataset -> push the
+# kernel -> poll until it finishes -> pull the output. The adapter publishes
+# itself to Hugging Face from inside the notebook, so no step here depends
+# on a human downloading a file.
+#
+# Requires secrets KAGGLE_USERNAME, KAGGLE_KEY, HF_TOKEN (docs/SETUP.md C2).
+name: train
+
+on:
+  workflow_dispatch:
+    inputs:
+      note:
+        description: "What is the one variable that changed in this run?"
+        required: true
+        type: string
+
+jobs:
+  sft:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350          # a 9-hour Kaggle session, plus slack
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: install
+        run: |
+          python -m pip install -q --upgrade pip
+          python -m pip install -q kaggle huggingface-hub
+
+      - name: restore the corpus
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: python scripts/backup_to_hf.py --restore
+
+      # Rebuild rather than trust what was restored. The mix is cheap to
+      # derive and expensive to get wrong, and its hash is recorded with the
+      # eval numbers so a result can always be traced to the data that
+      # produced it.
+      - name: rebuild the training mix
+        run: |
+          python scripts/export_gold.py
+          python scripts/export_dataset.py
+          python scripts/prepare_training.py
+          python -m forge.doctor || true
+
+      - name: package for Kaggle
+        run: python scripts/package_for_kaggle.py
+
+      - name: authenticate
+        env:
+          KAGGLE_USERNAME: ${{ secrets.KAGGLE_USERNAME }}
+          KAGGLE_KEY: ${{ secrets.KAGGLE_KEY }}
+        run: |
+          mkdir -p ~/.kaggle
+          printf '{"username":"%s","key":"%s"}' "$KAGGLE_USERNAME" "$KAGGLE_KEY" \
+            > ~/.kaggle/kaggle.json
+          chmod 600 ~/.kaggle/kaggle.json
+
+      - name: upload the dataset
+        run: |
+          cd kaggle/manim-forge-data
+          kaggle datasets version -m "mix $(date -u +%F) — ${{ inputs.note }}" \
+            || kaggle datasets create
+
+      - name: push the kernel
+        run: kaggle kernels push -p kaggle/
+
+      # Kaggle has no webhook, so this polls. Ten minutes between checks: the
+      # job takes hours and a tighter loop only burns runner minutes.
+      - name: wait for it
+        run: |
+          for i in $(seq 1 54); do
+            sleep 600
+            status=$(kaggle kernels status nimitttt/manim-forge-sft 2>&1 || true)
+            echo "[$i] $status"
+            case "$status" in
+              *complete*)  echo "finished"; exit 0 ;;
+              *error*|*cancel*)
+                kaggle kernels output nimitttt/manim-forge-sft -p out/ || true
+                tail -100 out/*.log 2>/dev/null || true
+                echo "kernel failed"; exit 1 ;;
+            esac
+          done
+          echo "still running after 9 hours — check Kaggle"; exit 1
+
+      - name: pull the output
+        if: always()
+        run: kaggle kernels output nimitttt/manim-forge-sft -p out/ || true
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: kaggle-output
+          path: out/

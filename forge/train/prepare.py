@@ -47,6 +47,8 @@ def _example(prompt: str, code: str, meta: dict) -> dict:
 
 def load_gated(train_jsonl: Path) -> list[dict]:
     """Verified rows already exported by the gate, deduplicated by id."""
+    if not train_jsonl.exists():
+        return []          # every other loader here tolerates this; so does CI
     out, seen = [], set()
     for line in train_jsonl.open():
         r = json.loads(line)
