@@ -120,6 +120,51 @@ uvicorn forge.app.server:app --port 8765    # the platform
 - Truncated generations surface as **syntax errors**, not as truncation. Budget
   generously (16k) and check `finishReason`.
 
+## Training on Kaggle — nine runs' worth of facts
+
+Every one of these cost a run. None is in Kaggle's documentation where I
+looked.
+
+- **Datasets mount at `/kaggle/input/datasets/<owner>/<slug>/`**, not
+  `/kaggle/input/<slug>`. Three runs died on that constant, each reporting
+  the directory "does not exist at all" -- true of the path, false of the
+  data. `find_data()` searches for a file it needs instead of assuming.
+- **Kaggle unpacks archives on upload.** A shipped `forge.tar.gz` arrives as
+  `forge/forge/` and the archive is gone.
+- **`kernel_type: "script"` is plain Python.** `!pip` is a SyntaxError there.
+  Check with `ast.parse` on the file *unmodified* -- stripping magics first
+  to make the check pass is how this shipped.
+- **A new dataset version is not immediately mountable**, and neither
+  `dataset_status` nor the file listing nor the version number tells you
+  when it is -- all three describe the previous version for a while. Upload
+  a fingerprint file and wait until downloading it returns the new hash.
+- **Status strings are `KernelWorkerStatus.ERROR` in capitals**, inside a
+  sentence that also contains the kernel slug. Match the extracted token,
+  not a substring of the message.
+- **The kernel log is a JSON array** of `{stream_name, data}`, so `tail` on
+  it shows one enormous line. `scripts/read_kaggle_log.py`.
+- **Kaggle notebooks see none of the runner's environment.** `HF_TOKEN` has
+  to be attached as a Kaggle Secret through the web UI, so anything needing
+  it belongs in the workflow, not the kernel.
+
+### QLoRA on a T4, specifically
+
+- **trl 1.13 renamed `max_seq_length` to `max_length` and dropped
+  `warmup_ratio`** (only `warmup_steps` remains). Pin the version: an
+  unpinned `trl>=0.12` means a different training config every run.
+- **`loss_type` defaults to `chunked_nll`**, which patches the LM head and
+  assumes `forward` is a bound method. On a bitsandbytes-quantised model it
+  is a `functools.partial`, and `SFTTrainer` cannot be constructed at all.
+  Use `loss_type="nll"` -- at the cost of ~620 MB of un-chunked logits at
+  seq=2048 over a 152k vocabulary.
+- **`prepare_model_for_kbit_training` is not optional.** Without it,
+  Qwen2.5's bf16 config leaves bf16 gradients, `fp16=True` turns on a
+  GradScaler, and torch has no bf16 CUDA kernel for the AMP unscale:
+  `NotImplementedError: _amp_foreach_non_finite_check_and_unscale_cuda`.
+  It upcasts fp16/bf16 params to fp32 -- which costs ~2.2 GB on Qwen's
+  embedding table, so print the memory budget.
+- **The GPU is 2x Tesla T4, 15360 MiB each**, and only one is used here.
+
 ## Standing instructions from Nimit
 
 - Preserve every artefact, failures included. Storage is not a constraint.
