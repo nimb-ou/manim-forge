@@ -33,7 +33,7 @@ the block below and exits non-zero if it has drifted; `--write` updates it.
 | — of those, rescued by lint | 38 (no API cost) |
 | Synthetic, verified | **667** unique |
 | Gold scenes, authored | **44 of 61** · 182 beats |
-| Gold rendered at 1080p60 | **19 of 44** |
+| Gold rendered at 1080p60 | **43 of 44** |
 | Training mix | **3,010** train / 131 valid |
 | 3b1b narration segments | 5,825 |
 
