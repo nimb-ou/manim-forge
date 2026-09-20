@@ -11,3 +11,8 @@ license = "CC-BY-NC-SA-4.0"
 
 [tool.setuptools.packages.find]
 include = ["forge*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+filterwarnings = ["ignore::DeprecationWarning:pydub.*"]
