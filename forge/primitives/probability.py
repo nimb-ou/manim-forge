@@ -177,3 +177,64 @@ class TestOutcome:
                  + (1 - self.specificity) * (1 - self.prevalence))
         bayes = self.sensitivity * self.prevalence / p_pos
         return abs(self.posterior - bayes) < tol
+
+
+# ------------------------------------------------- the central limit theorem
+
+
+def sample_means(n_per_sample: int, n_samples: int, *, seed: int = 0,
+                 kind: str = "uniform") -> list[float]:
+    """Means of many small samples drawn from a decidedly non-normal source.
+
+    ``kind`` picks the source distribution. "uniform" is flat, "skewed" is
+    exponential-ish, "bimodal" has two humps and no mass in the middle. The
+    point of offering ugly sources is that the theorem is about the *means*,
+    not about the data -- a demonstration starting from a bell curve proves
+    nothing at all.
+    """
+    import random
+    rng = random.Random(seed)
+
+    def draw() -> float:
+        if kind == "uniform":
+            return rng.random()
+        if kind == "skewed":
+            return rng.expovariate(1.6)
+        if kind == "bimodal":
+            return rng.gauss(0.18, 0.06) if rng.random() < 0.5 else rng.gauss(0.82, 0.06)
+        raise ValueError(kind)
+
+    return [sum(draw() for _ in range(n_per_sample)) / n_per_sample
+            for _ in range(n_samples)]
+
+
+def histogram(values: list[float], bins: int, lo: float, hi: float) -> list[int]:
+    """Counts per bin, with out-of-range values clamped into the end bins."""
+    out = [0] * bins
+    for v in values:
+        idx = int((v - lo) / (hi - lo) * bins)
+        out[min(max(idx, 0), bins - 1)] += 1
+    return out
+
+
+def spread(values: list[float]) -> float:
+    m = sum(values) / len(values)
+    return math.sqrt(sum((v - m) ** 2 for v in values) / len(values))
+
+
+def verify_spread_shrinks_as_sqrt_n(kind: str = "bimodal",
+                                    tol: float = 0.18) -> bool:
+    """The spread of sample means must fall like one over root n.
+
+    This is the quantitative half of the theorem and the half a picture
+    cannot show: the histogram narrowing is obvious, but whether it narrows
+    at the right *rate* is the actual claim. Checked by comparing the ratio
+    of measured spreads against the ratio of one over root n.
+    """
+    base = spread(sample_means(1, 4000, seed=3, kind=kind))
+    for n in (4, 16, 64):
+        got = spread(sample_means(n, 4000, seed=3, kind=kind))
+        want = base / math.sqrt(n)
+        if abs(got - want) / want > tol:
+            return False
+    return True

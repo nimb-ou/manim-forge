@@ -10,6 +10,40 @@ from pathlib import Path
 
 GOLD = [
     {
+        "module": "forge/gold/eigenvectors.py",
+        "scene": "Eigenvectors",
+        "prompt": "show eigenvectors as the directions a transformation does not "
+                  "turn, only scales, verify A v equals lambda v numerically, "
+                  "then show a rotation that has no real eigenvectors at all",
+        "tags": ['vectors', 'matrices'],
+    },
+    {
+        "module": "forge/gold/determinant.py",
+        "scene": "Determinant",
+        "prompt": "show that the determinant is the factor by which a "
+                  "transformation multiplies every area, measure it on an "
+                  "irregular shape as well as the unit square, and explain why a "
+                  "determinant of zero means no inverse",
+        "tags": ['vectors', 'matrices'],
+    },
+    {
+        "module": "forge/gold/linear_transform.py",
+        "scene": "LinearTransform",
+        "prompt": "show that a matrix is a record of where the two basis vectors "
+                  "land, transform the whole grid to match, and explain matrix "
+                  "multiplication as doing one map after another",
+        "tags": ['vectors', 'matrices'],
+    },
+    {
+        "module": "forge/gold/central_limit.py",
+        "scene": "CentralLimit",
+        "prompt": "show why averages become bell-shaped by starting from a source "
+                  "with two humps and an empty middle, then plot the averages of "
+                  "four, sixteen and sixty-four draws and show the spread "
+                  "shrinking like one over root n",
+        "tags": ['probability', 'statistics'],
+    },
+    {
         "module": "forge/gold/wave_interference.py",
         "scene": "WaveInterference",
         "prompt": "show two waves travelling in opposite directions, add them "

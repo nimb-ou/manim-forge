@@ -78,15 +78,18 @@ CURRICULUM: list[Scene] = [
     Scene("linear_transform", "A matrix moves the whole plane", "vectors", 2,
           "show a linear transformation as the entire grid moving, with the "
           "basis vectors landing where the matrix columns say",
-          needs=["vectors"], builds_on=["coordinate_plane"]),
+          needs=["vectors"], builds_on=["coordinate_plane"],
+          done=True),
     Scene("determinant", "The determinant is an area factor", "vectors", 2,
           "show that the determinant is the factor by which a transformation "
           "scales area, and what a negative one means",
-          needs=["vectors"], builds_on=["linear_transform"]),
+          needs=["vectors"], builds_on=["linear_transform"],
+          done=True),
     Scene("eigenvectors", "The directions that do not turn", "vectors", 2,
           "show eigenvectors as the directions a transformation leaves pointing "
           "the same way, only stretched",
-          needs=["vectors"], builds_on=["linear_transform"]),
+          needs=["vectors"], builds_on=["linear_transform"],
+          done=True),
     Scene("derivative_slope", "The derivative as a limit of slopes", "calculus", 2,
           "show the derivative as the slope of a line through two points on a "
           "curve, as those points slide together",
@@ -125,7 +128,8 @@ CURRICULUM: list[Scene] = [
     Scene("central_limit", "Why the bell curve keeps appearing", "probability", 2,
           "show many small random effects adding up into a bell curve, using a "
           "Galton board, and show it emerge regardless of the underlying shape",
-          needs=["probability"], builds_on=["law_of_large_numbers"]),
+          needs=["probability"], builds_on=["law_of_large_numbers"],
+          done=True),
     Scene("monty_hall", "The door problem, played out", "puzzles", 2,
           "play the Monty Hall problem out over many trials and show the "
           "switching strategy winning two thirds of the time",
