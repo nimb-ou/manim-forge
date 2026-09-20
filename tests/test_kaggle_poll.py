@@ -283,6 +283,11 @@ def test_no_name_is_used_before_it_exists():
             elif isinstance(n, ast.NamedExpr):
                 local.update(x.id for x in ast.walk(n.target)
                              if isinstance(x, ast.Name))
+            elif isinstance(n, (ast.Import, ast.ImportFrom)):
+                # An import inside a try/if block binds for the rest of that
+                # block, and the walk sees the whole block as one statement.
+                local.update((a.asname or a.name).split(".")[0]
+                             for a in n.names)
             elif isinstance(n, ast.Assign):
                 # A compound statement -- if/try/with/for -- can assign a
                 # name and use it in the same statement, which this walk

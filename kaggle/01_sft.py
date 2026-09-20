@@ -344,22 +344,39 @@ from transformers import TrainerCallback
 
 # 3% of total steps, computed rather than declared: trl 1.13 has no
 # warmup_ratio, only warmup_steps.
+# A smoke run exercises every step -- data, model, LoRA, the optimiser step
+# that five runs died on, saving, run.json, and the artefact the workflow
+# collects -- in about eight minutes instead of four hours. Nothing about
+# the resulting adapter is meaningful; the point is that the path works.
+# Set by the workflow rewriting this exact line before `kaggle kernels
+# push`. It cannot be an environment variable: a Kaggle kernel sees none of
+# the runner's environment, which is the same fact that moved the adapter
+# upload out of this file and which I nearly forgot again here.
+SMOKE = False  # workflow-managed
+
 EPOCHS, BATCH, ACCUM = 3, 1, 8
+if SMOKE:
+    ds["train"] = ds["train"].select(range(min(64, len(ds["train"]))))
+    ds["valid"] = ds["valid"].select(range(min(8, len(ds["valid"]))))
+    print(f"[smoke] {len(ds['train'])} train / {len(ds['valid'])} valid rows, "
+          f"20 steps", flush=True)
+
 steps_per_epoch = max(1, len(ds["train"]) // (BATCH * ACCUM))
 total_steps = steps_per_epoch * EPOCHS
 
 cfg = SFTConfig(
     output_dir=str(WORK / "sft-out"),
     num_train_epochs=EPOCHS,
+    max_steps=20 if SMOKE else -1,
     per_device_train_batch_size=BATCH,
     gradient_accumulation_steps=ACCUM,
     learning_rate=1e-4,               # LoRA tolerates far more than full FT
     lr_scheduler_type="cosine",
     warmup_steps=max(10, int(0.03 * total_steps)),
-    logging_steps=10,
+    logging_steps=1 if SMOKE else 10,
     eval_strategy="steps",
-    eval_steps=60,
-    save_steps=120,
+    eval_steps=10 if SMOKE else 60,
+    save_steps=10 if SMOKE else 120,
     save_total_limit=2,               # Kaggle's output quota is finite
     max_length=2048,                  # was max_seq_length before trl 1.x
     packing=False,
@@ -462,15 +479,25 @@ for f in sorted((WORK / "adapter").iterdir()):
     print(f"  {f.name}  {f.stat().st_size/1e6:.1f} MB")
 
 # ── 5. sanity check: generate one scene ────────────────────────────────────
-from transformers import pipeline
-gen = pipeline("text-generation", model=trainer.model, tokenizer=tok)
-msg = [
-    {"role": "system", "content": ds["valid"][0]["messages"][0]["content"]},
-    {"role": "user", "content": "draw a blue circle and transform it into a red square"},
-]
-out = gen(tok.apply_chat_template(msg, tokenize=False, add_generation_prompt=True),
-          max_new_tokens=400, do_sample=False)[0]["generated_text"]
-print(out[-900:])
+# Wrapped, deliberately. This runs *after* the adapter is saved, and a
+# non-zero exit here makes the kernel report ERROR -- at which point the
+# workflow's poller fails the run and never publishes. A nicety at the end
+# of a four-hour job must not be able to throw the job away.
+try:
+    from transformers import pipeline
+    gen = pipeline("text-generation", model=trainer.model, tokenizer=tok)
+    msg = [
+        {"role": "system", "content": ds["valid"][0]["messages"][0]["content"]},
+        {"role": "user",
+         "content": "draw a blue circle and transform it into a red square"},
+    ]
+    out = gen(tok.apply_chat_template(msg, tokenize=False,
+                                      add_generation_prompt=True),
+              max_new_tokens=400, do_sample=False)[0]["generated_text"]
+    print(out[-900:])
+except Exception as exc:                                    # noqa: BLE001
+    print(f"sanity generation failed ({type(exc).__name__}: {exc}) — "
+          f"the adapter is saved and unaffected", flush=True)
 
 # ── 6. what happens next, and what would make this a failure ───────────────
 #
