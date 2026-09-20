@@ -10,6 +10,22 @@ from pathlib import Path
 
 GOLD = [
     {
+        "module": "forge/gold/bayes.py",
+        "scene": "Bayes",
+        "prompt": "show why a positive result on a very accurate medical test "
+                  "still means you are probably fine, by drawing ten thousand "
+                  "people as areas and counting the true and false positives",
+        "tags": ['probability', 'bayes'],
+    },
+    {
+        "module": "forge/gold/monty_hall.py",
+        "scene": "MontyHall",
+        "prompt": "play out the Monty Hall door problem, state the host's rule "
+                  "explicitly, explain why switching wins two times in three, and "
+                  "confirm it by simulating twenty thousand games",
+        "tags": ['puzzles', 'probability'],
+    },
+    {
         "module": "forge/gold/irrational_sqrt2.py",
         "scene": "IrrationalSqrt2",
         "prompt": "prove that the square root of two cannot be written as a "

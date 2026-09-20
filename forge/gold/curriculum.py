@@ -118,7 +118,8 @@ CURRICULUM: list[Scene] = [
     Scene("bayes", "Belief as area", "probability", 2,
           "show Bayes' theorem as areas in a rectangle, where evidence shrinks "
           "the space of possibilities",
-          needs=["probability", "grid"]),
+          needs=["probability", "grid"],
+          done=True),
     Scene("central_limit", "Why the bell curve keeps appearing", "probability", 2,
           "show many small random effects adding up into a bell curve, using a "
           "Galton board, and show it emerge regardless of the underlying shape",
@@ -126,7 +127,8 @@ CURRICULUM: list[Scene] = [
     Scene("monty_hall", "The door problem, played out", "puzzles", 2,
           "play the Monty Hall problem out over many trials and show the "
           "switching strategy winning two thirds of the time",
-          needs=["probability"]),
+          needs=["probability"],
+          done=True),
     Scene("bfs_graph", "Searching outward one step at a time", "graphs", 2,
           "show breadth-first search expanding outward from a node in waves, "
           "and show that it finds the shortest path when every edge costs one",

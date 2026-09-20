@@ -74,3 +74,106 @@ def smallest_n_above(threshold: float, days: int = 365) -> int:
     while birthday_collision(n, days) < threshold:
         n += 1
     return n
+
+
+# ------------------------------------------------- Monty Hall and Bayes
+
+
+@dataclass
+class MontyRun:
+    """One play: where the car was, what was picked, what was opened."""
+    car: int
+    first_pick: int
+    opened: int
+    switch_wins: bool
+    stay_wins: bool
+
+
+def play_monty(seed: int = 0, trials: int = 1000, doors: int = 3
+               ) -> list[MontyRun]:
+    """Play the door game properly, ``trials`` times.
+
+    The host's constraint is the whole puzzle and it is enforced here: he
+    opens a door that is neither the contestant's pick nor the car. A
+    simulation that lets him open at random gives one half and quietly
+    answers a different question -- which is why so many arguments about this
+    puzzle are really arguments about which game is being played.
+    """
+    import random
+    rng = random.Random(seed)
+    out: list[MontyRun] = []
+    for _ in range(trials):
+        car = rng.randrange(doors)
+        pick = rng.randrange(doors)
+        choices = [d for d in range(doors) if d != pick and d != car]
+        opened = rng.choice(choices)
+        switched_to = next(d for d in range(doors)
+                           if d != pick and d != opened)
+        out.append(MontyRun(car, pick, opened,
+                            switch_wins=(switched_to == car),
+                            stay_wins=(pick == car)))
+    return out
+
+
+def monty_rates(runs: list[MontyRun]) -> tuple[float, float]:
+    """(switch win rate, stay win rate) as actually observed."""
+    n = len(runs)
+    return (sum(r.switch_wins for r in runs) / n,
+            sum(r.stay_wins for r in runs) / n)
+
+
+def verify_monty_is_two_thirds(trials: int = 20000, tol: float = 0.02) -> bool:
+    """Switching must win about two thirds, and the two rates must sum to one.
+
+    The second half matters more than the first: switching and staying are
+    complementary here, so any simulation where they do not sum to one has
+    got the host's rule wrong.
+    """
+    sw, st = monty_rates(play_monty(seed=1, trials=trials))
+    return abs(sw - 2 / 3) < tol and abs(sw + st - 1.0) < 1e-9
+
+
+@dataclass
+class TestOutcome:
+    """A screening test applied to a whole population, in counts not rates."""
+    population: int
+    prevalence: float
+    sensitivity: float
+    specificity: float
+
+    @property
+    def sick(self) -> int:
+        return round(self.population * self.prevalence)
+
+    @property
+    def well(self) -> int:
+        return self.population - self.sick
+
+    @property
+    def true_positive(self) -> int:
+        return round(self.sick * self.sensitivity)
+
+    @property
+    def false_positive(self) -> int:
+        return round(self.well * (1 - self.specificity))
+
+    @property
+    def positive(self) -> int:
+        return self.true_positive + self.false_positive
+
+    @property
+    def posterior(self) -> float:
+        """Chance of being ill given a positive result."""
+        return self.true_positive / self.positive if self.positive else 0.0
+
+    def verify_against_bayes(self, tol: float = 1e-3) -> bool:
+        """Counting people must agree with the formula.
+
+        Counts are what the scene shows, because the formula is where the
+        intuition goes wrong -- but if the two disagreed the scene would be
+        showing one thing and naming another.
+        """
+        p_pos = (self.sensitivity * self.prevalence
+                 + (1 - self.specificity) * (1 - self.prevalence))
+        bayes = self.sensitivity * self.prevalence / p_pos
+        return abs(self.posterior - bayes) < tol
