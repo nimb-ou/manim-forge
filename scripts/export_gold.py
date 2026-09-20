@@ -10,6 +10,62 @@ from pathlib import Path
 
 GOLD = [
     {
+        "module": "forge/gold/electron_shells.py",
+        "scene": "ElectronShells",
+        "prompt": "show electrons filling shells around a nucleus and why the "
+                  "shells hold two, eight and eighteen — derive the capacities by "
+                  "counting orbitals rather than listing them",
+        "tags": ['chemistry', 'atoms'],
+    },
+    {
+        "module": "forge/gold/covalent_bond.py",
+        "scene": "CovalentBond",
+        "prompt": "show a covalent bond forming as two hydrogen atoms come "
+                  "together, plot the energy against their separation, and show "
+                  "that the bond is the bottom of that curve",
+        "tags": ['chemistry', 'energy', 'plot'],
+    },
+    {
+        "module": "forge/gold/reaction_rate.py",
+        "scene": "ReactionRate",
+        "prompt": "show a reaction as individual particles reacting at random, "
+                  "then plot the concentration falling and show it follows an "
+                  "exponential with a fixed half-life",
+        "tags": ['chemistry', 'kinetics', 'plot'],
+    },
+    {
+        "module": "forge/gold/bfs_graph.py",
+        "scene": "BreadthFirst",
+        "prompt": "show breadth-first search expanding outward from a node in "
+                  "waves, and show that it finds the shortest path when every "
+                  "edge costs one",
+        "tags": ['graphs', 'algorithms'],
+    },
+    {
+        "module": "forge/gold/dijkstra.py",
+        "scene": "Dijkstra",
+        "prompt": "show Dijkstra's algorithm relaxing edges and settling on the "
+                  "cheapest route, on a graph where the route with fewest steps "
+                  "is not the cheapest, and explain why the greedy choice is safe",
+        "tags": ['graphs', 'algorithms'],
+    },
+    {
+        "module": "forge/gold/graph_colouring.py",
+        "scene": "GraphColouring",
+        "prompt": "colour a graph so no two connected nodes match, show that the "
+                  "greedy method's answer depends on the order you take the nodes "
+                  "in, and compare it to the true minimum",
+        "tags": ['graphs', 'algorithms', 'complexity'],
+    },
+    {
+        "module": "forge/gold/konigsberg.py",
+        "scene": "Konigsberg",
+        "prompt": "show the seven bridges of Konigsberg, try and fail to cross "
+                  "each exactly once, then prove it is impossible by counting how "
+                  "many bridges touch each piece of land",
+        "tags": ['graphs', 'proof', 'history'],
+    },
+    {
         "module": "forge/gold/rook_corners.py",
         "scene": "RookCorners",
         "prompt": "build a chess grid, add rooks on it and animate the rook's "

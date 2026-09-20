@@ -124,11 +124,13 @@ CURRICULUM: list[Scene] = [
     Scene("bfs_graph", "Searching outward one step at a time", "graphs", 2,
           "show breadth-first search expanding outward from a node in waves, "
           "and show that it finds the shortest path when every edge costs one",
-          needs=["graphs"]),
+          needs=["graphs"],
+          done=True),
     Scene("dijkstra", "Shortest paths when edges cost different amounts", "graphs", 2,
           "show Dijkstra's algorithm relaxing edges and settling on the "
           "cheapest route, and why greedy works here",
-          needs=["graphs"], builds_on=["bfs_graph"]),
+          needs=["graphs"], builds_on=["bfs_graph"],
+          done=True),
     Scene("binary_search", "Halving the haystack", "discrete", 2,
           "show binary search discarding half the remaining possibilities each "
           "step, and count how few steps that takes"),
@@ -153,14 +155,17 @@ CURRICULUM: list[Scene] = [
           needs=["oscillation"]),
     Scene("electron_shells", "Why atoms fill up in layers", "chemistry", 2,
           "show electrons filling shells around a nucleus and why the shells "
-          "hold two, eight and eight"),
+          "hold two, eight and eight",
+          done=True),
     Scene("covalent_bond", "Sharing electrons", "chemistry", 2,
           "show a covalent bond forming as two atoms share a pair of electrons, "
-          "and why that lowers the energy"),
+          "and why that lowers the energy",
+          done=True),
     Scene("reaction_rate", "Concentration falling over time", "chemistry", 2,
           "show a reaction as particles colliding, and plot the concentration "
           "falling into an exponential decay",
-          needs=["calculus"]),
+          needs=["calculus"],
+          done=True),
     Scene("gradient_descent_2d", "Downhill on a surface", "machine-learning", 2,
           "show gradient descent on a two-dimensional loss surface, following "
           "the steepest direction down into a valley",
@@ -233,11 +238,13 @@ CURRICULUM: list[Scene] = [
     Scene("graph_colouring", "The fewest colours that work", "graphs", 3,
           "colour a graph so no two connected nodes match, using as few colours "
           "as possible, and show why it is hard",
-          needs=["graphs"], builds_on=["bfs_graph"]),
+          needs=["graphs"], builds_on=["bfs_graph"],
+          done=True),
     Scene("konigsberg", "The walk that cannot be done", "graphs", 3,
           "show the seven bridges of Konigsberg and prove no route crosses each "
           "exactly once, by counting odd degrees",
-          needs=["graphs"]),
+          needs=["graphs"],
+          done=True),
     Scene("pigeonhole", "More items than containers", "puzzles", 3,
           "show the pigeonhole principle and use it to prove something "
           "surprising about a group of people",

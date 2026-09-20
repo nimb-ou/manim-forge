@@ -280,3 +280,64 @@ def verify_dijkstra_matches_bruteforce(g: Graph, start: str,
     walk(start, 0.0, frozenset({start}))
     dist, _ = dijkstra(g, start)
     return all(abs(dist[n] - best.get(n, math.inf)) < tol for n in g.nodes)
+
+
+@dataclass
+class WalkStep:
+    """One bridge crossed: which edge, and where it took you."""
+    edge_index: int
+    frm: str
+    to: str
+
+
+def walk_until_stuck(g: Graph, start: str,
+                     preference: list[int] | None = None) -> list[WalkStep]:
+    """Cross unused edges from ``start`` until no unused edge is incident.
+
+    The walk is *maximal*, not optimal: at each node it takes the first
+    unused edge in ``preference`` order (edge-list order by default). Vary the
+    preference to get a different attempt.
+
+    This exists because hand-written attempts are not attempts. Three routes
+    written by eye for the Konigsberg scene turned out to be one invalid walk
+    and two that could have carried on -- the narration said "stranded" and
+    the data disagreed. A walk that really runs out has to be walked.
+    """
+    order = preference if preference is not None else list(range(len(g.edges)))
+    used: set[int] = set()
+    here = start
+    out: list[WalkStep] = []
+    while True:
+        nxt = None
+        for i in order:
+            if i in used:
+                continue
+            a, b, _ = g.edges[i]
+            if here == a:
+                nxt = (i, b)
+                break
+            if here == b:
+                nxt = (i, a)
+                break
+        if nxt is None:
+            return out
+        i, dest = nxt
+        used.add(i)
+        out.append(WalkStep(i, here, dest))
+        here = dest
+
+
+def verify_walk_strands(g: Graph, walk: list[WalkStep], start: str) -> bool:
+    """The walk must be legal, and must genuinely have nowhere left to go."""
+    here = start
+    used: set[int] = set()
+    for s in walk:
+        a, b, _ = g.edges[s.edge_index]
+        if {here, s.to} != {a, b} or s.frm != here or s.edge_index in used:
+            return False
+        used.add(s.edge_index)
+        here = s.to
+    remaining = [i for i in range(len(g.edges)) if i not in used]
+    if not remaining:
+        return False                      # it finished; that is not stranding
+    return not any(here in g.edges[i][:2] for i in remaining)
