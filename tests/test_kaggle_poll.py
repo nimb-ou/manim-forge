@@ -182,3 +182,55 @@ def test_sft_does_not_import_forge():
             "SFT now imports forge — make the package a hard requirement"
         assert not any(x.startswith("forge") for x in names), \
             "SFT now imports forge — make the package a hard requirement"
+
+
+# --- where Kaggle actually mounts a dataset --------------------------------
+
+def _find_data_fn(root: Path) -> str:
+    import re
+    src = KERNEL.read_text()
+    m = re.search(r'def find_data\(\).*?\n(?=\n\nDATA =)', src, re.S)
+    assert m, "the kernel no longer defines find_data"
+    return m.group(0).replace('Path("/kaggle/input")', f'Path({str(root)!r})')
+
+
+@pytest.mark.parametrize("layout,rel", [
+    # The real one. Not /kaggle/input/<slug>, which is what the script
+    # assumed and what three consecutive runs died on -- each reporting the
+    # directory "does not exist at all", which was true of the path and false
+    # of the data.
+    ("kaggle-real", "datasets/nimbou/manim-forge-data"),
+    ("flat", "manim-forge-data"),
+])
+def test_the_dataset_is_found_wherever_kaggle_mounts_it(tmp_path, layout, rel):
+    import sys as _sys
+    root = tmp_path / "input"
+    (root / rel).mkdir(parents=True)
+    (root / rel / "train.jsonl").touch()
+    ns = {"Path": Path, "sys": _sys}
+    exec(_find_data_fn(root), ns)
+    assert ns["find_data"]() == root / rel
+
+
+def test_no_dataset_fails_with_a_diagnosis_not_a_keyerror(tmp_path, capsys):
+    import sys as _sys
+    root = tmp_path / "input"
+    root.mkdir(parents=True)
+    ns = {"Path": Path, "sys": _sys}
+    exec(_find_data_fn(root), ns)
+    with pytest.raises(SystemExit) as exc:
+        ns["find_data"]()
+    assert "dataset_sources" in str(exc.value)
+
+
+def test_an_ambiguous_mount_is_refused(tmp_path):
+    """Two datasets with train.jsonl means we cannot know which to train on."""
+    import sys as _sys
+    root = tmp_path / "input"
+    for rel in ("a/manim-forge-data", "b/other-data"):
+        (root / rel).mkdir(parents=True)
+        (root / rel / "train.jsonl").touch()
+    ns = {"Path": Path, "sys": _sys}
+    exec(_find_data_fn(root), ns)
+    with pytest.raises(SystemExit, match="several places"):
+        ns["find_data"]()

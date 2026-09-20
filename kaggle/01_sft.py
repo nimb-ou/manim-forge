@@ -43,8 +43,45 @@ subprocess.run([sys.executable, "-m", "pip", "install", "-q",
                 "accelerate==1.15.0", "datasets==5.0.1",
                 "bitsandbytes>=0.48", "huggingface_hub"], check=True)
 
-DATA = Path("/kaggle/input/manim-forge-data")
 WORK = Path("/kaggle/working")
+
+
+def find_data() -> Path:
+    """Locate the mounted dataset instead of assuming where Kaggle puts it.
+
+    It is not /kaggle/input/<slug>. The real path is
+
+        /kaggle/input/datasets/<owner>/<slug>/
+
+    which three consecutive runs died on -- each time reporting that the
+    directory "does not exist at all", which was true of the path being
+    looked at and false of the data, and which I misdiagnosed twice as a
+    version-processing race and built a whole readiness system around.
+
+    So: search for a file the kernel actually needs, and let the answer come
+    from the filesystem rather than from a constant.
+    """
+    root = Path("/kaggle/input")
+    hits = sorted(root.rglob("train.jsonl")) if root.exists() else []
+    if len(hits) == 1:
+        return hits[0].parent
+    if len(hits) > 1:
+        raise SystemExit(f"train.jsonl found in several places: {hits}")
+
+    print("Could not find train.jsonl anywhere under /kaggle/input.",
+          file=sys.stderr)
+    if root.exists():
+        print("What is mounted:", file=sys.stderr)
+        for q in sorted(root.rglob("*"))[:40]:
+            print(f"  {q}", file=sys.stderr)
+    else:
+        print("  /kaggle/input does not exist — no dataset is attached at all.",
+              file=sys.stderr)
+    raise SystemExit("no dataset; check dataset_sources in kernel-metadata.json")
+
+
+DATA = find_data()
+print(f"dataset mounted at {DATA}")
 
 os.chdir(WORK)
 
@@ -77,25 +114,6 @@ def _add_forge_to_path() -> str:
 print(_add_forge_to_path())
 
 # ── 2. data ────────────────────────────────────────────────────────────────
-# Check the mount before using it. A dataset version that is still processing
-# mounts incomplete, and the failure that produces -- deep inside
-# load_dataset, complaining about a file the API lists as present -- explains
-# nothing. This says what is actually there.
-_need = ["train.jsonl", "valid.jsonl"]
-_missing = [f for f in _need if not (DATA / f).exists()]
-if _missing:
-    print(f"MISSING from the mounted dataset: {_missing}", file=sys.stderr)
-    print(f"{DATA} contains:", file=sys.stderr)
-    if DATA.exists():
-        for f in sorted(DATA.iterdir())[:30]:
-            kind = "dir " if f.is_dir() else f"{f.stat().st_size/1e6:>6.1f}MB"
-            print(f"  {kind}  {f.name}", file=sys.stderr)
-    else:
-        print("  (the directory does not exist at all)", file=sys.stderr)
-    raise SystemExit(
-        "The dataset version was probably still processing when this kernel "
-        "started. scripts/wait_for_dataset.py exists to prevent that.")
-
 from datasets import load_dataset
 
 ds = load_dataset("json", data_files={
