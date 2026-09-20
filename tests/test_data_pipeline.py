@@ -251,3 +251,40 @@ def test_a_row_that_already_passes_is_not_superseded(tmp_path):
                     [{"id": "r1", "ok": True, "code": "WRONG", "retried": True}])
     stats = gate_build(corpus, gate, tmp_path / "v.jsonl", regate=regate)
     assert stats["recovered_by_lint"] == 0
+
+
+def test_restore_does_not_require_the_package_to_be_installed():
+    """A fresh machine restores *before* it can import anything.
+
+    The first training run failed here: scripts/backup_to_hf.py imported
+    forge.catalog at the top of main(), and a CI runner that has checked out
+    the repo but not installed it gets ModuleNotFoundError before it can
+    fetch the data the project needs. Restoring is the bootstrap step; it
+    cannot depend on the thing it is bootstrapping.
+    """
+    import ast
+    from pathlib import Path as _P
+
+    src = (_P(__file__).resolve().parents[1] / "scripts" / "backup_to_hf.py").read_text()
+    tree = ast.parse(src)
+    fn = next(n for n in ast.walk(tree)
+              if isinstance(n, ast.FunctionDef) and n.name == "main")
+
+    # Find where the --restore branch returns, and where forge is imported.
+    restore_return = next(
+        (n.lineno for n in ast.walk(fn)
+         if isinstance(n, ast.Return) and n.lineno > 0
+         and "restore" in ast.get_source_segment(src, fn).split("\n")[
+             max(0, n.lineno - fn.lineno - 1)]),
+        None)
+    forge_import = next(
+        (n.lineno for n in ast.walk(fn)
+         if isinstance(n, ast.ImportFrom) and (n.module or "").startswith("forge")),
+        None)
+
+    assert forge_import is not None, "expected a forge import in main()"
+    assert restore_return is not None, "expected the --restore branch to return"
+    assert restore_return < forge_import, (
+        f"forge is imported at line {forge_import}, before --restore returns at "
+        f"line {restore_return} — a runner with no package installed cannot "
+        f"restore the data it needs to install anything")

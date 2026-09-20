@@ -91,7 +91,6 @@ def main() -> None:
     a = ap.parse_args()
 
     from huggingface_hub import HfApi, whoami
-    from forge.catalog import CATALOG
 
     try:
         me = whoami()["name"]
@@ -101,8 +100,13 @@ def main() -> None:
     repo = a.repo or f"{me}/manim-forge-corpus"
     api = HfApi()
     if a.restore:
+        # Deliberately before the CATALOG import: restoring is what a fresh
+        # machine does *first*, and it should not require the project to be
+        # installed to pull down the data the project needs.
         restore(api, repo, Path("data"), include_frames=a.include_frames)
         return
+
+    from forge.catalog import CATALOG
     api.create_repo(repo, repo_type="dataset", private=not a.public, exist_ok=True)
     print(f"repo: https://huggingface.co/datasets/{repo} "
           f"({'PUBLIC' if a.public else 'private'})")

@@ -29,6 +29,10 @@ jobs:
         run: |
           python -m pip install -q --upgrade pip
           python -m pip install -q huggingface-hub
+          # `forge` has to be importable: scripts/ import it, and unlike
+          # pytest (whose conftest puts the root on sys.path) they get no
+          # help from the test harness.
+          python -m pip install -q -e .
 
       - name: restore the corpus
         env:
