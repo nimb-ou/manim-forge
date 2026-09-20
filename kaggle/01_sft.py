@@ -154,6 +154,10 @@ if torch.cuda.is_available():
           f"{torch.cuda.is_bf16_supported()}", flush=True)
 from transformers import (AutoModelForCausalLM, AutoTokenizer,
                           BitsAndBytesConfig, TrainerCallback)
+# Imported here, not in section 4. GradSafeSFTTrainer subclasses SFTTrainer,
+# and a base class is evaluated when the class statement runs -- the exact
+# mistake that killed the previous smoke run with TrainerCallback.
+from trl import SFTConfig, SFTTrainer
 from peft import (LoraConfig, get_peft_model,
                   prepare_model_for_kbit_training)
 
@@ -284,63 +288,64 @@ model.print_trainable_parameters()
 # before accelerate unscales, which is the exact frame that raises. It
 # prints what is actually in the optimizer -- and casts anything that is not
 # fp32, which is also the fix if the report turns out to be boring.
-class GradDtypeGuard(TrainerCallback):
-    """Report and normalise gradient dtypes at the point the scaler reads them."""
+def _normalise_grads(model) -> dict:
+    """Make every gradient match fp32 before anything unscales it.
 
-    def __init__(self):
-        self.reported = False
+    torch gives tensors a `grad_dtype` (present on Kaggle's 2.10, confirmed
+    by the [env] line), and when it is set an fp32 parameter legitimately
+    carries a bf16 gradient. torch's AMP unscale has no bf16 CUDA kernel, so
+    five runs died there -- and casting *parameters*, which I did three
+    times, could never reach it.
+    """
+    seen, fixed = {}, 0
+    for prm in model.parameters():
+        if prm.grad is None:
+            continue
+        key = (f"param={str(prm.dtype).replace('torch.', '')} "
+               f"grad={str(prm.grad.dtype).replace('torch.', '')}")
+        seen[key] = seen.get(key, 0) + 1
+        if prm.grad.dtype is not torch.float32:
+            # None means "allow any dtype" -- setting it to torch.float32
+            # does *not* permit the reassignment. Tested; my first attempt
+            # at this fix was exactly that and raised.
+            try:
+                prm.grad_dtype = None
+            except (AttributeError, RuntimeError):
+                pass
+            prm.grad = prm.grad.float()
+            fixed += 1
+    return {"seen": seen, "fixed": fixed}
 
-    def on_pre_optimizer_step(self, args, state, control, optimizer=None, **kwargs):
-        opt = optimizer
-        for _ in range(4):                     # unwrap AcceleratedOptimizer
-            inner = getattr(opt, "optimizer", None)
-            if inner is None:
-                break
-            opt = inner
-        groups = getattr(opt, "param_groups", None)
-        if not groups:
-            if not self.reported:
-                self.reported = True
-                print(f"[grad] no param_groups on {type(optimizer).__name__}",
-                      flush=True)
-            return
 
-        seen, fixed = {}, 0
-        for g in groups:
-            for prm in g["params"]:
-                if prm.grad is None:
-                    continue
-                key = f"param={str(prm.dtype).replace('torch.','')} " \
-                      f"grad={str(prm.grad.dtype).replace('torch.','')}"
-                seen[key] = seen.get(key, 0) + 1
-                if prm.grad.dtype is not torch.float32:
-                    # torch 2.14 gives tensors a `grad_dtype`, and assigning
-                    # a gradient that disagrees with it raises. So clear it
-                    # first -- that attribute is how an fp32 parameter comes
-                    # to hold a bf16 gradient at all, which is the thing five
-                    # runs died on and which no amount of casting parameters
-                    # could have reached.
-                    # `None` means "allow any dtype", which is what the
-                    # error message itself recommends. Setting it to
-                    # torch.float32 does *not* permit the reassignment --
-                    # tested, and my first attempt at this fix was exactly
-                    # that and failed.
-                    try:
-                        prm.grad_dtype = None
-                    except (AttributeError, RuntimeError):
-                        pass
-                    prm.grad = prm.grad.float()
-                    fixed += 1
-        if not self.reported:
-            self.reported = True
-            print(f"[grad] at unscale: " + ", ".join(f"{k} x{v}"
-                                                     for k, v in seen.items())
-                  + (f"  -- cast {fixed} to fp32" if fixed else ""), flush=True)
+class GradSafeSFTTrainer(SFTTrainer):
+    """SFTTrainer that normalises gradient dtypes in the frame that fails.
 
+    transformers calls, in this order:
+
+        if self.args.max_grad_norm > 0:
+            grad_norm = self._clip_grad_norm(model)          <- raises
+        ...
+        self.callback_handler.on_pre_optimizer_step(...)     <- too late
+
+    My first attempt put the fix in that callback, which is one frame after
+    the exception. The [grad] line simply never printed, which is how I
+    know: an instrument that stays silent is telling you it was not reached.
+    """
+
+    _grad_reported = False
+
+    def _clip_grad_norm(self, model):
+        info = _normalise_grads(model)
+        if not GradSafeSFTTrainer._grad_reported:
+            GradSafeSFTTrainer._grad_reported = True
+            print("[grad] at clip: "
+                  + ", ".join(f"{k} x{v}" for k, v in info["seen"].items())
+                  + (f"  -- cast {info['fixed']} to fp32" if info["fixed"]
+                     else "  -- nothing to cast"), flush=True)
+        return super()._clip_grad_norm(model)
 
 
 # ── 4. train ───────────────────────────────────────────────────────────────
-from trl import SFTConfig, SFTTrainer
 
 # 3% of total steps, computed rather than declared: trl 1.13 has no
 # warmup_ratio, only warmup_steps.
@@ -437,10 +442,10 @@ class StabilityGuard(TrainerCallback):
 
 # No peft_config: the model is already a PeftModel, with its adapters
 # created and cast above where their dtype can be checked.
-trainer = SFTTrainer(
+trainer = GradSafeSFTTrainer(
     model=model, args=cfg,
     train_dataset=ds["train"], eval_dataset=ds["valid"], processing_class=tok,
-    callbacks=[GradDtypeGuard(), StabilityGuard()],
+    callbacks=[StabilityGuard()],
 )
 report_memory("before train")
 trainer.train()

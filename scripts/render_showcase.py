@@ -79,7 +79,11 @@ def already_done(quality: str, timeout: int) -> set[str]:
         elif (not rec.get("interrupted")
               and "timed out" in (rec.get("error") or "")
               and rec.get("quality") == quality
-              and rec.get("timeout", 0) >= timeout):
+              # Records written before this field existed ran under the
+              # then-default of 5400s. Reading them as timeout=0 made
+              # "already failed at a clock this long" always false, so the
+              # skip never fired and SphereInCube was retried anyway.
+              and rec.get("timeout", 5400) >= timeout):
             hopeless.add(rec["scene"])
     for s in hopeless - out:
         print(f"  skipping {s}: already timed out at >={timeout}s, "

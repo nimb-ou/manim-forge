@@ -316,9 +316,16 @@ def backlog() -> list[Work]:
     # A scene that has exhausted the clock is not outstanding work until
     # something about it changes; counting it as such keeps the pool busy
     # re-proving it.
+    # Only park a scene the *current* clock cannot help. The pool now runs
+    # with --timeout 14400 against records that failed at 5400, so those are
+    # outstanding work, not settled -- and reporting them as settled while a
+    # renderer was actively grinding on one is how the doctor came to
+    # disagree with the machine.
+    POOL_TIMEOUT = 14400
     timed_out = {r["scene"] for r in showcase
                  if not r.get("ok") and not r.get("interrupted")
-                 and "timed out" in (r.get("error") or "")}
+                 and "timed out" in (r.get("error") or "")
+                 and r.get("timeout", 5400) >= POOL_TIMEOUT}
     timed_out -= {r["scene"] for r in showcase if r.get("ok")}
 
     from forge.repair.lint import RULES
