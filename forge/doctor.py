@@ -290,8 +290,17 @@ def keys_present() -> list[tuple[str, bool]]:
             seen[name] = bool(os.environ.get(env))
     seen["gemini"] = bool(os.environ.get("GEMINI_API_KEY")
                           or os.environ.get("GOOGLE_API_KEY"))
-    seen["huggingface"] = bool(os.environ.get("HF_TOKEN")
-                               or os.environ.get("HUGGINGFACE_TOKEN"))
+    # Hugging Face and Kaggle both cache a login outside the environment, so
+    # checking env vars alone reports a working credential as missing --
+    # which this did, for a token that had been in use for a day.
+    seen["huggingface"] = bool(
+        os.environ.get("HF_TOKEN") or os.environ.get("HUGGINGFACE_TOKEN")
+        or (Path.home() / ".cache/huggingface/token").exists()
+        or (Path.home() / ".huggingface/token").exists())
+    seen["kaggle"] = bool(
+        os.environ.get("KAGGLE_API_TOKEN")
+        or (Path.home() / ".kaggle/access_token").exists()
+        or (Path.home() / ".kaggle/kaggle.json").exists())
     return sorted(seen.items())
 
 
