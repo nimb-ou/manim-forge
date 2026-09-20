@@ -247,101 +247,20 @@ def test_no_name_is_used_before_it_exists():
         trainer.train(), completed
 
     which parses perfectly -- it is a tuple expression -- and dies at runtime
-    with NameError on line 149, three minutes into a GPU run.
+    with NameError three minutes into a GPU run.
 
-    So this walks the module body in order and checks that every name a
-    top-level statement loads has already been bound above it. Approximate
-    by design: it ignores anything inside a function, where order does not
-    work that way.
+    This used to be a second, narrower copy of that walk living here. It
+    knew about ast.Assign and not ast.AnnAssign, so `ATTEMPTS: list = []`
+    read as never bound and it failed on a correct file -- a checker whose
+    false positives you learn to wave through is worse than no checker.
+    scripts/check_kernel.py does the same walk properly, is scope-aware, and
+    is held to all three historical failures by tests/test_check_kernel.py.
+    One implementation, tested once.
     """
-    import ast
-    import builtins
+    import subprocess
+    import sys
 
-    tree = ast.parse(KERNEL.read_text())
-    bound = set(dir(builtins)) | {"__name__", "__file__"}
-    problems = []
-
-    def bind(target):
-        bound.update(n.id for n in ast.walk(target) if isinstance(n, ast.Name))
-
-    for node in tree.body:
-        # Names bound *within* this statement: comprehension variables and
-        # for-loop targets both bind before their own body runs.
-        local = set()
-        for n in ast.walk(node):
-            if isinstance(n, ast.comprehension):
-                local.update(x.id for x in ast.walk(n.target)
-                             if isinstance(x, ast.Name))
-            elif isinstance(n, (ast.For, ast.AsyncFor)):
-                local.update(x.id for x in ast.walk(n.target)
-                             if isinstance(x, ast.Name))
-            elif isinstance(n, ast.withitem) and n.optional_vars is not None:
-                local.update(x.id for x in ast.walk(n.optional_vars)
-                             if isinstance(x, ast.Name))
-            elif isinstance(n, ast.ExceptHandler) and n.name:
-                local.add(n.name)
-            elif isinstance(n, ast.NamedExpr):
-                local.update(x.id for x in ast.walk(n.target)
-                             if isinstance(x, ast.Name))
-            elif isinstance(n, (ast.Import, ast.ImportFrom)):
-                # An import inside a try/if block binds for the rest of that
-                # block, and the walk sees the whole block as one statement.
-                local.update((a.asname or a.name).split(".")[0]
-                             for a in n.names)
-            elif isinstance(n, ast.Assign):
-                # A compound statement -- if/try/with/for -- can assign a
-                # name and use it in the same statement, which this walk
-                # sees as one unit. Treat anything assigned inside it as
-                # bound. Slightly weaker, and it still catches the case this
-                # test exists for: a name that is never assigned anywhere
-                # above.
-                for t in n.targets:
-                    local.update(x.id for x in ast.walk(t)
-                                 if isinstance(x, ast.Name))
-
-        # Names this statement reads, excluding nested function bodies.
-        reads = []
-        for n in ast.walk(node):
-            if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef, ast.Lambda)):
-                continue
-            if (isinstance(n, ast.Name) and isinstance(n.ctx, ast.Load)
-                    and n.id not in local):
-                reads.append(n)
-        if isinstance(node, ast.ClassDef):
-            # A class body is deferred, but its *bases* and decorators are
-            # evaluated the moment the class statement runs. The smoke run
-            # died on exactly that -- `class GradDtypeGuard(TrainerCallback)`
-            # above the import of TrainerCallback -- and this check skipped
-            # ClassDef wholesale, so it never looked.
-            here = []
-            for b in list(node.bases) + list(node.decorator_list):
-                here += [n.id for n in ast.walk(b)
-                         if isinstance(n, ast.Name) and n.id not in bound]
-            problems += [(node.lineno, nm) for nm in here]
-        elif not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
-            problems += [(n.lineno, n.id) for n in reads if n.id not in bound]
-
-        if isinstance(node, (ast.Import, ast.ImportFrom)):
-            bound.update((a.asname or a.name).split(".")[0] for a in node.names)
-        elif isinstance(node, ast.Assign):
-            for t in node.targets:
-                bind(t)
-        elif isinstance(node, (ast.AnnAssign, ast.AugAssign)):
-            bind(node.target)
-        elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
-            bound.add(node.name)
-        elif isinstance(node, ast.For):
-            bind(node.target)
-        elif isinstance(node, ast.With):
-            for item in node.items:
-                if item.optional_vars is not None:
-                    bind(item.optional_vars)
-        elif isinstance(node, (ast.If, ast.Try)):
-            for sub in ast.walk(node):
-                if isinstance(sub, ast.Assign):
-                    for t in sub.targets:
-                        bind(t)
-
-    assert not problems, (
-        "names used before they exist: "
-        + ", ".join(f"{name} (line {ln})" for ln, name in problems))
+    checker = KERNEL.parent.parent / "scripts" / "check_kernel.py"
+    r = subprocess.run([sys.executable, str(checker), str(KERNEL)],
+                       capture_output=True, text=True)
+    assert r.returncode == 0, r.stdout + r.stderr

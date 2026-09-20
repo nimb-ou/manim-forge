@@ -19,7 +19,7 @@
 # subprocess, not `!pip`. This is pushed as kernel_type "script", which is
 # plain Python -- IPython's ! magic is a SyntaxError there, and the whole
 # first run died on line 19 before importing anything.
-import json, os, subprocess, sys, tarfile, textwrap
+import json, os, subprocess, sys, tarfile, textwrap, time
 from pathlib import Path
 
 # Kaggle gives two T4s, and `device_map="auto"` splits a model across both.
@@ -146,6 +146,103 @@ ds = load_dataset("json", data_files={
 })
 print(ds)
 print("\nexample:\n", textwrap.shorten(ds["train"][0]["messages"][1]["content"], 200))
+
+# ── 2b. one attempt per process ────────────────────────────────────────────
+# Run 16's smoke passed cleanly and its full run then died with
+#
+#     [mem] after releasing the smoke model: 2.20 GB still allocated
+#     [mem] after kbit prep: 9.93 / 15.6 GB      (the smoke saw 7.73)
+#
+# `del` the returned dict, gc.collect(), empty_cache() -- and 2.2 GB of the
+# previous model stayed resident. So each attempt started deeper in the hole
+# than the last: the full run OOM'd needing 1.06 GiB with 762 MB free, which
+# it would have had, and the 1536 smoke after it OOM'd for the same borrowed
+# reason. The plan then printed that sequence length was not the binding
+# constraint, which was true and not what the numbers meant.
+#
+# I could keep hunting the reference. A process boundary is cheaper and
+# total: CUDA context and all, freed by the kernel when the child exits.
+# So this file is both the orchestrator and the worker. The parent decides
+# what to try, spawns a child per attempt and reads its verdict off disk;
+# the parent never imports torch, which is the whole point -- an orchestrator
+# that has touched CUDA has the same leak as the loop it replaced.
+MF_ATTEMPT = os.environ.get("MF_ATTEMPT")
+
+
+def next_attempt(use_fp16: bool, max_len: int, why: str):
+    """Choose the next combination from why the last one failed.
+
+    non-finite -> turn AMP off, which costs T4 throughput and nothing else.
+    oom        -> shorten the sequence, which costs corpus permanently in
+                  the adapter, so it is the lever of last resort. 2048
+                  already truncates 9.1% of rows and 1536 truncates 18.4%;
+                  at 1024 it is 55.9% and the cure is worse than the
+                  disease, so the descent stops at 1536.
+    """
+    if why == "oom":
+        return (use_fp16, 1536) if max_len > 1536 else None
+    if use_fp16:
+        return (False, max_len)
+    return None
+
+
+def run_attempt(phase: str, use_fp16: bool, max_len: int) -> dict:
+    """Run one attempt in a child process and return what it reported."""
+    tag = f"{phase}-{'fp16' if use_fp16 else 'fp32'}-{max_len}"
+    verdict = WORK / f"verdict-{tag}.json"
+    verdict.unlink(missing_ok=True)
+    env = dict(os.environ, MF_ATTEMPT=json.dumps(
+        {"phase": phase, "fp16": use_fp16, "max_len": max_len, "tag": tag}))
+    print(f"\n{'=' * 74}\n[plan] {tag}\n{'=' * 74}", flush=True)
+    proc = subprocess.run([sys.executable, "-u", os.path.abspath(__file__)],
+                          env=env)
+    if verdict.exists():
+        return json.loads(verdict.read_text())
+    # No verdict file means the child died before it could write one -- an
+    # import error, a segfault, the session being killed. That is not an
+    # OOM and must not be answered by shortening the sequence.
+    return {"ok": False, "why": "crashed", "returncode": proc.returncode}
+
+
+if MF_ATTEMPT is None:
+    ATTEMPTS: list = []
+    _attempt, _seen, _won = (True, 2048), set(), False
+    while _attempt is not None and _attempt not in _seen:
+        _seen.add(_attempt)
+        _fp16, _len = _attempt
+
+        _r = run_attempt("smoke", _fp16, _len)
+        ATTEMPTS.append({"phase": "smoke", "amp": _fp16, "max_len": _len,
+                         **_r})
+        if not _r["ok"]:
+            _attempt = next_attempt(_fp16, _len, _r["why"])
+            print(f"[plan] smoke failed ({_r['why']}); next: "
+                  f"{_attempt or 'nothing left to try'}", flush=True)
+            continue
+
+        _r = run_attempt("full", _fp16, _len)
+        ATTEMPTS.append({"phase": "full", "amp": _fp16, "max_len": _len, **_r})
+        if _r["ok"]:
+            _won = True
+            break
+        _attempt = next_attempt(_fp16, _len, _r["why"])
+        print(f"[plan] the full run failed ({_r['why']}) after a clean smoke; "
+              f"next: {_attempt or 'nothing left to try'}", flush=True)
+
+    print("\n[plan] attempts: " + json.dumps(ATTEMPTS, indent=2), flush=True)
+    (WORK / "attempts.json").write_text(json.dumps(ATTEMPTS, indent=2))
+    if not _won:
+        raise SystemExit(
+            "every combination failed; read the 'why' fields above. 'crashed' "
+            "is not an OOM and the child's traceback is in this log.")
+    print("\n[plan] done — the adapter is in /kaggle/working/adapter",
+          flush=True)
+    for _f in sorted((WORK / "adapter").iterdir()):
+        print(f"  {_f.name}  {_f.stat().st_size / 1e6:.1f} MB")
+    sys.exit(0)
+
+# ── everything below runs in a worker, for exactly one attempt ─────────────
+SPEC = json.loads(MF_ATTEMPT)
 
 # ── 3. model ───────────────────────────────────────────────────────────────
 import torch
@@ -388,7 +485,15 @@ def train_once(use_fp16: bool, smoke: bool, tag: str,
     # the runner's environment, which is the same fact that moved the adapter
     # upload out of this file and which I nearly forgot again here.
 
-    EPOCHS, BATCH, ACCUM = 3, 1, 8
+    # One epoch, and that is arithmetic rather than taste. Run 16's full run
+    # reported 1131 steps at 43.3 s/it -- **13.6 hours** against Kaggle's
+    # twelve-hour session limit, so three epochs could not have finished
+    # however well it trained. 3010 rows at batch 1 x accum 8 is 376 steps
+    # an epoch, so one epoch is about 4.5 hours: the cosine schedule
+    # completes, the weekly quota keeps room for a second run, and the
+    # question this run exists to answer -- whether length ratio and concept
+    # coverage move at all -- does not need three passes to answer.
+    EPOCHS, BATCH, ACCUM = 1, 1, 8
 
     # Local names, not `ds[...] = ds[...].select(...)`. The smoke attempt used
     # to assign back into the module-level DatasetDict, which meant the full
@@ -504,6 +609,27 @@ def train_once(use_fp16: bool, smoke: bool, tag: str,
                 self.failed = True
 
 
+    class TimeBudget(TrainerCallback):
+        """Stop and let the run save before Kaggle takes the session away.
+
+        Insurance rather than a plan: one epoch is about 4.5 hours and the
+        budget is nine, so this should never fire. It exists because run 16
+        would have been killed at twelve hours with 1131 steps outstanding
+        and nothing saved, and an adapter that trained for nine hours and
+        stopped is worth more than one that trained for twelve and vanished.
+        """
+
+        def __init__(self, hours: float = 9.0):
+            self.deadline = time.time() + hours * 3600
+            self.hours = hours
+
+        def on_step_end(self, args, state, control, **kwargs):
+            if time.time() > self.deadline:
+                print(f"\nTIME BUDGET: {self.hours}h reached at step "
+                      f"{state.global_step}. Stopping so the adapter saves.",
+                      flush=True)
+                control.should_training_stop = True
+
     guard = StabilityGuard()
 
     # No peft_config: the model is already a PeftModel, with its adapters
@@ -511,7 +637,7 @@ def train_once(use_fp16: bool, smoke: bool, tag: str,
     trainer = GradSafeSFTTrainer(
         model=model, args=cfg,
         train_dataset=train_ds, eval_dataset=valid_ds, processing_class=tok,
-        callbacks=[guard],
+        callbacks=[guard, TimeBudget()],
     )
     # The assert above passed -- all 40.4M trainable parameters were fp32 -- and
     # yet the run reported, from inside the training loop:
@@ -566,139 +692,58 @@ def train_once(use_fp16: bool, smoke: bool, tag: str,
         "train_rows": len(train_ds), "valid_rows": len(valid_ds),
     }
 
-# ── 4c. the kernel decides, and the decision is on the record ──────────────
-# Thirteen runs of this project ended with me reading a log and pushing a
-# slightly different kernel. That loop is the bottleneck, not the GPU, and
-# it stops here: the plan below is executed by the kernel itself.
-#
-#   1. smoke with AMP on   -- 20 steps, ~15 min, exercises every frame that
-#                             has ever failed: data, 4-bit load, LoRA, the
-#                             clip that five runs died in, eval, saving.
-#   2. if that stayed finite, train for real with AMP on.
-#   3. if it did not, smoke again with AMP off and, if *that* is finite,
-#      train for real without AMP. fp16=False cannot hit the unscale kernel
-#      or the bf16/fp16 mismatch at all; it costs T4 throughput, which is a
-#      price worth paying for an adapter that exists.
-#
-# If step 3's smoke also goes NaN the fault is not AMP, and a four-hour run
-# would only produce an expensive version of the same information -- so the
-# kernel stops and says so.
+# ── 4c. one attempt, then a verdict on disk ────────────────────────────────
+# The parent above reads this file. Writing it is the last thing the worker
+# does, so its absence means the child died before it could speak -- which
+# the parent reports as "crashed" rather than guessing at a cause.
 import gc
 
-RESULT = None
-ATTEMPTS = []
+_out, _ok, _why = None, False, None
+try:
+    _out = train_once(use_fp16=SPEC["fp16"], smoke=SPEC["phase"] == "smoke",
+                      tag=SPEC["tag"], max_len=SPEC["max_len"])
+    _ok, _why = _out["ok"], None if _out["ok"] else "non-finite"
+except torch.OutOfMemoryError as _exc:
+    _ok, _why = False, "oom"
+    print(f"[plan] {SPEC['tag']} ran out of memory: "
+          f"{str(_exc).splitlines()[0]}", flush=True)
 
-# Two independent things kill an attempt here, and they want opposite
-# remedies, so the next attempt is chosen from *why* the last one failed
-# rather than read off a fixed list.
-#
-#   non-finite -> turn AMP off. Costs T4 throughput and nothing else.
-#   oom        -> shorten the sequence. Costs corpus, permanently, in the
-#                 adapter, so it is the lever of last resort.
-#
-# Marching down a fixed list would answer an OOM by turning AMP off, which
-# makes activations fp32 and therefore uses *more* memory -- twenty minutes
-# spent proving something already known.
-def next_attempt(use_fp16: bool, max_len: int, why: str):
-    if why == "oom":
-        # 2048 already truncates 9.1% of the corpus and 1536 truncates 18.4%.
-        # Below that the cure is worse than the disease: at 1024 it is 56%,
-        # and an adapter trained on half-scenes is not worth a GPU session.
-        return (use_fp16, 1536) if max_len > 1536 else None
-    if use_fp16:
-        return (False, max_len)
-    return None
+VERDICT = WORK / f"verdict-{SPEC['tag']}.json"
 
 
-_attempt, _seen = (True, 2048), set()
+def speak(**extra) -> None:
+    VERDICT.write_text(json.dumps({"ok": _ok, "why": _why, **extra}, indent=2))
 
-while _attempt is not None and _attempt not in _seen:
-    _seen.add(_attempt)
-    _use_fp16, _max_len = _attempt
-    _label = f"{'fp16' if _use_fp16 else 'fp32'}-{_max_len}"
-    print(f"\n{'=' * 74}\n[plan] smoke {_label} "
-          f"(AMP {'on' if _use_fp16 else 'off'}, max_len {_max_len})"
-          f"\n{'=' * 74}", flush=True)
-    try:
-        _smoke = train_once(use_fp16=_use_fp16, smoke=True,
-                            tag=f"smoke-{_label}", max_len=_max_len)
-        _ok, _why = _smoke["ok"], None if _smoke["ok"] else "non-finite"
-    except torch.OutOfMemoryError as _exc:
-        # Caught rather than allowed to end the kernel, because an OOM is
-        # information about *this* combination and not about the next one,
-        # and because the whole point of the plan is that a failure costs
-        # fifteen minutes instead of a day.
-        _smoke, _ok, _why = {"ok": False}, False, "oom"
-        print(f"[plan] {_label} smoke ran out of memory: "
-              f"{str(_exc).splitlines()[0]}", flush=True)
-    ATTEMPTS.append({"phase": "smoke", "amp": _use_fp16, "max_len": _max_len,
-                     "ok": _ok, "why": _why})
 
-    # The next attempt loads a second 7B model into a 15 GB card, so the
-    # first one has to be genuinely gone -- not merely out of scope. Trainer,
-    # model and callbacks reference each other, so a plain del leaves a cycle
-    # that only gc.collect() breaks, and empty_cache() before that frees
-    # nothing. The number is printed because "I freed it" is a claim and
-    # 0.1 GB is evidence.
-    del _smoke
+if not _ok or SPEC["phase"] == "smoke":
+    # A smoke run's adapter is meaningless by construction -- 64 rows, 20
+    # steps -- so it is not saved over the real one. Its value was spending
+    # fifteen minutes on the question instead of four hours.
+    speak()
+    print(f"[worker] {SPEC['tag']}: ok={_ok} why={_why}", flush=True)
+    del _out
     gc.collect()
-    torch.cuda.empty_cache()
-    print(f"[mem] after releasing the smoke model: "
-          f"{torch.cuda.memory_allocated() / 1e9:.2f} GB still allocated",
-          flush=True)
-    if not _ok:
-        _attempt = next_attempt(_use_fp16, _max_len, _why)
-        print(f"[plan] smoke {_label} failed ({_why}); not spending four "
-              f"hours on it. Next: {_attempt or 'nothing left to try'}",
-              flush=True)
-        continue
+    sys.exit(0)
 
-    print(f"\n{'=' * 74}\n[plan] full run, {_label}\n{'=' * 74}", flush=True)
-    try:
-        RESULT = train_once(use_fp16=_use_fp16, smoke=False,
-                            tag=f"full-{_label}", max_len=_max_len)
-        _full_ok, _full_why = RESULT["ok"], None if RESULT["ok"] else "non-finite"
-    except torch.OutOfMemoryError as _exc:
-        # A smoke that fit and a full run that did not is a real case: the
-        # smoke sees 64 rows and the longest scenes are in the other 2946.
-        RESULT, _full_ok, _full_why = None, False, "oom"
-        print(f"[plan] {_label} full run ran out of memory: "
-              f"{str(_exc).splitlines()[0]}", flush=True)
-    ATTEMPTS.append({"phase": "full", "amp": _use_fp16, "max_len": _max_len,
-                     "ok": _full_ok, "why": _full_why})
-    if _full_ok:
-        break
-    # A smoke that held for 20 steps and a full run that did not is a real
-    # case rather than a contradiction: divergence arrives with the learning
-    # rate and the smoke barely leaves warmup, and the longest scenes in the
-    # corpus are in the 2946 rows the smoke never sees.
-    _attempt = next_attempt(_use_fp16, _max_len, _full_why)
-    print(f"[plan] the full run failed ({_full_why}) after a clean smoke. "
-          f"Next: {_attempt or 'nothing left to try'}", flush=True)
-    RESULT = None
-    gc.collect()
-    torch.cuda.empty_cache()
-
-print("\n[plan] attempts: " + json.dumps(ATTEMPTS), flush=True)
-if RESULT is None:
-    raise SystemExit(
-        "every combination in the plan failed; see the 'why' field above. "
-        "All non-finite means AMP is not the cause and the [dtype] lines are "
-        "the next thing to read. All oom at 1536 means the logits tensor is "
-        "not the binding constraint and the next lever is the optimiser or "
-        "chunked loss, not another sequence length.")
-
-# The tokenizer comes back out with the rest of it. It used to be a module
-# global; wrapping the build in a function made it a local, and the three
-# places below that save and use it would each have raised NameError --
-# after the four-hour run had already succeeded. scripts/check_kernel.py
-# found that, which is the entire reason that file exists.
+RESULT = _out
+ATTEMPTS = [{"phase": SPEC["phase"], "amp": SPEC["fp16"],
+             "max_len": SPEC["max_len"], "ok": True}]
 trainer = RESULT["trainer"]
 cfg, peft_cfg, tok = RESULT["cfg"], RESULT["peft_cfg"], RESULT["tok"]
 
 trainer.save_model(str(WORK / "adapter"))
 tok.save_pretrained(str(WORK / "adapter"))
 print("adapter saved to /kaggle/working/adapter")
+
+# The verdict goes *after* the save, not before it. Written first, a failure
+# in save_model would leave the parent believing it had won and then
+# crashing while listing an adapter directory that was never written -- a
+# success on the record and nothing on disk, which is the one failure mode
+# worse than an honest crash.
+assert (WORK / "adapter" / "adapter_config.json").exists(), \
+    "save_model reported no error and wrote no adapter_config.json"
+speak(train_rows=RESULT["train_rows"], valid_rows=RESULT["valid_rows"],
+      adapter=str(WORK / "adapter"))
 
 # Record what produced this. Every eval number has to be traceable to the mix
 # and the config that made it, or "one variable per experiment" is a slogan
