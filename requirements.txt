@@ -1,5 +1,7 @@
 # --- Phase 0: render harness -------------------------------------------------
-manim==0.21.0            # Manim Community Edition. NOT manimgl — see docs/PLAN.md
+manim==0.21.0            # Manim Community Edition. NOT manimgl — the two APIs
+                         # are incompatible; rows are tagged `flavor` to keep
+                         # them apart. See docs/STATE.md.
 # system deps (Homebrew): cairo pango pkg-config ffmpeg, plus BasicTeX
 
 # --- Phase 1: ingestion ------------------------------------------------------
@@ -17,5 +19,8 @@ fastapi>=0.115
 uvicorn[standard]>=0.32
 
 # --- Phase 5: fine-tuning (Apple Silicon) ------------------------------------
-# installed separately, see docs/SETUP.md:
-#   mlx>=0.21  mlx-lm>=0.20
+# installed separately (not on PyPI for every platform):
+#   pip install mlx>=0.21 mlx-lm>=0.20
+
+# --- development -------------------------------------------------------------
+pytest>=8.0              # tests/ — run with ./.venv/bin/python -m pytest -q

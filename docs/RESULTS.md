@@ -93,13 +93,45 @@ priors rather than on its output.
 
 ## Corpus
 
+*Counts re-derived from the data files 2026-09-20; the previous version of
+this table was stale by 40 gold scenes.*
+
 | source | rows | verified | note |
 |--------|------|----------|------|
 | 5 public datasets, deduplicated | 3,680 | 1,760 (47.8%) | 7,433 raw rows; half were duplicates |
-| Synthetic — topics | growing | ~94% yield | 115 topics across 12 domains |
-| Synthetic — 3b1b narration | growing | ~91% yield | his words as the prompt |
-| Gold — hand-authored | 4 | 4 | weighted 6× at training |
+| Synthetic — topics | 186 | 138 | 115 topics across 12 domains |
+| Synthetic — continuous daemon | 429 | 399 | `stream.jsonl` |
+| Synthetic — 3b1b narration | 175 | 130 | his words as the prompt |
+| Gold — hand-authored | **44** | 44 | 182 beats; weighted 6× at training |
 | 3b1b transcripts | 5,825 segments | — | 151 videos, subtitles only |
+
+Training mix as actually written: **2,989** train / 125 valid, of which 1,437
+gated · 1,294 synthetic · 258 gold. Rows with zero `self.play()` calls are
+excluded (243 of them). Until 2026-09-20 this mix was 1,995 examples with gold
+at 3.6% and 228 static rows included — see `docs/POSTMORTEM.md` §A, §B.
+
+### What the corpus teaches, measured
+
+Never measured until the audit, and the most consequential number here.
+Synthetic training rows against the hand-written gold scenes:
+
+| | corpus | gold |
+|---|---|---|
+| mean `self.play()` calls | 10.6 | 17.8 |
+| share of visual vocabulary that is text | 41% | 36% |
+| uses `ValueTracker` | **1.3%** | 9.1% |
+| uses `always_redraw` | **0.9%** | 9.1% |
+| asserts its own numbers | 2.7% | 95.5% |
+
+`ValueTracker` and `always_redraw` are what make an animation continuous
+rather than a slideshow, and they are effectively absent. The commonest
+objects are `FadeOut` (11,543), `Text` (10,813), `Write` (10,200); `Dot`
+appears 1,732 times.
+
+This is the hard eval's finding — *"the model answers a much smaller
+question"* — arriving independently from the data side. The gate filters for
+**executes**. Nothing filters for **animates**, and nothing filters for
+**explains**.
 
 Dedupe is AST-structural, so renamed variables and reflowed whitespace collapse
 together. `generaleoley` (1,622 rows) contributed **zero** new rows — it is
