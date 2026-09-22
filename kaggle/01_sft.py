@@ -263,7 +263,8 @@ if torch.cuda.is_available():
           f"{_p.total_memory/1e9:.1f} GB, bf16 supported: "
           f"{torch.cuda.is_bf16_supported()}", flush=True)
 from transformers import (AutoModelForCausalLM, AutoTokenizer,
-                          BitsAndBytesConfig, TrainerCallback)
+                          BitsAndBytesConfig, EarlyStoppingCallback,
+                          TrainerCallback)
 # Imported here, not in section 4. GradSafeSFTTrainer subclasses SFTTrainer,
 # and a base class is evaluated when the class statement runs -- the exact
 # mistake that killed the previous smoke run with TrainerCallback.
@@ -527,8 +528,27 @@ def train_once(use_fp16: bool, smoke: bool, tag: str,
         logging_steps=1 if smoke else 10,
         eval_strategy="steps",
         eval_steps=10 if smoke else 60,
-        save_steps=10 if smoke else 120,
+        save_steps=10 if smoke else 60,
         save_total_limit=2,               # Kaggle's output quota is finite
+
+        # Run 17 saved its *last* checkpoint, and its eval loss had stopped
+        # improving 137 steps earlier:
+        #
+        #   step        60     120     180     240     300     360     377
+        #   eval_loss 0.6317  0.5836  0.5692  0.5604  0.5619  0.5611  0.5609
+        #
+        # while train loss kept falling 0.80 -> 0.49. For run 17 the
+        # difference between best and last is 0.0005 and changes nothing, so
+        # this is insurance rather than a fix: it matters on the longer runs
+        # that come next, where the gap between "stopped learning" and
+        # "stopped training" is where an adapter quietly gets worse.
+        #
+        # save_steps moved 120 -> 60 because load_best_model_at_end can only
+        # choose among checkpoints that exist, and a best step it did not
+        # save is a best step it cannot load.
+        load_best_model_at_end=True,
+        metric_for_best_model="eval_loss",
+        greater_is_better=False,
         # Not lowered by default, and that is a measurement rather than a
         # preference: 2048 already truncates 9.1% of the corpus and 1536
         # truncates 18.4%. Truncation here does not trim padding, it cuts
@@ -637,7 +657,11 @@ def train_once(use_fp16: bool, smoke: bool, tag: str,
     trainer = GradSafeSFTTrainer(
         model=model, args=cfg,
         train_dataset=train_ds, eval_dataset=valid_ds, processing_class=tok,
-        callbacks=[guard, TimeBudget()],
+        callbacks=[guard, TimeBudget(), EarlyStoppingCallback(
+        # Three evals -- 180 steps -- without improvement. Deliberately
+        # patient: run 17's curve wobbles up at step 300 and back down at
+        # 360, and a patience of 1 would have stopped on the wobble.
+        early_stopping_patience=3)],
     )
     # The assert above passed -- all 40.4M trainable parameters were fp32 -- and
     # yet the run reported, from inside the training loop:
