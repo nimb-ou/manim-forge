@@ -60,6 +60,14 @@ def hard_stats(rows: list[dict]) -> dict:
         "mean duration s": st.mean(r["seconds"] for r in ok),
         "length ratio": st.mean(ratios) if ratios else 0.0,
         "concept coverage": st.mean(r.get("coverage", 0) for r in ok),
+        # Coverage is computed from the *code*, so a scene that failed to
+        # render still has one. Averaging over renders only is consistent
+        # between runs and quietly selects for whichever scenes happened to
+        # work -- which matters here, because run 17's failures are its more
+        # ambitious attempts, so the rendered-only figure under-reports
+        # exactly the thing being measured. Both are printed; neither is
+        # the honest one on its own.
+        "concept coverage (all)": st.mean(r.get("coverage", 0) for r in rows),
         "mean play calls": st.mean(r.get("n_play_calls", 0) for r in ok),
         "mean beats": st.mean(r.get("n_beats", 0) for r in ok),
     }
@@ -110,6 +118,11 @@ def main() -> None:
         print("  THE VERDICT")
         print("=" * 66)
         dl = (new["length ratio"] - base["length ratio"]) * 100
+        dca = (new.get("concept coverage (all)", 0)
+               - base.get("concept coverage (all)", 0)) * 100
+        print(f"  concept coverage {dca:+.2f} pts over ALL trials   "
+              f"({base.get('concept coverage (all)', 0):.1%} -> "
+              f"{new.get('concept coverage (all)', 0):.1%})")
         dc = (new["concept coverage"] - base["concept coverage"]) * 100
         print(f"  length ratio     {dl:+.2f} pts   "
               f"({base['length ratio']:.2%} -> {new['length ratio']:.2%})")
