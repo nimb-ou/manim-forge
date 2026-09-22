@@ -44,6 +44,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+CHUNK = 12
 SYSTEM = (
     "You plan 3Blue1Brown-style mathematical animations. Given a request, "
     "produce ONLY a numbered list of beats. A beat is one communicative step: "
@@ -167,24 +168,35 @@ def main() -> int:
         todo = arcs()[: a.limit or None]
         print(f"narration: {len(todo)} arcs, one call each")
         for n, (title, segs) in enumerate(todo, 1):
-            body = "\n".join(
-                f"{i}. [{s['end'] - s['start']:.0f}s] {' '.join(s['text'].split())}"
-                for i, s in enumerate(segs, 1))
-            try:
-                reply = gen.complete(
-                    "You describe what is on screen during a narrated "
-                    "mathematical animation. Terse, visual, no commentary.",
-                    INTENT_PROMPT.format(title=title, body=body),
-                    max_tokens=4096)
-            except Exception as exc:                          # noqa: BLE001
-                print(f"  [{n}/{len(todo)}] {title[:40]}: {type(exc).__name__}",
-                      flush=True)
+            # Chunked. A whole arc is ~35 segments and about 12k input
+            # tokens, and both trial calls hit the teacher's 240s timeout.
+            # Twelve at a time still gives enough surrounding context for
+            # "what is on screen here" to be answerable, and returns in
+            # seconds.
+            intents, failed = {}, False
+            for start in range(0, len(segs), CHUNK):
+                part = segs[start:start + CHUNK]
+                body = "\n".join(
+                    f"{start + j}. [{s['end'] - s['start']:.0f}s] "
+                    f"{' '.join(s['text'].split())}"
+                    for j, s in enumerate(part, 1))
+                try:
+                    reply = gen.complete(
+                        "You describe what is on screen during a narrated "
+                        "mathematical animation. Terse, visual, no commentary.",
+                        INTENT_PROMPT.format(title=title, body=body),
+                        max_tokens=1024)
+                except Exception as exc:                      # noqa: BLE001
+                    print(f"  [{n}/{len(todo)}] {title[:40]}: "
+                          f"{type(exc).__name__} on chunk {start}", flush=True)
+                    failed = True
+                    break
+                for line in reply.splitlines():
+                    m = re.match(r"\s*(\d+)[.)]\s*(.+)", line)
+                    if m:
+                        intents[int(m.group(1))] = m.group(2).strip()
+            if failed:
                 continue
-            intents = {}
-            for line in reply.splitlines():
-                m = re.match(r"\s*(\d+)[.)]\s*(.+)", line)
-                if m:
-                    intents[int(m.group(1))] = m.group(2).strip()
             if len(intents) < len(segs) * 0.6:
                 print(f"  [{n}/{len(todo)}] {title[:40]}: only "
                       f"{len(intents)}/{len(segs)} intents, skipped", flush=True)

@@ -217,3 +217,74 @@ instead of stopping at one model's share — but it does not multiply it.
 Raising concurrency does **not** help and actively hurt: 5 workers produced
 ~10 tasks/min while 8 produced ~5.7, because extra workers front-load the
 exhaustion and then everything waits.
+
+---
+
+# Phase 1 — the first trained adapter · 2026-09-22
+
+**Run 17**, Qwen2.5-Coder-7B-Instruct, QLoRA r=16 alpha=32 on all seven
+projections, 1 epoch over 3,010 rows, mix `fbb31a386b28f197`.
+
+Every number below is against a **same-day control** run with the
+byte-identical command, differing only in `--adapter`. The control
+reproduced the recorded baseline exactly — 93% / 77 first-try / 16 rescued
+on the benchmark, 85% / 16.3s / 1.76% / 8.8% on the hard eval — so the
+comparison is one-variable, which this project has failed three times
+before.
+
+## Single-scene benchmark (100 prompts, repair rounds 4, retrieval)
+
+| | control | run 17 |
+|---|---|---|
+| render success | 93.0% | **77.0%** |
+| passed first try | 77.0% | 73.0% |
+| rescued by repair | 16.0% | **4.0%** |
+
+## Hard eval (81 real 3Blue1Brown titles)
+
+| | control | run 17 | |
+|---|---|---|---|
+| render success | 85.2% | **71.6%** | −13.6 pts |
+| concept coverage, all trials | 8.4% | **18.8%** | **2.2×** |
+| concept coverage, rendered | 8.8% | **16.8%** | 1.9× |
+| mean duration, rendered | 16.3s | **31.0s** | 1.9× |
+| length ratio | 1.76% | **3.47%** | 2.0× |
+| mean play calls | 5.4 | **11.3** | 2.1× |
+| mean beats | **0.00** | **4.54** | from nothing |
+
+## What this says
+
+**The premise held, and the plan's prediction was wrong.** `docs/PLAN.md` §2
+predicted a fine-tune on this mix would not move length ratio or concept
+coverage. Both roughly doubled, duration doubled, play calls doubled, and
+beat structure appeared where the untuned model produced none at all. A
+render-gated corpus does teach longer, denser, better-covering explanations.
+
+**The render drop is the price of that, not a failure of it.** Paired prompt
+by prompt: first-try 77 → 73 (−4), but repair rescues 16 → 4 (−12). Repair
+effectiveness fell 70% → 15%, three quarters of the loss.
+
+`failure_anatomy.py` says why repair stopped working. Run 17's failures are
+**80% longer than its own passes** — 23 lines against 13, 19 calls against
+11. Reading them: where the control wrote `Dodecahedron()`, run 17 hand-built
+a `Polyhedron` from vertex coordinates; where the control drew a
+`SurroundingRectangle`, it tried `table[0, :].set_color(...).animate`. All 23
+remaining benchmark failures are `api_misuse`, with the same error at every
+one of four rounds.
+
+**The corpus moved the model's ambition past its API competence.** Repair
+cannot rescue that: the approach is wrong, not the line.
+
+**Consequence for measurement.** Render rate and explanation quality trade
+off through ambition, so render rate at a fixed repair budget is the wrong
+headline — the product repairs until a scene renders, and a scene that took
+three repairs is not worse than one that took none. It is a cost, not a goal.
+
+**Not undertrained.** Eval loss plateaued at step 240 of 377 while train loss
+kept falling (0.5604 → 0.5619 → 0.5611 → 0.5609 against 0.80 → 0.49), so more
+epochs buy overfitting, not competence.
+
+*Artefacts: `data/bench/{ctrl,tuned}100_n100_r4.json`,
+`data/bench/{ctrl,tuned}81_n81.json`. Adapter `adapters/kaggle-sft/adapter`,
+161,533,192 bytes, conversion verified by `scripts/verify_adapter_math.py` at
+3.1e-04 relative error.*
