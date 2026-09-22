@@ -178,18 +178,35 @@ def weights_are_readable(found: Path) -> tuple[bool, str]:
         size = q.stat().st_size
         if size < 1_000_000:
             return False, f"{q.name} is {size} bytes — truncated or empty"
-    try:
-        from safetensors import safe_open
-        for q in files:
-            if q.suffix == ".safetensors":
-                with safe_open(q, framework="pt") as f:
-                    keys = list(f.keys())
-                if not keys:
-                    return False, f"{q.name} holds no tensors"
-    except ImportError:
-        say("    safetensors not importable; size check only")
-    except Exception as exc:                                  # noqa: BLE001
-        return False, f"{type(exc).__name__}: {exc}"
+    # The header, parsed by hand rather than by the library.
+    #
+    # The first version deferred to `safetensors.safe_open` and fell back to
+    # a size check when the import failed. On CI, where safetensors is not
+    # installed, that made 6 MB of zeros a valid adapter -- the exact file
+    # the truncation test builds. A validator whose strictness depends on
+    # which packages happen to be present is not a validator.
+    #
+    # The format needs no library to check: 8 bytes of little-endian u64
+    # giving the header length, then that many bytes of JSON describing the
+    # tensors. Zeros give a header length of 0, which is already invalid.
+    for q in files:
+        if q.suffix != ".safetensors":
+            continue
+        try:
+            with q.open("rb") as fh:
+                raw = fh.read(8)
+                if len(raw) < 8:
+                    return False, f"{q.name} is shorter than its header"
+                n = int.from_bytes(raw, "little")
+                if not 0 < n <= q.stat().st_size - 8:
+                    return False, (f"{q.name} declares a {n}-byte header in a "
+                                   f"{q.stat().st_size}-byte file")
+                header = json.loads(fh.read(n).decode("utf-8"))
+        except Exception as exc:                              # noqa: BLE001
+            return False, f"{q.name}: {type(exc).__name__}: {exc}"
+        tensors = [k for k in header if k != "__metadata__"]
+        if not tensors:
+            return False, f"{q.name} holds no tensors"
     total = sum(q.stat().st_size for q in files) / 1e6
     return True, f"{', '.join(sorted(q.name for q in files))} ({total:.0f} MB)"
 
