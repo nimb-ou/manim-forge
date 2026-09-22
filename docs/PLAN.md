@@ -119,33 +119,72 @@ that proves Phase 2 is the whole project — which is worth a week.
 *Exit: two numbers against two baselines in `RESULTS.md`, with the hash of
 the mix that produced them.*
 
-### Phase 2 — A gate that judges animation · **~2 weeks**
+### Phase 2 — A gate that judges animation · **measure done 2026-09-22**
 
 The real work. Everything before it is preparation.
 
 The render gate answers *did this produce a video file*. A second gate has to
 answer *is this an explanation*. Structure first, not a model-judge — things
-that can be measured, argued about, and cheated only by actually improving:
+that can be measured, argued about, and cheated only by actually improving.
+**The 44 gold scenes are the labelled positive set**, which is what makes a
+judge unnecessary.
 
-- play calls and their spacing across the scene's duration
-- continuous constructs (`ValueTracker`, `always_redraw`, `.animate`,
-  updaters) against discrete `Write`/`FadeOut` pairs
-- ratio of text mobjects to geometric ones
-- whether any displayed number is computed rather than typed
-- beat structure, and declared duration against actual
+`forge/gate/animation.py` exists. It separates gold from the corpus at
+composite **AUC 0.98**, stable across four disjoint samples (0.970–0.979),
+with both halves of the gold set separating equally (0.978 / 0.967). About a
+quarter of corpus rows still reach the weakest gold scene — the honest
+ceiling of this version.
 
-**The 44 gold scenes are the labelled positive set.** That is what they are
-for, and it would be the first use of them as anything but training weight.
-The measure has to separate them from a random corpus sample without
-squinting, or it is not measuring anything.
+**Most of what this section originally proposed measuring does not work,
+and finding that out was the point.** Per-signal AUC against 2,770 non-gold
+rows:
 
-Then: rebuild the mix against it, and rewrite the synthetic prompts to ask
-for what the measure rewards. This is where new generation restarts — and
-not before, because until the measure exists there is no way to tell whether
-a generated row is worth keeping.
+| signal | AUC | |
+|---|---|---|
+| `computed_labels` | 0.926 | numbers the scene works out |
+| `n_play` | 0.844 | |
+| `declared_seconds` | 0.813 | |
+| discrete per 100 calls | 0.226 | gold animates *less* per unit of work |
+| `continuous` | 0.538 | **coin flip** |
+| `transforms` | 0.462 | **coin flip** |
+| `geom_objs` | 0.534 | **coin flip** |
 
-*Exit: a measure with a visible gap between gold and corpus, and a rebuilt
-mix whose profile sits between them.*
+- **Continuous constructs do not separate a gold scene from a corpus row.**
+  The audit's headline — ValueTracker in 9.1% of gold against 1.3% of the
+  corpus — is a *corpus-level ratio resting on four scenes*. The other 40
+  gold scenes do not use ValueTracker either. This section was designed
+  around that signal; it is noise per scene.
+- **Text-heavy does not mean slideware.** Gold averages 16.4 text mobjects
+  against 7.7. 3Blue1Brown scenes label things. The "ratio of text to
+  geometric mobjects" bullet is deleted rather than inverted, because
+  inverting a signal to match the labels is fitting.
+- **`assert` separates perfectly (40/44 vs 0/2770) because it is a house
+  convention**, not because asserted scenes animate better. Reported as
+  `convention`, kept out of the score.
+
+**What remains: rebuilding the mix, and the cut is expensive.**
+`scripts/score_mix.py` scores all 3,010 rows:
+
+| source | rows | mean |
+|---|---|---|
+| synthetic | 1308 | 0.454 |
+| bespoke | 888 | 0.311 |
+| thanhkt | 448 | 0.402 |
+| gold | 240 | 0.727 |
+| manimbench | 126 | ~0.23 |
+
+A threshold of 0.40 keeps 1,469 rows; 0.50 keeps 754, a third of them gold;
+0.70 keeps 221 and is essentially the gold set. Gold averages 0.727, so a
+cut near it leaves too little to train on and a cut that preserves size
+keeps most of what the measure calls slideware. **That trade is the
+decision** — and the 888 bespoke rows scoring below teacher-generated ones
+is its own question.
+
+Only after that: rewrite the synthetic prompts to ask for what the measure
+rewards. New generation restarts here and not before.
+
+*Exit: a rebuilt mix whose profile sits between the corpus and gold, trained
+once, measured against the Phase 1 numbers.*
 
 ### Phase 3 — Length, structure, and GRPO · **~2 weeks**
 
