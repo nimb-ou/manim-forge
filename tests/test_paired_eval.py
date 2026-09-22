@@ -34,18 +34,40 @@ def test_repair_regression_is_named_as_one(tmp_path):
     r = run(tmp_path, control, tuned)
     assert r.returncode == 0, r.stderr
     assert "tuning LOST 10" in r.stdout
-    assert "10 produced the *same* first-round error" in r.stdout
-    assert "reads as: repair regressed" in r.stdout
+    assert "10 share the control's first-round error" in r.stdout
+    assert "repair accounts for 100% of the difference" in r.stdout
 
 
-def test_generation_change_is_named_as_one(tmp_path):
-    """Different first error: the model writes something else now."""
-    control = [trial(i, True, ["api_misuse", "none"]) for i in range(10)]
+def test_generation_change_is_attributed_to_generation(tmp_path):
+    """Control passes first try; tuned fails outright. Repair explains none.
+
+    The fixture matters: an earlier version had the control passing only
+    *after* repair, so its first-try count was zero and the assertion about
+    first-try could never hold. A test whose data cannot exhibit the thing
+    it asserts passes or fails for the wrong reason.
+    """
+    control = [trial(i, True, ["none"]) for i in range(10)]
     tuned = [trial(i, False, ["syntax"] * 5) for i in range(10)]
     r = run(tmp_path, control, tuned)
     assert r.returncode == 0, r.stderr
-    assert "0 produced the *same* first-round error" in r.stdout
-    assert "reads as: generation changed" in r.stdout
+    assert "first-try 10 -> 0" in r.stdout
+    assert "repair accounts for 0% of the difference" in r.stdout
+
+
+def test_both_mechanisms_are_reported_not_one(tmp_path):
+    """The real run was both: -4 generation and -12 repair.
+
+    A binary verdict called that 'generation changed' and was wrong about
+    which dominated.
+    """
+    control = ([trial(i, True, ["none"]) for i in range(8)]
+               + [trial(8 + i, True, ["api_misuse", "none"]) for i in range(4)])
+    tuned = ([trial(i, True, ["none"]) for i in range(6)]
+             + [trial(6 + i, False, ["api_misuse"] * 5) for i in range(6)])
+    r = run(tmp_path, control, tuned)
+    assert "first-try 8 -> 6 (-2)" in r.stdout
+    assert "rescued   4 -> 0 (-4)" in r.stdout
+    assert "repair accounts for 67% of the difference" in r.stdout
 
 
 def test_an_improvement_is_not_reported_as_a_loss(tmp_path):

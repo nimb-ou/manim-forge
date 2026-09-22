@@ -88,17 +88,29 @@ def main() -> int:
           f"tuning LOST {len(lost)} | tuning WON {len(won)}")
 
     # ── the question ──────────────────────────────────────────────────────
+    # Decomposed, not labelled. The first version of this printed one of two
+    # verdicts based on whether the lost prompts shared a first-round error
+    # with the control -- and got it backwards on the real data, because on
+    # 12 of 18 lost prompts the control passed *first try*, so there was no
+    # first-round error to share and absence read as difference. The two
+    # mechanisms are not exclusive anyway: a run can generate slightly worse
+    # code *and* stop repairing it, which is what happened.
+    c_ok, c_first, c_resc = rate(c)
+    t_ok, t_first, t_resc = rate(t)
+    print(f"\nwhere the {c_ok - t_ok:+d} went:")
+    print(f"  generation : first-try {c_first} -> {t_first} "
+          f"({t_first - c_first:+d})")
+    print(f"  repair     : rescued   {c_resc} -> {t_resc} "
+          f"({t_resc - c_resc:+d})")
+    if (c_ok - t_ok) != 0:
+        share = abs(t_resc - c_resc) / max(abs(c_ok - t_ok), 1)
+        print(f"  -> repair accounts for {100*share:.0f}% of the difference")
     if lost:
         same_first = [i for i in lost if first_error(c[i]) == first_error(t[i])]
         c_rescued = [i for i in lost if c[i].get("rounds", 0) > 0]
-        print(f"\nOf the {len(lost)} prompts tuning lost:")
-        print(f"  {len(same_first)} produced the *same* first-round error as "
-              f"the control")
-        print(f"  {len(c_rescued)} were ones the control only passed *because "
-              f"repair fixed them*")
-        verdict = ("repair regressed" if len(same_first) > len(lost) / 2
-                   else "generation changed")
-        print(f"  -> reads as: {verdict}")
+        print(f"  of the {len(lost)} prompts lost: {len(same_first)} share the "
+              f"control's first-round error, {len(c_rescued)} were ones the "
+              f"control only passed because repair fixed them")
 
     print("\nfirst-round error mix (what the model writes before any repair):")
     fc, ft = Counter(first_error(x) for x in c.values()), \
