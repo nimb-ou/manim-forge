@@ -181,11 +181,38 @@ def main() -> int:
                     help="call the teacher to infer on-screen intent for the "
                          "151 narration arcs (one call per video)")
     ap.add_argument("--limit", type=int, default=0, help="cap arcs, for a trial")
+    ap.add_argument("--fresh", action="store_true",
+                    help="start over instead of resuming")
     a = ap.parse_args()
 
-    rows = from_gold()
-    print(f"gold: {len(rows)} plan rows, "
-          f"{sum(r['meta']['n_beats'] for r in rows)} beats")
+    # Appended as they are produced, and re-runnable. The first version held
+    # all 151 arcs in memory and wrote once at the end, so a crash at arc 140
+    # lost four hours of teacher calls -- and a TimeoutError on any chunk
+    # dropped that whole video silently. Both are the same mistake: treating
+    # a long unattended job as if it will finish.
+    a.out.parent.mkdir(parents=True, exist_ok=True)
+    done: set[str] = set()
+    if a.out.exists() and not a.fresh:
+        for line in a.out.read_text().splitlines():
+            if line.strip():
+                done.add(json.loads(line)["meta"]["id"])
+        print(f"resuming: {len(done)} rows already written")
+
+    def emit(r: dict) -> None:
+        if r["meta"]["id"] in done:
+            return
+        with a.out.open("a") as f:
+            f.write(json.dumps(r) + "\n")
+        done.add(r["meta"]["id"])
+
+    if a.fresh and a.out.exists():
+        a.out.unlink()
+    gold = from_gold()
+    for g in gold:
+        emit(g)
+    print(f"gold: {len(gold)} plan rows, "
+          f"{sum(r['meta']['n_beats'] for r in gold)} beats")
+    rows = list(gold)
 
     if a.with_intents:
         from forge.app.generator import RemoteGemini
@@ -193,6 +220,8 @@ def main() -> int:
         todo = arcs()[: a.limit or None]
         print(f"narration: {len(todo)} arcs, one call each")
         for n, (title, segs) in enumerate(todo, 1):
+            if f"plan-narration:{segs[0]['video_id']}" in done:
+                continue
             # Chunked. A whole arc is ~35 segments and about 12k input
             # tokens, and both trial calls hit the teacher's 240s timeout.
             # Twelve at a time still gives enough surrounding context for
@@ -212,10 +241,23 @@ def main() -> int:
                         INTENT_PROMPT.format(title=title, body=body),
                         max_tokens=1024)
                 except Exception as exc:                      # noqa: BLE001
-                    print(f"  [{n}/{len(todo)}] {title[:40]}: "
-                          f"{type(exc).__name__} on chunk {start}", flush=True)
-                    failed = True
-                    break
+                    # One retry. A timeout is usually the teacher being slow
+                    # rather than the request being impossible, and dropping
+                    # a whole 40-minute arc over one slow chunk is a bad
+                    # trade for a job that is already running unattended.
+                    try:
+                        reply = gen.complete(
+                            "You describe what is on screen during a narrated "
+                            "mathematical animation. Terse, visual, no "
+                            "commentary.",
+                            INTENT_PROMPT.format(title=title, body=body),
+                            max_tokens=1024)
+                    except Exception:                         # noqa: BLE001
+                        print(f"  [{n}/{len(todo)}] {title[:40]}: "
+                              f"{type(exc).__name__} on chunk {start}, "
+                              f"retry failed", flush=True)
+                        failed = True
+                        break
                 for line in reply.splitlines():
                     m = re.match(r"\s*(\d+)[.)]\s*(.+)", line)
                     if m:
@@ -235,18 +277,19 @@ def main() -> int:
                 print(f"  [{n}/{len(todo)}] {title[:40]}: "
                       f"{len(beats)} beats after cleaning, skipped", flush=True)
                 continue
-            rows.append(row(
-                f"Explain, in the style of 3Blue1Brown: {title}",
-                render_plan(beats),
-                {"id": f"plan-narration:{segs[0]['video_id']}",
-                 "source": "narration", "task": "plan", "n_beats": len(beats)}))
+            r = row(f"Explain, in the style of 3Blue1Brown: {title}",
+                    render_plan(beats),
+                    {"id": f"plan-narration:{segs[0]['video_id']}",
+                     "source": "narration", "task": "plan",
+                     "n_beats": len(beats)})
+            emit(r)
+            rows.append(r)
             print(f"  [{n}/{len(todo)}] {title[:50]} -> {len(beats)} beats",
                   flush=True)
 
-    a.out.parent.mkdir(parents=True, exist_ok=True)
-    a.out.write_text("\n".join(json.dumps(r) for r in rows) + "\n")
-    tot = sum(r["meta"]["n_beats"] for r in rows)
-    print(f"\n{len(rows)} plan rows, {tot} beats -> {a.out}")
+    total = [json.loads(l) for l in a.out.read_text().splitlines() if l.strip()]
+    tot = sum(r["meta"]["n_beats"] for r in total)
+    print(f"\n{len(total)} plan rows, {tot} beats -> {a.out}")
     return 0
 
 
