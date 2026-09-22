@@ -41,10 +41,12 @@ import json
 import os
 import re
 import sys
+import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 CHUNK = 12
+PAUSE = 2.0
 SYSTEM = (
     "You plan 3Blue1Brown-style mathematical animations. Given a request, "
     "produce ONLY a numbered list of beats. A beat is one communicative step: "
@@ -227,7 +229,7 @@ def main() -> int:
             # Twelve at a time still gives enough surrounding context for
             # "what is on screen here" to be answerable, and returns in
             # seconds.
-            intents, failed = {}, False
+            intents = {}
             for start in range(0, len(segs), CHUNK):
                 part = segs[start:start + CHUNK]
                 body = "\n".join(
@@ -253,17 +255,21 @@ def main() -> int:
                             INTENT_PROMPT.format(title=title, body=body),
                             max_tokens=1024)
                     except Exception:                         # noqa: BLE001
+                        # Keep going. One chunk of one arc is ~12 of 5,825
+                        # segments, and abandoning a 40-minute video because
+                        # the teacher was slow once threw away everything
+                        # already paid for. The completeness check below is
+                        # the real guard: an arc missing too much is dropped
+                        # there, on evidence, rather than here on a guess.
                         print(f"  [{n}/{len(todo)}] {title[:40]}: "
                               f"{type(exc).__name__} on chunk {start}, "
-                              f"retry failed", flush=True)
-                        failed = True
-                        break
+                              f"continuing without it", flush=True)
+                        continue
                 for line in reply.splitlines():
                     m = re.match(r"\s*(\d+)[.)]\s*(.+)", line)
                     if m:
                         intents[int(m.group(1))] = m.group(2).strip()
-            if failed:
-                continue
+                time.sleep(PAUSE)   # the free tier is rate limited
             if len(intents) < len(segs) * 0.6:
                 print(f"  [{n}/{len(todo)}] {title[:40]}: only "
                       f"{len(intents)}/{len(segs)} intents, skipped", flush=True)
