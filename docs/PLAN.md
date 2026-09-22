@@ -32,16 +32,11 @@ untuned Qwen2.5-Coder-7B with scaffolding around it.
 
 ---
 
-## 2. The one thing that is actually wrong
+## 2. What is actually wrong — revised 2026-09-22 by run 17
 
-Two measurements, taken from opposite ends, that say the same thing.
+### 2.1 What the audit said, and how much of it survived
 
-**From the eval:** asked for a 16-minute explainer, the model returns 16.3
-seconds — a 1.76% length ratio with 5.0 play calls, flat across 81 tasks.
-*"Not getting the subject wrong; answering a different, much smaller
-question."*
-
-**From the corpus, measured during the audit:**
+The audit diagnosed a corpus that asks a smaller question than the eval does:
 
 | | corpus | gold |
 |---|---|---|
@@ -51,21 +46,116 @@ question."*
 | uses `always_redraw` | **0.9%** | 9.1% |
 | asserts its own numbers | 2.7% | 95.5% |
 
-`ValueTracker` and `always_redraw` are what make an animation continuous
-rather than a sequence of slides. They are effectively absent. The three
-commonest objects are `FadeOut`, `Text`, `Write`.
+Two of those rows do not mean what they were taken to mean. `ValueTracker`
+at 9.1% of gold is **four scenes**; per scene it separates gold from corpus
+at AUC 0.538, a coin flip. And gold is *more* text-heavy than the corpus in
+absolute terms (16.4 mobjects against 7.7) — 3Blue1Brown scenes label
+things. See Phase 2 for the full per-signal table.
 
-**The model answers a smaller question because the corpus asks a smaller
-question.** The render gate filters for *executes*. Nothing has ever filtered
-for *animates*, and nothing has ever filtered for *explains*.
+What survived is the play-call gap and the grounding gap, and they were
+enough.
 
-Consequence for planning: **generating more rows from the same teacher with
-the same prompts makes this worse.** Any plan whose first move is "produce
-more data" builds on the defect.
+### 2.2 The prediction, and the result
+
+This section predicted that a fine-tune on the current mix **would not move
+length ratio or concept coverage**, and that Phase 1 would be the experiment
+proving Phase 2 was the whole project.
+
+Run 17, at 60 of 81 hard-eval tasks (provisional — the same-day control is
+still running):
+
+| | baseline | run 17 |
+|---|---|---|
+| render rate | 85.2% | **71.7%** |
+| coverage, all trials | 8.4% | **18.8%** |
+| coverage, rendered only | 8.8% | **16.7%** |
+| mean duration, rendered | 16.3s | **31.5s** |
+| length ratio, rendered | 1.76% | **3.88%** |
+| play calls | 5.4 | **11.2** |
+
+**The prediction was wrong.** Every explanation-quality metric roughly
+doubled. The render-gated corpus does teach longer, denser, more
+concept-covering scenes. That is the project's premise, and it held.
+
+### 2.3 The new binding constraint
+
+Render rate fell 13.5 points, and the single-scene benchmark fell 93% → 77%.
+That is not the corpus failing. It is the price of the thing the corpus
+bought.
+
+- Paired against the baseline: first-try 77 → 73, but repair rescues 16 → 4.
+  Repair effectiveness 70% → 15%, three quarters of the drop.
+- `failure_anatomy.py`: the tuned model's failures are **80% longer than its
+  own passes** (23 lines against 13, 19 calls against 11).
+- Reading them: where the control wrote `Dodecahedron()`, run 17 hand-built
+  a `Polyhedron` from vertex coordinates. Where the control drew a
+  `SurroundingRectangle`, it tried `table[0, :].set_color(...).animate`.
+
+**The corpus moved the model's ambition past its API competence.** Repair
+cannot rescue that, because the approach is wrong rather than the line —
+which is exactly why four rounds changed nothing and why a fifth would not.
+
+### 2.4 What this changes about steering
+
+The project has been steering by render rate. Run 17 shows render rate and
+explanation quality trading against each other, so it is the wrong headline:
+the product repairs until a scene renders, and a scene that needed three
+repairs is not worse than one that needed none. **The metric that matters is
+explanation quality conditional on eventually rendering**, with render rate
+as a cost, not a goal.
+
+Consequence for planning, unchanged from the audit: generating more rows
+from the same teacher with the same prompts is still not the first move. But
+the reason has changed. It is no longer "the corpus teaches slideware" — it
+is that the corpus already teaches the right ambition, and more of it buys
+more ambition the model cannot execute.
 
 ---
 
 ## 3. The five phases
+
+### Revised sequence, 2026-09-22
+
+Run 17 reordered these. The premise held — a render-gated corpus does teach
+longer, denser explanations — and the constraint moved to **API competence
+on ambitious code**. The phases are re-prioritised against that, not against
+the original diagnosis.
+
+| was | now | why |
+|---|---|---|
+| Phase 2 rebuild the mix | **demoted** | The corpus already moves the metrics it was meant to fix. Filtering at 0.50 halves the mix, and less data on a model whose problem is competence is the wrong direction. The *measure* stays (it is built, AUC 0.98); the *rebuild* waits for a reason. |
+| Phase 3 GRPO | **promoted to next** | The gap is "ambitious **and** renders". A render is a verifiable reward, which is precisely the tool for that gap, and nothing else on the list attacks it directly. |
+| — | **new: cheap competence probes first** | Before spending 20 GPU-hours on RL, three one-variable runs that cost hours, not days. |
+
+**The cheap probes, in order of cost.**
+
+1. **Upweight gold.** 240 of the mix's 3,010 rows are the only ambitious
+   *and* correct code in it. Reweighting costs one training run and no new
+   data. If ambition is fine and correctness is the gap, this is the
+   smallest intervention that tests it.
+2. **Retrieval during repair.** Retrieval is used at generation and not at
+   repair — repair gets an API briefing built from the traceback. The
+   failures are architectural (`Polyhedron` hand-built where
+   `Dodecahedron()` exists), and an example of the right construct is
+   exactly what a briefing does not supply. This is an inference-time
+   change: no training, measurable in one eval.
+3. **Repair rows in the mix.** Every training row is "prompt → complete
+   scene"; none is "here is an error, fix it". Worth testing, but demoted
+   from the original reading: repair collapsed *because the approach was
+   wrong*, and teaching the model to repair small errors does not teach it
+   not to attempt a hand-built dodecahedron. Requires instrumenting
+   `forge/repair/loop.py` to keep each round's code and error, which no
+   artefact on disk currently does.
+
+Only then GRPO, with the render as the primary reward and the Phase 2
+measure as a denser secondary term.
+
+**What would overturn this.** The control run is still going. If it comes
+back materially below the recorded 85.2% / 8.4% baseline, then part of what
+looks like a run-17 effect is a difference between the recorded baseline and
+today's machine, and these numbers need recomputing before anything is built
+on them.
+
 
 Each ends in a number that decides whether the next is worth doing. Nothing
 runs in parallel with something it could confound.
