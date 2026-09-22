@@ -149,6 +149,28 @@ overtrained.** So:
 Worth keeping from this: run 17 could have stopped at step 240 with the same
 eval loss. Early stopping belongs in the kernel.
 
+**Both scaffolding probes ran, and both failed.** 2026-09-22:
+
+| probe | result |
+|---|---|
+| pre-render API check (`forge/repair/apicheck.py`) | catches **1 of 23** failures, 0 false positives on 77 passes |
+| retrieval in the repair prompt (`--repair-retrieval`) | **77% vs 77%**, rescued 4 vs 4, one won one lost |
+
+The second is the informative one. Same adapter, same prompts, one flag; the
+first-round error mix is identical (73 none / 25 api_misuse both ways), so
+generation is untouched and repair is the only variable — and it moved
+nothing.
+
+**The model is not failing for lack of examples.** It is committed to an
+approach it cannot execute, and putting a correct scene in front of it
+during repair does not make it abandon that approach. Nor is the failure a
+name it invented: the API check proves only one of the 23 is a symbol that
+does not exist.
+
+That closes the cheap tier. The gap is not in the scaffolding, so it is in
+the weights or in the shape of the task — which is what the planner split
+and GRPO address, and why they are what is left.
+
 **The probes that survive, in order of cost.**
 
 1. **Retrieval during repair.** Retrieval is used at generation and not at
