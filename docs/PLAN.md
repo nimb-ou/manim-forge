@@ -127,19 +127,37 @@ the original diagnosis.
 | Phase 3 GRPO | **promoted to next** | The gap is "ambitious **and** renders". A render is a verifiable reward, which is precisely the tool for that gap, and nothing else on the list attacks it directly. |
 | — | **new: cheap competence probes first** | Before spending 20 GPU-hours on RL, three one-variable runs that cost hours, not days. |
 
-**The cheap probes, in order of cost.**
+**Two probes ruled out before spending a GPU-hour on them**, by reading run
+17's own `trainer_state.json`:
 
-1. **Upweight gold.** 240 of the mix's 3,010 rows are the only ambitious
-   *and* correct code in it. Reweighting costs one training run and no new
-   data. If ambition is fine and correctness is the gap, this is the
-   smallest intervention that tests it.
-2. **Retrieval during repair.** Retrieval is used at generation and not at
+    eval_loss  0.6317  0.5836  0.5692  0.5604  0.5619  0.5611  0.5609
+    step          60     120     180     240     300     360     377
+    train loss 0.80 -------------------------------------------> 0.49
+
+Eval loss stopped improving at step 240 of 377 and flattened while train
+loss kept falling. **Run 17 was not undertrained; it was slightly
+overtrained.** So:
+
+- *Train longer / more epochs* — no. The model has extracted what this mix
+  contains, and a second epoch buys overfitting.
+- *Upweight gold* — no, for the same reason and worse. The positive set is
+  44 unique scenes already repeated six times; tripling that overfits 44
+  scenes harder. It was also a confounded probe: gold is the most ambitious
+  code in the mix, so more of it raises ambition as well as correctness,
+  which is the opposite of what needs testing.
+
+Worth keeping from this: run 17 could have stopped at step 240 with the same
+eval loss. Early stopping belongs in the kernel.
+
+**The probes that survive, in order of cost.**
+
+1. **Retrieval during repair.** Retrieval is used at generation and not at
    repair — repair gets an API briefing built from the traceback. The
    failures are architectural (`Polyhedron` hand-built where
    `Dodecahedron()` exists), and an example of the right construct is
    exactly what a briefing does not supply. This is an inference-time
    change: no training, measurable in one eval.
-3. **Repair rows in the mix.** Every training row is "prompt → complete
+2. **Repair rows in the mix.** Every training row is "prompt → complete
    scene"; none is "here is an error, fix it". Worth testing, but demoted
    from the original reading: repair collapsed *because the approach was
    wrong*, and teaching the model to repair small errors does not teach it
