@@ -60,11 +60,26 @@ ESCALATION = (
 
 
 def repair_prompt(description: str, code: str, result: RenderResult,
-                  repeated: bool = False) -> str:
+                  repeated: bool = False, index=None) -> str:
     """The retry message: what was asked, what was written, what broke, what's true.
 
     ``repeated`` marks a round whose error kind matches the previous one, which
     switches the instruction from correction to simplification.
+
+    ``index`` adds a worked example, and is the Phase 1 follow-up. Run 17's
+    repair effectiveness fell 70% -> 15%, and reading its failures says why:
+    where the control wrote ``Dodecahedron()`` it hand-built a ``Polyhedron``
+    from vertex coordinates, and where the control drew a
+    ``SurroundingRectangle`` it tried ``table[0, :].set_color(...).animate``.
+
+    `api_briefing` cannot fix that by construction. It prioritises the names
+    the *traceback* blames, so it explains the thing that was used, and a
+    briefing on Polyhedron never suggests Dodecahedron. Retrieval keyed on
+    what the scene is *trying to do* can surface the construct that already
+    exists -- the difference between correcting a line and correcting an
+    approach.
+
+    Retrieval runs at generation and has never run here.
     """
     parts = [
         f"This Manim scene was meant to do the following:\n{description}\n",
@@ -74,6 +89,16 @@ def repair_prompt(description: str, code: str, result: RenderResult,
     briefing = api_briefing(code, result.stderr)
     if briefing:
         parts.append(briefing + "\n")
+    if index is not None:
+        # Queried on the description, not the traceback. The traceback names
+        # what broke; what is wanted is an example of the construct that
+        # should have been reached for instead. One example, not two -- the
+        # prompt already carries the failing scene and a briefing, and dense
+        # context is a measured failure mode for small models.
+        shots = index.as_fewshot(description, k=1, max_chars=1400)
+        if shots:
+            parts.append("A verified scene that does something similar:\n"
+                         + shots + "\n")
     if repeated:
         parts.append(ESCALATION + "\n")
     parts.append("Rewrite the complete scene so it renders. Output only code in one ``` block.")
@@ -92,9 +117,14 @@ class LoopResult:
 
 class RepairLoop:
     def __init__(self, model, tokenizer, harness: RenderHarness,
-                 max_rounds: int = 4, max_tokens: int = 900, index=None):
+                 max_rounds: int = 4, max_tokens: int = 900, index=None,
+                 repair_retrieval: bool = False):
         self.model, self.tok, self.harness = model, tokenizer, harness
         self.max_rounds, self.max_tokens = max_rounds, max_tokens
+        # Off by default, and switchable separately from generation-time
+        # retrieval, because it is a variable under test. Turning it on for
+        # everything at once would mean the next number moved for two reasons.
+        self.repair_retrieval = repair_retrieval
         # Optional example index. Retrieval is a variable under test, not an
         # assumption: dense context is a measured failure mode for small
         # models, so whether it helps has to be shown rather than believed.
@@ -133,7 +163,9 @@ class RepairLoop:
             # escalate to simplification rather than repeating it.
             repeated = len(history) >= 2 and history[-1] == history[-2]
             code = extract_code(self._generate(
-                repair_prompt(description, code, result, repeated=repeated)))
+                repair_prompt(description, code, result, repeated=repeated,
+                              index=self.index if self.repair_retrieval
+                              else None)))
             code, more = lint(code)
             rules += more
             result = self.harness.render(code, quality="low", frames=4)

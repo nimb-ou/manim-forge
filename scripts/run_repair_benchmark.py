@@ -12,6 +12,10 @@ ap.add_argument("--model", default="mlx-community/Qwen2.5-Coder-7B-Instruct-4bit
 ap.add_argument("--n", type=int, default=20)
 ap.add_argument("--rounds", type=int, default=2)
 ap.add_argument("--retrieval", action="store_true", help="add few-shot examples")
+ap.add_argument("--repair-retrieval", action="store_true",
+                help="also put a worked example in the repair prompt. "
+                     "Separate flag from --retrieval so the two are one "
+                     "variable each.")
 ap.add_argument("--tag", default="", help="label for the output file")
 ap.add_argument("--adapter", default=None,
                 help="MLX LoRA adapter directory. A PEFT adapter from Kaggle "
@@ -35,10 +39,12 @@ if a.retrieval:
     from forge.retrieve.examples import ExampleIndex
     index = ExampleIndex.load(Path("data/verified/example_index.jsonl"))
     print(f"retrieval on: {len(index.examples)} verified examples indexed")
-loop = RepairLoop(model, tok, h, max_rounds=a.rounds, index=index)
+loop = RepairLoop(model, tok, h, max_rounds=a.rounds, index=index,
+                  repair_retrieval=a.repair_retrieval)
 
 run_meta = {"model": a.model, "adapter": a.adapter, "rounds": a.rounds,
-            "retrieval": bool(a.retrieval), "n": a.n}
+            "retrieval": bool(a.retrieval), "n": a.n,
+            "repair_retrieval": bool(a.repair_retrieval)}
 if a.adapter:
     rj = Path(a.adapter) / "run.json"
     if rj.exists():

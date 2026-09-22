@@ -89,6 +89,31 @@ def beats_of(source: str) -> list[dict]:
     return sorted(out, key=lambda b: b["lineno"])
 
 
+# Subtitle files carry corrections boilerplate, and 3Blue1Brown videos end
+# with a patron thank-you that is not part of the explanation. Both would be
+# learned as the shape of an explainer: open with a URL, close by thanking
+# people.
+BOILERPLATE = re.compile(r"\[[^\]]*(?:subtitle|caption|correction)[^\]]*\]",
+                         re.I)
+OUTRO = re.compile(r"patreon|patron|sponsor|thanks for watching|subscribe|"
+                   r"supporters|brilliant\.org", re.I)
+
+
+def clean(beats: list[dict]) -> list[dict]:
+    """Strip subtitle boilerplate, and drop the outro off the tail.
+
+    Only from the *tail*: a video may mention a sponsor mid-way while still
+    explaining something, and cutting from the middle would leave a plan
+    whose timings no longer describe a continuous arc.
+    """
+    for b in beats:
+        b["narration"] = " ".join(BOILERPLATE.sub("", b["narration"]).split())
+    end = len(beats)
+    while end > 1 and OUTRO.search(beats[end - 1]["narration"]):
+        end -= 1
+    return [b for b in beats[:end] if b["narration"]]
+
+
 def render_plan(beats: list[dict]) -> str:
     lines = []
     for i, b in enumerate(beats, 1):
@@ -205,6 +230,11 @@ def main() -> int:
                       "seconds": round(s["end"] - s["start"]),
                       "narration": " ".join(s["text"].split())}
                      for i, s in enumerate(segs, 1)]
+            beats = clean(beats)
+            if len(beats) < 4:
+                print(f"  [{n}/{len(todo)}] {title[:40]}: "
+                      f"{len(beats)} beats after cleaning, skipped", flush=True)
+                continue
             rows.append(row(
                 f"Explain, in the style of 3Blue1Brown: {title}",
                 render_plan(beats),
