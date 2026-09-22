@@ -62,3 +62,68 @@ def test_archive_preserves_the_previous_run(ap, tmp_path):
 def test_archive_survives_having_no_kernel_output(ap, tmp_path):
     ap.archive_state({"outcome": "timeout", "updated": "2026-09-20T10:00:00"})
     assert list((tmp_path / "history").glob("state-*.json"))
+
+
+def test_zero_byte_weights_are_not_a_collected_adapter(ap, tmp_path):
+    """Run 17's failure: the download broke and left 0 bytes behind.
+
+    The old check asked whether a file with a .safetensors suffix existed.
+    One did. So the adapter was declared collected and handed to a converter
+    that died on "Unable to read 8 bytes from file" — a truncated transfer
+    reported as a conversion bug, an hour after the training that earned it.
+    """
+    found = tmp_path / "adapter"
+    found.mkdir()
+    (found / "adapter_config.json").write_text("{}")
+    (found / "adapter_model.safetensors").write_bytes(b"")
+    ok, detail = ap.weights_are_readable(found)
+    assert not ok
+    assert "0 bytes" in detail
+
+
+def test_a_partial_download_is_not_a_collected_adapter(ap, tmp_path):
+    found = tmp_path / "adapter"
+    found.mkdir()
+    (found / "adapter_model.safetensors").write_bytes(b"\x00" * 6_153_124)
+    ok, detail = ap.weights_are_readable(found)
+    assert not ok, detail
+
+
+def test_config_without_weights_is_not_a_collected_adapter(ap, tmp_path):
+    found = tmp_path / "adapter"
+    found.mkdir()
+    (found / "adapter_config.json").write_text("{}")
+    ok, detail = ap.weights_are_readable(found)
+    assert not ok
+    assert "no adapter_model weights" in detail
+
+
+def test_a_real_safetensors_file_reads_back(ap, tmp_path):
+    torch = pytest.importorskip("torch")
+    st = pytest.importorskip("safetensors.torch")
+    found = tmp_path / "adapter"
+    found.mkdir()
+    st.save_file({"lora_A": torch.zeros(4096, 64)},
+                 str(found / "adapter_model.safetensors"))
+    ok, detail = ap.weights_are_readable(found)
+    assert ok, detail
+    assert "MB" in detail
+
+
+def test_a_small_sidecar_file_is_not_mistaken_for_weights(ap, tmp_path):
+    """training_args.bin is 5.7 KB and belongs there.
+
+    Matching on suffix alone rejected a good 161 MB adapter because a file
+    called training_args.bin sat next to it. A validator with false
+    positives is one you start overriding, which is how you end up with no
+    validator.
+    """
+    torch = pytest.importorskip("torch")
+    st = pytest.importorskip("safetensors.torch")
+    found = tmp_path / "adapter"
+    found.mkdir()
+    st.save_file({"lora_A": torch.zeros(4096, 64)},
+                 str(found / "adapter_model.safetensors"))
+    (found / "training_args.bin").write_bytes(b"\x00" * 5777)
+    ok, detail = ap.weights_are_readable(found)
+    assert ok, detail

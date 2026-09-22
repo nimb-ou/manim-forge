@@ -151,28 +151,80 @@ def wait_for_kernel(kernel: str, poll: int, max_hours: float) -> str:
     return "timeout"
 
 
-def collect(kernel: str, dest: Path) -> Path | None:
-    """Download the kernel's output and find the PEFT adapter inside it."""
-    dest.mkdir(parents=True, exist_ok=True)
-    r = subprocess.run([str(KAGGLE), "kernels", "output", kernel,
-                        "-p", str(dest)], capture_output=True, text=True)
-    say(f"    kaggle kernels output -> {(r.stdout + r.stderr).strip()[:300]}")
+def weights_are_readable(found: Path) -> tuple[bool, str]:
+    """Open the weights, rather than believe the directory listing.
 
-    hits = sorted(dest.rglob("adapter_config.json"))
-    if not hits:
-        say("    no adapter_config.json in the output — the kernel finished "
-            "without saving an adapter")
-        return None
-    if len(hits) > 1:
-        say(f"    several adapters in the output: {[str(h) for h in hits]}; "
-            f"taking the first")
-    found = hits[0].parent
-    weights = [p.name for p in found.iterdir()
-               if p.suffix in (".safetensors", ".bin")]
-    if not weights:
-        say(f"    {found} has a config but no weights")
-        return None
-    say(f"    adapter at {found} ({', '.join(sorted(weights))})")
+    Run 17 trained successfully and the download broke mid-stream:
+
+        ('Connection broken: IncompleteRead(6153124 bytes read, ...
+
+    leaving adapter_model.safetensors at **zero bytes**. The old check asked
+    whether a file with that suffix existed, which it did, so the autopilot
+    declared the adapter collected and handed it to a converter that died on
+    `Unable to read 8 bytes from file`. A truncated download is the normal
+    case over a long transfer, not an exotic one, and every other check in
+    this project already learned that presence is not validity.
+    """
+    # `adapter_model.*` specifically, not every .bin in the directory.
+    # Matching on suffix alone called transformers' 5.7 KB training_args.bin
+    # a truncated weight file and rejected a perfectly good 161 MB adapter --
+    # a validator with false positives is one you start overriding.
+    files = [q for q in found.iterdir()
+             if q.stem == "adapter_model"
+             and q.suffix in (".safetensors", ".bin")]
+    if not files:
+        return False, "a config but no adapter_model weights"
+    for q in files:
+        size = q.stat().st_size
+        if size < 1_000_000:
+            return False, f"{q.name} is {size} bytes — truncated or empty"
+    try:
+        from safetensors import safe_open
+        for q in files:
+            if q.suffix == ".safetensors":
+                with safe_open(q, framework="pt") as f:
+                    keys = list(f.keys())
+                if not keys:
+                    return False, f"{q.name} holds no tensors"
+    except ImportError:
+        say("    safetensors not importable; size check only")
+    except Exception as exc:                                  # noqa: BLE001
+        return False, f"{type(exc).__name__}: {exc}"
+    total = sum(q.stat().st_size for q in files) / 1e6
+    return True, f"{', '.join(sorted(q.name for q in files))} ({total:.0f} MB)"
+
+
+def collect(kernel: str, dest: Path, tries: int = 3) -> Path | None:
+    """Download the kernel's output until the adapter actually reads back."""
+    for attempt in range(1, tries + 1):
+        dest.mkdir(parents=True, exist_ok=True)
+        r = subprocess.run([str(KAGGLE), "kernels", "output", kernel,
+                            "-p", str(dest)], capture_output=True, text=True)
+        say(f"    attempt {attempt}: kaggle kernels output -> "
+            f"{(r.stdout + r.stderr).strip()[:300]}")
+
+        hits = sorted(dest.rglob("adapter_config.json"))
+        if not hits:
+            say("    no adapter_config.json in the output — the kernel "
+                "finished without saving an adapter")
+            return None
+        if len(hits) > 1:
+            say(f"    several adapters in the output: "
+                f"{[str(h) for h in hits]}; taking the first")
+        found = hits[0].parent
+        good, detail = weights_are_readable(found)
+        if good:
+            say(f"    adapter at {found} — {detail}")
+            break
+        say(f"    adapter at {found} is not usable: {detail}")
+        if attempt == tries:
+            return None
+        # Remove the bad weights so the next download cannot be skipped as
+        # already present.
+        for q in found.iterdir():
+            if q.suffix in (".safetensors", ".bin"):
+                q.unlink()
+        time.sleep(10)
 
     run_json = found / "run.json"
     if run_json.exists():
