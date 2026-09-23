@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import signal
 import subprocess
 import time
 from dataclasses import dataclass, field
@@ -37,7 +38,13 @@ PY = ROOT / ".venv" / "bin" / "python"
 KAGGLE = ROOT / ".venv" / "bin" / "kaggle"
 STATE = ROOT / "data" / "supervisor" / "state.json"
 LOG = ROOT / "data" / "supervisor" / "supervisor.log"
-MAX_RESTARTS = 3
+# 12, not 3. When restarts were a guess at an unknown fault, three was a
+# sensible ceiling. Now a restart is a known recovery from a known fault --
+# a teacher call that hangs despite a client timeout -- and capping at three
+# means the job stays dead for the rest of the night after three bad calls.
+# The ceiling still exists so a job that cannot start at all is reported
+# rather than relaunched forever.
+MAX_RESTARTS = 12
 STALL_SWEEPS = 2          # sweeps with no growth before calling it stalled
 
 
@@ -78,16 +85,32 @@ def lines_in(path: Path) -> int:
     return sum(1 for line in path.open() if line.strip())
 
 
-def kernel_status(ref: str) -> str:
+_STATUS: dict[str, str] = {}
+
+
+def kernel_status(ref: str, fresh: bool = False) -> str:
+    """One API call per kernel per sweep, not three.
+
+    `kaggle()` builds produced, alive and done as separate lambdas and each
+    one called this, so a sweep made six Kaggle calls for two kernels -- up
+    to 270 seconds of blocking at the 45-second timeout, against a
+    five-minute interval. That is most of why sweeps went missing.
+    """
+    if not fresh and ref in _STATUS:
+        return _STATUS[ref]
     code, out = _run([str(KAGGLE), "kernels", "status", ref])
+    # A timed-out status is "unreachable", not failed: a slow Kaggle API is
+    # not a broken kernel, and reporting it as one restarts healthy things.
+    verdict = "unknown"
     if code == 124:
-        # Unknown, not failed. A slow Kaggle API is not a broken kernel, and
-        # reporting it as one would restart things that are fine.
-        return "unreachable"
-    for word in ("complete", "error", "cancel", "running", "queued"):
-        if word in out.lower():
-            return word
-    return "unknown"
+        verdict = "unreachable"
+    else:
+        for word in ("complete", "error", "cancel", "running", "queued"):
+            if word in out.lower():
+                verdict = word
+                break
+    _STATUS[ref] = verdict
+    return verdict
 
 
 @dataclass
@@ -246,6 +269,21 @@ def main() -> int:
                          "the sweeps that happened, and the sweeps stopped.")
     a = ap.parse_args()
 
+    # A sweep that has not finished in two minutes is wedged, and the whole
+    # point of this file is to notice wedged things. It ran as one
+    # long-lived process sleeping between sweeps, and twice that process
+    # stopped sweeping while staying alive -- once blocked in a Kaggle call,
+    # once for no reason I could find, missing twelve consecutive sweeps at
+    # zero CPU.
+    #
+    # So each sweep is now its own process, launched by launchd on an
+    # interval, and it kills itself if it takes too long. A watchdog whose
+    # own liveness has to be watched is not finished.
+    signal.signal(signal.SIGALRM,
+                  lambda *_: (_ for _ in ()).throw(
+                      TimeoutError("sweep took longer than 120s")))
+    signal.alarm(120)
+
     STATE.parent.mkdir(parents=True, exist_ok=True)
     state = {}
     if STATE.exists():
@@ -254,15 +292,18 @@ def main() -> int:
         except json.JSONDecodeError:
             pass
     while True:
+        _STATUS.clear()          # one fresh reading per sweep
         say("=" * 62)
         state = sweep(state, restart=not a.no_restart,
                       stale_minutes=a.stale_minutes)
         STATE.write_text(json.dumps(
             {"updated": datetime.now(timezone.utc).isoformat(timespec="seconds"),
              "jobs": state}, indent=2) + "\n")
+        signal.alarm(0)
         if a.once:
             return 0
         time.sleep(a.every)
+        signal.alarm(120)
 
 
 if __name__ == "__main__":
