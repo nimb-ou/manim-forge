@@ -128,7 +128,7 @@ def jobs() -> list[Job]:
         local("planner-v2", "train_planner_v2.py",
               d / "plan_synth_windows.jsonl",
               [str(PY), "-u", str(ROOT / "scripts" / "train_planner_v2.py"),
-               "--min-arcs", "400"],
+               "--min-arcs", "250"],
               log=ROOT / "data" / "logs" / "planner_v2.log",
               note="waits for arcs, then pushes planner v2", stallable=False),
         local("collect-coder", "collect_adapter.*coder",

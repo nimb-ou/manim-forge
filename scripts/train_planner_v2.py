@@ -37,7 +37,12 @@ def rows(path: Path) -> int:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--min-arcs", type=int, default=400)
+    # 250, not 400. At ~1.7 arcs a minute with a quarter rejected for being
+    # too short, 400 is four hours away and 250 is two. 250 arcs is about
+    # 1,250 windows, which already doubles the planner's 1,068 -- the
+    # difference between doubling and tripling the data is not worth two
+    # hours of a GPU slot sitting idle waiting for it.
+    ap.add_argument("--min-arcs", type=int, default=250)
     ap.add_argument("--poll", type=int, default=600)
     ap.add_argument("--max-wait-hours", type=float, default=10.0)
     a = ap.parse_args()
