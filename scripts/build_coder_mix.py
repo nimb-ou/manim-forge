@@ -37,12 +37,21 @@ played, and the helpers the scene defines, and the answer is that one
 method. Without the running context the target is unlearnable -- the method
 references `self.arrows` and there would be nothing saying where it came
 from.
+
+**One output format, checked.** The gold rows first emitted the whole
+`def name(self): ...` method while the decomposed corpus rows emitted bare
+statements -- two formats for one task, which would have taught the model to
+produce either and broken assembly on whichever it did not expect. That cost
+nothing to find here and would have cost a five-hour GPU run to find at eval.
+Both now emit the dedented body, which is also what the harness wants to
+concatenate.
 """
 from __future__ import annotations
 
 import argparse
 import ast
 import json
+import textwrap
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -72,8 +81,12 @@ def beat_methods(src: str) -> list[dict]:
             kw = {k.arg: k.value for k in dec.keywords}
             def const(v):
                 return v.value if isinstance(v, ast.Constant) else None
+            body = "\n".join(
+                textwrap.dedent(ast.get_source_segment(src, st) or "")
+                for st in node.body)
             out.append({
                 "name": node.name,
+                "body": body,
                 "intent": const(dec.args[0]) if dec.args else "",
                 "seconds": const(kw.get("seconds")) if "seconds" in kw else None,
                 "narration": " ".join(str(const(kw.get("narration")) or "").split()),
@@ -126,7 +139,8 @@ def main() -> int:
                 f"REQUEST\n{g['prompt'].strip()}\n\n"
                 f"ALREADY ON SCREEN\n{prior}\n\n"
                 f"HELPERS THIS SCENE DEFINES\n{helps or '  (none)'}\n\n"
-                f"WRITE THIS BEAT — method `{b['name']}`, about {secs}\n"
+                f"WRITE THIS BEAT — step {i + 1} of {len(beats)}, "
+                f"about {secs}\n"
                 f"  intent: {b['intent']}\n"
                 f"  narration: {b['narration']}"
             )
@@ -134,11 +148,11 @@ def main() -> int:
                 "messages": [{"role": "system", "content": SYSTEM},
                              {"role": "user", "content": user},
                              {"role": "assistant",
-                              "content": f"```python\n{b['source']}\n```"}],
+                              "content": f"```python\n{b['body']}\n```"}],
                 "meta": {"id": f"coder-gold:{g['meta']['scene']}:{b['name']}",
                          "source": "gold", "task": "beat",
                          "scene": g["meta"]["scene"], "index": i,
-                         "loc": len(b["source"].splitlines())},
+                         "loc": len(b["body"].splitlines())},
             })
 
     a.out.parent.mkdir(parents=True, exist_ok=True)
