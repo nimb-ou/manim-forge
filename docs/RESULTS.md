@@ -426,3 +426,18 @@ end-to-end losses are in composition — planner v1 repeats one intent across
 up to nine beats, never writes END, and when the beat that should build an
 object is dropped, every later beat that uses it fails the scene. Coder v3
 is measured against 92.7%, and planner v2 is now the larger lever.
+
+## Can Kaggle render? · 2026-09-24
+
+GRPO's reward is "the beat renders", so the trainer needs Manim beside the
+GPU. Probed on a Kaggle CPU session (`kaggle/probe_render`, no GPU quota):
+
+| step | result |
+|---|---|
+| apt: cairo, pango, ffmpeg, texlive-latex-extra, dvisvgm | ok, 66 s |
+| pip install manim==0.21.0 | ok, 42 s |
+| render Circle + Text + MathTex, -ql | ok, 5.7 s cold, **2.6 s warm** |
+| four renders in parallel (a GRPO group) | all ok, **5.1 s** |
+
+Two minutes of setup and about 1.3 s per completion at group size four. The
+reward is not the bottleneck; generation on a T4 will be.
