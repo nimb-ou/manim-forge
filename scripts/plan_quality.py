@@ -83,6 +83,15 @@ def describe(name: str, data: list[list[dict]]) -> dict:
         "sec p10-p90": (f"{sorted(secs)[len(secs)//10]:.0f}-"
                         f"{sorted(secs)[9*len(secs)//10]:.0f}" if secs else "-"),
         "words/beat": round(st.mean(words), 1) if words else 0.0,
+        # The internal check: does the narration fill the duration the beat
+        # claims? A beat saying [23s] with 41 words is asking for 23 seconds
+        # of screen time and supplying 12 seconds of speech. That is not a
+        # style difference from the real arcs, it is the arc contradicting
+        # itself, and it is invisible in either number alone.
+        "words/sec": round(
+            st.mean([len(b["narration"].split()) / b["seconds"]
+                     for b in flat if b["seconds"] and b["narration"]]), 2)
+        if secs else 0.0,
         "table-of-contents %": round(100 * contents / len(flat), 1),
         "no intent %": round(100 * no_intent / len(flat), 1),
     }
@@ -110,6 +119,7 @@ def main() -> int:
     for key, tol, why in (
         ("seconds/beat", 0.45, "pacing — what a beat costs"),
         ("words/beat", 0.50, "narration density"),
+        ("words/sec", 0.35, "does the narration fill the time it asks for"),
     ):
         r, s = real[key], synth[key]
         off = abs(s - r) / max(r, 1e-9)
