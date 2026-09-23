@@ -67,7 +67,15 @@ class Assembly:
 
 
 def parse_plan(text: str, limit: int = 40) -> tuple[list[Beat], bool]:
-    """Beats out of a planner window, and whether it declared the arc over."""
+    """Beats out of a planner window, and whether it declared the arc over.
+
+    `ended` means the planner wrote END. It does **not** mean the limit was
+    reached, and conflating the two capped every plan in the hard eval at six
+    beats: the driver asks for a window of six, the parser hit its limit and
+    said "ended", and the driver believed it and never asked for a seventh
+    beat. Real arcs run about 40. The measurement would have shown the
+    planner producing short explanations when the planner was never asked.
+    """
     beats, ended = [], False
     for line in text.splitlines():
         if line.strip() == "END":
@@ -88,7 +96,6 @@ def parse_plan(text: str, limit: int = 40) -> tuple[list[Beat], bool]:
         beats.append(Beat(int(m.group(1)), secs, intent,
                           (m.group(5) or "").strip()))
         if len(beats) >= limit:
-            ended = True
             break
     return beats, ended
 

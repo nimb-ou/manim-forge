@@ -40,9 +40,17 @@ def test_prose_around_the_plan_is_ignored():
 
 
 def test_a_runaway_plan_is_capped():
+    """Capped, but not reported as finished.
+
+    This test used to assert `ended` here, which encoded the bug it was
+    supposed to guard: the driver reads `ended` as "the planner is done" and
+    stops asking for more, so a cap that claims to be END truncates every
+    arc at one window.
+    """
     text = "\n".join(f"{i}. [5s] beat {i} -- x" for i in range(1, 200))
     beats, ended = parse_plan(text, limit=40)
-    assert len(beats) == 40 and ended
+    assert len(beats) == 40
+    assert not ended
 
 
 def test_assembly_produces_a_parsing_scene():
@@ -145,3 +153,17 @@ def test_a_scene_that_already_waits_is_left_alone():
     a = assemble([Beat(1, 5, "x")],
                  ["c = Circle()\nself.play(Create(c))\nself.wait(2)"])
     assert a.code.count("self.wait") == 1
+
+
+def test_hitting_the_limit_is_not_the_planner_saying_END():
+    """The bug that capped every hard-eval plan at six beats.
+
+    The driver asks for a window, the parser caps it, and if the cap reports
+    itself as END the driver stops asking. Real arcs run about 40 beats.
+    """
+    text = "\n".join(f"{i}. [20s] beat {i} -- narration" for i in range(1, 12))
+    beats, ended = parse_plan(text, limit=6)
+    assert len(beats) == 6
+    assert not ended, "the cap must not look like the planner finishing"
+    beats, ended = parse_plan(text + "\nEND", limit=20)
+    assert ended
