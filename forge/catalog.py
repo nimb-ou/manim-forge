@@ -145,6 +145,24 @@ CATALOG: list[Dataset] = [
         "<hash>/frames/fNN.jpg plus result.json",
     ),
     Dataset(
+        "data/planner",
+        "The two-stage split's training data: arcs for the planner, beats "
+        "for the coder.",
+        "plan.jsonl (request -> whole arc) + plan_windows.jsonl (the same "
+        "arcs as incremental windows) + coder.jsonl (gold beats) + "
+        "coder_corpus.jsonl (beats cut from verified scenes)",
+        "plan.jsonl is kept even though nothing trains on it: the windows "
+        "are derived from it, and rebuilding them with a different stride "
+        "should not mean re-buying 151 videos' worth of teacher calls.",
+    ),
+    Dataset(
+        "data/mix_scores.jsonl",
+        "Every training row scored by the animation gate.",
+        "id, source, score, convention, components{}, n_play, loc, parsed",
+        "What a threshold would keep, per source. The Phase 2 decision is "
+        "read off this rather than off a round number.",
+    ),
+    Dataset(
         "data/autopilot",
         "What the unattended Kaggle-to-evaluation chain did, and why it stopped.",
         "state.json{phase,outcome,kernel_status} + autopilot.log + "

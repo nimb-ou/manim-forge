@@ -94,13 +94,24 @@ def main() -> int:
     ap.add_argument("--stride", type=int, default=6)
     ap.add_argument("--max-beats", type=int, default=24)
     ap.add_argument("--tag", default="twostage")
+    ap.add_argument("--hard", action="store_true",
+                    help="run the 81 real 3Blue1Brown titles instead of the "
+                         "single-scene prompts, and score coverage and length "
+                         "ratio the way run_hard_eval does -- so the split's "
+                         "number sits next to Phase 1's on the same tasks")
     a = ap.parse_args()
 
-    raw = json.loads((ROOT / "data" / "verified" / "bench_prompts.json")
-                     .read_text())
-    tasks = raw["prompts"] if isinstance(raw, dict) else raw
-    requests = [t["prompt"] if isinstance(t, dict) else t
-                for t in tasks][: a.n]
+    hard_tasks = None
+    if a.hard:
+        from forge.evaluate.hard_eval import build_tasks
+        hard_tasks = build_tasks()[: a.n]
+        requests = [t.prompt for t in hard_tasks]
+    else:
+        raw = json.loads((ROOT / "data" / "verified" / "bench_prompts.json")
+                         .read_text())
+        tasks = raw["prompts"] if isinstance(raw, dict) else raw
+        requests = [t["prompt"] if isinstance(t, dict) else t
+                    for t in tasks][: a.n]
 
     print(f"planning {len(requests)} requests "
           f"(adapter: {a.planner or 'none'})", flush=True)
@@ -133,11 +144,23 @@ def main() -> int:
             bodies.append(extract_code(reply))
         asm = assemble(beats, bodies)
         res = h.render(asm.code, quality="low", frames=4) if asm.ok else None
-        rows.append({"index": i - 1, "request": req, "beats": len(beats),
-                     "assembled": asm.ok, "problems": asm.problems,
-                     "ok": bool(res and res.ok),
-                     "error": (res.error_kind.value if res else "assembly"),
-                     "code": asm.code})
+        row = {"index": i - 1, "request": req, "beats": len(beats),
+               "assembled": asm.ok, "problems": asm.problems,
+               "ok": bool(res and res.ok),
+               "error": (res.error_kind.value if res else "assembly"),
+               "code": asm.code}
+        if hard_tasks is not None:
+            # Same fields and the same names run_hard_eval writes, so
+            # paired_eval and compare_eval read this artefact without
+            # knowing which pipeline produced it.
+            from forge.evaluate.hard_eval import concept_coverage
+            cov, hits = concept_coverage(asm.code, hard_tasks[i - 1].terms)
+            row.update(coverage=round(cov, 3), matched_terms=hits,
+                       real_seconds=hard_tasks[i - 1].real_seconds,
+                       seconds=(res.duration_s or 0.0) if res else 0.0,
+                       n_play_calls=asm.code.count("self.play("),
+                       n_beats=len(beats), title=hard_tasks[i - 1].prompt[:60])
+        rows.append(row)
         print(f"  [{i}/{len(requests)}] {len(beats)} beats | "
               f"assembled={asm.ok} rendered={bool(res and res.ok)} "
               f"{asm.problems[:1]}", flush=True)
@@ -150,6 +173,16 @@ def main() -> int:
     ok = sum(r["ok"] for r in rows)
     print(f"\nassembled {asmok}/{len(rows)}   rendered {ok}/{len(rows)}   "
           f"mean beats {sum(r['beats'] for r in rows)/len(rows):.1f}")
+    if hard_tasks is not None:
+        done = [r for r in rows if r["ok"]]
+        print(f"  coverage, all trials {sum(r['coverage'] for r in rows)/len(rows):.1%}"
+              f"   (Phase 1: control 8.4%, run 17 18.8%)")
+        if done:
+            print(f"  coverage, rendered   "
+                  f"{sum(r['coverage'] for r in done)/len(done):.1%}")
+            print(f"  length ratio         "
+                  f"{sum(r['seconds']/r['real_seconds'] for r in done)/len(done):.2%}"
+                  f"   (Phase 1: control 1.76%, run 17 3.47%)")
     print(f"-> {out}")
     return 0
 
