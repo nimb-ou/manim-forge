@@ -180,8 +180,16 @@ def assemble(beats: list[Beat], bodies: list[str],
         f"        # beat {b.n}: {b.intent}\n"
         + textwrap.indent(textwrap.dedent(src).strip("\n"), " " * 8)
         for b, src in zip(beats, bodies) if src.strip())
+    # A trailing hold, unless the last beat already ends on one. A scene
+    # whose final beat is construction renders zero frames and the harness
+    # calls it `empty_render` -- which is true and unhelpful, because the
+    # scene is fine and nobody told it to stay on screen. A single model
+    # rarely hits this because it writes the ending itself; a concatenation
+    # of beats has no ending unless one is added.
+    tail = "" if re.search(r"self\.wait\([^)]*\)\s*$", body) else \
+        "\n        self.wait(1)"
     code = (f"{PREAMBLE}\n\nclass {scene}(Scene):\n"
-            f"    def construct(self):\n{body}\n")
+            f"    def construct(self):\n{body}{tail}\n")
     out = Assembly(code=code, beats=list(beats), bodies=list(bodies))
     if not any(src.strip() for src in bodies):
         # Reported as itself. An empty construct fails to parse, and

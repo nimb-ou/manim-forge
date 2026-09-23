@@ -22,6 +22,7 @@ from __future__ import annotations
 import argparse
 import ast
 import json
+import re
 import textwrap
 import time
 from pathlib import Path
@@ -172,6 +173,35 @@ def main() -> int:
                 dropped.append(why)
             bodies.append(body)
         asm = assemble(beats, bodies)
+
+        # One targeted repair of the split's own failure. When a beat uses a
+        # name no beat defines, the beat is asked again with the offending
+        # names quoted back -- which is information the first prompt could
+        # not contain, because it did not know what the model would invent.
+        missing = [p for p in asm.problems if p.startswith("beats use names")]
+        if missing and beats:
+            names = missing[0].split(":", 1)[1].strip()
+            scope = names_in_scope(bodies)
+            for j, b in enumerate(beats):
+                if not any(re.search(rf"\b{re.escape(n.strip())}\b", bodies[j])
+                           for n in names.split(",") if n.strip()):
+                    continue
+                reply = ask(cm, ctok, CODE_SYSTEM,
+                            f"REQUEST\n{req}\n\nNAMES IN SCOPE\n  "
+                            + (", ".join(scope) if scope else "(none yet)")
+                            + f"\n\nYour previous attempt at this beat used "
+                              f"{names}, which nothing defines. Rewrite it "
+                              f"using only the names in scope, or build what "
+                              f"you need first.\n\n"
+                              f"WRITE THIS BEAT — step {j + 1} of {len(beats)}"
+                              f"\n  intent: {b.intent}", max_tokens=a.beat_tokens)
+                cand = extract_code(reply)
+                try:
+                    ast.parse(textwrap.dedent(cand))
+                except SyntaxError:
+                    continue
+                bodies[j] = cand
+            asm = assemble(beats, bodies)
         asm.problems.extend(dropped)
         res = h.render(asm.code, quality="low", frames=4) if asm.ok else None
         row = {"index": i - 1, "request": req, "beats": len(beats),

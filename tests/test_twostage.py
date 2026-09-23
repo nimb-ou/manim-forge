@@ -129,3 +129,19 @@ def test_the_chat_end_token_is_stripped():
 
 def test_text_after_the_end_token_is_dropped():
     assert extract_code("a = 1<|im_end|>\nassistant\nb = 2") == "a = 1"
+
+
+def test_a_scene_that_never_waits_gets_a_hold():
+    """Otherwise it renders zero frames and reports `empty_render`.
+
+    A single model writes its own ending; a concatenation of beats has none
+    unless one is added.
+    """
+    a = assemble([Beat(1, 5, "x")], ["c = Circle()\nself.add(c)"])
+    assert a.ok and a.code.rstrip().endswith("self.wait(1)")
+
+
+def test_a_scene_that_already_waits_is_left_alone():
+    a = assemble([Beat(1, 5, "x")],
+                 ["c = Circle()\nself.play(Create(c))\nself.wait(2)"])
+    assert a.code.count("self.wait") == 1
