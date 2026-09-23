@@ -54,13 +54,16 @@ import json
 import textwrap
 from pathlib import Path
 
+from forge.app.twostage import names_in_scope
+
 ROOT = Path(__file__).resolve().parents[1]
 SYSTEM = (
     "You write one beat of a 3Blue1Brown-style Manim scene. You are given the "
     "whole request, the beats already on screen, and the helpers the scene "
-    "defines. Write only the method for the beat you are asked for: its "
-    "signature, its body, and nothing else. Reuse what earlier beats put on "
-    "self; do not rebuild it."
+    "defines. Write only the code for the beat you are asked for, as "
+    "statements at method-body level -- no class, no def, no imports. Reuse "
+    "the names already in scope rather than rebuilding what they refer to, "
+    "and do not use a name that is not listed."
 )
 
 
@@ -135,9 +138,12 @@ def main() -> int:
                 f"  {j + 1}. {p['intent']}" for j, p in enumerate(beats[:i])
             ) or "  (nothing yet — this is the opening beat)"
             secs = f"{b['seconds']:g} seconds" if b["seconds"] else "a few seconds"
+            scope = names_in_scope([p["body"] for p in beats[:i]])
             user = (
                 f"REQUEST\n{g['prompt'].strip()}\n\n"
                 f"ALREADY ON SCREEN\n{prior}\n\n"
+                f"NAMES IN SCOPE\n  "
+                + (", ".join(scope) if scope else "(none yet)") + "\n\n"
                 f"HELPERS THIS SCENE DEFINES\n{helps or '  (none)'}\n\n"
                 f"WRITE THIS BEAT — step {i + 1} of {len(beats)}, "
                 f"about {secs}\n"

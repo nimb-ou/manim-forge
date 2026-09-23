@@ -27,6 +27,8 @@ import re
 import time
 from pathlib import Path
 
+from forge.app.twostage import names_in_scope
+
 ROOT = Path(__file__).resolve().parents[1]
 SYSTEM = ("You label the steps of a mathematical animation. Terse, visual, "
           "no commentary.")
@@ -176,9 +178,13 @@ def main() -> int:
             for i, g in enumerate(gs, 1):
                 prior = "\n".join(f"  {j}. {intents[j]}" for j in range(1, i)) \
                     or "  (nothing yet — this is the opening beat)"
+                scope = names_in_scope(
+                    [text_of(gs[k], src) for k in range(i - 1)])
                 user = (f"REQUEST\n{r['prompt'].strip()}\n\n"
                         f"ALREADY ON SCREEN\n{prior}\n\n"
-                        f"HELPERS THIS SCENE DEFINES\n  (none)\n\n"
+                        f"NAMES IN SCOPE\n  "
+                        + (", ".join(scope) if scope else "(none yet)")
+                        + "\n\n"
                         f"WRITE THIS BEAT — step {i} of {len(gs)}\n"
                         f"  intent: {intents[i]}")
                 f.write(json.dumps({

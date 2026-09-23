@@ -26,6 +26,7 @@ from __future__ import annotations
 import ast
 import re
 import textwrap
+import textwrap
 from dataclasses import dataclass, field
 
 # The bracketed duration is optional. The untuned model answers
@@ -118,6 +119,38 @@ def defined_names(tree: ast.AST) -> set[str]:
                     out.add(t.id)
         elif isinstance(node, ast.ExceptHandler) and node.name:
             out.add(node.name)
+    return out
+
+
+def names_in_scope(bodies: list[str]) -> list[str]:
+    """Variables earlier beats left behind, for the next beat's prompt.
+
+    The untuned run failed with "beats use names no beat defines: Diagram,
+    radius, show_smaller_angle" -- the coder invented objects because nothing
+    told it what already existed. Listing intents is not enough: "a circle
+    appears" does not say the circle is called `c`.
+
+    Skipped names that are almost certainly not reusable state: loop and
+    comprehension targets, which are dead outside their block.
+    """
+    out: list[str] = []
+    for src in bodies:
+        try:
+            tree = ast.parse(textwrap.dedent(src))
+        except SyntaxError:
+            continue
+        transient: set[str] = set()
+        for node in ast.walk(tree):
+            if isinstance(node, (ast.For, ast.AsyncFor)):
+                transient |= {t.id for t in ast.walk(node.target)
+                              if isinstance(t, ast.Name)}
+            elif isinstance(node, ast.comprehension):
+                transient |= {t.id for t in ast.walk(node.target)
+                              if isinstance(t, ast.Name)}
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Store) \
+                    and node.id not in transient and node.id not in out:
+                out.append(node.id)
     return out
 
 

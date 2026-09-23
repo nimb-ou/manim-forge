@@ -20,11 +20,14 @@ per prompt and buys the ability to run at all.
 from __future__ import annotations
 
 import argparse
+import ast
 import json
+import textwrap
 import time
 from pathlib import Path
 
-from forge.app.twostage import (assemble, extract_code, parse_plan)
+from forge.app.twostage import (assemble, extract_code, names_in_scope,
+                                parse_plan)
 from forge.harness import RenderHarness
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -44,7 +47,8 @@ CODE_SYSTEM = (
     "whole request, the beats already on screen, and the helpers the scene "
     "defines. Write only the code for the beat you are asked for, as "
     "statements at method-body level -- no class, no def, no imports. Reuse "
-    "what earlier beats put on screen; do not rebuild it."
+    "the names already in scope rather than rebuilding what they refer to, "
+    "and do not use a name that is not listed."
 )
 
 
@@ -92,6 +96,8 @@ def main() -> int:
     ap.add_argument("--planner", default=None)
     ap.add_argument("--coder", default=None)
     ap.add_argument("--stride", type=int, default=6)
+    ap.add_argument("--beat-tokens", type=int, default=900,
+                    help="600 truncated half the untuned run's beats")
     ap.add_argument("--max-beats", type=int, default=24)
     ap.add_argument("--tag", default="twostage")
     ap.add_argument("--hard", action="store_true",
@@ -131,21 +137,47 @@ def main() -> int:
                       timeout=180)
     rows = []
     for i, (req, beats) in enumerate(zip(requests, plans), 1):
-        bodies = []
+        bodies, dropped = [], []
         for j, b in enumerate(beats):
             prior = "\n".join(f"  {k + 1}. {beats[k].intent}"
                               for k in range(j)) or \
                 "  (nothing yet — this is the opening beat)"
-            reply = ask(cm, ctok, CODE_SYSTEM,
+            scope = names_in_scope(bodies)
+            body, why = "", ""
+            # Two tries, and each one's output has to parse on its own.
+            #
+            # The untuned run lost three of six scenes to "'(' was never
+            # closed" -- one beat truncated mid-expression and the whole
+            # assembled scene stopped parsing, so five good beats were thrown
+            # away by the sixth. A beat that does not parse alone cannot help
+            # the scene, and dropping it costs one beat instead of all of
+            # them.
+            for attempt in range(2):
+                reply = ask(cm, ctok, CODE_SYSTEM,
                         f"REQUEST\n{req}\n\nALREADY ON SCREEN\n{prior}\n\n"
-                        f"HELPERS THIS SCENE DEFINES\n  (none)\n\n"
+                        f"NAMES IN SCOPE\n  "
+                        + (", ".join(scope) if scope else "(none yet)")
+                        + "\n\n"
                         f"WRITE THIS BEAT — step {j + 1} of {len(beats)}\n"
-                        f"  intent: {b.intent}", max_tokens=600)
-            bodies.append(extract_code(reply))
+                        f"  intent: {b.intent}", max_tokens=a.beat_tokens)
+                cand = extract_code(reply)
+                try:
+                    ast.parse(textwrap.dedent(cand))
+                except SyntaxError as exc:
+                    why = f"beat {j + 1} did not parse: {exc.msg}"
+                    continue
+                body, why = cand, ""
+                break
+            if why:
+                dropped.append(why)
+            bodies.append(body)
         asm = assemble(beats, bodies)
+        asm.problems.extend(dropped)
         res = h.render(asm.code, quality="low", frames=4) if asm.ok else None
         row = {"index": i - 1, "request": req, "beats": len(beats),
-               "assembled": asm.ok, "problems": asm.problems,
+               "assembled": bool(asm.bodies) and not [p for p in asm.problems
+                                                     if "did not parse" not in p],
+               "problems": asm.problems, "dropped": len(dropped),
                "ok": bool(res and res.ok),
                "error": (res.error_kind.value if res else "assembly"),
                "code": asm.code}
