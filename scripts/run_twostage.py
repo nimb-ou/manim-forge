@@ -103,6 +103,9 @@ def main() -> int:
                     help="600 truncated half the untuned run's beats")
     ap.add_argument("--max-beats", type=int, default=24)
     ap.add_argument("--tag", default="twostage")
+    ap.add_argument("--salvage", action="store_true",
+                    help="after repair, drop beats that still use undefined "
+                         "names and render the rest, if half survive")
     ap.add_argument("--plan-only", action="store_true",
                     help="stop after planning. The length question -- does "
                          "the planner produce a 16-minute arc -- is answerable "
@@ -265,12 +268,52 @@ def main() -> int:
             print(f"      after repair: "
                   f"{asm.problems[0][:70] if asm.problems else 'clean'}",
                   flush=True)
+        salvaged = 0
+        if a.salvage:
+            # A partial scene over no scene, reported as partial. The beat
+            # that should have built `circle` was dropped for not parsing,
+            # and every later beat that animates `circle` then fails the
+            # whole scene. Blanking the users -- repeatedly, because a
+            # blanked beat can have been the definer of something else --
+            # keeps the beats that stand on their own. Counted, so a salvaged
+            # render is never mistaken for a whole one.
+            live = sum(1 for b in bodies if b.strip())
+            for _ in range(len(bodies)):
+                miss = [p for p in asm.problems if "names no beat" in p]
+                if not miss:
+                    break
+                names = [n.strip() for n in
+                         miss[0].split(":", 1)[1].split(",") if n.strip()]
+                hit = False
+                for j, body in enumerate(bodies):
+                    if body.strip() and any(
+                            re.search(rf"\b{re.escape(n)}\b", body)
+                            for n in names):
+                        bodies[j] = ""
+                        salvaged += 1
+                        hit = True
+                if not hit:
+                    break
+                asm = assemble(beats, bodies)
+            if salvaged and salvaged * 2 > live:
+                asm.problems.append(f"salvage would drop {salvaged} of {live} "
+                                    f"beats; not rendered")
+            elif salvaged:
+                print(f"      salvaged: {salvaged} of {live} beats dropped",
+                      flush=True)
+        # Render on the assembly's own verdict, then record the dropped
+        # beats. Extending first made every scene with one unparsable beat
+        # unrenderable -- `ok` is "no problems" -- so the drop-one-beat rule
+        # above cost the whole scene after all, and was reported as an
+        # assembly failure.
+        renderable = asm.ok
         asm.problems.extend(dropped)
-        res = h.render(asm.code, quality="low", frames=4) if asm.ok else None
+        res = h.render(asm.code, quality="low", frames=4) if renderable \
+            else None
         row = {"index": i - 1, "request": req, "beats": len(beats),
-               "assembled": bool(asm.bodies) and not [p for p in asm.problems
-                                                     if "did not parse" not in p],
+               "assembled": renderable,
                "problems": asm.problems, "dropped": len(dropped),
+               "salvaged": salvaged,
                "ok": bool(res and res.ok),
                "error": (res.error_kind.value if res else "assembly"),
                "code": asm.code}
