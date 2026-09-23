@@ -1,5 +1,6 @@
 #!/bin/sh
 # Overnight: evaluate each adapter as it lands, one MLX job at a time.
+# pgrep patterns use [.] so this script's own command line never matches.
 # Waits for any demo or other run_twostage/beat_eval to finish first -- two
 # 7B models at once put this 16 GB Mac 6 GB into swap.
 cd "$(dirname "$0")/.." || exit 1
@@ -7,6 +8,13 @@ PY=.venv/bin/python
 idle() { while pgrep -f "scripts/(demo|run_twostage|beat_eval)[.]py" >/dev/null; do sleep 30; done; }
 waitfor() { while [ ! -f "adapters/$1/adapters.safetensors" ]; do sleep 60; done; }
 say() { echo "[$(date -u +%H:%MZ)] $*"; }
+
+# Planner v2 alone first, while the Kaggle runs train: does it END, how
+# long are its arcs, does it still repeat intents.
+idle
+say "planner v2 plan-only (hard titles)"
+nice -n 5 $PY -u scripts/run_twostage.py --n 8 --hard --planner adapters/mlx-planner2 --max-beats 48 --plan-only --tag plans_v2_hard > data/logs/plans_v2_hard.log 2>&1
+tail -4 data/logs/plans_v2_hard.log
 
 waitfor mlx-coder3; idle
 say "coder v3 landed: beat eval"
