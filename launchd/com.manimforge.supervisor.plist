@@ -12,7 +12,6 @@
     <string>/Users/nimitjain/Desktop/My Mac/Projects/manim-forge/.venv/bin/python</string>
     <string>-u</string>
     <string>/Users/nimitjain/Desktop/My Mac/Projects/manim-forge/scripts/supervisor.py</string>
-    <string>--once</string>
   </array>
   <key>WorkingDirectory</key><string>/Users/nimitjain/Desktop/My Mac/Projects/manim-forge</string>
   <key>EnvironmentVariables</key>
@@ -23,16 +22,25 @@
     <key>PYTHONPATH</key><string>/Users/nimitjain/Desktop/My Mac/Projects/manim-forge</string>
   </dict>
   <key>RunAtLoad</key><true/>
-  <!-- One process per sweep, on an interval, rather than one long-lived
-       process sleeping between them. That process twice stopped sweeping
-       while staying alive -- once blocked in a Kaggle call, once missing
-       twelve consecutive sweeps at zero CPU -- and a watchdog whose own
-       liveness has to be watched is not finished. launchd restarting a
-       short job on a timer cannot wedge the same way. -->
-  <key>StartInterval</key><integer>300</integer>
+  <!-- KeepAlive, not StartInterval. One process per sweep was the right
+       instinct and the wrong mechanism: launchd ran the job once at load
+       and not again for 43 minutes, because it defers interval jobs. So the
+       loop is back, with the two properties it was missing -- each sweep is
+       bounded by a 120s alarm and now takes 4.2 seconds, and the process
+       retires after twelve sweeps so launchd hands over a fresh one every
+       hour. A loop that runs forever is a loop that can wedge forever. -->
+  <key>KeepAlive</key><true/>
+  <key>ThrottleInterval</key><integer>30</integer>
   <key>StandardOutPath</key><string>/Users/nimitjain/Desktop/My Mac/Projects/manim-forge/data/supervisor/launchd.log</string>
   <key>StandardErrorPath</key><string>/Users/nimitjain/Desktop/My Mac/Projects/manim-forge/data/supervisor/launchd.log</string>
-  <key>ProcessType</key><string>Background</string>
-  <key>Nice</key><integer>10</integer>
+  <!-- Interactive, not Background, and not niced.
+       ProcessType=Background tells macOS this job is throttleable, and the
+       machine is running MLX inference at full tilt, so its timers were
+       coalesced hard: one sweep at 17:54 and nothing for the next 27
+       minutes, the process alive at zero CPU the whole time. A watchdog
+       that the OS is free to defer indefinitely is not a watchdog.
+       A 4.2-second sweep every five minutes does not need to be
+       throttleable. -->
+  <key>ProcessType</key><string>Interactive</string>
 </dict>
 </plist>

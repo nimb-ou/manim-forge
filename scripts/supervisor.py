@@ -262,6 +262,12 @@ def main() -> int:
                          "sweep is a few subprocess calls; staleness costs "
                          "more than the sweep does.")
     ap.add_argument("--no-restart", action="store_true")
+    ap.add_argument("--retire-after", type=int, default=12,
+                    help="exit cleanly after this many sweeps so launchd "
+                         "hands over a fresh process. A loop that runs "
+                         "forever is a loop that can wedge forever, and the "
+                         "sweeps are cheap now (4.2s), so retiring hourly "
+                         "costs nothing and bounds how long a wedge lasts.")
     ap.add_argument("--stale-minutes", type=float, default=25.0,
                     help="a job whose output file has not been written in "
                          "this long is stalled, regardless of what its row "
@@ -285,6 +291,7 @@ def main() -> int:
     signal.alarm(120)
 
     STATE.parent.mkdir(parents=True, exist_ok=True)
+    swept = 0
     state = {}
     if STATE.exists():
         try:
@@ -301,6 +308,10 @@ def main() -> int:
              "jobs": state}, indent=2) + "\n")
         signal.alarm(0)
         if a.once:
+            return 0
+        swept += 1
+        if swept >= a.retire_after:
+            say(f"retiring after {swept} sweeps; launchd starts the next")
             return 0
         time.sleep(a.every)
         signal.alarm(120)
