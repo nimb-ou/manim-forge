@@ -27,6 +27,9 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
+import subprocess
+import sys
 import random
 import re
 import time
@@ -118,6 +121,10 @@ def main() -> int:
     # is the length failure the planner exists to fix.
     ap.add_argument("--beats", type=int, default=30)
     ap.add_argument("--limit", type=int, default=0)
+    ap.add_argument("--requests", type=Path, default=None,
+                    help="jsonl with a 'request' field per line, instead of "
+                         "the corpus (e.g. data/planner/topics.jsonl)")
+    ap.add_argument("--id-prefix", default="plan-synth")
     ap.add_argument("--pause", type=float, default=2.0)
     ap.add_argument("--out", type=Path,
                     default=ROOT / "data" / "planner" / "plan_synth.jsonl")
@@ -159,6 +166,11 @@ def main() -> int:
     # Longest requests first: a one-line "draw a circle" has no arc in it,
     # and spending teacher calls on those buys nothing.
     requests = sorted(set(requests), key=len, reverse=True)[: a.limit or None]
+    if a.requests:
+        # Topic requests are short by design -- that is what users type -- so
+        # they are taken in file order, not sorted by length.
+        requests = [json.loads(l)["request"] for l in
+                    a.requests.read_text().splitlines() if l.strip()]
 
     a.out.parent.mkdir(parents=True, exist_ok=True)
     done = set()
@@ -209,7 +221,7 @@ def main() -> int:
                     {"role": "system", "content": SYSTEM},
                     {"role": "user", "content": req},
                     {"role": "assistant", "content": "\n".join(beats) + "\nEND"}],
-                "meta": {"id": f"plan-synth:{n:05d}", "source": "synthetic",
+                "meta": {"id": f"{a.id_prefix}:{n:05d}", "source": "synthetic",
                          "task": "plan", "n_beats": len(beats),
                          "request": req, "teacher": f"{a.provider}:{a.model}"},
             }) + "\n")
@@ -221,6 +233,27 @@ def main() -> int:
         time.sleep(a.pause)
 
     print(f"\n{made} arcs written, {failed} failed -> {a.out}")
+    # Corpus exhausted: carry on with the teacher-written topics, which
+    # synth_topics.py may still be adding to. Re-exec rather than loop, so
+    # each pass re-reads the topic file and the process keeps its name for
+    # the supervisor's pgrep.
+    topics = ROOT / "data" / "planner" / "topics.jsonl"
+    if topics.exists():
+        if a.requests:
+            if made == 0:
+                for _ in range(40):                  # ten minutes, stepped
+                    time.sleep(15)
+            if made == 0 and not any(
+                    "synth_topics" in l for l in subprocess.run(
+                        ["ps", "-eo", "command"], capture_output=True,
+                        text=True).stdout.splitlines()):
+                return 0
+        args = [sys.executable, "-u", __file__, "--provider", a.provider,
+                "--model", a.model, "--beats", str(a.beats),
+                "--out", str(a.out), "--requests", str(topics),
+                "--id-prefix", "plan-topic"]
+        print("moving on to topics.jsonl", flush=True)
+        os.execv(sys.executable, args)
     return 0
 
 
