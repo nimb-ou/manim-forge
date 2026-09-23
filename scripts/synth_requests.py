@@ -114,8 +114,13 @@ def main() -> int:
                               for i, (_, r) in enumerate(chunk, 1))
             signal.alarm(180)
             try:
+                # An explicit system prompt: with none, Teacher falls back to
+                # its Manim-scene one and half the replies came back wrapped
+                # in a ForgeScene, truncated before the last pair.
                 reply = teacher.ask(PROMPT.format(k=len(chunk), items=items),
-                                    max_tokens=1500)
+                                    max_tokens=2500, system=(
+                                        "You rewrite requests concisely. "
+                                        "Plain text lines only, no code."))
             except Exception as exc:                          # noqa: BLE001
                 failed += 1
                 print(f"  {type(exc).__name__}: {str(exc)[:160]}", flush=True)
