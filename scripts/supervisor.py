@@ -187,7 +187,14 @@ def sweep(state: dict, restart: bool, stale_minutes: float = 25.0) -> dict:
         # rising line through the stall, because the supervisor was itself
         # blocked and took no samples during it. The file's mtime does not
         # depend on the supervisor having been awake.
-        if alive and job.stallable and job.out is not None and job.out.exists():
+        # A restart does not touch the output file, so mtime stays old until
+        # the new process lands its first row -- and a job that takes two
+        # minutes an item would be killed again on the next sweep, forever.
+        # That restart loop is the busy-looking failure this project has
+        # already built once, so the clock starts at the restart.
+        since_restart = (time.time() - prev.get("restarted_at", 0)) / 60
+        if alive and job.stallable and job.out is not None \
+                and job.out.exists() and since_restart > stale_minutes:
             idle = (time.time() - job.out.stat().st_mtime) / 60
             if idle > stale_minutes:
                 stalled = True
@@ -195,6 +202,7 @@ def sweep(state: dict, restart: bool, stale_minutes: float = 25.0) -> dict:
         status = ("done" if finished else "stalled" if stalled
                   else "running" if alive else "down")
         restarts = prev.get("restarts", 0)
+        restarted_at = prev.get("restarted_at", 0)
 
         if status in ("down", "stalled") and not finished \
                 and job.restart and restart:
@@ -209,12 +217,13 @@ def sweep(state: dict, restart: bool, stale_minutes: float = 25.0) -> dict:
                     subprocess.Popen(job.restart, stdout=f, stderr=f,
                                      start_new_session=True, cwd=ROOT)
                 restarts += 1
+                restarted_at = time.time()
                 status = "restarted"
                 say(f"  {job.name}: was down, relaunched ({restarts}/{MAX_RESTARTS})")
 
         out[job.name] = {"status": status, "produced": n, "history": hist,
-                         "restarts": restarts, "kind": job.kind,
-                         "note": job.note}
+                         "restarts": restarts, "restarted_at": restarted_at,
+                         "kind": job.kind, "note": job.note}
         say(f"  {job.name:14s} {status:15s} produced={n:<7} {job.note}")
     return out
 
