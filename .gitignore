@@ -26,3 +26,4 @@ kaggle/manim-forge-data/
 data/autopilot/nohup.out
 data/autopilot/autopilot.log
 kaggle/coder/01_sft.py
+kaggle/planner/01_sft.py
