@@ -346,3 +346,29 @@ harness rather than the idea — beats truncated at 600 tokens destroying the
 scenes they were concatenated into, and a coder inventing names because
 nothing told it what was already in scope. Both fixed; neither number is
 meaningful until the coder is trained.
+
+---
+
+# The coder adapter · 2026-09-23
+
+9,504 beat→method rows from 1,071 scenes (182 gold beats at weight 6, the
+rest decomposed from render-verified corpus scenes), `max_len` 768, split by
+scene so no scene straddles train and validation.
+
+**Early stopping fired, and here it was worth something.**
+
+```
+eval_loss  0.678  0.612  0.594  0.581  0.579  0.591  0.594  0.602
+step          60    120    180    240    300    360    420    480
+train loss 2.499 ──────────────────────────────────────────→ 0.408
+```
+
+Three evaluations of degradation after step 300 stopped the run at 480 of
+1,188 planned steps, and `load_best_model_at_end` means the saved adapter is
+step 300 rather than step 480 — 0.579 against 0.602. On run 17 the same two
+settings were worth 0.0005 and I recorded them as insurance; here they are
+the difference between the best checkpoint and one well into overfitting.
+
+Collected, converted and verified without a person: `collect_adapter.py`
+waited for the run, downloaded with retry, checked the weights read back,
+converted to MLX and confirmed the delta survives at 3.2e-04.
