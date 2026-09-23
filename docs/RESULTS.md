@@ -288,3 +288,61 @@ epochs buy overfitting, not competence.
 `data/bench/{ctrl,tuned}81_n81.json`. Adapter `adapters/kaggle-sft/adapter`,
 161,533,192 bytes, conversion verified by `scripts/verify_adapter_math.py` at
 3.1e-04 relative error.*
+
+---
+
+# The planner adapter · 2026-09-23
+
+First half of the two-stage split. 1,226 windows from 190 arcs (44 gold, 146
+real 3Blue1Brown videos), 162 MB, conversion verified at 2.9e-04 relative
+error.
+
+Same prompt, same task, tuned against untuned:
+
+**Tuned**
+```
+1. [18s] A beam of light, and a question -- A beam of light. What is it?
+         It is not a wave, and it is not a particle...
+2. [22s] A beam of light, and a screen -- Shine the beam on a screen, and
+         it spreads out into a fuzzy blob...
+3. [23s] A beam of light, and a slit -- Shine the beam through a slit...
+```
+
+**Untuned**
+```
+1. [0.0s]  -- Introduce the concept of light and its fundamental properties.
+2. [2.0s]  -- Explain that light is a form of electromagnetic radiation.
+3. [4.0s]  -- Describe the speed of light and its significance.
+```
+
+Three differences, all of them the point:
+
+- **Durations of 18–23 seconds against 0, 2, 4.** The untuned model has no
+  idea what a beat costs. Real 3Blue1Brown beats run about 26 seconds.
+- **Real visual intents against an empty intent field.** The untuned model
+  copied the word "intent" out of the format spec.
+- **Narration in 3Blue1Brown's voice against a table of contents.**
+  "Introduce the concept of" is not something anyone says out loud.
+
+The 151 real narration arcs taught that, and they had been sitting unused in
+`data/style/narration.jsonl` since the scrape.
+
+**This is not yet the split working.** The coder is still untuned and
+assembly is still where the pipeline fails. It means the planner half of the
+premise holds: ambition expressed in text, in the right shape.
+
+## Two-stage pipeline, untuned both halves
+
+| | n=6 |
+|---|---|
+| assembled | 2/6 → 3/6 after the harness fixes |
+| rendered | 1/6 → 0/6 |
+| mean beats | 6.0 |
+
+Run before either adapter existed, on purpose: if the machinery does not
+work, no adapter rescues it, and "the split fails" and "the adapters are not
+good yet" want opposite responses. Both failure modes turned out to be the
+harness rather than the idea — beats truncated at 600 tokens destroying the
+scenes they were concatenated into, and a coder inventing names because
+nothing told it what was already in scope. Both fixed; neither number is
+meaningful until the coder is trained.
