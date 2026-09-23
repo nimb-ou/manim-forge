@@ -85,8 +85,13 @@ class Job:
 
 def local(name: str, pattern: str, out: Path, cmd: list[str] | None,
           done_when=None, log: Path | None = None, note: str = "") -> Job:
+    # A job whose output is one artefact written at the end has no growing
+    # count, so "stalled" would be wrong for it the whole way through. Those
+    # report 1 when the artefact exists and 0 before, and are only ever
+    # running or done.
     return Job(name=name, kind="local",
-               produced=lambda: lines_in(out),
+               produced=lambda: (lines_in(out) if out.suffix == ".jsonl"
+                                 else int(out.exists())),
                alive=lambda: running(pattern),
                done=done_when or (lambda: False),
                restart=cmd, log=log, note=note)
@@ -112,6 +117,16 @@ def jobs() -> list[Job]:
               [str(PY), "-u", str(ROOT / "scripts" / "synth_plans.py")],
               log=ROOT / "data" / "logs" / "synth_plans.log",
               note="teacher-written arcs for corpus topics"),
+        local("planner-v2", "train_planner_v2.py",
+              d / "plan_synth_windows.jsonl",
+              [str(PY), "-u", str(ROOT / "scripts" / "train_planner_v2.py"),
+               "--min-arcs", "400"],
+              log=ROOT / "data" / "logs" / "planner_v2.log",
+              note="waits for arcs, then pushes planner v2"),
+        local("twostage-hard", "run_twostage.*--hard",
+              ROOT / "data" / "bench" / "twostage_hard_planner_n81.json",
+              None, log=ROOT / "data" / "logs" / "twostage_hard.log",
+              note="81 titles, tuned planner + untuned coder"),
     ]
 
 
@@ -122,7 +137,12 @@ def sweep(state: dict, restart: bool) -> dict:
         n = job.produced()
         hist = (prev.get("history") or [])[-4:] + [n]
         alive, finished = job.alive(), job.done()
-        stalled = (alive and len(hist) > STALL_SWEEPS
+        # Only jobs that grow a count can stall. A job that writes one
+        # artefact at the end shows no growth by design, and calling that
+        # stalled would be an alarm that is always wrong -- the kind you
+        # learn to ignore, which is worse than no alarm.
+        stalled = (alive and job.restart is not None
+                   and len(hist) > STALL_SWEEPS
                    and len(set(hist[-STALL_SWEEPS - 1:])) == 1)
         status = ("done" if finished else "stalled" if stalled
                   else "running" if alive else "down")

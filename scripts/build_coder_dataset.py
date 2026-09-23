@@ -60,6 +60,11 @@ def main() -> int:
         key = lambda r: r["meta"]["scene"]                     # noqa: E731
     else:
         rows = load(ROOT / "data" / "planner" / "plan_windows.jsonl")
+        # Synthetic arcs join at a lower weight, by being loaded once while
+        # the real ones are repeated. 146 real 3Blue1Brown arcs are the thing
+        # being imitated; a teacher's imitation of them is worth less, and at
+        # equal weight the next planner number would not say which taught it.
+        rows += load(ROOT / "data" / "planner" / "plan_synth_windows.jsonl")
         out = a.out or ROOT / "kaggle" / "manim-forge-planner"
         key = lambda r: r["meta"]["id"].rsplit(":w", 1)[0]     # noqa: E731
     if not rows:
@@ -80,7 +85,9 @@ def main() -> int:
     train, valid = [], []
     for scene, group in by_scene.items():
         target = valid if scene in valid_scenes else train
-        reps = a.gold_weight if group[0]["meta"]["source"] == "gold" else 1
+        src0 = group[0]["meta"]["source"]
+        reps = a.gold_weight if src0 == "gold" else \
+            (3 if src0 == "narration" else 1)
         # Gold is weighted in training only. Repeating it in validation would
         # make the eval loss a measurement of how well 44 scenes were
         # memorised.
