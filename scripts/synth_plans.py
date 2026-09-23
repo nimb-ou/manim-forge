@@ -38,9 +38,11 @@ SYSTEM = (
     "numbered list of beats, each as\n"
     "  N. [seconds] intent -- narration\n"
     "where intent is what is on screen and narration is what is spoken over "
-    "it. Beats run 15-30 seconds. Build a real explanatory arc: establish, "
-    "develop, complicate, resolve. Write END on its own line after the last "
-    "beat. Write no code and no commentary."
+    "it. Beats run 20-30 seconds and the narration for one is 60-100 words -- "
+    "what a presenter actually says in that time, not a summary of it. Build "
+    "a real explanatory arc: establish, develop, complicate, resolve. Write "
+    "END on its own line after the last beat. Write no code and no "
+    "commentary."
 )
 PROMPT = (
     "Here is a real arc, for style and pacing:\n\n{example}\n\n"
@@ -68,7 +70,12 @@ def main() -> int:
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--provider", default="gemini")
     ap.add_argument("--model", default="gemini-3.7-flash")
-    ap.add_argument("--beats", type=int, default=10)
+    # 30, not 10. Real 3Blue1Brown arcs average 39.7 beats; the first 142
+    # synthetic arcs came out at 10 because that is what I asked for, and the
+    # END marker is what teaches the planner how long an explanation runs.
+    # Training on those would have taught it to stop after ten beats, which
+    # is the length failure the planner exists to fix.
+    ap.add_argument("--beats", type=int, default=30)
     ap.add_argument("--limit", type=int, default=0)
     ap.add_argument("--pause", type=float, default=2.0)
     ap.add_argument("--out", type=Path,
@@ -118,14 +125,19 @@ def main() -> int:
             reply = teacher.ask(
                 PROMPT.format(example=rng.choice(examples), n=a.beats,
                               request=req),
-                max_tokens=2000, system=SYSTEM)
+                max_tokens=max(2000, a.beats * 200), system=SYSTEM)
         except Exception as exc:                              # noqa: BLE001
             failed += 1
-            print(f"  [{n}/{len(requests)}] {type(exc).__name__}", flush=True)
+            # The message, not just the class. "HTTPError" on every call told
+            # me nothing and could have been a token limit, a quota, or a bad
+            # model name; 30 beats at 100 words is about 4,000 tokens against
+            # a 2,000 cap, which the text says and the class does not.
+            print(f"  [{n}/{len(requests)}] {type(exc).__name__}: "
+                  f"{str(exc)[:160]}", flush=True)
             time.sleep(a.pause * 3)
             continue
         beats = [l.rstrip() for l in reply.splitlines() if LINE.match(l)]
-        if len(beats) < 5:
+        if len(beats) < a.beats // 2:
             failed += 1
             print(f"  [{n}/{len(requests)}] {len(beats)} beats, skipped",
                   flush=True)
