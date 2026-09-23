@@ -135,6 +135,27 @@ reported as *stalled*, which is the state that costs a night. Restarts are
 capped at three and counted; a job that will not stay up is reported rather
 than relaunched forever.
 
+### What the split cost to get working · 2026-09-23
+
+Six defects between "both adapters exist" and "the pipeline produces a
+scene", and only one of them was the models. Recorded because the shape
+repeats: **every one was the harness or the data reporting a failure as
+though the model had produced it.**
+
+| found | was reported as |
+|---|---|
+| mlx-lm returns `<\|im_end\|>` inside the generated string | "the coder writes invalid syntax" on nearly every beat |
+| a cap in `parse_plan` set `ended` | "the planner writes six-beat arcs" |
+| the driver's loop cap, not the planner | "the planner writes 47-beat arcs" — the same error with the sign reversed |
+| `names_in_scope` ignored `self.x` | "NAMES IN SCOPE: (none)" while the model used attributes |
+| 139 of 182 gold beats call scene helpers the runtime lacks | `api_misuse` on every assembled scene |
+| gold uses `self.x`, corpus uses locals, gold weighted 6x | the coder learned the minority convention |
+
+The rule that would have caught most of them: **before believing a number
+about a model, check that the thing measuring it can express what the model
+did.** A parser that cannot represent a plan reports no plan. A scope list
+that cannot represent an attribute reports no scope.
+
 ### The sequence
 
 1. **Coder adapter lands** → convert, verify the delta, then
