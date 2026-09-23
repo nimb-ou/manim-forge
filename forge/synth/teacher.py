@@ -309,7 +309,17 @@ class Teacher:
             self._client = None
         else:
             from openai import OpenAI
-            self._client = OpenAI(api_key=key, base_url=cfg["base_url"])
+            # Explicit, because the SDK's defaults are timeout=600 with two
+            # retries -- up to half an hour inside one call. A synthetic-arc
+            # job hung twice on exactly that: alive, zero CPU, blocked in a
+            # socket read, producing nothing for 48 minutes while every
+            # process check said it was running.
+            #
+            # 180 seconds is longer than any generation this project asks
+            # for, and one retry is enough for a blip. Beyond that the
+            # caller's own rotation is the better answer than waiting.
+            self._client = OpenAI(api_key=key, base_url=cfg["base_url"],
+                                  timeout=180.0, max_retries=1)
 
     def _gemini_rest(self, user: str, max_tokens: int, attempts: int = 5) -> str:
         """Try each model in the rotation before giving up.
@@ -424,7 +434,8 @@ class Teacher:
                 if "generateContent" in m.get("supportedGenerationMethods", [])
             )
         from openai import OpenAI
-        client = OpenAI(api_key=key, base_url=cfg["base_url"])
+        client = OpenAI(api_key=key, base_url=cfg["base_url"],
+                        timeout=60.0, max_retries=1)
         return sorted(m.id for m in client.models.list())
 
     def ask(self, user: str, max_tokens: int = 3000,

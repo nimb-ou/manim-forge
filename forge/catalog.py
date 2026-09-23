@@ -163,6 +163,15 @@ CATALOG: list[Dataset] = [
         "read off this rather than off a round number.",
     ),
     Dataset(
+        "data/supervisor",
+        "What every standing job has produced, swept every five minutes.",
+        "state.json{jobs{status,produced,history,restarts}} + supervisor.log",
+        "produced, not running: a job is judged by output, and a stall is "
+        "read from the output file's mtime rather than the sweep history -- "
+        "the history only shows the sweeps that happened, and the sweeps "
+        "stopped once.",
+    ),
+    Dataset(
         "data/autopilot",
         "What the unattended Kaggle-to-evaluation chain did, and why it stopped.",
         "state.json{phase,outcome,kernel_status} + autopilot.log + "
