@@ -80,11 +80,18 @@ class Job:
     restart: list[str] | None = None
     log: Path | None = None
     note: str = ""
+    # Some jobs are supposed to sit at zero. planner-v2 waits for 400 arcs
+    # before it does anything, so flat output is it working correctly, and
+    # reporting that as stalled is the third always-wrong alarm this file has
+    # produced. Flat output only means something for a job that should be
+    # producing *now*.
+    stallable: bool = True
     history: list[int] = field(default_factory=list)
 
 
 def local(name: str, pattern: str, out: Path, cmd: list[str] | None,
-          done_when=None, log: Path | None = None, note: str = "") -> Job:
+          done_when=None, log: Path | None = None, note: str = "",
+          stallable: bool = True) -> Job:
     # A job whose output is one artefact written at the end has no growing
     # count, so "stalled" would be wrong for it the whole way through. Those
     # report 1 when the artefact exists and 0 before, and are only ever
@@ -94,7 +101,7 @@ def local(name: str, pattern: str, out: Path, cmd: list[str] | None,
                                  else int(out.exists())),
                alive=lambda: running(pattern),
                done=done_when or (lambda: False),
-               restart=cmd, log=log, note=note)
+               restart=cmd, log=log, note=note, stallable=stallable)
 
 
 def kaggle(name: str, ref: str, note: str = "") -> Job:
@@ -122,11 +129,11 @@ def jobs() -> list[Job]:
               [str(PY), "-u", str(ROOT / "scripts" / "train_planner_v2.py"),
                "--min-arcs", "400"],
               log=ROOT / "data" / "logs" / "planner_v2.log",
-              note="waits for arcs, then pushes planner v2"),
+              note="waits for arcs, then pushes planner v2", stallable=False),
         local("twostage-hard", "run_twostage.*--hard",
               ROOT / "data" / "bench" / "twostage_hard_planner_n81.json",
               None, log=ROOT / "data" / "logs" / "twostage_hard.log",
-              note="81 titles, tuned planner + untuned coder"),
+              note="81 titles, tuned planner + untuned coder", stallable=False),
     ]
 
 
@@ -141,7 +148,7 @@ def sweep(state: dict, restart: bool) -> dict:
         # artefact at the end shows no growth by design, and calling that
         # stalled would be an alarm that is always wrong -- the kind you
         # learn to ignore, which is worse than no alarm.
-        stalled = (alive and job.restart is not None
+        stalled = (alive and job.stallable and job.restart is not None
                    and len(hist) > STALL_SWEEPS
                    and len(set(hist[-STALL_SWEEPS - 1:])) == 1)
         status = ("done" if finished else "stalled" if stalled
@@ -172,7 +179,12 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--once", action="store_true")
-    ap.add_argument("--every", type=int, default=1800)
+    ap.add_argument("--every", type=int, default=300,
+                    help="seconds between sweeps. 300, not 1800: state.json "
+                         "is what other watchers read, and a half-hour-old "
+                         "snapshot reported 21 arcs when 136 were on disk. A "
+                         "sweep is a few subprocess calls; staleness costs "
+                         "more than the sweep does.")
     ap.add_argument("--no-restart", action="store_true")
     a = ap.parse_args()
 
