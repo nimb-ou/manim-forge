@@ -167,3 +167,30 @@ def test_hitting_the_limit_is_not_the_planner_saying_END():
     assert not ended, "the cap must not look like the planner finishing"
     beats, ended = parse_plan(text + "\nEND", limit=20)
     assert ended
+
+
+def test_self_attributes_count_as_names_in_scope():
+    """The gold scenes carry state between beats on `self`.
+
+    Tracking only plain locals told the coder the scene had no names in it,
+    while it was writing `self.axes` — so it invented attributes and every
+    assembled scene died on api_misuse.
+    """
+    from forge.app.twostage import names_in_scope
+    scope = names_in_scope(["self.axes = Axes()\nc = Circle()\nself.add(c)"])
+    assert "self.axes" in scope and "c" in scope
+
+
+def test_an_unset_self_attribute_is_caught():
+    a = assemble([Beat(1, 5, "x"), Beat(2, 5, "y")],
+                 ["self.axes = Axes()\nself.play(Create(self.axes))",
+                  "self.play(FadeOut(self.grid))"])
+    assert not a.ok and "self.grid" in a.problems[0]
+
+
+def test_scene_own_attributes_are_not_reported_missing():
+    """Manim's Scene supplies camera, renderer, mobjects and the rest."""
+    a = assemble([Beat(1, 5, "x")],
+                 ["self.play(Create(Circle()))\nself.add(Square())\n"
+                  "self.wait()"])
+    assert a.ok, a.problems

@@ -171,6 +171,20 @@ def names_in_scope(bodies: list[str]) -> list[str]:
             if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Store) \
                     and node.id not in transient and node.id not in out:
                 out.append(node.id)
+            # `self.x = ...` as well as `x = ...`. The gold scenes carry
+            # state between beats on self, because that is how @beat methods
+            # talk to each other, while the decomposed corpus rows use plain
+            # locals. Unifying the output *format* left the two state
+            # conventions in place, and gold is weighted six times -- so the
+            # coder learned the self idiom and then read `self.axes` in beat
+            # one, having been told the scene had no names in it at all.
+            elif isinstance(node, ast.Attribute) \
+                    and isinstance(node.ctx, ast.Store) \
+                    and isinstance(node.value, ast.Name) \
+                    and node.value.id == "self":
+                name = f"self.{node.attr}"
+                if name not in out:
+                    out.append(name)
     return out
 
 
@@ -220,10 +234,26 @@ def assemble(beats: list[Beat], bodies: list[str],
         out.problems.append("manim not importable; names unchecked")
         return out
 
+    # Attributes read off self that nothing assigns. Manim's Scene supplies
+    # some -- camera, renderer, mobjects -- so only names no beat sets and
+    # Scene does not define are reported.
+    try:
+        import manim as _m
+        scene_attrs = set(dir(_m.Scene))
+    except Exception:                                         # noqa: BLE001
+        scene_attrs = set()
+    set_attrs = {n.attr for n in ast.walk(tree)
+                 if isinstance(n, ast.Attribute)
+                 and isinstance(n.ctx, ast.Store)
+                 and isinstance(n.value, ast.Name) and n.value.id == "self"}
     missing = sorted({
         n.id for n in ast.walk(tree)
         if isinstance(n, ast.Name) and isinstance(n.ctx, ast.Load)
-        and n.id not in known})
+        and n.id not in known}
+        | {f"self.{n.attr}" for n in ast.walk(tree)
+           if isinstance(n, ast.Attribute) and isinstance(n.ctx, ast.Load)
+           and isinstance(n.value, ast.Name) and n.value.id == "self"
+           and n.attr not in set_attrs and n.attr not in scene_attrs})
     if missing:
         out.problems.append(
             "beats use names no beat defines: " + ", ".join(missing[:8]))

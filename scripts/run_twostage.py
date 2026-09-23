@@ -257,10 +257,16 @@ def main() -> int:
                        seconds=(res.duration_s or 0.0) if res else 0.0,
                        n_play_calls=asm.code.count("self.play("),
                        n_beats=len(beats), title=hard_tasks[i - 1].prompt[:60])
+        if res is not None and not res.ok:
+            row["stderr"] = (res.stderr or "")[-600:]
         rows.append(row)
+        # The error kind, not just the boolean. A run that assembles and does
+        # not render prints "rendered=False []" -- an empty problems list
+        # because assembly was fine -- which says nothing about why, and the
+        # answer was already in the row.
         print(f"  [{i}/{len(requests)}] {len(beats)} beats | "
-              f"assembled={asm.ok} rendered={bool(res and res.ok)} "
-              f"{asm.problems[:1]}", flush=True)
+              f"assembled={row['assembled']} rendered={row['ok']} "
+              f"{row['error']} {asm.problems[:1]}", flush=True)
 
     out = ROOT / "data" / "bench" / f"{a.tag}_n{len(rows)}.json"
     out.write_text(json.dumps({"meta": {"planner": a.planner,
