@@ -409,3 +409,20 @@ Not yet comparable to Phase 1: these are single-scene prompts at 12 beats,
 not the 81 titles. The hard-eval comparison waits for the assembly failures,
 because a pipeline that drops three of eight scenes would report a coverage
 number computed on the five that survived.
+
+## The coder alone · 2026-09-23
+
+`scripts/beat_eval.py` renders each held-out beat of the coder's validation
+split on top of the *reference* bodies of the beats before it — the coder
+measured with the planner held out.
+
+| adapter | beats render | api_misuse | undefined names | unparsable | excluded (reference fails) |
+|---|---|---|---|---|---|
+| coder v2 | **179 / 193 (92.7%)** | 8 | 5 | 1 | 20 |
+
+Against 2–3 of 8 end-to-end, this moves the problem. Given correct earlier
+beats, the coder writes a beat that renders nine times in ten; the
+end-to-end losses are in composition — planner v1 repeats one intent across
+up to nine beats, never writes END, and when the beat that should build an
+object is dropped, every later beat that uses it fails the scene. Coder v3
+is measured against 92.7%, and planner v2 is now the larger lever.
