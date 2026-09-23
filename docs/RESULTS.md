@@ -372,3 +372,40 @@ the difference between the best checkpoint and one well into overfitting.
 Collected, converted and verified without a person: `collect_adapter.py`
 waited for the run, downloaded with retry, checked the weights read back,
 converted to MLX and confirmed the delta survives at 3.2e-04.
+
+---
+
+# The split renders · 2026-09-23
+
+Eight single-scene prompts, 12-beat plans, planner v1 throughout.
+
+| coder | assembled | rendered |
+|---|---|---|
+| untuned | 3/6 | 0/6 |
+| v1 | 6/8 | **0/8** |
+| v2 | 5/8 | **3/8** |
+
+The difference between v1 and v2 is entirely training data, and it is the
+first time the two-stage pipeline has produced a scene that renders.
+
+v1 was trained on 182 gold beats of which 139 call helper methods — `panel()`,
+`arrow()`, `grid()` — that a bare assembled `Scene` does not have, and on two
+incompatible conventions for carrying state between beats (`self.x` in gold,
+plain locals in the 8,649 decomposed corpus rows), with gold weighted six
+times. It learned the minority convention and the absent helpers. Every
+assembled scene died on `api_misuse`.
+
+v2 trains on gold localised to plain variables and filtered to the 43 beats
+the runtime can satisfy. 258 gold rows rather than 1,092.
+
+**What is left is one failure, three times.** Three of eight fail assembly on
+names no beat defines — `dot, square, triangle`, `axes, dot, function_graph`,
+`dot1, dot2, dot3`. A later beat uses objects an earlier beat was supposed to
+create and did not. That is the failure the split introduces by construction,
+it is caught before a render rather than in a render log, and it is the next
+thing to fix rather than a reason to abandon the split.
+
+Not yet comparable to Phase 1: these are single-scene prompts at 12 beats,
+not the 81 titles. The hard-eval comparison waits for the assembly failures,
+because a pipeline that drops three of eight scenes would report a coverage
+number computed on the five that survived.
