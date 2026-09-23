@@ -153,8 +153,9 @@ def main() -> int:
     print(f"\n{B}{C}RENDER{X} {D}({a.quality} quality){X}")
     from forge.harness import RenderHarness
     h = RenderHarness(python_bin=str(ROOT / ".venv" / "bin" / "python"),
-                      cache_dir=str(ROOT / "data" / "frames"), timeout=600)
-    res = h.render(asm.code, quality=a.quality)
+                      cache_dir=str(ROOT / "data" / "frames"), timeout=600,
+                      store_video=True)
+    res = h.render(asm.code, quality=a.quality, use_cache=False)
     out = ROOT / "data" / "demo"
     out.mkdir(parents=True, exist_ok=True)
     (out / "last_scene.py").write_text(asm.code)
