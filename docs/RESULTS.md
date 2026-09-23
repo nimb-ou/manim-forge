@@ -456,3 +456,20 @@ padded a thirty-beat quota by repeating one intent (planner v3 trains on
 arcs cut at their first repeat, teacher told to END instead of padding),
 and the driver had no stopping rule besides END (a repeated intent now
 ends the plan).
+
+## Split renders after the harness fixes · 2026-09-24
+
+Same eight tasks, same planner v2 plans (greedy, stopped at the first
+repeated intent, so 4.8 beats mean), `--salvage`, after fixing three
+harness faults (an unparsable beat cost the whole scene; `self.mobjects`
+flagged as undefined; a repair that added unknown names was kept):
+
+| coder | assembled | rendered | beat eval (alone) |
+|---|---|---|---|
+| v2 | 6/8 | **5/8** | 92.7% |
+| v3 | 6/8 | 3/8 | 92.7% |
+
+Coder v3 — one system prompt, rows that break the CONSTRUCT rule removed —
+is not better on either measure. At n=8 the gap is two scenes and could be
+noise; it is not evidence *for* v3. v2 stays the default. The step from 3/8
+to 5/8 is the harness, not a model.
