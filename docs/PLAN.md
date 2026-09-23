@@ -112,6 +112,55 @@ more ambition the model cannot execute.
 
 ---
 
+## 2b. The autonomous plan · 2026-09-23
+
+What runs, what it produces, and what stops it. Written down because the
+alternative is four daemons of which two have empty queues, which this
+project has already built once.
+
+### Standing jobs
+
+| job | resource | produces | how it is watched |
+|---|---|---|---|
+| `coder-sft` | Kaggle GPU | beat→method adapter | supervisor, Kaggle status |
+| `planner-sft` | Kaggle GPU | arc adapter — **done** | supervisor |
+| `synth-plans` | teacher API | arcs for corpus topics | supervisor, row count |
+| two-stage evals | local CPU | pipeline numbers | run by hand between builds |
+| pool, autopilot | local | renders, adapter collection | launchd |
+
+`scripts/supervisor.py` sweeps every 30 minutes under launchd. A job is
+described by **what it has produced**, never by whether a process exists: a
+process that is alive and whose output has not grown across two sweeps is
+reported as *stalled*, which is the state that costs a night. Restarts are
+capped at three and counted; a job that will not stay up is reported rather
+than relaunched forever.
+
+### The sequence
+
+1. **Coder adapter lands** → convert, verify the delta, then
+   `run_twostage --hard` on the same 81 titles. The split's number has to sit
+   beside Phase 1's: control 8.4% coverage / 1.76% length, run 17 18.8% /
+   3.47%. **The split has to beat run 17, not the untuned model.**
+2. **Planner v2** on 190 real arcs plus however many `synth-plans` writes.
+   Kept as a separate tier with its own weight, because which of the two
+   taught it has to stay answerable.
+3. **Coder v2** if the hard eval says the beats are the weak half.
+4. **GRPO** last, on the split rather than on the joint task — "implement one
+   beat so it renders" is a far easier optimisation than "write an explainer".
+
+### What would stop each
+
+- *The split loses to run 17 on coverage.* Then decomposition costs more than
+  it buys and the answer is GRPO on the single model. Assembly overhead is
+  the suspect; it is measured separately for this reason.
+- *Synthetic arcs make the planner worse.* Visible as planner v2 scoring below
+  v1 on the same tasks, which is why they are a separate tier rather than
+  mixed in.
+- *Beats render but the scene does not cohere.* Not yet measurable — the
+  animation gate scores structure, not continuity. It would show up as high
+  coverage with low render rate, and the fix is in the planner's intents
+  rather than the coder.
+
 ## 3. The five phases
 
 ### Revised sequence, 2026-09-22
