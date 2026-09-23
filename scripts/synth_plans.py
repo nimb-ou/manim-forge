@@ -54,6 +54,40 @@ PROMPT = (
 LINE = re.compile(r"^\s*\d+\.\s")
 
 
+# Real 3Blue1Brown narration runs 3.34 words a second, measured across the
+# 146 scraped arcs. The gold scenes run 2.53.
+WORDS_PER_SEC = 3.0
+BEAT_LINE = re.compile(r"^(\s*\d+\.\s*)\[([^\]]*)\]\s*(.*)$")
+
+
+def retime(line: str) -> str:
+    """Set each beat's duration from its narration, not from the teacher.
+
+    Asked for denser narration, mistral-medium lengthened the *durations*
+    instead: seconds-per-beat went 22.8 -> 27.3 and words-per-second went
+    1.98 -> 1.61. So the arcs claim time their narration does not fill.
+
+    That is worse than cosmetic. The planner's declared seconds are what a
+    length ratio gets computed from, so an arc asking for 16 minutes while
+    narrating 9 would report a length the scene never had -- the project
+    would be measuring its own inflation. The narration is the real content;
+    the duration should follow it.
+
+    Coherent and shorter beats incoherent and longer, because only one of
+    them can be believed later.
+    """
+    m = BEAT_LINE.match(line)
+    if not m:
+        return line
+    head, _, rest = m.groups()
+    narration = rest.split(" -- ", 1)[1] if " -- " in rest else ""
+    words = len(narration.split())
+    if not words:
+        return line
+    secs = max(6, min(45, round(words / WORDS_PER_SEC)))
+    return f"{head}[{secs}s] {rest}"
+
+
 def real_arcs() -> list[str]:
     path = ROOT / "data" / "planner" / "plan.jsonl"
     out = []
@@ -139,7 +173,8 @@ def main() -> int:
                   f"{str(exc)[:160]}", flush=True)
             time.sleep(a.pause * 3)
             continue
-        beats = [l.rstrip() for l in reply.splitlines() if LINE.match(l)]
+        beats = [retime(l.rstrip()) for l in reply.splitlines()
+                 if LINE.match(l)]
         if len(beats) < a.beats // 2:
             failed += 1
             print(f"  [{n}/{len(requests)}] {len(beats)} beats, skipped",
