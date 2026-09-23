@@ -1,0 +1,15 @@
+{
+  "id": "nimbou/manim-forge-coder-sft",
+  "title": "Manim Forge - coder SFT",
+  "code_file": "01_sft.py",
+  "language": "python",
+  "kernel_type": "script",
+  "is_private": true,
+  "enable_gpu": true,
+  "enable_internet": true,
+  "dataset_sources": [
+    "nimbou/manim-forge-coder"
+  ],
+  "competition_sources": [],
+  "kernel_sources": []
+}
