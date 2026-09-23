@@ -51,6 +51,7 @@ from __future__ import annotations
 import argparse
 import ast
 import json
+import re
 import textwrap
 from pathlib import Path
 
@@ -99,6 +100,38 @@ def beat_methods(src: str) -> list[dict]:
     return sorted(out, key=lambda b: b["lineno"])
 
 
+def localise(src: str, attrs: set[str]) -> str:
+    """Rewrite `self.x` to `x` for attributes the scene assigns.
+
+    The gold scenes pass state between beats on `self`, because @beat methods
+    have no other way to talk. The 8,649 decomposed corpus rows use plain
+    locals, because they were cut out of one construct where locals already
+    persist. That is two conventions for one task, and the coder learned the
+    minority one -- gold is weighted six times -- then read `self.axes` in
+    beat one and every assembled scene died on api_misuse.
+
+    Only attributes the scene *assigns* are rewritten, which leaves
+    `self.play`, `self.wait`, `self.add` and the scene's helper methods
+    alone: those are Scene's, not the beat's.
+    """
+    if not attrs:
+        return src
+    pattern = re.compile(r"\bself\.(" + "|".join(
+        re.escape(a) for a in sorted(attrs, key=len, reverse=True)) + r")\b")
+    return pattern.sub(r"\1", src)
+
+
+def assigned_attrs(src: str) -> set[str]:
+    """Attributes the scene assigns to self, anywhere."""
+    try:
+        tree = ast.parse(src)
+    except SyntaxError:
+        return set()
+    return {n.attr for n in ast.walk(tree)
+            if isinstance(n, ast.Attribute) and isinstance(n.ctx, ast.Store)
+            and isinstance(n.value, ast.Name) and n.value.id == "self"}
+
+
 def helpers(src: str) -> str:
     """Undecorated methods and module-level defs the beats may call.
 
@@ -132,8 +165,35 @@ def main() -> int:
         if not beats:
             skipped += 1
             continue
+        attrs = assigned_attrs(g["code"])
+        for b in beats:
+            b["body"] = localise(b["body"], attrs)
         helps = helpers(g["code"])
+        # Beats that call the scene's own helpers cannot be training data
+        # for a runtime that has none. The two-stage harness assembles bare
+        # `Scene` subclasses, so `self.panel(...)` is a method that will
+        # never exist -- and 139 of the 182 gold beats call one. At weight
+        # six they taught the coder to reach for infrastructure the runtime
+        # cannot supply, which is a large part of why every assembled scene
+        # died on api_misuse.
+        #
+        # 43 rows survive, across 22 of the 44 scenes. Small, and the only
+        # part of gold that transfers. The rest are not deleted -- the
+        # scenes still serve the animation gate and the planner.
+        import manim as _manim
+        _scene_api = set(dir(_manim.Scene))
+        usable = []
+        for b in beats:
+            calls = {n for n in re.findall(r"self\.(\w+)", b["body"])
+                     if n not in _scene_api}
+            if not calls:
+                usable.append(b)
+        if not usable:
+            skipped += 1
+            continue
         for i, b in enumerate(beats):
+            if b not in usable:
+                continue
             prior = "\n".join(
                 f"  {j + 1}. {p['intent']}" for j, p in enumerate(beats[:i])
             ) or "  (nothing yet — this is the opening beat)"
