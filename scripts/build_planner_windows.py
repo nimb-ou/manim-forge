@@ -28,6 +28,7 @@ rather than left to luck.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import re
 from pathlib import Path
@@ -56,6 +57,25 @@ def beats_of(plan: str) -> list[str]:
     return [l.rstrip() for l in plan.splitlines() if LINE.match(l)]
 
 
+VARIANTS = ROOT / "data" / "planner" / "request_variants.jsonl"
+
+
+def pick_request(meta: dict, request: str, variants: dict) -> str:
+    """The request at one of three lengths, fixed per arc.
+
+    Corpus requests are paragraphs; the hard eval's median prompt is six
+    words, and so is a person typing into the app. Where synth_requests.py
+    has written shorter versions, 40% of arcs are asked tersely, 30% in one
+    sentence, and 30% keep the paragraph. Hashed on the arc id, so every
+    window of an arc sees the same request and a rebuild does not reshuffle.
+    """
+    v = variants.get(meta.get("id"))
+    if not v:
+        return request
+    h = int(hashlib.sha256(meta["id"].encode()).hexdigest(), 16) % 10
+    return v["short"] if h < 4 else v["sentence"] if h < 7 else request
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -64,16 +84,21 @@ def main() -> int:
                     default=ROOT / "data" / "planner" / "plan_windows.jsonl")
     a = ap.parse_args()
 
-    rows, arcs = [], 0
+    variants = ({json.loads(l)["id"]: json.loads(l)
+                 for l in VARIANTS.read_text().splitlines() if l.strip()}
+                if VARIANTS.exists() else {})
+    rows, arcs, varied = [], 0, 0
     for line in a.src.read_text().splitlines():
         if not line.strip():
             continue
         r = json.loads(line)
-        request = r["messages"][1]["content"]
+        request = pick_request(r["meta"], r["messages"][1]["content"],
+                               variants)
         beats = beats_of(r["messages"][2]["content"])
         if len(beats) < 3:
             continue
         arcs += 1
+        varied += request != r["messages"][1]["content"]
         for start in range(0, len(beats), STRIDE):
             window = beats[start:start + STRIDE]
             if not window:
@@ -115,7 +140,8 @@ def main() -> int:
 
     a.out.parent.mkdir(parents=True, exist_ok=True)
     a.out.write_text("\n".join(json.dumps(r) for r in rows) + "\n")
-    print(f"{len(rows)} windows from {arcs} arcs -> {a.out}")
+    print(f"{len(rows)} windows from {arcs} arcs -> {a.out}"
+          + (f" ({varied} arcs asked with a shorter request)" if varied else ""))
     return 0
 
 
