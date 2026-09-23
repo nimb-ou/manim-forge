@@ -258,6 +258,15 @@ def sweep(state: dict, restart: bool, stale_minutes: float = 25.0) -> dict:
                   else "running" if alive else "down")
         restarts = prev.get("restarts", 0)
         restarted_at = prev.get("restarted_at", 0)
+        # The cap is for a job that will not stay up, not a lifetime quota.
+        # synth-plans reached twelve over two days of healthy running --
+        # each restart a recovery from a deliberate kill or a hung API call
+        # -- and was then left down with 1,000 requests to go. An hour of
+        # growing output since the last restart earns the count back.
+        if status == "running" and restarts and len(hist) > 1 \
+                and hist[-1] > hist[0] \
+                and time.time() - restarted_at > 3600:
+            restarts = 0
 
         if status in ("down", "stalled") and not finished \
                 and job.restart and restart:
