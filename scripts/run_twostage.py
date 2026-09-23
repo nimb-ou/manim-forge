@@ -274,6 +274,21 @@ def main() -> int:
                     ast.parse(textwrap.dedent(cand))
                 except SyntaxError:
                     continue
+                # Keep a rewrite only if the scene is left with fewer
+                # missing names. Asked to fix `self.mobjects`, the coder
+                # rewrote the beat around `dot, square, triangle` -- three
+                # new unknowns for one -- and the worse version was kept.
+                def n_missing(bs):
+                    probs = [q for q in assemble(beats, bs).problems
+                             if "names no beat" in q]
+                    return len(probs[0].split(":", 1)[1].split(",")) \
+                        if probs else 0
+                trial = list(bodies)
+                trial[j] = cand
+                if n_missing(trial) >= n_missing(bodies):
+                    print(f"      beat {j + 1} rewrite rejected "
+                          f"(no fewer missing names)", flush=True)
+                    continue
                 bodies[j] = cand
                 print(f"      beat {j + 1} rewritten", flush=True)
             asm = assemble(beats, bodies)

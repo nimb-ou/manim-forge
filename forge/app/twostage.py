@@ -242,6 +242,11 @@ def assemble(beats: list[Beat], bodies: list[str],
         scene_attrs = set(dir(_m.Scene))
     except Exception:                                         # noqa: BLE001
         scene_attrs = set()
+    # Instance attributes Scene.__init__ sets, which dir(Scene) cannot see.
+    # `FadeOut(*self.mobjects)` is the idiomatic clear-the-screen, and
+    # flagging it sent three of eight scenes to a repair that made them worse.
+    scene_attrs |= {"mobjects", "camera", "renderer", "foreground_mobjects",
+                    "time", "moving_mobjects", "static_mobjects"}
     set_attrs = {n.attr for n in ast.walk(tree)
                  if isinstance(n, ast.Attribute)
                  and isinstance(n.ctx, ast.Store)
