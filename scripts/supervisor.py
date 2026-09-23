@@ -313,7 +313,15 @@ def main() -> int:
         if swept >= a.retire_after:
             say(f"retiring after {swept} sweeps; launchd starts the next")
             return 0
-        time.sleep(a.every)
+        # Slept in short steps, not one long one. A single time.sleep(300)
+        # did not return for 38 minutes here -- under launchd and under
+        # nohup, at nice 0 and at ProcessType Interactive, on a machine at
+        # load 1.95. Whatever defers a five-minute timer on this system does
+        # not defer a fifteen-second one, and the loop below reaches the same
+        # wall-clock deadline by asking repeatedly instead of once.
+        deadline = time.time() + a.every
+        while time.time() < deadline:
+            time.sleep(min(15, max(1, deadline - time.time())))
         signal.alarm(120)
 
 
