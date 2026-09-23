@@ -121,6 +121,17 @@ def main() -> int:
 
     from forge.synth.teacher import Teacher
     teacher = Teacher(provider=a.provider, model=a.model)
+    # The job hung for 74 minutes inside one request. Whatever the client's
+    # own default is, it is longer than a generation of this size can
+    # justify, and a call that has not answered in four minutes is not going
+    # to. An alarm makes the hang visible to the retry logic that already
+    # exists rather than to nobody.
+    import signal
+
+    def _impatient(signum, frame):                            # noqa: ANN001
+        raise TimeoutError("teacher did not answer in time")
+
+    signal.signal(signal.SIGALRM, _impatient)
     examples = real_arcs()
     if not examples:
         print("no real arcs to imitate; run build_planner_mix.py first")
@@ -158,6 +169,7 @@ def main() -> int:
     for n, req in enumerate(requests, 1):
         if req in done:
             continue
+        signal.alarm(240)
         try:
             reply = teacher.ask(
                 PROMPT.format(example=rng.choice(examples), n=a.beats,
@@ -173,6 +185,8 @@ def main() -> int:
                   f"{str(exc)[:160]}", flush=True)
             time.sleep(a.pause * 3)
             continue
+        finally:
+            signal.alarm(0)
         beats = [retime(l.rstrip()) for l in reply.splitlines()
                  if LINE.match(l)]
         if len(beats) < a.beats // 2:

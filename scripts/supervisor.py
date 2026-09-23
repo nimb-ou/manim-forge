@@ -49,9 +49,27 @@ def say(msg: str) -> None:
         f.write(line + "\n")
 
 
+# Every subprocess call here gets a timeout. The supervisor swept at 06:41
+# and then not again until 07:25 -- 44 minutes blocked inside a `kaggle
+# kernels status` call that never returned -- and during that window the job
+# it was watching stalled and was not noticed. A watchdog that blocks on the
+# same kind of call it is watching for is not a watchdog.
+TIMEOUT = 45
+
+
+def _run(cmd: list[str]) -> tuple[int, str]:
+    try:
+        r = subprocess.run(cmd, capture_output=True, text=True,
+                           timeout=TIMEOUT)
+        return r.returncode, r.stdout + r.stderr
+    except subprocess.TimeoutExpired:
+        return 124, "timed out"
+    except Exception as exc:                                  # noqa: BLE001
+        return 125, f"{type(exc).__name__}: {exc}"
+
+
 def running(pattern: str) -> bool:
-    return subprocess.run(["pgrep", "-f", pattern],
-                          capture_output=True).returncode == 0
+    return _run(["pgrep", "-f", pattern])[0] == 0
 
 
 def lines_in(path: Path) -> int:
@@ -61,9 +79,11 @@ def lines_in(path: Path) -> int:
 
 
 def kernel_status(ref: str) -> str:
-    r = subprocess.run([str(KAGGLE), "kernels", "status", ref],
-                       capture_output=True, text=True)
-    out = (r.stdout + r.stderr)
+    code, out = _run([str(KAGGLE), "kernels", "status", ref])
+    if code == 124:
+        # Unknown, not failed. A slow Kaggle API is not a broken kernel, and
+        # reporting it as one would restart things that are fine.
+        return "unreachable"
     for word in ("complete", "error", "cancel", "running", "queued"):
         if word in out.lower():
             return word
@@ -86,6 +106,7 @@ class Job:
     # produced. Flat output only means something for a job that should be
     # producing *now*.
     stallable: bool = True
+    out: Path | None = None
     history: list[int] = field(default_factory=list)
 
 
@@ -101,14 +122,16 @@ def local(name: str, pattern: str, out: Path, cmd: list[str] | None,
                                  else int(out.exists())),
                alive=lambda: running(pattern),
                done=done_when or (lambda: False),
-               restart=cmd, log=log, note=note, stallable=stallable)
+               restart=cmd, log=log, note=note, stallable=stallable,
+               out=out)
 
 
 def kaggle(name: str, ref: str, note: str = "") -> Job:
     return Job(name=name, kind="kaggle",
                produced=lambda: {"complete": 2, "running": 1, "queued": 1}
                .get(kernel_status(ref), 0),
-               alive=lambda: kernel_status(ref) in ("running", "queued"),
+               alive=lambda: kernel_status(ref) in ("running", "queued",
+                                                     "unreachable"),
                done=lambda: kernel_status(ref) == "complete",
                restart=None, note=note)
 
@@ -140,15 +163,13 @@ def jobs() -> list[Job]:
               log=ROOT / "data" / "logs" / "collect_coder.log",
               note="waits, downloads, converts, verifies the coder adapter",
               stallable=False),
-        local("plan-lengths", "run_twostage.*--plan-only",
-              ROOT / "data" / "bench" / "twostage_hard_planner_plans_n81.json",
-              None, log=ROOT / "data" / "logs" / "twostage_plans.log",
-              note="81 titles, how long an arc the planner writes",
-              stallable=False),
+        # plan-lengths is deliberately not listed. It was stopped to free the
+        # CPU for the two-adapter run, and a supervisor that relists every
+        # job ever started turns "down" into permanent noise.
     ]
 
 
-def sweep(state: dict, restart: bool) -> dict:
+def sweep(state: dict, restart: bool, stale_minutes: float = 25.0) -> dict:
     out = {}
     for job in jobs():
         prev = state.get(job.name, {})
@@ -162,11 +183,23 @@ def sweep(state: dict, restart: bool) -> dict:
         stalled = (alive and job.stallable and job.restart is not None
                    and len(hist) > STALL_SWEEPS
                    and len(set(hist[-STALL_SWEEPS - 1:])) == 1)
+        # Wall clock, not sweep count. The history above showed a healthy
+        # rising line through the stall, because the supervisor was itself
+        # blocked and took no samples during it. The file's mtime does not
+        # depend on the supervisor having been awake.
+        if alive and job.stallable and job.out is not None and job.out.exists():
+            idle = (time.time() - job.out.stat().st_mtime) / 60
+            if idle > stale_minutes:
+                stalled = True
+                say(f"  {job.name}: no output for {idle:.0f} minutes")
         status = ("done" if finished else "stalled" if stalled
                   else "running" if alive else "down")
         restarts = prev.get("restarts", 0)
 
-        if status == "down" and not finished and job.restart and restart:
+        if status in ("down", "stalled") and not finished \
+                and job.restart and restart:
+            if status == "stalled":
+                _run(["pkill", "-f", job.restart[-1]])
             if restarts >= MAX_RESTARTS:
                 status = "down (gave up)"
             else:
@@ -197,6 +230,11 @@ def main() -> int:
                          "sweep is a few subprocess calls; staleness costs "
                          "more than the sweep does.")
     ap.add_argument("--no-restart", action="store_true")
+    ap.add_argument("--stale-minutes", type=float, default=25.0,
+                    help="a job whose output file has not been written in "
+                         "this long is stalled, regardless of what its row "
+                         "count history says. The count history only sees "
+                         "the sweeps that happened, and the sweeps stopped.")
     a = ap.parse_args()
 
     STATE.parent.mkdir(parents=True, exist_ok=True)
@@ -208,7 +246,8 @@ def main() -> int:
             pass
     while True:
         say("=" * 62)
-        state = sweep(state, restart=not a.no_restart)
+        state = sweep(state, restart=not a.no_restart,
+                      stale_minutes=a.stale_minutes)
         STATE.write_text(json.dumps(
             {"updated": datetime.now(timezone.utc).isoformat(timespec="seconds"),
              "jobs": state}, indent=2) + "\n")
