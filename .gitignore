@@ -27,3 +27,4 @@ data/autopilot/nohup.out
 data/autopilot/autopilot.log
 kaggle/coder/01_sft.py
 kaggle/planner/01_sft.py
+kaggle/*/.fingerprint.json
