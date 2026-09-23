@@ -441,3 +441,18 @@ GPU. Probed on a Kaggle CPU session (`kaggle/probe_render`, no GPU quota):
 
 Two minutes of setup and about 1.3 s per completion at group size four. The
 reward is not the bottleneck; generation on a T4 will be.
+
+## Planner v2 loops · 2026-09-24
+
+Plan-only on eight hard titles, cap 48: **48.9 beats per plan, END never
+written, 38–51 repeated intents per plan** ("two dice, one dot
+highlighted" fifty times). The opening beats are good — "two vectors, a
+line of all combinations" → "three vectors, a plane" → "four vectors, a
+whole space" is a real arc — and then greedy decoding, fed its own output,
+settles into a loop.
+
+Two causes, both addressed: half of the 252 synthetic arcs it trained on
+padded a thirty-beat quota by repeating one intent (planner v3 trains on
+arcs cut at their first repeat, teacher told to END instead of padding),
+and the driver had no stopping rule besides END (a repeated intent now
+ends the plan).
