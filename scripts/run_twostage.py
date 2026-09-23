@@ -47,9 +47,11 @@ CODE_SYSTEM = (
     "You write one beat of a 3Blue1Brown-style Manim scene. You are given the "
     "whole request, the beats already on screen, and the helpers the scene "
     "defines. Write only the code for the beat you are asked for, as "
-    "statements at method-body level -- no class, no def, no imports. Reuse "
-    "the names already in scope rather than rebuilding what they refer to, "
-    "and do not use a name that is not listed."
+    "statements at method-body level -- no class, no def, no imports. "
+    "NAMES IN SCOPE lists what earlier beats already built: reuse those "
+    "rather than rebuilding them. Anything else you use you must "
+    "CONSTRUCT in this beat before you animate it -- `self.play(Create(dot))` "
+    "is wrong unless a line above it makes `dot`."
 )
 
 
