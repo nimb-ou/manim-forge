@@ -111,3 +111,21 @@ def test_a_plan_without_brackets_still_parses():
 def test_no_beats_is_reported_as_itself():
     a = assemble([], [])
     assert not a.ok and a.problems == ["no beats to assemble"]
+
+
+def test_the_chat_end_token_is_stripped():
+    """What actually broke the untuned coder baseline.
+
+    mlx-lm returns the template's end-of-turn token inside the generated
+    string, so `circle.become(square)<|im_end|>` was reported as the coder
+    writing invalid syntax. The statement was correct; the harness was
+    breaking it.
+    """
+    assert extract_code("circle.become(square)<|im_end|>") == "circle.become(square)"
+    assert extract_code("```python\nx = 1\n```<|im_end|>") == "x = 1"
+    for tokname in ("<|endoftext|>", "<|eot_id|>", "<|end_of_text|>"):
+        assert extract_code(f"y = 2{tokname}") == "y = 2"
+
+
+def test_text_after_the_end_token_is_dropped():
+    assert extract_code("a = 1<|im_end|>\nassistant\nb = 2") == "a = 1"

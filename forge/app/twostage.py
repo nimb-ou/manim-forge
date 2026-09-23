@@ -93,8 +93,21 @@ def parse_plan(text: str, limit: int = 40) -> tuple[list[Beat], bool]:
     return beats, ended
 
 
+# Chat templates end a turn with a special token, and mlx-lm hands it back
+# in the generated string. Left in place it is the last thing on the line:
+#
+#     circle.become(square)<|im_end|>
+#
+# which does not parse. That was reported as "beat did not parse: invalid
+# syntax" on nearly every beat of the untuned run, and read as the coder
+# being unable to write a statement -- when the statement was correct and the
+# harness was breaking it. Anything from the first such token is dropped.
+STOP = re.compile(r"<\|(?:im_end|endoftext|eot_id|end_of_text)\|>")
+
+
 def extract_code(text: str) -> str:
     """The largest fenced block, or the whole thing if it is unfenced."""
+    text = STOP.split(text, 1)[0]
     if "```" not in text:
         return text.strip()
     body = max(text.split("```"), key=len)
