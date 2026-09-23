@@ -91,14 +91,21 @@ def main() -> int:
             if start > CONTEXT:
                 shown = f"  … {start - CONTEXT} earlier beats …\n" + shown
             last = start + STRIDE >= len(beats)
+            # The ask has to match what is being answered. A final window
+            # holds whatever is left -- 3.8 beats on average -- and asking
+            # "write the next 6" above an answer of 3 teaches the model that
+            # the number requested is advisory. At inference the driver asks
+            # for 6 every time, so if END only ever follows a short request
+            # the model has no reason to produce one.
             answer = "\n".join(window) + ("\nEND" if last else "")
             rows.append({
                 "messages": [
                     {"role": "system", "content": SYSTEM},
                     {"role": "user", "content":
                         f"REQUEST\n{request}\n\nBEATS SO FAR\n{shown}\n\n"
-                        f"Write the next {len(window)} beat(s), numbered from "
-                        f"{start + 1}."},
+                        f"Write the next {STRIDE} beat(s), numbered from "
+                        f"{start + 1}. Stop early and write END if the "
+                        f"explanation is complete."},
                     {"role": "assistant", "content": answer}],
                 "meta": {**r["meta"],
                          "id": f"{r['meta']['id']}:w{start // STRIDE}",
