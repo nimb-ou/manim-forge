@@ -156,18 +156,35 @@ about a model, check that the thing measuring it can express what the model
 did.** A parser that cannot represent a plan reports no plan. A scope list
 that cannot represent an attribute reports no scope.
 
-### The sequence
+### The sequence — updated 2026-09-23 evening
 
-1. **Coder adapter lands** → convert, verify the delta, then
-   `run_twostage --hard` on the same 81 titles. The split's number has to sit
-   beside Phase 1's: control 8.4% coverage / 1.76% length, run 17 18.8% /
-   3.47%. **The split has to beat run 17, not the untuned model.**
-2. **Planner v2** on 190 real arcs plus however many `synth-plans` writes.
-   Kept as a separate tier with its own weight, because which of the two
-   taught it has to stay answerable.
-3. **Coder v2** if the hard eval says the beats are the weak half.
-4. **GRPO** last, on the split rather than on the joint task — "implement one
-   beat so it renders" is a far easier optimisation than "write an explainer".
+Where it stands: planner v1 + coder v2 assemble and render **3 of 8**
+(coder v1: 0 of 8). The dominant remaining failure is cross-beat names — a
+beat animates an object no beat built.
+
+1. **Coder v3** — *pushed, waiting for a GPU slot.* Same corpus, but every
+   row now carries the one system prompt inference sends (v2 trained on
+   three different ones, none with the CONSTRUCT rule), and the 98 rows
+   whose reference answer uses a name nothing gives it are gone. Gold beats
+   carry the module constants and functions they read.
+2. **Planner v2** — *training.* 252 synthetic arcs as a separate tier, END
+   on every final window. Collected by `collect-planner2` when it lands.
+   Checked for: END emitted, arc length near real (≈40 beats), and whether
+   it still repeats one intent across beats (v1 wrote "Three shapes, then
+   one group" twelve times).
+3. **Planner v3 data** — *accumulating.* `synth-plans` keeps writing arcs
+   (mistral) and `synth-requests` writes 3–10 word and one-sentence
+   versions of each request (gemini): the hard eval's median prompt is six
+   words and the planner has trained on paragraphs.
+4. **The 8-task split eval after each adapter lands** (v1/v2/v3 × repair on
+   and off), then `run_twostage --hard --n 81` against Phase 1 — control
+   8.4% coverage / 1.76% length, run 17 18.8% / 3.47%. **The split has to
+   beat run 17, not the untuned model.** Not before the assembly failures
+   are under half, or the 81 measure the harness.
+5. **GRPO** last, on "implement one beat so it renders".
+
+Checked every 30 minutes by hand (not only the supervisor), and against
+`docs/REASSESS.md` every six hours.
 
 ### What would stop each
 
