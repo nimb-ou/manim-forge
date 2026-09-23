@@ -60,6 +60,29 @@ def beats_of(plan: str) -> list[str]:
 VARIANTS = ROOT / "data" / "planner" / "request_variants.jsonl"
 
 
+def intent_of(beat: str) -> str:
+    m = re.match(r"^\s*\d+\.\s*\[[^\]]*\]\s*(.*?)\s*(?:--|—|$)", beat)
+    return " ".join((m.group(1) if m else beat).lower().split())
+
+
+def first_repeat_cut(beats: list[str]) -> list[str]:
+    """The arc up to the first beat whose intent was already used.
+
+    Synthetic arcs written to a fixed thirty-beat quota padded small
+    requests by repeating one intent -- 3,425 duplicate intents across 259
+    of 508 arcs -- and planner v1 duly wrote "The function graphed on a
+    timeline" nine times running. Real arcs repeat an intent 58 times in
+    5,984 beats, so this is applied to synthetic arcs only.
+    """
+    seen: set[str] = set()
+    for i, b in enumerate(beats):
+        k = intent_of(b)
+        if k in seen:
+            return beats[:i]
+        seen.add(k)
+    return beats
+
+
 def pick_request(meta: dict, request: str, variants: dict) -> str:
     """The request at one of three lengths, fixed per arc.
 
@@ -87,7 +110,7 @@ def main() -> int:
     variants = ({json.loads(l)["id"]: json.loads(l)
                  for l in VARIANTS.read_text().splitlines() if l.strip()}
                 if VARIANTS.exists() else {})
-    rows, arcs, varied = [], 0, 0
+    rows, arcs, varied, cut_arcs, cut_beats = [], 0, 0, 0, 0
     for line in a.src.read_text().splitlines():
         if not line.strip():
             continue
@@ -95,6 +118,13 @@ def main() -> int:
         request = pick_request(r["meta"], r["messages"][1]["content"],
                                variants)
         beats = beats_of(r["messages"][2]["content"])
+        if r["meta"].get("source") == "synthetic":
+            full = len(beats)
+            beats = first_repeat_cut(beats)
+            if len(beats) < 6:
+                cut_arcs += 1
+                continue
+            cut_beats += full - len(beats)
         if len(beats) < 3:
             continue
         arcs += 1
@@ -142,6 +172,9 @@ def main() -> int:
     a.out.write_text("\n".join(json.dumps(r) for r in rows) + "\n")
     print(f"{len(rows)} windows from {arcs} arcs -> {a.out}"
           + (f" ({varied} arcs asked with a shorter request)" if varied else ""))
+    if cut_arcs or cut_beats:
+        print(f"  repeated intents: {cut_beats} beats cut, {cut_arcs} arcs "
+              f"dropped (under six beats before the first repeat)")
     return 0
 
 

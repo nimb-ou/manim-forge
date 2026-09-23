@@ -49,7 +49,11 @@ SYSTEM = (
 )
 PROMPT = (
     "Here is a real arc, for style and pacing:\n\n{example}\n\n"
-    "Now write an arc of {n} beats for this request:\n{request}"
+    "Now write an arc for this request. Use as many beats as the idea "
+    "genuinely needs, at most {n}: a small request may need eight, a deep "
+    "one thirty. Every beat must put something NEW on screen -- never repeat "
+    "an intent, and stop (END) when the explanation is complete rather than "
+    "padding.\n{request}"
 )
 LINE = re.compile(r"^\s*\d+\.\s")
 
@@ -189,7 +193,11 @@ def main() -> int:
             signal.alarm(0)
         beats = [retime(l.rstrip()) for l in reply.splitlines()
                  if LINE.match(l)]
-        if len(beats) < a.beats // 2:
+        # Six, not half the cap. The cap is now a ceiling the teacher is
+        # told it need not reach -- forced to thirty beats for "a square
+        # moves right", it repeated one intent up to 49 times, and half of
+        # the first 508 arcs taught the planner to repeat itself.
+        if len(beats) < 6:
             failed += 1
             print(f"  [{n}/{len(requests)}] {len(beats)} beats, skipped",
                   flush=True)
