@@ -91,8 +91,18 @@ def main() -> int:
 
     for attempt in range(1, a.tries + 1):
         a.peft.mkdir(parents=True, exist_ok=True)
-        subprocess.run([str(KAGGLE), "kernels", "output", a.kernel,
-                        "-p", str(a.peft)], capture_output=True, text=True)
+        # Bounded. The first attempt at coder v2 sat for six hours having
+        # downloaded only README.md: alive, zero CPU, blocked in the Kaggle
+        # client with no timeout of its own. A download that has not
+        # finished in fifteen minutes is not going to, and the retry loop
+        # below is a better answer than waiting.
+        try:
+            subprocess.run([str(KAGGLE), "kernels", "output", a.kernel,
+                            "-p", str(a.peft)], capture_output=True,
+                           text=True, timeout=900)
+        except subprocess.TimeoutExpired:
+            say(f"  attempt {attempt}: download timed out after 15 minutes")
+            continue
         hits = sorted(a.peft.rglob("adapter_config.json"))
         if not hits:
             say("no adapter in the output")

@@ -12,6 +12,7 @@
     <string>/Users/nimitjain/Desktop/My Mac/Projects/manim-forge/.venv/bin/python</string>
     <string>-u</string>
     <string>/Users/nimitjain/Desktop/My Mac/Projects/manim-forge/scripts/supervisor.py</string>
+    <string>--once</string>
   </array>
   <key>WorkingDirectory</key><string>/Users/nimitjain/Desktop/My Mac/Projects/manim-forge</string>
   <key>EnvironmentVariables</key>
@@ -29,8 +30,16 @@
        bounded by a 120s alarm and now takes 4.2 seconds, and the process
        retires after twelve sweeps so launchd hands over a fresh one every
        hour. A loop that runs forever is a loop that can wedge forever. -->
+  <!-- No sleeping in-process at all. `time.sleep(300)` did not return for
+       sixteen minutes on an unloaded machine with the job at nice 0 and
+       ProcessType Interactive, which is the third distinct way this
+       watchdog has gone quiet while alive.
+       So: sweep once, exit, and let KeepAlive plus ThrottleInterval supply
+       the cadence. launchd restarting an exited job after 300 seconds is
+       the one timing mechanism here that has not failed, and a process that
+       only ever runs for four seconds has nowhere to wedge. -->
   <key>KeepAlive</key><true/>
-  <key>ThrottleInterval</key><integer>30</integer>
+  <key>ThrottleInterval</key><integer>300</integer>
   <key>StandardOutPath</key><string>/Users/nimitjain/Desktop/My Mac/Projects/manim-forge/data/supervisor/launchd.log</string>
   <key>StandardErrorPath</key><string>/Users/nimitjain/Desktop/My Mac/Projects/manim-forge/data/supervisor/launchd.log</string>
   <!-- Interactive, not Background, and not niced.
