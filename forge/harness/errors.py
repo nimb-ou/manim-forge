@@ -36,6 +36,11 @@ class ErrorKind(str, Enum):
 #: Ordered most-specific first — the first match wins, so a LaTeX failure is
 #: never mistaken for the generic FileNotFoundError it is built on.
 _PATTERNS: list[tuple[ErrorKind, re.Pattern[str]]] = [
+    # The interpreter has no Manim at all -- a harness pointed at the wrong
+    # python. Classed as UNKNOWN it was cached as a verdict on the code, and
+    # the next correctly-configured run read "reference fails" from the
+    # cache. `manimlib` and `manim.x` are the code's fault and stay IMPORT.
+    (ErrorKind.LAUNCH, re.compile(r"No module named '?manim'?(?![\w.])")),
     (ErrorKind.LATEX_MISSING, re.compile(
         r"No such file or directory: '(latex|xelatex|pdflatex|dvisvgm)'|"
         r"(latex|dvisvgm).{0,40}not found", re.I)),
