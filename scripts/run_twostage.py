@@ -84,6 +84,18 @@ def plan(model, tok, request: str, stride: int, max_beats: int) -> list:
                     f"{len(beats) + 1}.", max_tokens=700)
         new, ended = parse_plan(reply, limit=stride)
         new = [b for b in new if b.n > len(beats)]
+        # A repeated intent ends the arc. Planner v2 wrote 38-51 repeats in
+        # every 48-beat plan and never wrote END: greedy decoding fed its own
+        # output falls into a loop, and half its synthetic training arcs
+        # padded that way. The training windows now cut synthetic arcs at
+        # their first repeat, and this is the same rule at inference.
+        seen = {" ".join(b.intent.lower().split()) for b in beats}
+        for k, b in enumerate(new):
+            key = " ".join(b.intent.lower().split())
+            if key in seen:
+                new, ended = new[:k], True
+                break
+            seen.add(key)
         if not new:
             break
         beats.extend(new)
