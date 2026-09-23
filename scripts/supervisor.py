@@ -176,6 +176,7 @@ def jobs() -> list[Job]:
               [str(PY), "-u", str(ROOT / "scripts" / "train_planner_v2.py"),
                "--min-arcs", "250"],
               log=ROOT / "data" / "logs" / "planner_v2.log",
+              done_when=lambda: (d / "v2_pushed").exists(),
               note="waits for arcs, then pushes planner v2", stallable=False),
         local("collect-coder2", "collect_adapter.*coder2",
               ROOT / "adapters" / "mlx-coder2" / "adapters.safetensors",
@@ -184,7 +185,20 @@ def jobs() -> list[Job]:
                "--peft", str(ROOT / "adapters" / "kaggle-coder2"),
                "--mlx", str(ROOT / "adapters" / "mlx-coder2")],
               log=ROOT / "data" / "logs" / "collect_coder.log",
+              done_when=lambda: (ROOT / "adapters" / "mlx-coder2"
+                                 / "adapters.safetensors").exists(),
               note="waits, downloads, converts, verifies the coder adapter",
+              stallable=False),
+        local("collect-planner2", "collect_adapter.*planner2",
+              ROOT / "adapters" / "mlx-planner2" / "adapters.safetensors",
+              [str(PY), "-u", str(ROOT / "scripts" / "collect_adapter.py"),
+               "--kernel", "nimbou/manim-forge-planner-sft",
+               "--peft", str(ROOT / "adapters" / "kaggle-planner2"),
+               "--mlx", str(ROOT / "adapters" / "mlx-planner2")],
+              done_when=lambda: (ROOT / "adapters" / "mlx-planner2"
+                                 / "adapters.safetensors").exists(),
+              log=ROOT / "data" / "logs" / "collect_planner2.log",
+              note="waits, downloads, converts, verifies planner v2",
               stallable=False),
         # plan-lengths is deliberately not listed. It was stopped to free the
         # CPU for the two-adapter run, and a supervisor that relists every

@@ -195,9 +195,13 @@ def main() -> int:
                         f"REQUEST\n{req}\n\nALREADY ON SCREEN\n{prior}\n\n"
                         f"NAMES IN SCOPE\n  "
                         + (", ".join(scope) if scope else "(none yet)")
-                        + "\n\n"
-                        f"WRITE THIS BEAT — step {j + 1} of {len(beats)}\n"
-                        f"  intent: {b.intent}", max_tokens=a.beat_tokens)
+                        + "\n\nHELPERS THIS SCENE DEFINES\n  (none)\n\n"
+                        f"WRITE THIS BEAT — step {j + 1} of {len(beats)}"
+                        + (f", about {b.seconds:g} seconds" if b.seconds
+                           else "") + "\n"
+                        f"  intent: {b.intent}"
+                        + (f"\n  narration: {b.narration}" if b.narration
+                           else ""), max_tokens=a.beat_tokens)
                 cand = extract_code(reply)
                 try:
                     ast.parse(textwrap.dedent(cand))

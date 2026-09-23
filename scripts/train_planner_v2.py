@@ -77,6 +77,10 @@ def main() -> int:
             capture_output=True, text=True)
         if "successfully pushed" in out.stdout + out.stderr:
             print(f"planner v2 pushed on attempt {attempt}", flush=True)
+            # The supervisor reads this. Without it a finished push looks like
+            # a dead job, and a restart rebuilds and pushes over the run.
+            (ROOT / "data" / "planner" / "v2_pushed").write_text(
+                time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()) + "\n")
             return 0
         print(f"  attempt {attempt}: no free GPU session", flush=True)
         time.sleep(600)

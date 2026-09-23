@@ -151,6 +151,58 @@ def helpers(src: str) -> str:
     return "\n".join(dict.fromkeys(names))
 
 
+def module_constants(src: str) -> list[tuple[set[str], str]]:
+    """Module-level assignments, in order, as (names bound, source line)."""
+    tree = ast.parse(src)
+    out = []
+    for node in tree.body:
+        if isinstance(node, (ast.Assign, ast.AnnAssign)):
+            targets = node.targets if isinstance(node, ast.Assign) \
+                else [node.target]
+            names = {t.id for tg in targets for t in ast.walk(tg)
+                     if isinstance(t, ast.Name)}
+            if names:
+                out.append((names, ast.get_source_segment(src, node) or ""))
+        # Module-level functions and small classes (`f`, `relu`, `Vec2`) are
+        # the same problem one level up: defined outside the beat, read in
+        # it. The Scene subclass itself is not a dependency, it is the scene.
+        elif isinstance(node, ast.FunctionDef) and node.name != "beat":
+            out.append(({node.name}, ast.get_source_segment(src, node) or ""))
+        elif isinstance(node, ast.ClassDef) and not any(
+                "Scene" in ast.unparse(b) for b in node.bases):
+            out.append(({node.name}, ast.get_source_segment(src, node) or ""))
+    return out
+
+
+def with_constants(body: str, consts: list[tuple[set[str], str]]) -> str:
+    """Prepend the module constants the beat reads, and what they read.
+
+    Gold scenes keep colours and parameters at module level -- `DIM`,
+    `SUM_C`, `K` -- and the beats read them. The assembled scene has no
+    module level, so a coder that learns to read `DIM` writes a name nothing
+    defines. Prepending the definitions makes each row obey the CONSTRUCT
+    rule it is trained under: build what is not in scope, then use it.
+    """
+    def loads(src: str) -> set[str]:
+        try:
+            return {n.id for n in ast.walk(ast.parse(src))
+                    if isinstance(n, ast.Name) and isinstance(n.ctx, ast.Load)}
+        except SyntaxError:
+            return set()
+    need, picked = loads(body), set()
+    changed = True
+    while changed:
+        changed = False
+        for i, (names, line) in enumerate(consts):
+            if i not in picked and names & need:
+                picked.add(i)
+                need |= loads(line)
+                changed = True
+    if not picked:
+        return body
+    return "\n".join(consts[i][1] for i in sorted(picked)) + "\n" + body
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -168,9 +220,12 @@ def main() -> int:
             skipped += 1
             continue
         attrs = assigned_attrs(g["code"])
+        consts = module_constants(g["code"])
         for b in beats:
-            b["body"] = localise(b["body"], attrs)
-        helps = helpers(g["code"])
+            b["body"] = with_constants(localise(b["body"], attrs), consts)
+        # The runtime has no helpers, and the beats kept below call none, so
+        # the prompt says so rather than listing methods the answer ignores.
+        helps = ""
         # Beats that call the scene's own helpers cannot be training data
         # for a runtime that has none. The two-stage harness assembles bare
         # `Scene` subclasses, so `self.panel(...)` is a method that will
