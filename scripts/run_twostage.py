@@ -101,6 +101,12 @@ def main() -> int:
                     help="600 truncated half the untuned run's beats")
     ap.add_argument("--max-beats", type=int, default=24)
     ap.add_argument("--tag", default="twostage")
+    ap.add_argument("--plan-only", action="store_true",
+                    help="stop after planning. The length question -- does "
+                         "the planner produce a 16-minute arc -- is answerable "
+                         "without the coder, and at 40 beats x 81 tasks the "
+                         "implementation is ~9 hours of CPU for beats an "
+                         "untuned coder will write badly anyway.")
     ap.add_argument("--hard", action="store_true",
                     help="run the 81 real 3Blue1Brown titles instead of the "
                          "single-scene prompts, and score coverage and length "
@@ -131,6 +137,35 @@ def main() -> int:
         print(f"  [{i}/{len(requests)}] {len(bs)} beats "
               f"({time.time() - t0:.0f}s)", flush=True)
     del pm, ptok
+
+    if a.plan_only:
+        counts = [len(b) for b in plans]
+        secs = [sum(x.seconds or 0 for x in b) for b in plans]
+        real = ([t.real_seconds for t in hard_tasks] if hard_tasks
+                else [0] * len(plans))
+        ratios = [s / r for s, r in zip(secs, real) if r]
+        out = ROOT / "data" / "bench" / f"{a.tag}_plans_n{len(plans)}.json"
+        out.write_text(json.dumps(
+            {"meta": {"planner": a.planner, "n": len(plans),
+                      "plan_only": True},
+             "trials": [{"index": i, "request": r, "beats": len(b),
+                         "declared_seconds": s,
+                         "real_seconds": (hard_tasks[i].real_seconds
+                                          if hard_tasks else None),
+                         "plan": [{"n": x.n, "seconds": x.seconds,
+                                   "intent": x.intent,
+                                   "narration": x.narration} for x in b]}
+                        for i, (r, b, s) in enumerate(zip(requests, plans, secs))]},
+            indent=2))
+        print(f"\nbeats/arc  {sum(counts)/len(counts):.1f}   "
+              f"(real 3Blue1Brown arcs average 39.7)")
+        print(f"declared   {sum(secs)/len(secs)/60:.1f} min per arc")
+        if ratios:
+            print(f"length ratio {sum(ratios)/len(ratios):.1%}   "
+                  f"(Phase 1: control 1.76%, run 17 3.47% -- but those are "
+                  f"rendered seconds, and this is what the plan asks for)")
+        print(f"-> {out}")
+        return 0
 
     print(f"\nimplementing (adapter: {a.coder or 'none'})", flush=True)
     cm, ctok = load(a.coder)

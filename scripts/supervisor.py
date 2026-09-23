@@ -131,10 +131,11 @@ def jobs() -> list[Job]:
                "--min-arcs", "400"],
               log=ROOT / "data" / "logs" / "planner_v2.log",
               note="waits for arcs, then pushes planner v2", stallable=False),
-        local("twostage-hard", "run_twostage.*--hard",
-              ROOT / "data" / "bench" / "twostage_hard_planner_n81.json",
-              None, log=ROOT / "data" / "logs" / "twostage_hard.log",
-              note="81 titles, tuned planner + untuned coder", stallable=False),
+        local("plan-lengths", "run_twostage.*--plan-only",
+              ROOT / "data" / "bench" / "twostage_hard_planner_plans_n81.json",
+              None, log=ROOT / "data" / "logs" / "twostage_plans.log",
+              note="81 titles, how long an arc the planner writes",
+              stallable=False),
     ]
 
 
