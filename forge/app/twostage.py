@@ -1,0 +1,169 @@
+"""Plan then implement: the two-stage generator.
+
+One model doing both is what run 17 measured. It plans well now -- beats 0 ->
+4.54, coverage 8.4% -> 18.8%, length 1.76% -> 3.47% -- and then has to
+implement all of that in a single pass, where its failures run 80% longer
+than its passes and it hand-builds a `Polyhedron` where `Dodecahedron()`
+exists. Both attempts to fix that from outside the weights did nothing: a
+pre-render API check catches 1 of 23, and a worked example in the repair
+prompt moved 77% to 77%.
+
+So split the job. The planner writes the arc, in windows, feeding its own
+output back until it writes END -- ambition expressed in text cannot fail to
+render. The coder writes one beat at a time against a stated intent and the
+objects already on screen. Each coder call is a few dozen lines with its
+setup handed to it, rather than a whole scene invented from one sentence.
+
+**Assembly is the new failure mode**, and it is the honest risk of the
+split: a single model cannot fail this way because it never assembles
+anything. Two beats can name the same variable, or a later beat can use one
+an earlier beat never made. So the assembled scene is parsed before it is
+rendered, and undefined names are reported as an assembly failure rather
+than left to surface as a confusing render error.
+"""
+from __future__ import annotations
+
+import ast
+import re
+import textwrap
+from dataclasses import dataclass, field
+
+# The bracketed duration is optional. The untuned model answers
+#
+#     1. 0.000 intent -- Start with a blank screen.
+#
+# -- no brackets, and the word "intent" copied straight out of the format
+# spec. Requiring brackets scored that as zero beats, which reads as "the
+# planner produced nothing" when what happened is "the planner produced an
+# arc in a different format". Those are opposite findings and the measurement
+# has to tell them apart; teaching the format is the adapter's job, and the
+# parser should not do it by fiat.
+BEAT = re.compile(
+    r"^\s*(\d+)[.)]\s*"
+    r"(?:\[([^\]]*)\]|(\d+(?:\.\d+)?)\s*s?\b)?\s*"
+    r"(.*?)(?:\s+--\s+(.*))?$")
+PREAMBLE = "from manim import *\nimport numpy as np\nimport math\n"
+
+
+@dataclass
+class Beat:
+    n: int
+    seconds: float | None
+    intent: str
+    narration: str = ""
+
+
+@dataclass
+class Assembly:
+    code: str
+    beats: list[Beat] = field(default_factory=list)
+    bodies: list[str] = field(default_factory=list)
+    problems: list[str] = field(default_factory=list)
+
+    @property
+    def ok(self) -> bool:
+        return not self.problems and bool(self.bodies)
+
+
+def parse_plan(text: str, limit: int = 40) -> tuple[list[Beat], bool]:
+    """Beats out of a planner window, and whether it declared the arc over."""
+    beats, ended = [], False
+    for line in text.splitlines():
+        if line.strip() == "END":
+            ended = True
+            continue
+        m = BEAT.match(line)
+        if not m:
+            continue
+        secs = None
+        raw = (m.group(2) or m.group(3) or "").strip().rstrip("s")
+        try:
+            secs = float(raw)
+        except ValueError:
+            pass
+        intent = m.group(4).strip()
+        if not intent:
+            continue
+        beats.append(Beat(int(m.group(1)), secs, intent,
+                          (m.group(5) or "").strip()))
+        if len(beats) >= limit:
+            ended = True
+            break
+    return beats, ended
+
+
+def extract_code(text: str) -> str:
+    """The largest fenced block, or the whole thing if it is unfenced."""
+    if "```" not in text:
+        return text.strip()
+    body = max(text.split("```"), key=len)
+    if body.startswith("python"):
+        body = body[len("python"):]
+    return body.strip("\n")
+
+
+def defined_names(tree: ast.AST) -> set[str]:
+    out: set[str] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Store):
+            out.add(node.id)
+        elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef,
+                               ast.ClassDef)):
+            out.add(node.name)
+        elif isinstance(node, ast.alias):
+            out.add((node.asname or node.name).split(".")[0])
+        elif isinstance(node, ast.comprehension):
+            for t in ast.walk(node.target):
+                if isinstance(t, ast.Name):
+                    out.add(t.id)
+        elif isinstance(node, ast.ExceptHandler) and node.name:
+            out.add(node.name)
+    return out
+
+
+def assemble(beats: list[Beat], bodies: list[str],
+             scene: str = "ForgeScene") -> Assembly:
+    """Concatenate beat bodies into one renderable scene, and check it.
+
+    Names are checked against Manim's exports plus the builtins plus whatever
+    the scene itself binds. Anything left over is a beat referring to
+    something no beat created -- the failure the split introduces, caught
+    here rather than in a render log.
+    """
+    body = "\n\n".join(
+        f"        # beat {b.n}: {b.intent}\n"
+        + textwrap.indent(textwrap.dedent(src).strip("\n"), " " * 8)
+        for b, src in zip(beats, bodies) if src.strip())
+    code = (f"{PREAMBLE}\n\nclass {scene}(Scene):\n"
+            f"    def construct(self):\n{body}\n")
+    out = Assembly(code=code, beats=list(beats), bodies=list(bodies))
+    if not any(src.strip() for src in bodies):
+        # Reported as itself. An empty construct fails to parse, and
+        # "expected an indented block" is a confusing way to say that the
+        # planner returned nothing.
+        out.problems.append("no beats to assemble")
+        return out
+
+    try:
+        tree = ast.parse(code)
+    except SyntaxError as exc:
+        out.problems.append(f"assembled scene does not parse: {exc}")
+        return out
+
+    import builtins
+    known = defined_names(tree) | set(dir(builtins)) | {"self"}
+    try:
+        import manim
+        known |= {n for n in dir(manim) if not n.startswith("_")}
+    except Exception:                                         # noqa: BLE001
+        out.problems.append("manim not importable; names unchecked")
+        return out
+
+    missing = sorted({
+        n.id for n in ast.walk(tree)
+        if isinstance(n, ast.Name) and isinstance(n.ctx, ast.Load)
+        and n.id not in known})
+    if missing:
+        out.problems.append(
+            "beats use names no beat defines: " + ", ".join(missing[:8]))
+    return out
