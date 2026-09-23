@@ -217,19 +217,37 @@ def main() -> int:
         # not contain, because it did not know what the model would invent.
         missing = [p for p in asm.problems if p.startswith("beats use names")]
         if missing and beats:
-            names = missing[0].split(":", 1)[1].strip()
+            # Logged, because "the repair exists" and "the repair runs" are
+            # different claims and I had been assuming the second from the
+            # first.
+            print(f"      repairing: {missing[0][:80]}", flush=True)
+            names = [n.strip() for n in
+                     missing[0].split(":", 1)[1].split(",") if n.strip()]
             scope = names_in_scope(bodies)
+            # Repair the *first* beat that uses each missing name, not every
+            # beat that uses it. The old loop rewrote beats 2, 3, 4 and 5 --
+            # all users -- and left the scene just as broken, because none of
+            # them had been made the definer. Whoever mentions an object
+            # first is the one that has to build it.
+            owners: dict[int, list[str]] = {}
+            for n in names:
+                for j in range(len(beats)):
+                    if re.search(rf"\b{re.escape(n)}\b", bodies[j]):
+                        owners.setdefault(j, []).append(n)
+                        break
             for j, b in enumerate(beats):
-                if not any(re.search(rf"\b{re.escape(n.strip())}\b", bodies[j])
-                           for n in names.split(",") if n.strip()):
+                if j not in owners:
                     continue
+                mine = ", ".join(owners[j])
                 reply = ask(cm, ctok, CODE_SYSTEM,
                             f"REQUEST\n{req}\n\nNAMES IN SCOPE\n  "
                             + (", ".join(scope) if scope else "(none yet)")
-                            + f"\n\nYour previous attempt at this beat used "
-                              f"{names}, which nothing defines. Rewrite it "
-                              f"using only the names in scope, or build what "
-                              f"you need first.\n\n"
+                            + f"\n\nYour previous attempt used {mine}, which "
+                              f"nothing in the scene creates. This beat is "
+                              f"the first to mention {mine}, so CONSTRUCT "
+                              f"{mine} here -- an assignment line for each, "
+                              f"before any self.play that uses it -- and then "
+                              f"animate as the intent asks.\n\n"
                               f"WRITE THIS BEAT — step {j + 1} of {len(beats)}"
                               f"\n  intent: {b.intent}", max_tokens=a.beat_tokens)
                 cand = extract_code(reply)
@@ -238,7 +256,11 @@ def main() -> int:
                 except SyntaxError:
                     continue
                 bodies[j] = cand
+                print(f"      beat {j + 1} rewritten", flush=True)
             asm = assemble(beats, bodies)
+            print(f"      after repair: "
+                  f"{asm.problems[0][:70] if asm.problems else 'clean'}",
+                  flush=True)
         asm.problems.extend(dropped)
         res = h.render(asm.code, quality="low", frames=4) if asm.ok else None
         row = {"index": i - 1, "request": req, "beats": len(beats),
