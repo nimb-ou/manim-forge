@@ -181,7 +181,14 @@ beat animates an object no beat built.
    8.4% coverage / 1.76% length, run 17 18.8% / 3.47%. **The split has to
    beat run 17, not the untuned model.** Not before the assembly failures
    are under half, or the 81 measure the harness.
-5. **GRPO** last, on "implement one beat so it renders".
+5. **GRPO** last. Revised 23:20Z: the coder alone renders 92.7% of beats on
+   reference prefixes, so the reward is the **whole assembled scene**, with
+   the coder conditioned on its own earlier beats. Kaggle renders Manim +
+   LaTeX at 2.6 s a scene (probed). No further coder SFT: v3's cleaning
+   moved neither measure.
+6. **Planner v4** on all ~1,800 arcs if v3 shows the cleaning fixed the
+   loops; if v3 still loops, test sampling (temperature, repetition
+   penalty) before training again.
 
 Checked every 30 minutes by hand (not only the supervisor), and against
 `docs/REASSESS.md` every six hours.

@@ -55,3 +55,42 @@ else is support.
 
 If the honest answer is "I am three fixes deep into something I cannot
 explain the value of", write that down, stop, and go back to §3.
+
+---
+
+## Log · 2026-09-23 23:20Z
+
+**1. Arrived (verified, on disk).** Coder v3 adapter (92.7% beat eval — same
+as v2). Planner v2 adapter (loops: ~45 repeats per 48-beat plan, no END).
+Beat-level eval: the coder alone is not the bottleneck. Kaggle renders
+Manim + LaTeX (2.6 s, four in parallel 5.1 s) — GRPO's reward is feasible.
+Split end-to-end 3/8 → **5/8** (planner v2 + coder v2). Data: 1,805 arcs,
+1,513 topics, ~1,000 short-request variants.
+
+**2. Symptom or thing?** Four harness faults found and fixed today, each
+with a measured before/after; the step to 5/8 is those, not a model. That
+is the recurring pattern, and it is still paying — but it also means every
+number from before today's fixes understates the models. No problem has had
+three attempts without progress. The one candidate: *coder data cleaning*
+(v3) produced no gain on either measure, so a coder v4 by more cleaning
+would be a third attempt. Not doing it.
+
+**3. Critical path.** The 24-title hard eval against run 17 is running now
+— that is the number the plan is waiting for. Last three commits: two
+measurements, one fix. Fine.
+
+**4. What the plan is missing.**
+- Plans are now 4.8 beats (stopped at the first repeat) against ~40 in real
+  arcs. Coverage on the hard eval will be capped by that. Planner v3 (clean
+  arcs) is the fix; *if v3 still loops, test sampling (temp 0.3–0.5,
+  repetition penalty) before training again* — a free test.
+- Coder SFT is done. The coder's remaining losses are composition, so GRPO
+  should reward **whole assembled scenes, with the coder conditioned on its
+  own earlier beats**, not single beats on reference prefixes (92.7%
+  already, little headroom).
+- 1,805 arcs is 7× what planner v2 had. Planner v4 on all of it, cleaned,
+  after v3 says whether cleaning worked.
+
+**5. Handover.** Best pair: planner v2 + coder v2, 5/8. Demo:
+`scripts/demo.py`. Next decisions wait on planner v3 (training) and the
+hard eval (running).
