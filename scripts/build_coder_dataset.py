@@ -93,6 +93,19 @@ def main() -> int:
         # memorised.
         target.extend(group * (reps if target is train else 1))
 
+    # One meta schema for every row. The datasets JSON loader infers the
+    # struct from the first chunk and refuses a later row with an extra key:
+    # synthetic arcs carry `request` and `teacher`, the rest do not, and
+    # planner v3 died on Kaggle at load_dataset. Filling with null is not
+    # enough -- a chunk of all-null infers type null and the next chunk's
+    # strings fail to cast -- so every value is a string. The kernel never
+    # reads meta; it is here for the analysis scripts.
+    keys = sorted({k for r in train + valid for k in r.get("meta", {})})
+    for r in train + valid:
+        m = r.get("meta", {})
+        r["meta"] = {k: "" if m.get(k) is None else str(m.get(k))
+                     for k in keys}
+
     out.mkdir(parents=True, exist_ok=True)
     for name, data in (("train", train), ("valid", valid)):
         (out / f"{name}.jsonl").write_text(

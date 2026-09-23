@@ -43,8 +43,8 @@ def scenes() -> dict[str, list[dict]]:
             by[r["meta"]["scene"]].append(r)
     out = {}
     for s, rows in by.items():
-        rows.sort(key=lambda r: r["meta"]["index"])
-        if [r["meta"]["index"] for r in rows] == list(range(len(rows))):
+        rows.sort(key=lambda r: int(r["meta"]["index"]))
+        if [int(r["meta"]["index"]) for r in rows] == list(range(len(rows))):
             out[s] = rows
     return out
 
