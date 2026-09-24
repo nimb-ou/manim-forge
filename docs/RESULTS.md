@@ -494,3 +494,18 @@ specific, identified defect in the planner rather than decomposition as
 such. Planner v3 — trained on arcs cut at their first repeat, teacher told
 to END rather than pad — is the test of that; if v3 plans run long without
 looping, this table is re-run on all 81.
+
+## Planner v3, sampled · 2026-09-24
+
+Plan-only, eight hard titles, temperature 0.5, repetition penalty 1.1:
+
+| planner | beats before first exact repeat | real arcs |
+|---|---|---|
+| v2 (repeating synthetic arcs) | 22.6 | 39.7 |
+| **v3** (arcs cut at first repeat) | **33.9** | 39.7 |
+
+Cleaning the training arcs worked on the measure it targeted — and v3 then
+looped past it by counting: "Span of three vectors", "four vectors", …
+"eleven vectors". Repeats are now detected with numerals and number words
+removed (ordinals kept), at inference and in training cuts. The 24-title
+hard eval is re-running with planner v3 + coder v2 and every harness fix.
