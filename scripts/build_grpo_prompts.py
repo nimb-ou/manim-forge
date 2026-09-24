@@ -55,6 +55,8 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--max-per-scene", type=int, default=8)
+    ap.add_argument("--kit", action="store_true",
+                    help="prompts from teacher kit beats instead of bench runs")
     a = ap.parse_args()
 
     from forge.harness import RenderHarness
@@ -98,11 +100,34 @@ def main() -> int:
                 })
         print(f"  {Path(f).stem}: {len(rows)} prompts so far", flush=True)
 
+    if a.kit:
+        # Kit prompts: teacher kit beats (synth_kit_beats.py), each with the
+        # earlier bodies of a scene that rendered. They replace the raw-Manim
+        # prompts -- the kit is the direction; rewarding raw Manim would
+        # train the coder harder at the thing that produced slides.
+        rows = []
+        src = ROOT / "data" / "kit" / "kit_beats.jsonl"
+        for l in src.read_text().splitlines():
+            r = json.loads(l)
+            if "prefix" not in r:
+                continue
+            rows.append({"prompt": r["messages"][:2], "prefix": r["prefix"],
+                         "intents": r["intents"], "request": r["request"],
+                         "j": r["meta"]["index"], "id": r["meta"]["id"],
+                         "source": "kit-teacher", "kit": True})
     OUT.mkdir(parents=True, exist_ok=True)
     (OUT / "prompts.jsonl").write_text(
         "".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rows))
-    # The kernel scores with the same assemble() inference uses.
-    shutil.copy2(ROOT / "forge" / "app" / "twostage.py", OUT / "twostage.py")
+    # The kernel scores with the same assemble() inference uses, and in kit
+    # mode that embeds forge/kit/kit.py, found relative to twostage.py.
+    for rel in ("forge/__init__.py", "forge/app/__init__.py",
+                "forge/kit/__init__.py"):
+        (OUT / rel).parent.mkdir(parents=True, exist_ok=True)
+        (OUT / rel).write_text("")
+    shutil.copy2(ROOT / "forge" / "app" / "twostage.py",
+                 OUT / "forge" / "app" / "twostage.py")
+    shutil.copy2(ROOT / "forge" / "kit" / "kit.py", OUT / "forge" / "kit" / "kit.py")
+    (OUT / "twostage.py").unlink(missing_ok=True)
     print(f"{len(rows)} prompts -> {OUT / 'prompts.jsonl'}")
     return 0
 

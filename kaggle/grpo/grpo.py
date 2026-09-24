@@ -43,7 +43,9 @@ print(f"[setup] {time.time() - T0:.0f}s", flush=True)
 
 DATA = next(Path("/kaggle/input").glob("*/prompts.jsonl")).parent
 sys.path.insert(0, str(DATA))
-from twostage import Beat, assemble, extract_code  # noqa: E402
+# The dataset carries forge/app/twostage.py and forge/kit/kit.py in the
+# repo's layout, so assemble(kit=True) finds the kit where it looks for it.
+from forge.app.twostage import Beat, assemble, extract_code  # noqa: E402
 
 rows = [json.loads(l) for l in (DATA / "prompts.jsonl").open() if l.strip()]
 print(f"[data] {len(rows)} prompts from {DATA}", flush=True)
@@ -72,6 +74,22 @@ _MOTION = {"Transform", "ReplacementTransform", "TransformMatchingTex",
            "ApplyMatrix", "ApplyPointwiseFunction", "Homotopy",
            "ValueTracker", "always_redraw", "MoveToTarget"}
 _MOBJECT = None
+# Kit blocks draw and animate inside the kit, so a kit beat never contains
+# "self.play(" or a Mobject constructor; these count instead.
+_KIT_DRAWS = {"plane", "vector", "basis", "apply_matrix", "unit_square",
+              "span_line", "scale_vector", "axes", "graph", "tangent", "area",
+              "riemann", "trace", "number_line", "point_on_line", "bars",
+              "partial_sums", "circle_slices", "unroll_to_rectangle",
+              "right_triangle", "dice_grid", "determinant", "eigenvectors",
+              "taylor", "unit_circle_wave", "vector_field", "complex_plane",
+              "multiply_by", "neural_net", "network", "histogram_grows",
+              "wave", "superpose", "fourier_series", "halving_squares",
+              "epsilon_band", "array_bars", "coin_flips"}
+_KIT_MOVES = {"apply_matrix", "tangent", "riemann", "trace", "scale_vector",
+              "unroll_to_rectangle", "eigenvectors", "determinant", "taylor",
+              "unit_circle_wave", "multiply_by", "histogram_grows", "wave",
+              "superpose", "fourier_series", "epsilon_band", "swap",
+              "coin_flips"}
 
 
 def _shape_and_motion(code: str) -> tuple[bool, bool]:
@@ -94,9 +112,14 @@ def _shape_and_motion(code: str) -> tuple[bool, bool]:
         return False, False
     calls = {n.func.id for n in _ast.walk(tree)
              if isinstance(n, _ast.Call) and isinstance(n.func, _ast.Name)}
-    shape = bool((calls & _MOBJECT) - _TEXT) or ".plot(" in code
-    motion = bool(calls & _MOTION) or ".animate" in code
+    shape = bool((calls & _MOBJECT) - _TEXT) or ".plot(" in code \
+        or bool(calls & _KIT_DRAWS)
+    motion = motion_calls(calls, code)
     return shape, motion
+
+
+def motion_calls(calls, code):
+    return bool(calls & _MOTION) or ".animate" in code or bool(calls & _KIT_MOVES)
 
 
 def score(completion: str, row: dict) -> float:
@@ -109,14 +132,15 @@ def score(completion: str, row: dict) -> float:
         return 0.0
     beats = [Beat(n=k + 1, seconds=None, intent=t)
              for k, t in enumerate(row["intents"])]
-    asm = assemble(beats, list(row["prefix"]) + [code])
+    kit = bool(row.get("kit"))
+    asm = assemble(beats, list(row["prefix"]) + [code], kit=kit)
     if asm.problems:
         return 0.1 if any("names no beat" in p for p in asm.problems) else 0.0
     if not render_ok(asm.code):
         return 0.2
-    if "self.play(" not in code:
-        return 0.3
     shape, motion = _shape_and_motion(code)
+    if "self.play(" not in code and not (kit and (shape or motion)):
+        return 0.3
     return 0.6 + 0.2 * shape + 0.2 * motion
 
 

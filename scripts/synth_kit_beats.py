@@ -189,7 +189,12 @@ def main() -> int:
                         "meta": {"id": f"kit:{rid}:{j}", "scene": f"kit:{rid}",
                                  "source": "kit-teacher", "task": "beat",
                                  "index": j,
-                                 "teacher": f"{a.provider}:{a.model}"}},
+                                 "teacher": f"{a.provider}:{a.model}"},
+                        # What GRPO's reward needs to rebuild the scene up
+                        # to this beat: the earlier bodies and the intents.
+                        "prefix": bodies[:j],
+                        "intents": [b.intent for b in beats[: j + 1]],
+                        "request": req},
                         ensure_ascii=False) + "\n")
                     rows_made += 1
         print(f"  {rid}: ok={ok} visual={len(kept)}/{len(beats)} "
