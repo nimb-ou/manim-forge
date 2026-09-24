@@ -58,6 +58,7 @@ def beats_of(plan: str) -> list[str]:
 
 
 VARIANTS = ROOT / "data" / "planner" / "request_variants.jsonl"
+JUDGED = ROOT / "data" / "planner" / "arc_judgements.jsonl"
 
 
 def intent_of(beat: str) -> str:
@@ -110,11 +111,19 @@ def main() -> int:
     variants = ({json.loads(l)["id"]: json.loads(l)
                  for l in VARIANTS.read_text().splitlines() if l.strip()}
                 if VARIANTS.exists() else {})
+    # Arcs a second teacher judged mathematically wrong (judge_arcs.py).
+    wrong = ({json.loads(l)["id"] for l in JUDGED.read_text().splitlines()
+              if l.strip() and json.loads(l)["verdict"] == "ERROR"}
+             if JUDGED.exists() else set())
     rows, arcs, varied, cut_arcs, cut_beats = [], 0, 0, 0, 0
+    judged_out = 0
     for line in a.src.read_text().splitlines():
         if not line.strip():
             continue
         r = json.loads(line)
+        if r["meta"].get("id") in wrong:
+            judged_out += 1
+            continue
         request = pick_request(r["meta"], r["messages"][1]["content"],
                                variants)
         beats = beats_of(r["messages"][2]["content"])
@@ -172,6 +181,8 @@ def main() -> int:
     a.out.write_text("\n".join(json.dumps(r) for r in rows) + "\n")
     print(f"{len(rows)} windows from {arcs} arcs -> {a.out}"
           + (f" ({varied} arcs asked with a shorter request)" if varied else ""))
+    if judged_out:
+        print(f"  {judged_out} arcs dropped as mathematically wrong")
     if cut_arcs or cut_beats:
         print(f"  repeated intents: {cut_beats} beats cut, {cut_arcs} arcs "
               f"dropped (under six beats before the first repeat)")
