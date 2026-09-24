@@ -383,6 +383,8 @@ def run(request: str, host, emit: Emit, opts: Options | None = None,
         if k is None or not bodies[k - 1].strip():
             break
         bodies[k - 1] = ""
+        # The dropped beat may have built names later beats use.
+        bodies, _, _ = prune_all(beats, bodies, kit=kit)
         trial = assemble(beats, bodies, kit=kit)
         if not trial.ok or 2 * sum(1 for x in bodies if x.strip()) < live:
             break

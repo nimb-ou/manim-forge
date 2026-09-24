@@ -162,6 +162,8 @@ def main() -> int:
             if k is None or not bodies[k - 1].strip():
                 break
             bodies[k - 1] = ""
+            # The dropped beat may have built names later beats use.
+            bodies, _, _ = prune_all(beats, bodies, kit=True)
             asm = assemble(beats, bodies, kit=True)
             res = h.render(asm.code, quality="low", frames=2) if asm.ok else None
             tries += 1
