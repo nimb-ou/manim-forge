@@ -11,11 +11,9 @@ no adapter will rescue it. Measuring the pipeline before the adapters exist
 separates "the split does not work" from "the adapters are not good yet",
 and those call for completely different responses.
 
-Both adapters are LoRA over one base, so they are loaded as two models
-sharing it only in spirit -- mlx-lm has no adapter hot-swap, and holding two
-7B 4-bit models is 8 GB on a 16 GB machine. So they are loaded one at a
-time: plan every beat first, then swap and implement them. That costs a load
-per prompt and buys the ability to run at all.
+Planning every request first and then implementing them all needs one model
+load per stage for the whole batch. The server, which takes one request at
+a time, swaps adapters in place instead (forge.app.pipeline.SwapHost).
 """
 from __future__ import annotations
 
@@ -28,99 +26,17 @@ import time
 from pathlib import Path
 
 from forge.app.twostage import (assemble, beat_prompt, extract_code,
-                                failing_beat, intent_key, missing_names,
+                                failing_beat, missing_names,
                                 names_in_scope, parsing_prefix,
-                                prelude_prompt, prune_statements,
-                                parse_plan)
+                                prelude_prompt, prune_statements)
 from forge.harness import RenderHarness
 
 ROOT = Path(__file__).resolve().parents[1]
-MODEL = "mlx-community/Qwen2.5-Coder-7B-Instruct-4bit"
-
-PLAN_SYSTEM = (
-    "You plan 3Blue1Brown-style mathematical animations, a few beats at a "
-    "time. You are given the request and the beats already planned. Continue "
-    "the arc: write the next beats and nothing else, in the form\n"
-    "  N. [seconds] intent -- narration\n"
-    "keeping the numbering running. Build a real explanatory arc rather than "
-    "a list of topics. When the explanation is complete, write END on its "
-    "own line after the last beat."
-)
-CODE_SYSTEM = (
-    "You write one beat of a 3Blue1Brown-style Manim scene. You are given the "
-    "whole request, the beats already on screen, and the helpers the scene "
-    "defines. Write only the code for the beat you are asked for, as "
-    "statements at method-body level -- no class, no def, no imports. "
-    "NAMES IN SCOPE lists what earlier beats already built: reuse those "
-    "rather than rebuilding them. Anything else you use you must "
-    "CONSTRUCT in this beat before you animate it -- `self.play(Create(dot))` "
-    "is wrong unless a line above it makes `dot`."
-)
-
-
-def load(adapter: str | None):
-    from mlx_lm import load as mlx_load
-    return mlx_load(MODEL, **({"adapter_path": adapter} if adapter else {}))
-
-
-def ask(model, tok, system: str, user: str, max_tokens: int,
-        temp: float = 0.0, rep_penalty: float = 0.0) -> str:
-    from mlx_lm import generate
-    from mlx_lm.sample_utils import make_logits_processors, make_sampler
-    chat = tok.apply_chat_template(
-        [{"role": "system", "content": system},
-         {"role": "user", "content": user}],
-        add_generation_prompt=True, tokenize=False)
-    procs = (make_logits_processors(repetition_penalty=rep_penalty,
-                                    repetition_context_size=256)
-             if rep_penalty else None)
-    return generate(model, tok, prompt=chat, max_tokens=max_tokens,
-                    sampler=make_sampler(temp=temp, top_p=0.95 if temp else 0.0),
-                    logits_processors=procs, verbose=False)
-
-
-#: Planner decoding, set from --plan-temp / --plan-rep-penalty. Sampled by
-#: default: on eight hard titles planner v2 wrote 3.8 beats before its first
-#: repeated intent under greedy decoding and 22.6 at temperature 0.5 with a
-#: 1.1 repetition penalty -- real arcs, not paraphrased loops. The coder
-#: stays greedy.
-PLAN_DECODE = {"temp": 0.5, "rep_penalty": 1.1}
-
-
-def plan(model, tok, request: str, stride: int, max_beats: int) -> list:
-    """Feed the planner its own output until it says END or hits the cap."""
-    beats: list = []
-    for _ in range(max_beats // stride + 1):
-        # A sampled beat can come back without a duration; "[?]" keeps the
-        # history line well-formed instead of crashing the run at beat 20.
-        shown = "\n".join(f"{b.n}. [{f'{b.seconds:g}s' if b.seconds else '?'}] "
-                           f"{b.intent}"
-                          for b in beats[-12:]) or \
-            "  (nothing yet — open the explanation)"
-        reply = ask(model, tok, PLAN_SYSTEM,
-                    f"REQUEST\n{request}\n\nBEATS SO FAR\n{shown}\n\n"
-                    f"Write the next {stride} beat(s), numbered from "
-                    f"{len(beats) + 1}.", max_tokens=700, **PLAN_DECODE)
-        new, ended = parse_plan(reply, limit=stride)
-        new = [b for b in new if b.n > len(beats)]
-        # A repeated intent ends the arc. Planner v2 wrote 38-51 repeats in
-        # every 48-beat plan and never wrote END: greedy decoding fed its own
-        # output falls into a loop, and half its synthetic training arcs
-        # padded that way. The training windows now cut synthetic arcs at
-        # their first repeat, and this is the same rule at inference.
-        seen = {intent_key(b.intent) for b in beats}
-        for k, b in enumerate(new):
-            key = intent_key(b.intent)
-            if key in seen:
-                new, ended = new[:k], True
-                break
-            seen.add(key)
-        if not new:
-            break
-        beats.extend(new)
-        if ended or len(beats) >= max_beats:
-            break
-    return beats
+# The prompts, decoding, loading and planning live in forge.app.pipeline, one
+# copy for this runner, the demo and the server. Re-exported under the names
+# other scripts import from here.
+from forge.app.pipeline import (CODE_SYSTEM, MODEL, PLAN_DECODE,  # noqa: E402,F401
+                                PLAN_SYSTEM, ask, load, plan)
 
 
 def main() -> int:
