@@ -31,7 +31,10 @@ sys.path.insert(0, str(ROOT / "scripts"))
 from forge.app.twostage import Beat, assemble, extract_code  # noqa: E402
 from run_twostage import ask, load  # noqa: E402
 
-VALID = ROOT / "kaggle" / "manim-forge-coder" / "valid.jsonl"
+# Pinned: the coder's own valid split changes with each mix, and v2 (92.7%)
+# and v3 were scored on this one. data/ is not tracked; recreate it with
+#   git show 1b22e6e:kaggle/manim-forge-coder/valid.jsonl > data/bench/beat_eval_valid.jsonl
+VALID = ROOT / "data" / "bench" / "beat_eval_valid.jsonl"
 
 
 def scenes() -> dict[str, list[dict]]:

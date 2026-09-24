@@ -48,6 +48,8 @@ def main() -> int:
     ap.add_argument("--out", type=Path, default=None)
     ap.add_argument("--gold-weight", type=int, default=6)
     ap.add_argument("--valid-frac", type=float, default=0.04)
+    ap.add_argument("--min-gate", type=float, default=0.0,
+                    help="coder: keep corpus scenes scoring at least this")
     ap.add_argument("--synth-cap", type=int, default=4000,
                     help="planner: at most this many synthetic windows")
     a = ap.parse_args()
@@ -55,6 +57,18 @@ def main() -> int:
     if a.which == "coder":
         rows = load(ROOT / "data" / "planner" / "coder.jsonl") \
             + load(ROOT / "data" / "planner" / "coder_corpus.jsonl")
+        if a.min_gate:
+            # Coder v4: corpus scenes the animation gate scores at least
+            # this (data/coder_scene_gate.json). The split's rendered scenes
+            # scored 0.38 against gold's 0.73 -- the level of the corpus the
+            # coder learned from. Gold rows are always kept.
+            gate = json.loads((ROOT / "data" / "coder_scene_gate.json")
+                              .read_text())
+            before = len(rows)
+            rows = [r for r in rows if r["meta"]["source"] == "gold"
+                    or gate.get(r["meta"]["scene"], {}).get("score", 0)
+                    >= a.min_gate]
+            print(f"  gate >= {a.min_gate}: {len(rows)} of {before} rows")
         out = a.out or ROOT / "kaggle" / "manim-forge-coder"
         # The grouping key is what must not straddle the split. For the coder
         # that is the scene; for the planner it is the arc, since one arc's
