@@ -134,6 +134,7 @@ class Job:
     # pushed, found the kernel "complete" -- from v3 -- and collected v3's
     # weights under v4's name, verified and all.
     ready: callable = lambda: True
+    pattern: str = ""
     history: list[int] = field(default_factory=list)
 
 
@@ -150,7 +151,7 @@ def local(name: str, pattern: str, out: Path, cmd: list[str] | None,
                alive=lambda: running(pattern),
                done=done_when or (lambda: False),
                restart=cmd, log=log, note=note, stallable=stallable,
-               out=out, ready=ready or (lambda: True))
+               out=out, ready=ready or (lambda: True), pattern=pattern)
 
 
 def kaggle(name: str, ref: str, note: str = "") -> Job:
@@ -198,7 +199,7 @@ def jobs() -> list[Job]:
         # is worse than none. On gemini's daily 429 the judge waits.
         local("judge-arcs", "judge_arcs.py --provider", d / "arc_judgements.jsonl",
               [str(PY), "-u", str(ROOT / "scripts" / "judge_arcs.py"),
-               "--provider", "gemini"],
+               "--provider", "gemini"], stallable=False,
               done_when=lambda: (d / "judge_done").exists(),
               log=ROOT / "data" / "logs" / "judge_arcs.log",
               note="teacher checks each synthetic arc's mathematics"),
@@ -336,7 +337,11 @@ def sweep(state: dict, restart: bool, stale_minutes: float = 25.0) -> dict:
         if status in ("down", "stalled") and not finished \
                 and job.restart and restart:
             if status == "stalled":
-                _run(["pkill", "-f", job.restart[-1]])
+                # The job's own pattern, not its command's last argument:
+                # with "--provider gemini" appended that argument was
+                # "gemini", and a stalled judge would have killed every
+                # process talking to gemini.
+                _run(["pkill", "-f", job.pattern or job.restart[1]])
             if restarts >= MAX_RESTARTS:
                 status = "down (gave up)"
             else:
