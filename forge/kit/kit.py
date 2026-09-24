@@ -650,6 +650,159 @@ def histogram_grows(stage: Stage, sampler, bins, n: int = 400, steps: int = 8,
     return bars_
 
 
+# -- waves and series ----------------------------------------------------------
+
+def wave(stage: Stage, ax, amp: float = 1.0, k: float = 2.0, omega: float = 2.0,
+         t_end: float = 4.0, color=YELLOW):
+    """A travelling wave amp*sin(kx - wt), moving for t_end seconds."""
+    _need(ax, "plot", "the axes from axes(stage)", "wave(stage, axes)")
+    t = ValueTracker(0)
+    xr = [ax.x_range[0], ax.x_range[1]]
+    w = always_redraw(lambda: ax.plot(
+        lambda x: amp * np.sin(k * x - omega * t.get_value()), x_range=xr,
+        color=color))
+    stage.scene.add(w)
+    stage.scene.play(t.animate.set_value(t_end), run_time=t_end,
+                     rate_func=lambda x: x)
+    stage._objects.append(w)
+    return w, t
+
+
+def superpose(stage: Stage, ax, parts, t_end: float = 4.0):
+    """Two or more waves moving together, and their sum drawn in white.
+
+    ``parts`` is a list of (amp, k, omega)."""
+    _need(ax, "plot", "the axes from axes(stage)", "superpose(stage, axes, parts)")
+    t = ValueTracker(0)
+    xr = [ax.x_range[0], ax.x_range[1]]
+    one = lambda a, k, w: (lambda x: a * np.sin(k * x - w * t.get_value()))
+    curves = [always_redraw(lambda a=a, k=k, w=w, c=c: ax.plot(
+        one(a, k, w), x_range=xr, color=c, stroke_opacity=0.6))
+        for (a, k, w), c in zip(parts, _PALETTE)]
+    total = always_redraw(lambda: ax.plot(
+        lambda x: sum(one(a, k, w)(x) for a, k, w in parts), x_range=xr,
+        color=WHITE, stroke_width=4))
+    stage.scene.add(*curves, total)
+    stage.scene.play(t.animate.set_value(t_end), run_time=t_end,
+                     rate_func=lambda x: x)
+    stage._objects += [*curves, total]
+    return curves, total
+
+
+def fourier_series(stage: Stage, ax, n_terms: int = 7, run_time: float = 1.0):
+    """The square wave built from odd sines, one more term each step."""
+    _need(ax, "plot", "the axes from axes(stage)", "fourier_series(stage, axes)")
+    xr = [ax.x_range[0], ax.x_range[1]]
+    target = ax.plot(lambda x: np.sign(np.sin(x)), x_range=xr, color=GREY,
+                     stroke_opacity=0.5, use_smoothing=False)
+    stage.scene.play(Create(target), run_time=1.0)
+
+    def partial(n):
+        return lambda x: 4 / PI * sum(np.sin((2 * j + 1) * x) / (2 * j + 1)
+                                      for j in range(n))
+
+    cur = ax.plot(partial(1), x_range=xr, color=YELLOW)
+    stage.scene.play(Create(cur), run_time=run_time)
+    for n in range(2, n_terms + 1):
+        stage.scene.play(Transform(cur, ax.plot(partial(n), x_range=xr,
+                                                color=YELLOW)), run_time=run_time)
+    stage._objects += [target, cur]
+    return cur
+
+
+def halving_squares(stage: Stage, n: int = 7, where: str = "center"):
+    """A unit square filled by halves: 1/2, 1/4, 1/8, ... -- the sum is 1."""
+    cx, cy, w, h = _REGIONS[where]
+    side = min(w, h) * 0.85
+    outline = Square(side, color=WHITE).move_to([cx, cy, 0])
+    stage.scene.play(Create(outline), run_time=0.8)
+    x0, y0 = cx - side / 2, cy - side / 2
+    wd, ht, pieces = side, side, []
+    for k in range(n):
+        if k % 2 == 0:
+            r = Rectangle(width=wd / 2, height=ht, fill_opacity=0.7,
+                          color=_PALETTE[k % len(_PALETTE)], stroke_width=1)
+            r.move_to([x0 + wd / 4, y0 + ht / 2, 0])
+            x0 += wd / 2
+            wd /= 2
+        else:
+            r = Rectangle(width=wd, height=ht / 2, fill_opacity=0.7,
+                          color=_PALETTE[k % len(_PALETTE)], stroke_width=1)
+            r.move_to([x0 + wd / 2, y0 + ht / 4, 0])
+            y0 += ht / 2
+            ht /= 2
+        tag = MathTex(r"\tfrac{1}{%d}" % (2 ** (k + 1)),
+                      font_size=max(40 - 5 * k, 14)).move_to(r)
+        stage.scene.play(FadeIn(r), FadeIn(tag), run_time=0.5)
+        pieces.append(VGroup(r, tag))
+    grp = VGroup(outline, *pieces)
+    stage._objects.append(grp)
+    return grp
+
+
+def epsilon_band(stage: Stage, ax, g, limit: float, eps: float = 0.5,
+                 shrink_to: float = 0.1, color=GREEN):
+    """A band limit +- eps around the curve's limit, narrowing: the curve
+    eventually stays inside every band."""
+    _need(ax, "c2p", "the axes from axes(stage)", "epsilon_band(stage, axes, graph, L)")
+    e = ValueTracker(eps)
+    x0, x1 = ax.x_range[0], ax.x_range[1]
+    band = always_redraw(lambda: Polygon(
+        ax.c2p(x0, limit - e.get_value()), ax.c2p(x1, limit - e.get_value()),
+        ax.c2p(x1, limit + e.get_value()), ax.c2p(x0, limit + e.get_value()),
+        color=color, fill_opacity=0.2, stroke_width=1))
+    stage.scene.play(FadeIn(band), run_time=0.8)
+    stage.scene.play(e.animate.set_value(shrink_to), run_time=2.5)
+    stage._objects.append(band)
+    return band
+
+
+# -- algorithms ----------------------------------------------------------------
+
+def array_bars(stage: Stage, values, where: str = "center", color=BLUE):
+    """An array as bars, left to right, heights by value."""
+    return bars(stage, values, labels=values, where=where, color=color)
+
+
+def swap(stage: Stage, bars_, i: int, j: int, run_time: float = 0.6):
+    """Swap two bars of an array_bars group, sliding past each other."""
+    items = bars_[0] if isinstance(bars_[0], VGroup) and len(bars_) == 2 else bars_
+    a, b = items[i], items[j]
+    xa, xb = a.get_x(), b.get_x()
+    stage.scene.play(a.animate.set_x(xb), b.animate.set_x(xa),
+                     run_time=run_time)
+    items.submobjects[i], items.submobjects[j] = b, a
+    return bars_
+
+
+# -- chance --------------------------------------------------------------------
+
+def coin_flips(stage: Stage, n: int = 30, p: float = 0.5, seed: int = 1,
+               where: str = "center"):
+    """Flips appear as heads (yellow) and tails (blue); the share of heads is
+    read out as it settles towards p."""
+    rng = np.random.default_rng(seed)
+    cx, cy, w, h = _REGIONS[where]
+    per_row = 10
+    coins, heads = VGroup(), 0
+    share = DecimalNumber(0, num_decimal_places=2, font_size=36)
+    read = VGroup(MathTex(r"\text{heads} =", font_size=36), share).arrange(RIGHT)
+    read.move_to([cx, cy + h / 2 - 0.3, 0])
+    stage.scene.play(FadeIn(read), run_time=0.4)
+    for k in range(n):
+        hit = rng.random() < p
+        heads += hit
+        c = Circle(radius=0.2, fill_opacity=0.9, stroke_width=1,
+                   color=YELLOW if hit else BLUE)
+        c.move_to([cx - (per_row - 1) * 0.25 + (k % per_row) * 0.5,
+                   cy + h / 2 - 1.1 - (k // per_row) * 0.5, 0])
+        coins.add(c)
+        stage.scene.play(FadeIn(c, scale=0.5), share.animate.set_value(heads / (k + 1)),
+                         run_time=0.12 if k > 5 else 0.3)
+    stage._objects += [coins, read]
+    return coins, read
+
+
 # -- emphasis ------------------------------------------------------------------
 
 def highlight(stage: Stage, m, color=YELLOW):
@@ -697,6 +850,12 @@ returns what it made; keep the return value to reuse it in later beats.
   neural_net(stage, layers=(3, 4, 2)) -> net
   network(stage, {"A": (x, y), ...}, [("A", "B"), ...]) -> (dots, lines)
   histogram_grows(stage, lambda rng, k: rng.normal(size=k), bins=[...])
+  wave(stage, ax, amp=1, k=2, omega=2)   superpose(stage, ax, [(a, k, w), ...])
+  fourier_series(stage, ax, n_terms=7)   -- a square wave from odd sines
+  halving_squares(stage, n=7)            -- 1/2 + 1/4 + ... fills the square
+  epsilon_band(stage, ax, g, L, eps=0.5) -- the band narrows around the limit
+  array_bars(stage, [5, 2, 8, ...]) -> bars   swap(stage, bars, i, j)
+  coin_flips(stage, n=30, p=0.5)         -- share of heads settles
   highlight(stage, m)   pulse(stage, m)
 Regions: "center", "left", "right", "full". Text only through stage.title,
 stage.caption, stage.label and stage.equation.
