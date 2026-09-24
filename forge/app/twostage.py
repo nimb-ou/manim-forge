@@ -287,3 +287,25 @@ def failing_beat(code: str, stderr: str) -> int | None:
         if mm:
             return int(mm.group(1))
     return None
+
+
+def beat_prompt(request: str, beats: list[Beat], j: int,
+                bodies: list[str]) -> str:
+    """The coder's user message for beat ``j``, given the bodies before it.
+
+    One definition for inference (run_twostage, demo) and for building
+    training prompts (GRPO), because the two drifting apart is how coder v2
+    came to be trained on three different prompts.
+    """
+    b = beats[j]
+    prior = "\n".join(f"  {k + 1}. {beats[k].intent}" for k in range(j)) \
+        or "  (nothing yet — this is the opening beat)"
+    scope = names_in_scope(bodies[:j])
+    return (f"REQUEST\n{request}\n\nALREADY ON SCREEN\n{prior}\n\n"
+            f"NAMES IN SCOPE\n  "
+            + (", ".join(scope) if scope else "(none yet)")
+            + "\n\nHELPERS THIS SCENE DEFINES\n  (none)\n\n"
+            f"WRITE THIS BEAT — step {j + 1} of {len(beats)}"
+            + (f", about {b.seconds:g} seconds" if b.seconds else "") + "\n"
+            f"  intent: {b.intent}"
+            + (f"\n  narration: {b.narration}" if b.narration else ""))

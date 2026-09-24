@@ -27,8 +27,8 @@ import textwrap
 import time
 from pathlib import Path
 
-from forge.app.twostage import (assemble, extract_code, failing_beat,
-                                names_in_scope,
+from forge.app.twostage import (assemble, beat_prompt, extract_code,
+                                failing_beat, names_in_scope,
                                 parse_plan)
 from forge.harness import RenderHarness
 
@@ -212,10 +212,6 @@ def main() -> int:
     for i, (req, beats) in enumerate(zip(requests, plans), 1):
         bodies, dropped = [], []
         for j, b in enumerate(beats):
-            prior = "\n".join(f"  {k + 1}. {beats[k].intent}"
-                              for k in range(j)) or \
-                "  (nothing yet — this is the opening beat)"
-            scope = names_in_scope(bodies)
             body, why = "", ""
             # Two tries, and each one's output has to parse on its own.
             #
@@ -227,16 +223,8 @@ def main() -> int:
             # them.
             for attempt in range(2):
                 reply = ask(cm, ctok, CODE_SYSTEM,
-                        f"REQUEST\n{req}\n\nALREADY ON SCREEN\n{prior}\n\n"
-                        f"NAMES IN SCOPE\n  "
-                        + (", ".join(scope) if scope else "(none yet)")
-                        + "\n\nHELPERS THIS SCENE DEFINES\n  (none)\n\n"
-                        f"WRITE THIS BEAT — step {j + 1} of {len(beats)}"
-                        + (f", about {b.seconds:g} seconds" if b.seconds
-                           else "") + "\n"
-                        f"  intent: {b.intent}"
-                        + (f"\n  narration: {b.narration}" if b.narration
-                           else ""), max_tokens=a.beat_tokens)
+                            beat_prompt(req, beats, j, bodies),
+                            max_tokens=a.beat_tokens)
                 cand = extract_code(reply)
                 try:
                     ast.parse(textwrap.dedent(cand))

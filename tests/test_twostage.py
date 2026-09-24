@@ -205,3 +205,13 @@ def test_failing_beat_maps_rich_marker_to_beat():
            "│ ❱ 187 │   raise TypeError(\"x\")   │\n")
     assert failing_beat(code, err) == 2
     assert failing_beat(code, "no markers") is None
+
+
+def test_beat_prompt_shape():
+    from forge.app.twostage import Beat, beat_prompt
+    beats = [Beat(1, 20.0, "a circle", "say hi"), Beat(2, None, "it grows")]
+    p = beat_prompt("circles", beats, 1, ["c = Circle()\nself.play(Create(c))"])
+    assert "ALREADY ON SCREEN\n  1. a circle" in p
+    assert "NAMES IN SCOPE\n  c" in p
+    assert "HELPERS THIS SCENE DEFINES\n  (none)" in p
+    assert p.endswith("WRITE THIS BEAT — step 2 of 2\n  intent: it grows")

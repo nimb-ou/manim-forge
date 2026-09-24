@@ -28,7 +28,7 @@ sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "scripts"))
 
 from forge.app.twostage import (assemble, extract_code,  # noqa: E402
-                                failing_beat, names_in_scope)
+                                beat_prompt, failing_beat)
 from run_twostage import CODE_SYSTEM, ask, load, plan  # noqa: E402
 
 B, D, G, R, Y, C, X = ("\033[1m", "\033[2m", "\033[32m", "\033[31m",
@@ -86,22 +86,10 @@ def main() -> int:
     cm, ctok = load(a.coder)
     bodies: list[str] = []
     for j, b in enumerate(beats):
-        prior = "\n".join(f"  {k + 1}. {beats[k].intent}" for k in range(j)) \
-            or "  (nothing yet — this is the opening beat)"
-        scope = names_in_scope(bodies)
         body = ""
         for _ in range(2):
             reply = ask(cm, ctok, CODE_SYSTEM,
-                        f"REQUEST\n{req}\n\nALREADY ON SCREEN\n{prior}\n\n"
-                        f"NAMES IN SCOPE\n  "
-                        + (", ".join(scope) if scope else "(none yet)")
-                        + "\n\nHELPERS THIS SCENE DEFINES\n  (none)\n\n"
-                        f"WRITE THIS BEAT — step {j + 1} of {len(beats)}"
-                        + (f", about {b.seconds:g} seconds" if b.seconds
-                           else "") + "\n"
-                        f"  intent: {b.intent}"
-                        + (f"\n  narration: {b.narration}" if b.narration
-                           else ""), max_tokens=900)
+                        beat_prompt(req, beats, j, bodies), max_tokens=900)
             cand = extract_code(reply)
             try:
                 ast.parse(textwrap.dedent(cand))
