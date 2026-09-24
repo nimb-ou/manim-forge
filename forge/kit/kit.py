@@ -326,6 +326,7 @@ def trace_graph(stage: Stage, ax, f, x_start: float, x_end: float, color=YELLOW,
 # -- numbers and series --------------------------------------------------------
 
 def draw_number_line(stage: Stage, x_range=(0, 10), where: str = "center"):
+    """A number line with its integers labelled, drawn."""
     nl = NumberLine(x_range=[*x_range, 1], length=10, include_numbers=True)
     stage.place(nl, where)
     stage.scene.play(Create(nl), run_time=1.0)
@@ -333,6 +334,7 @@ def draw_number_line(stage: Stage, x_range=(0, 10), where: str = "center"):
 
 
 def mark_point(stage: Stage, nl, x: float, color=YELLOW, label: str | None = None):
+    """A dot at x on a number line, optionally labelled."""
     d = Dot(nl.n2p(x), color=color)
     stage.scene.play(GrowFromCenter(d), run_time=0.5)
     stage._objects.append(d)
@@ -552,6 +554,7 @@ def draw_vector_field(stage: Stage, f, where: str = "center"):
 # -- complex numbers -----------------------------------------------------------
 
 def draw_complex_plane(stage: Stage, where: str = "center"):
+    """The complex plane with its coordinates, drawn."""
     cp = ComplexPlane(x_range=[-4, 4], y_range=[-3, 3], x_length=7.2,
                       y_length=5.4,
                       background_line_style={"stroke_opacity": 0.45})
