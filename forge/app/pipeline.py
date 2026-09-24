@@ -26,7 +26,7 @@ from typing import Callable
 from forge.app.twostage import (Beat, assemble, beat_prompt, extract_code,
                                 failing_beat, intent_key, missing_names,
                                 parse_plan, parsing_prefix, prelude_prompt,
-                                prune_statements)
+                                prune_all)
 
 MODEL = "mlx-community/Qwen2.5-Coder-7B-Instruct-4bit"
 
@@ -170,7 +170,11 @@ def write_beat(model, tok, request: str, beats: list[Beat], j: int,
         except SyntaxError:
             continue
     head = parsing_prefix(cand)
-    if "self.play(" in head:
+    # "Animates something" means it calls something: a raw beat's self.play,
+    # or a kit block, which plays its own animation (and so never contains
+    # the string "self.play(").
+    if head.strip() and any(isinstance(n, ast.Call)
+                            for n in ast.walk(ast.parse(head))):
         return head, "truncated; kept the lines before the cut"
     return "", "did not parse twice; dropped"
 
@@ -333,14 +337,12 @@ def run(request: str, host, emit: Emit, opts: Options | None = None,
                 note(f"set-up built {', '.join(missing[:6])}", code=pre)
     live = sum(1 for x in bodies if x.strip())
     if opts.salvage:
-        missing = missing_names(beats, bodies, kit=kit)
-        if missing:
-            trial, n = prune_statements(bodies, missing)
-            if assemble(beats, trial, kit=kit).ok and \
-                    2 * sum("self.play(" in x for x in trial) >= live:
-                bodies = trial
-                note(f"removed {n} lines using {', '.join(missing[:4])}, "
-                     f"which nothing builds")
+        trial, n, missing = prune_all(beats, bodies, kit=kit)
+        drawing = sum(1 for x in trial if x.strip())
+        if n and assemble(beats, trial, kit=kit).ok and 2 * drawing >= live:
+            bodies = trial
+            note(f"removed {n} lines using {', '.join(missing[:4])}, "
+                 f"which nothing builds")
         for _ in range(len(bodies)):
             missing = missing_names(beats, bodies, kit=kit)
             if not missing:

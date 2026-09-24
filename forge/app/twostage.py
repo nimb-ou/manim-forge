@@ -463,3 +463,25 @@ def prune_statements(bodies: list[str], missing: list[str]
             keep.append(ast.get_source_segment(src, st) or "")
         out.append("\n".join(k for k in keep if k))
     return out, dropped
+
+
+def prune_all(beats: list[Beat], bodies: list[str], kit: bool = False,
+              rounds: int = 6) -> tuple[list[str], int, list[str]]:
+    """prune_statements until no name is missing (or rounds run out).
+
+    The assembler reports at most eight missing names, so one pass can leave
+    the rest -- a teacher scene using `i_hat`, `j_hat` and ten others kept
+    failing after a single prune. Returns (bodies, statements removed,
+    names that were missing).
+    """
+    total, seen = 0, []
+    for _ in range(rounds):
+        miss = missing_names(beats, bodies, kit=kit)
+        if not miss:
+            break
+        seen += [m for m in miss if m not in seen]
+        bodies, n = prune_statements(bodies, miss)
+        total += n
+        if n == 0:
+            break
+    return bodies, total, seen

@@ -33,8 +33,8 @@ sys.path.insert(0, str(ROOT / "scripts"))
 
 from forge.app.pipeline import CODE_SYSTEM_KIT  # noqa: E402
 from forge.app.twostage import (Beat, assemble, beat_prompt,  # noqa: E402
-                                failing_beat, missing_names, parse_plan,
-                                parsing_prefix, prune_statements)
+                                failing_beat, parse_plan, parsing_prefix,
+                                prune_all)
 from scorecard import visual  # noqa: E402
 
 D = ROOT / "data" / "planner"
@@ -153,9 +153,7 @@ def main() -> int:
             continue
         signal.alarm(0)
         bodies = bodies_from(reply, len(beats))
-        missing = missing_names(beats, bodies, kit=True)
-        if missing:
-            bodies, _ = prune_statements(bodies, missing)
+        bodies, _, _ = prune_all(beats, bodies, kit=True)
         asm = assemble(beats, bodies, kit=True)
         res = h.render(asm.code, quality="low", frames=2) if asm.ok else None
         tries = 0
