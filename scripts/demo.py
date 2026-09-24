@@ -29,7 +29,8 @@ sys.path.insert(0, str(ROOT / "scripts"))
 
 from forge.app.twostage import (assemble, extract_code,  # noqa: E402
                                 beat_prompt, failing_beat,
-                                missing_names, prelude_prompt)
+                                missing_names, parsing_prefix,
+                                prelude_prompt)
 from run_twostage import CODE_SYSTEM, ask, load, plan  # noqa: E402
 
 B, D, G, R, Y, C, X = ("\033[1m", "\033[2m", "\033[32m", "\033[31m",
@@ -98,6 +99,9 @@ def main() -> int:
                 break
             except SyntaxError:
                 continue
+        if not body:
+            head = parsing_prefix(cand)
+            body = head if "self.play(" in head else ""
         bodies.append(body)
         print(f"\n  {B}beat {b.n}: {b.intent}{X}"
               + ("" if body else f"  {R}(did not parse twice; dropped){X}"))
@@ -109,9 +113,10 @@ def main() -> int:
     if missing and any(x.strip() for x in bodies):
         print(f"\n{B}{C}SET-UP{X} {D}(beats use {', '.join(missing[:6])} "
               f"but none builds them){X}")
-        pre = extract_code(ask(cm, ctok, CODE_SYSTEM,
-                               prelude_prompt(req, bodies, missing),
-                               max_tokens=900))
+        pre = parsing_prefix(extract_code(ask(cm, ctok, CODE_SYSTEM,
+                                              prelude_prompt(req, bodies,
+                                                             missing),
+                                              max_tokens=900)))
         try:
             ast.parse(textwrap.dedent(pre))
             first = next(k for k, x in enumerate(bodies) if x.strip())

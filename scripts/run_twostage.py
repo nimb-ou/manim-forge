@@ -29,7 +29,8 @@ from pathlib import Path
 
 from forge.app.twostage import (assemble, beat_prompt, extract_code,
                                 failing_beat, intent_key, missing_names,
-                                names_in_scope, prelude_prompt,
+                                names_in_scope, parsing_prefix,
+                                prelude_prompt,
                                 parse_plan)
 from forge.harness import RenderHarness
 
@@ -235,6 +236,12 @@ def main() -> int:
                 body, why = cand, ""
                 break
             if why:
+                # A truncated beat keeps what it wrote before the cut, if
+                # that still animates something.
+                head = parsing_prefix(cand)
+                if "self.play(" in head:
+                    body = head
+                    why += " (kept the parsing prefix)"
                 dropped.append(why)
             bodies.append(body)
         asm = assemble(beats, bodies)
@@ -310,8 +317,13 @@ def main() -> int:
             reply = ask(cm, ctok, CODE_SYSTEM,
                         prelude_prompt(req, bodies, missing_now),
                         max_tokens=a.beat_tokens)
-            pre = extract_code(reply)
+            pre = parsing_prefix(extract_code(reply))
+            with (ROOT / "data" / "logs" / "setup_replies.jsonl").open("a") as f:
+                f.write(json.dumps({"request": req[:80], "missing": missing_now,
+                                    "reply": reply[:3000]}) + "\n")
             try:
+                if not pre.strip():
+                    raise SyntaxError("empty")
                 ast.parse(textwrap.dedent(pre))
                 first = next(k for k, b in enumerate(bodies) if b.strip())
                 trial = list(bodies)

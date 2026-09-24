@@ -236,3 +236,10 @@ def test_intent_key_catches_counting_loops():
 def test_intent_key_keeps_ordinals():
     from forge.app.twostage import intent_key
     assert intent_key("The first derivative") != intent_key("The second derivative")
+
+
+def test_parsing_prefix_keeps_lines_before_a_truncation():
+    from forge.app.twostage import parsing_prefix
+    code = "c = Circle()\nself.play(Create(c))\nself.play(c.animate.shift(RIGHT"
+    assert parsing_prefix(code) == "c = Circle()\nself.play(Create(c))"
+    assert parsing_prefix("(((") == ""

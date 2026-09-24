@@ -363,3 +363,21 @@ def intent_key(intent: str) -> str:
     """
     words = re.findall(r"[a-z]+", intent.lower())
     return " ".join(w for w in words if w not in _NUMBER_WORDS)
+
+
+def parsing_prefix(code: str) -> str:
+    """The longest run of leading lines that parses, or "".
+
+    Most "did not parse: '(' was never closed" beats are a generation cut
+    off at the token limit mid-expression; everything before the cut is
+    fine. Dropping the whole beat cost the scene every name it defined.
+    """
+    lines = textwrap.dedent(code).splitlines()
+    for k in range(len(lines), 0, -1):
+        chunk = "\n".join(lines[:k])
+        try:
+            ast.parse(chunk)
+            return chunk
+        except SyntaxError:
+            continue
+    return ""
