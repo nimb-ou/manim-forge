@@ -1,35 +1,23 @@
 #!/bin/sh
-# Overnight: evaluate each adapter as it lands, one MLX job at a time.
-# pgrep patterns use [.] so this script's own command line never matches.
-# Waits for any demo or other run_twostage/beat_eval to finish first -- two
-# 7B models at once put this 16 GB Mac 6 GB into swap.
+# One MLX job at a time. pgrep patterns use [.] so this script's own command
+# line never matches; two 7B models at once put this Mac 6 GB into swap.
 cd "$(dirname "$0")/.." || exit 1
 PY=.venv/bin/python
 idle() { while pgrep -f "scripts/(demo|run_twostage|beat_eval)[.]py" >/dev/null; do sleep 30; done; }
-waitfor() { while [ ! -f "adapters/$1/adapters.safetensors" ]; do sleep 60; done; }
 say() { echo "[$(date -u +%H:%MZ)] $*"; }
 
-# Planner v2 alone first, while the Kaggle runs train: does it END, how
-# long are its arcs, does it still repeat intents.
-idle
-say "planner v2 plan-only (hard titles)"
-nice -n 5 $PY -u scripts/run_twostage.py --n 8 --hard --planner adapters/mlx-planner2 --max-beats 48 --plan-only --tag plans_v2_hard > data/logs/plans_v2_hard.log 2>&1
-tail -4 data/logs/plans_v2_hard.log
+idle; say "planner v3 plan-only, sampled, 8 hard titles"
+nice -n 5 $PY -u scripts/run_twostage.py --n 8 --hard --planner adapters/mlx-planner3 --max-beats 48 --plan-only --tag plans_v3_sampled > data/logs/plans_v3_sampled.log 2>&1
+grep -E "beats/arc|declared" data/logs/plans_v3_sampled.log
 
-waitfor mlx-coder3; idle
-say "coder v3 landed: beat eval"
-nice -n 5 $PY -u scripts/beat_eval.py --adapter adapters/mlx-coder3 --tag coder3 > data/logs/beat_eval_coder3.log 2>&1
-tail -7 data/logs/beat_eval_coder3.log
-idle
-say "two-stage planner2 + coder3"
-nice -n 5 $PY -u scripts/run_twostage.py --n 8 --planner adapters/mlx-planner2 --coder adapters/mlx-coder3 --max-beats 12 --salvage --tag twostage_p2c3 > data/logs/twostage_p2c3.log 2>&1
-grep "^assembled" data/logs/twostage_p2c3.log
+# The better planner by beats-before-first-repeat goes to the hard eval.
+v2=$(grep "beats/arc" data/logs/plans_v2_sampled.log | awk '{print $2}')
+v3=$(grep "beats/arc" data/logs/plans_v3_sampled.log | awk '{print $2}')
+P=adapters/mlx-planner2
+[ "$(echo "$v3 > $v2" | bc)" = "1" ] && P=adapters/mlx-planner3
+say "planner v2 $v2 vs v3 $v3 beats/arc -> hard eval with $P"
 
-waitfor mlx-planner3; idle
-say "planner v3 landed: plan-only"
-nice -n 5 $PY -u scripts/run_twostage.py --n 8 --hard --planner adapters/mlx-planner3 --max-beats 48 --plan-only --tag plans_v3_hard > data/logs/plans_v3_hard.log 2>&1
-idle
-say "two-stage planner3 + coder3"
-nice -n 5 $PY -u scripts/run_twostage.py --n 8 --planner adapters/mlx-planner3 --coder adapters/mlx-coder3 --max-beats 24 --salvage --tag twostage_p3c3 > data/logs/twostage_p3c3.log 2>&1
-grep "^assembled" data/logs/twostage_p3c3.log
+idle; say "hard eval, 24 titles, all harness fixes"
+nice -n 5 $PY -u scripts/run_twostage.py --n 24 --hard --planner $P --coder adapters/mlx-coder2 --max-beats 24 --salvage --tag hard_best > data/logs/hard_best.log 2>&1
+tail -6 data/logs/hard_best.log
 say "chain done"
