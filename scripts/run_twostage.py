@@ -30,7 +30,7 @@ from pathlib import Path
 from forge.app.twostage import (assemble, beat_prompt, extract_code,
                                 failing_beat, intent_key, missing_names,
                                 names_in_scope, parsing_prefix,
-                                prelude_prompt,
+                                prelude_prompt, prune_statements,
                                 parse_plan)
 from forge.harness import RenderHarness
 
@@ -350,6 +350,21 @@ def main() -> int:
             # keeps the beats that stand on their own. Counted, so a salvaged
             # render is never mistaken for a whole one.
             live = sum(1 for b in bodies if b.strip())
+            # Statements first: remove only the lines that read a missing
+            # name, and what those lines fed, keeping the rest of each beat.
+            # Kept if the scene is then clean and half the beats still play.
+            pruned_stmts = 0
+            miss_now = missing_names(beats, bodies)
+            if miss_now:
+                trial, pruned_stmts = prune_statements(bodies, miss_now)
+                t_asm = assemble(beats, trial)
+                playing = sum(1 for b in trial if "self.play(" in b)
+                if t_asm.ok and playing * 2 >= live:
+                    bodies, asm = trial, t_asm
+                    print(f"      pruned {pruned_stmts} statements using "
+                          f"{', '.join(miss_now[:4])}", flush=True)
+                else:
+                    pruned_stmts = 0
             for _ in range(len(bodies)):
                 miss = [p for p in asm.problems if "names no beat" in p]
                 if not miss:
@@ -408,6 +423,7 @@ def main() -> int:
                "assembled": renderable,
                "problems": asm.problems, "dropped": len(dropped),
                "salvaged": salvaged,
+               "pruned_statements": pruned_stmts if a.salvage else 0,
                "ok": bool(res and res.ok),
                "error": (res.error_kind.value if res else "assembly"),
                "code": asm.code}

@@ -243,3 +243,13 @@ def test_parsing_prefix_keeps_lines_before_a_truncation():
     code = "c = Circle()\nself.play(Create(c))\nself.play(c.animate.shift(RIGHT"
     assert parsing_prefix(code) == "c = Circle()\nself.play(Create(c))"
     assert parsing_prefix("(((") == ""
+
+
+def test_prune_statements_follows_what_a_dropped_line_fed():
+    from forge.app.twostage import prune_statements
+    bodies = ["t = table.copy()\nc = Circle()\nself.play(Create(c))",
+              "self.play(FadeOut(t), FadeOut(c))\nd = Dot()\nself.play(Create(d))"]
+    out, n = prune_statements(bodies, ["table"])
+    assert n == 2
+    assert out[0] == "c = Circle()\nself.play(Create(c))"
+    assert out[1] == "d = Dot()\nself.play(Create(d))"

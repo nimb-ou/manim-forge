@@ -30,7 +30,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 from forge.app.twostage import (assemble, extract_code,  # noqa: E402
                                 beat_prompt, failing_beat,
                                 missing_names, parsing_prefix,
-                                prelude_prompt)
+                                prelude_prompt, prune_statements)
 from run_twostage import CODE_SYSTEM, ask, load, plan  # noqa: E402
 
 B, D, G, R, Y, C, X = ("\033[1m", "\033[2m", "\033[32m", "\033[31m",
@@ -138,6 +138,13 @@ def main() -> int:
     print(f"\n{B}{C}ASSEMBLE{X}")
     asm = assemble(beats, bodies)
     dropped = 0
+    miss0 = missing_names(beats, bodies)
+    if miss0:
+        trial, n = prune_statements(bodies, miss0)
+        if assemble(beats, trial).ok:
+            print(f"  {Y}removed {n} lines that used {', '.join(miss0[:4])} "
+                  f"(nothing builds them){X}")
+            bodies, asm = trial, assemble(beats, trial)
     for _ in range(len(bodies)):
         miss = [p for p in asm.problems if "names no beat" in p]
         if not miss:

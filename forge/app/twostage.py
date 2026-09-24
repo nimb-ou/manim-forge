@@ -381,3 +381,48 @@ def parsing_prefix(code: str) -> str:
         except SyntaxError:
             continue
     return ""
+
+
+def prune_statements(bodies: list[str], missing: list[str]
+                     ) -> tuple[list[str], int]:
+    """Drop only the statements that use a missing name, and what they fed.
+
+    Beat-level salvage blanked every beat that mentioned an undefined name;
+    the names those beats defined then went missing too, and on 24-beat
+    scenes the cascade emptied the scene ("no beats to assemble", "would
+    drop 23 of 24"). A beat that uses `table` once in a FadeOut is otherwise
+    fine. This walks the beats in order, removes each top-level statement
+    that reads a missing name (for `self.x`, the attribute), adds whatever
+    that statement would have bound to the missing set, and keeps the rest.
+    Returns the pruned bodies and the number of statements removed.
+    """
+    gone = {m.removeprefix("self.") for m in missing}
+    out, dropped = [], 0
+    for body in bodies:
+        if not body.strip():
+            out.append(body)
+            continue
+        src = textwrap.dedent(body)
+        try:
+            tree = ast.parse(src)
+        except SyntaxError:
+            out.append(body)
+            continue
+        keep = []
+        for st in tree.body:
+            reads = {n.id for n in ast.walk(st) if isinstance(n, ast.Name)
+                     and isinstance(n.ctx, ast.Load)} | {
+                n.attr for n in ast.walk(st) if isinstance(n, ast.Attribute)
+                and isinstance(n.value, ast.Name) and n.value.id == "self"
+                and isinstance(n.ctx, ast.Load)}
+            if reads & gone:
+                dropped += 1
+                gone |= {n.id for n in ast.walk(st) if isinstance(n, ast.Name)
+                         and isinstance(n.ctx, ast.Store)} | {
+                    n.attr for n in ast.walk(st)
+                    if isinstance(n, ast.Attribute)
+                    and isinstance(n.ctx, ast.Store)}
+                continue
+            keep.append(ast.get_source_segment(src, st) or "")
+        out.append("\n".join(k for k in keep if k))
+    return out, dropped
