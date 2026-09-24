@@ -537,3 +537,15 @@ the truncation-fix rerun. (2) GRPO's reward now pays 0.6 for a render, +0.2
 for building a non-text mobject, +0.2 for motion — a reward that is only
 "it renders" would have taught more slides. (3) Coverage and length alone
 cannot be the headline again; the gate score goes beside them.
+
+## The kit, by prompt only · 2026-09-25
+
+Forge kit (forge/kit, ~40 verb-named blocks) in the coder's system prompt,
+coder v2 untrained on it: a one-title smoke kept **0 of 4 beats**. Asked
+for "a beam of light enters a block of glass", the coder reproduced the
+prompt's worked example — vector addition — word for word, then wrote
+stage.label calls with strings where objects go. The kit cannot be taught
+in a prompt to a 7B model trained on raw Manim; the coder has to be trained
+on it. Teacher-written kit beats (render-verified, visual beats only) are
+being generated in three shards, and a kit coder trains locally at 800
+rows.
