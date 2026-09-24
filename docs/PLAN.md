@@ -186,6 +186,10 @@ beat animates an object no beat built.
    the coder conditioned on its own earlier beats. Kaggle renders Manim +
    LaTeX at 2.6 s a scene (probed). No further coder SFT: v3's cleaning
    moved neither measure.
+   **Kaggle GPU quota spent 2026-09-24 02:28Z** (30 h/week: coder v2,
+   planner v2, coder v3, planner v3). Planner v4's data is built and
+   uploaded; `push_when_free.sh` retries hourly until the quota resets.
+   Until then the Mac evaluates what is on disk.
 6. **Planner v4** on all ~1,800 arcs if v3 shows the cleaning fixed the
    loops; if v3 still loops, test sampling (temperature, repetition
    penalty) before training again.
