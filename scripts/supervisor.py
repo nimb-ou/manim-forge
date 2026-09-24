@@ -130,12 +130,16 @@ class Job:
     # producing *now*.
     stallable: bool = True
     out: Path | None = None
+    # A job that must not start yet. collect-planner4, started before v4 was
+    # pushed, found the kernel "complete" -- from v3 -- and collected v3's
+    # weights under v4's name, verified and all.
+    ready: callable = lambda: True
     history: list[int] = field(default_factory=list)
 
 
 def local(name: str, pattern: str, out: Path, cmd: list[str] | None,
           done_when=None, log: Path | None = None, note: str = "",
-          stallable: bool = True) -> Job:
+          stallable: bool = True, ready=None) -> Job:
     # A job whose output is one artefact written at the end has no growing
     # count, so "stalled" would be wrong for it the whole way through. Those
     # report 1 when the artefact exists and 0 before, and are only ever
@@ -146,7 +150,7 @@ def local(name: str, pattern: str, out: Path, cmd: list[str] | None,
                alive=lambda: running(pattern),
                done=done_when or (lambda: False),
                restart=cmd, log=log, note=note, stallable=stallable,
-               out=out)
+               out=out, ready=ready or (lambda: True))
 
 
 def kaggle(name: str, ref: str, note: str = "") -> Job:
@@ -229,7 +233,8 @@ def jobs() -> list[Job]:
                                  / "adapters.safetensors").exists(),
               log=ROOT / "data" / "logs" / "collect_planner4.log",
               note="waits, downloads, converts, verifies planner v4",
-              stallable=False),
+              stallable=False,
+              ready=lambda: (d / "v4_pushed").exists()),
         local("collect-planner3", "collect_adapter.*planner3",
               ROOT / "adapters" / "mlx-planner3" / "adapters.safetensors",
               [str(PY), "-u", str(ROOT / "scripts" / "collect_adapter.py"),
@@ -288,6 +293,11 @@ def sweep(state: dict, restart: bool, stale_minutes: float = 25.0) -> dict:
             if idle > stale_minutes:
                 stalled = True
                 say(f"  {job.name}: no output for {idle:.0f} minutes")
+        if not finished and not alive and not job.ready():
+            out[job.name] = {**prev, "status": "waiting", "produced": n,
+                             "history": hist}
+            say(f"  {job.name:14s} waiting         {job.note}")
+            continue
         status = ("done" if finished else "stalled" if stalled
                   else "running" if alive else "down")
         restarts = prev.get("restarts", 0)
