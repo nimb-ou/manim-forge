@@ -4,8 +4,8 @@ The split's first long renders were slides: 215 of 289 beats built nothing
 but text, for intents like "basis vectors i-hat and j-hat highlighted". A
 7B model asked to invent an animation in raw Manim falls back on the one
 thing it can always make work, a Text. This file gives it a vocabulary in
-which the easy call *is* the picture: ``vector(stage, plane, (2, 1))`` draws
-an arrow on a grid, ``riemann(stage, ax, g, 0, 2)`` refines rectangles under
+which the easy call *is* the picture: ``draw_vector(stage, plane, (2, 1))`` draws
+an arrow on a grid, ``riemann_refine(stage, ax, g, 0, 2)`` refines rectangles under
 a curve, ``apply_matrix(stage, plane, [[1, 1], [0, 1]], vecs)`` shears the
 plane with its vectors riding along.
 
@@ -141,7 +141,7 @@ class Stage:
 def _need(obj, attr: str, what: str, call: str):
     """A clear error for the commonest misuse: the wrong thing in a slot.
 
-    Without it, `vector(stage, (1, 0))` fails three frames deep in Manim with
+    Without it, `draw_vector(stage, (1, 0))` fails three frames deep in Manim with
     "'tuple' object has no attribute 'c2p'", which neither a model nor a
     repair prompt can act on.
     """
@@ -152,7 +152,7 @@ def _need(obj, attr: str, what: str, call: str):
 
 # -- linear algebra ------------------------------------------------------------
 
-def plane(stage: Stage, where: str = "center", x_extent: int = 4,
+def draw_plane(stage: Stage, where: str = "center", x_extent: int = 4,
           y_extent: int = 3):
     """A faded coordinate grid filling its region, square units, drawn.
 
@@ -170,9 +170,9 @@ def plane(stage: Stage, where: str = "center", x_extent: int = 4,
     return p
 
 
-def vector(stage: Stage, plane_, xy, color=YELLOW, label: str | None = None):
+def draw_vector(stage: Stage, plane_, xy, color=YELLOW, label: str | None = None):
     """An arrow from the plane's origin to (x, y), grown, optionally labelled."""
-    _need(plane_, "c2p", "the plane from plane(stage)", "vector(stage, plane, (x, y))")
+    _need(plane_, "c2p", "the plane from draw_plane(stage)", "draw_vector(stage, plane, (x, y))")
     a = Arrow(plane_.c2p(0, 0), plane_.c2p(*xy), buff=0, color=color)
     stage.scene.play(GrowArrow(a), run_time=0.8)
     stage._objects.append(a)
@@ -182,17 +182,17 @@ def vector(stage: Stage, plane_, xy, color=YELLOW, label: str | None = None):
     return a
 
 
-def basis(stage: Stage, plane_):
+def draw_basis(stage: Stage, plane_):
     """i-hat and j-hat, green and red, labelled."""
-    _need(plane_, "c2p", "the plane from plane(stage)", "basis(stage, plane)")
-    i = vector(stage, plane_, (1, 0), GREEN, r"\hat{\imath}")
-    j = vector(stage, plane_, (0, 1), RED, r"\hat{\jmath}")
+    _need(plane_, "c2p", "the plane from draw_plane(stage)", "draw_basis(stage, plane)")
+    i = draw_vector(stage, plane_, (1, 0), GREEN, r"\hat{\imath}")
+    j = draw_vector(stage, plane_, (0, 1), RED, r"\hat{\jmath}")
     return i, j
 
 
 def apply_matrix(stage: Stage, plane_, matrix, riders=(), run_time: float = 2.0):
     """Move the grid, and anything riding on it, by a 2x2 matrix."""
-    _need(plane_, "c2p", "the plane from plane(stage)", "apply_matrix(stage, plane, matrix)")
+    _need(plane_, "c2p", "the plane from draw_plane(stage)", "apply_matrix(stage, plane, matrix)")
     m = np.array(matrix, dtype=float)
     about = plane_.c2p(0, 0)
     group = VGroup(plane_, *riders)
@@ -200,9 +200,9 @@ def apply_matrix(stage: Stage, plane_, matrix, riders=(), run_time: float = 2.0)
     return group
 
 
-def unit_square(stage: Stage, plane_, color=YELLOW):
+def draw_unit_square(stage: Stage, plane_, color=YELLOW):
     """The unit square on the grid, filled -- the area a determinant scales."""
-    _need(plane_, "c2p", "the plane from plane(stage)", "unit_square(stage, plane)")
+    _need(plane_, "c2p", "the plane from draw_plane(stage)", "draw_unit_square(stage, plane)")
     sq = Polygon(plane_.c2p(0, 0), plane_.c2p(1, 0), plane_.c2p(1, 1),
                  plane_.c2p(0, 1), color=color, fill_opacity=0.35,
                  stroke_width=2)
@@ -211,9 +211,9 @@ def unit_square(stage: Stage, plane_, color=YELLOW):
     return sq
 
 
-def span_line(stage: Stage, plane_, xy, color=BLUE):
+def draw_span(stage: Stage, plane_, xy, color=BLUE):
     """Every scalar multiple of one vector: a line through the origin."""
-    _need(plane_, "c2p", "the plane from plane(stage)", "span_line(stage, plane, (x, y))")
+    _need(plane_, "c2p", "the plane from draw_plane(stage)", "draw_span(stage, plane, (x, y))")
     d = np.array([*xy, 0.0]) / (np.linalg.norm(xy) or 1)
     ln = Line(plane_.c2p(*(-8 * d[:2])), plane_.c2p(*(8 * d[:2])),
               color=color, stroke_opacity=0.7)
@@ -231,7 +231,7 @@ def scale_vector(stage: Stage, plane_, arrow, factor: float, run_time=1.2):
 
 # -- functions and calculus ----------------------------------------------------
 
-def axes(stage: Stage, x_range=(-1, 5), y_range=(-1, 5), where: str = "center",
+def draw_axes(stage: Stage, x_range=(-1, 5), y_range=(-1, 5), where: str = "center",
          labels: tuple[str, str] = ("x", "y")):
     """Axes with tick numbers, drawn in a region."""
     ax = Axes(x_range=[*x_range, 1], y_range=[*y_range, 1],
@@ -243,9 +243,9 @@ def axes(stage: Stage, x_range=(-1, 5), y_range=(-1, 5), where: str = "center",
     return ax
 
 
-def graph(stage: Stage, ax, f, x_range=None, color=BLUE, label: str | None = None):
+def plot_graph(stage: Stage, ax, f, x_range=None, color=BLUE, label: str | None = None):
     """Plot f on the axes and draw it."""
-    _need(ax, "plot", "the axes from axes(stage)", "graph(stage, axes, f)")
+    _need(ax, "plot", "the axes from draw_axes(stage)", "plot_graph(stage, axes, f)")
     xr = x_range or (ax.x_range[0], ax.x_range[1])
     g = ax.plot(f, x_range=[xr[0], xr[1]], color=color)
     stage.scene.play(Create(g), run_time=1.5)
@@ -257,10 +257,10 @@ def graph(stage: Stage, ax, f, x_range=None, color=BLUE, label: str | None = Non
     return g
 
 
-def tangent(stage: Stage, ax, f, x_start: float, x_end: float,
+def slide_tangent(stage: Stage, ax, f, x_start: float, x_end: float,
             color=YELLOW, run_time: float = 3.0):
     """A tangent line sliding along f, with its slope read out live."""
-    _need(ax, "c2p", "the axes from axes(stage)", "tangent(stage, axes, f, x0, x1)")
+    _need(ax, "c2p", "the axes from draw_axes(stage)", "slide_tangent(stage, axes, f, x0, x1)")
     t = ValueTracker(x_start)
     h = 1e-4
 
@@ -285,19 +285,19 @@ def tangent(stage: Stage, ax, f, x_start: float, x_end: float,
     return tan, dot, read
 
 
-def area(stage: Stage, ax, g, a: float, b: float, color=BLUE_D):
+def shade_area(stage: Stage, ax, g, a: float, b: float, color=BLUE_D):
     """Shade the area under g between a and b."""
-    _need(ax, "get_area", "the axes from axes(stage)", "area(stage, axes, graph, a, b)")
+    _need(ax, "get_area", "the axes from draw_axes(stage)", "shade_area(stage, axes, graph, a, b)")
     r = ax.get_area(g, x_range=[a, b], color=color, opacity=0.5)
     stage.scene.play(FadeIn(r), run_time=1.0)
     stage._objects.append(r)
     return r
 
 
-def riemann(stage: Stage, ax, g, a: float, b: float, ns=(4, 8, 16, 32),
+def riemann_refine(stage: Stage, ax, g, a: float, b: float, ns=(4, 8, 16, 32),
             color=TEAL):
     """Rectangles under g, refined: 4, 8, 16, 32 strips."""
-    _need(ax, "get_riemann_rectangles", "the axes from axes(stage)", "riemann(stage, axes, graph, a, b)")
+    _need(ax, "get_riemann_rectangles", "the axes from draw_axes(stage)", "riemann_refine(stage, axes, graph, a, b)")
     rects = ax.get_riemann_rectangles(g, x_range=[a, b], dx=(b - a) / ns[0],
                                       fill_opacity=0.6, color=color)
     stage.scene.play(Create(rects), run_time=1.2)
@@ -309,7 +309,7 @@ def riemann(stage: Stage, ax, g, a: float, b: float, ns=(4, 8, 16, 32),
     return rects
 
 
-def trace(stage: Stage, ax, f, x_start: float, x_end: float, color=YELLOW,
+def trace_graph(stage: Stage, ax, f, x_start: float, x_end: float, color=YELLOW,
           run_time: float = 3.0):
     """A dot running along f and leaving a trail."""
     t = ValueTracker(x_start)
@@ -325,14 +325,14 @@ def trace(stage: Stage, ax, f, x_start: float, x_end: float, color=YELLOW,
 
 # -- numbers and series --------------------------------------------------------
 
-def number_line(stage: Stage, x_range=(0, 10), where: str = "center"):
+def draw_number_line(stage: Stage, x_range=(0, 10), where: str = "center"):
     nl = NumberLine(x_range=[*x_range, 1], length=10, include_numbers=True)
     stage.place(nl, where)
     stage.scene.play(Create(nl), run_time=1.0)
     return nl
 
 
-def point_on_line(stage: Stage, nl, x: float, color=YELLOW, label: str | None = None):
+def mark_point(stage: Stage, nl, x: float, color=YELLOW, label: str | None = None):
     d = Dot(nl.n2p(x), color=color)
     stage.scene.play(GrowFromCenter(d), run_time=0.5)
     stage._objects.append(d)
@@ -341,7 +341,7 @@ def point_on_line(stage: Stage, nl, x: float, color=YELLOW, label: str | None = 
     return d
 
 
-def bars(stage: Stage, values, labels=None, where: str = "center", color=BLUE,
+def draw_bars(stage: Stage, values, labels=None, where: str = "center", color=BLUE,
          max_height: float = 4.0):
     """A bar chart, bars growing in one after another."""
     top = max(max(values), 1e-9)
@@ -359,7 +359,7 @@ def bars(stage: Stage, values, labels=None, where: str = "center", color=BLUE,
     return group
 
 
-def partial_sums(stage: Stage, term, n: int = 10, where: str = "center",
+def show_partial_sums(stage: Stage, term, n: int = 10, where: str = "center",
                  color=YELLOW):
     """Bars of term(1)..term(n) stacking into a running total, read out."""
     total = 0.0
@@ -367,7 +367,7 @@ def partial_sums(stage: Stage, term, n: int = 10, where: str = "center",
     for k in range(1, n + 1):
         total += term(k)
         sums.append(total)
-    chart = bars(stage, sums, labels=list(range(1, n + 1)), where=where,
+    chart = draw_bars(stage, sums, labels=list(range(1, n + 1)), where=where,
                  color=color)
     value = DecimalNumber(sums[-1], num_decimal_places=3, font_size=36)
     read = VGroup(MathTex("S_{%d} =" % n, font_size=36), value).arrange(RIGHT)
@@ -378,7 +378,7 @@ def partial_sums(stage: Stage, term, n: int = 10, where: str = "center",
 
 # -- geometry ------------------------------------------------------------------
 
-def circle_slices(stage: Stage, n: int = 12, r: float = 1.6, where: str = "left"):
+def slice_circle(stage: Stage, n: int = 12, r: float = 1.6, where: str = "left"):
     """A circle cut into n sectors, alternately coloured."""
     cx, cy, _, _ = _REGIONS[where]
     secs = VGroup(*[Sector(radius=r, angle=TAU / n, start_angle=k * TAU / n,
@@ -391,7 +391,7 @@ def circle_slices(stage: Stage, n: int = 12, r: float = 1.6, where: str = "left"
     return secs
 
 
-def unroll_to_rectangle(stage: Stage, secs, r: float = 1.6, where: str = "right"):
+def unroll_slices(stage: Stage, secs, r: float = 1.6, where: str = "right"):
     """Lay the sectors alternately tip-down and tip-up into a near-rectangle
     of width pi*r and height r -- the picture behind area = pi r^2."""
     n = len(secs)
@@ -415,7 +415,7 @@ def unroll_to_rectangle(stage: Stage, secs, r: float = 1.6, where: str = "right"
     return secs
 
 
-def right_triangle(stage: Stage, a: float = 3, b: float = 2, where: str = "center",
+def draw_right_triangle(stage: Stage, a: float = 3, b: float = 2, where: str = "center",
                    labels=("a", "b", "c")):
     """A right triangle with its sides labelled."""
     cx, cy, _, _ = _REGIONS[where]
@@ -436,7 +436,7 @@ def right_triangle(stage: Stage, a: float = 3, b: float = 2, where: str = "cente
 
 # -- probability ---------------------------------------------------------------
 
-def dice_grid(stage: Stage, where: str = "center", highlight_sum: int | None = None):
+def draw_dice_grid(stage: Stage, where: str = "center", highlight_sum: int | None = None):
     """The 36 outcomes of two dice, with one sum highlighted."""
     cells = VGroup()
     for i in range(1, 7):
@@ -455,9 +455,9 @@ def dice_grid(stage: Stage, where: str = "center", highlight_sum: int | None = N
 
 # -- more linear algebra ------------------------------------------------------
 
-def determinant(stage: Stage, plane_, matrix, run_time: float = 2.0):
+def show_determinant(stage: Stage, plane_, matrix, run_time: float = 2.0):
     """The unit square rides a matrix; its new area is the determinant."""
-    sq = unit_square(stage, plane_)
+    sq = draw_unit_square(stage, plane_)
     m = np.array(matrix, dtype=float)
     apply_matrix(stage, plane_, m, riders=[sq], run_time=run_time)
     d = float(np.linalg.det(m))
@@ -468,7 +468,7 @@ def determinant(stage: Stage, plane_, matrix, run_time: float = 2.0):
     return sq, tag
 
 
-def eigenvectors(stage: Stage, plane_, matrix, run_time: float = 2.5):
+def show_eigenvectors(stage: Stage, plane_, matrix, run_time: float = 2.5):
     """Vectors on the eigen-directions stay on their lines as the plane moves;
     an ordinary vector is knocked off its line."""
     m = np.array(matrix, dtype=float)
@@ -478,13 +478,13 @@ def eigenvectors(stage: Stage, plane_, matrix, run_time: float = 2.5):
         if abs(np.imag(vals[k])) > 1e-9:
             continue
         v = np.real(vecs[:, k])
-        riders.append(span_line(stage, plane_, tuple(v), color=YELLOW))
-        riders.append(vector(stage, plane_, tuple(v), YELLOW))
+        riders.append(draw_span(stage, plane_, tuple(v), color=YELLOW))
+        riders.append(draw_vector(stage, plane_, tuple(v), YELLOW))
     e0 = np.real(vecs[:, 0])
     # A test vector on neither eigen-line (2D cross product by hand: numpy 2
     # rejects np.cross on 2-vectors).
     off_xy = (1, 1) if abs(e0[0] * 1 - e0[1] * 1) > 0.1 else (1, -1)
-    off = vector(stage, plane_, off_xy, RED)
+    off = draw_vector(stage, plane_, off_xy, RED)
     riders.append(off)
     apply_matrix(stage, plane_, m, riders=riders, run_time=run_time)
     return riders
@@ -492,7 +492,7 @@ def eigenvectors(stage: Stage, plane_, matrix, run_time: float = 2.5):
 
 # -- more calculus -------------------------------------------------------------
 
-def taylor(stage: Stage, ax, f, a: float, terms, colors=None, run_time: float = 1.2):
+def taylor_approximate(stage: Stage, ax, f, a: float, terms, colors=None, run_time: float = 1.2):
     """Taylor polynomials about a, one more term each time, closing in on f.
 
     ``terms`` is a list of the derivatives' values at a: [f(a), f'(a), ...].
@@ -516,7 +516,7 @@ def taylor(stage: Stage, ax, f, a: float, terms, colors=None, run_time: float = 
     return cur
 
 
-def unit_circle_wave(stage: Stage, turns: float = 1.0, run_time: float = 4.0):
+def circle_to_sine(stage: Stage, turns: float = 1.0, run_time: float = 4.0):
     """A radius turning on the unit circle, its height drawn out as a sine wave."""
     c = Circle(radius=1.3, color=GREY_B).move_to([-4.2, -0.1, 0])
     ax = Axes(x_range=[0, TAU * turns, PI / 2], y_range=[-1.2, 1.2, 1],
@@ -538,7 +538,7 @@ def unit_circle_wave(stage: Stage, turns: float = 1.0, run_time: float = 4.0):
     return c, ax, wave
 
 
-def vector_field(stage: Stage, f, where: str = "center"):
+def draw_vector_field(stage: Stage, f, where: str = "center"):
     """Arrows for a 2D field f(x, y) -> (u, v), drawn in."""
     field = ArrowVectorField(lambda p: np.array([*f(p[0], p[1]), 0.0]),
                              x_range=[-5, 5, 1], y_range=[-3, 3, 1],
@@ -551,7 +551,7 @@ def vector_field(stage: Stage, f, where: str = "center"):
 
 # -- complex numbers -----------------------------------------------------------
 
-def complex_plane(stage: Stage, where: str = "center"):
+def draw_complex_plane(stage: Stage, where: str = "center"):
     cp = ComplexPlane(x_range=[-4, 4], y_range=[-3, 3], x_length=7.2,
                       y_length=5.4,
                       background_line_style={"stroke_opacity": 0.45})
@@ -561,7 +561,7 @@ def complex_plane(stage: Stage, where: str = "center"):
     return cp
 
 
-def multiply_by(stage: Stage, cp, z: complex, points=(1 + 0j, 1j),
+def multiply_complex(stage: Stage, cp, z: complex, points=(1 + 0j, 1j),
                 run_time: float = 2.0):
     """Multiplying by z rotates by its angle and scales by its length: shown on
     arrows to the given points, which turn and stretch together."""
@@ -578,7 +578,7 @@ def multiply_by(stage: Stage, cp, z: complex, points=(1 + 0j, 1j),
 
 # -- networks and graphs -------------------------------------------------------
 
-def neural_net(stage: Stage, layers=(3, 4, 2), where: str = "center",
+def draw_neural_net(stage: Stage, layers=(3, 4, 2), where: str = "center",
                pulse_through: bool = True):
     """Layers of neurons joined by weights; a signal pulses left to right."""
     cx, cy, w, h = _REGIONS[where]
@@ -603,7 +603,7 @@ def neural_net(stage: Stage, layers=(3, 4, 2), where: str = "center",
     return net
 
 
-def network(stage: Stage, nodes, edges, where: str = "center"):
+def draw_network(stage: Stage, nodes, edges, where: str = "center"):
     """A graph: nodes {name: (x, y)} in [-1, 1]^2, edges [(a, b), ...]."""
     cx, cy, w, h = _REGIONS[where]
     pos = {k: np.array([cx + x * w * 0.42, cy + y * h * 0.4, 0])
@@ -621,7 +621,7 @@ def network(stage: Stage, nodes, edges, where: str = "center"):
 
 # -- sampling ------------------------------------------------------------------
 
-def histogram_grows(stage: Stage, sampler, bins, n: int = 400, steps: int = 8,
+def grow_histogram(stage: Stage, sampler, bins, n: int = 400, steps: int = 8,
                     where: str = "center", color=BLUE, seed: int = 0):
     """Draw samples in batches and watch the histogram take its shape.
 
@@ -652,10 +652,10 @@ def histogram_grows(stage: Stage, sampler, bins, n: int = 400, steps: int = 8,
 
 # -- waves and series ----------------------------------------------------------
 
-def wave(stage: Stage, ax, amp: float = 1.0, k: float = 2.0, omega: float = 2.0,
+def animate_wave(stage: Stage, ax, amp: float = 1.0, k: float = 2.0, omega: float = 2.0,
          t_end: float = 4.0, color=YELLOW):
     """A travelling wave amp*sin(kx - wt), moving for t_end seconds."""
-    _need(ax, "plot", "the axes from axes(stage)", "wave(stage, axes)")
+    _need(ax, "plot", "the axes from draw_axes(stage)", "animate_wave(stage, axes)")
     t = ValueTracker(0)
     xr = [ax.x_range[0], ax.x_range[1]]
     w = always_redraw(lambda: ax.plot(
@@ -668,11 +668,11 @@ def wave(stage: Stage, ax, amp: float = 1.0, k: float = 2.0, omega: float = 2.0,
     return w, t
 
 
-def superpose(stage: Stage, ax, parts, t_end: float = 4.0):
+def superpose_waves(stage: Stage, ax, parts, t_end: float = 4.0):
     """Two or more waves moving together, and their sum drawn in white.
 
     ``parts`` is a list of (amp, k, omega)."""
-    _need(ax, "plot", "the axes from axes(stage)", "superpose(stage, axes, parts)")
+    _need(ax, "plot", "the axes from draw_axes(stage)", "superpose_waves(stage, axes, parts)")
     t = ValueTracker(0)
     xr = [ax.x_range[0], ax.x_range[1]]
     one = lambda a, k, w: (lambda x: a * np.sin(k * x - w * t.get_value()))
@@ -689,9 +689,9 @@ def superpose(stage: Stage, ax, parts, t_end: float = 4.0):
     return curves, total
 
 
-def fourier_series(stage: Stage, ax, n_terms: int = 7, run_time: float = 1.0):
+def build_fourier_series(stage: Stage, ax, n_terms: int = 7, run_time: float = 1.0):
     """The square wave built from odd sines, one more term each step."""
-    _need(ax, "plot", "the axes from axes(stage)", "fourier_series(stage, axes)")
+    _need(ax, "plot", "the axes from draw_axes(stage)", "build_fourier_series(stage, axes)")
     xr = [ax.x_range[0], ax.x_range[1]]
     target = ax.plot(lambda x: np.sign(np.sin(x)), x_range=xr, color=GREY,
                      stroke_opacity=0.5, use_smoothing=False)
@@ -710,7 +710,7 @@ def fourier_series(stage: Stage, ax, n_terms: int = 7, run_time: float = 1.0):
     return cur
 
 
-def halving_squares(stage: Stage, n: int = 7, where: str = "center"):
+def fill_halving_squares(stage: Stage, n: int = 7, where: str = "center"):
     """A unit square filled by halves: 1/2, 1/4, 1/8, ... -- the sum is 1."""
     cx, cy, w, h = _REGIONS[where]
     side = min(w, h) * 0.85
@@ -740,11 +740,11 @@ def halving_squares(stage: Stage, n: int = 7, where: str = "center"):
     return grp
 
 
-def epsilon_band(stage: Stage, ax, g, limit: float, eps: float = 0.5,
+def narrow_epsilon_band(stage: Stage, ax, g, limit: float, eps: float = 0.5,
                  shrink_to: float = 0.1, color=GREEN):
     """A band limit +- eps around the curve's limit, narrowing: the curve
     eventually stays inside every band."""
-    _need(ax, "c2p", "the axes from axes(stage)", "epsilon_band(stage, axes, graph, L)")
+    _need(ax, "c2p", "the axes from draw_axes(stage)", "narrow_epsilon_band(stage, axes, graph, L)")
     e = ValueTracker(eps)
     x0, x1 = ax.x_range[0], ax.x_range[1]
     band = always_redraw(lambda: Polygon(
@@ -759,12 +759,12 @@ def epsilon_band(stage: Stage, ax, g, limit: float, eps: float = 0.5,
 
 # -- algorithms ----------------------------------------------------------------
 
-def array_bars(stage: Stage, values, where: str = "center", color=BLUE):
+def draw_array(stage: Stage, values, where: str = "center", color=BLUE):
     """An array as bars, left to right, heights by value."""
-    return bars(stage, values, labels=values, where=where, color=color)
+    return draw_bars(stage, values, labels=values, where=where, color=color)
 
 
-def swap(stage: Stage, bars_, i: int, j: int, run_time: float = 0.6):
+def swap_bars(stage: Stage, bars_, i: int, j: int, run_time: float = 0.6):
     """Swap two bars of an array_bars group, sliding past each other."""
     items = bars_[0] if isinstance(bars_[0], VGroup) and len(bars_) == 2 else bars_
     a, b = items[i], items[j]
@@ -777,7 +777,7 @@ def swap(stage: Stage, bars_, i: int, j: int, run_time: float = 0.6):
 
 # -- chance --------------------------------------------------------------------
 
-def coin_flips(stage: Stage, n: int = 30, p: float = 0.5, seed: int = 1,
+def flip_coins(stage: Stage, n: int = 30, p: float = 0.5, seed: int = 1,
                where: str = "center"):
     """Flips appear as heads (yellow) and tails (blue); the share of heads is
     read out as it settles towards p."""
@@ -819,44 +819,63 @@ def pulse(stage: Stage, m):
 KIT_API = """\
 stage = Stage(self) already exists. Every block plays its own animation and
 returns what it made; keep the return value to reuse it in later beats.
+Blocks are verbs (draw_plane, plot_graph); keep what they return in short
+nouns (p, ax, g, v) and animate those -- never a block's name.
   stage.title(s)  stage.caption(s)   -- replace the title / caption slot
   stage.equation(tex1, tex2, ..., where="right") -- a derivation, each step
       transforming into the next
   stage.label(m, s)  stage.clear(keep=[...])  stage.pause(seconds)
-  plane(stage, where="center", x_extent=4, y_extent=3) -> NumberPlane
-  vector(stage, p, (x, y), color=YELLOW, label=None) -> Arrow
-  basis(stage, p) -> (i_hat, j_hat)
+  draw_plane(stage, where="center", x_extent=4, y_extent=3) -> NumberPlane
+  draw_vector(stage, p, (x, y), color=YELLOW, label=None) -> Arrow
+  draw_basis(stage, p) -> (i_hat, j_hat)
   apply_matrix(stage, p, [[a, b], [c, d]], riders=[arrows...])
-  unit_square(stage, p) -> Polygon      span_line(stage, p, (x, y)) -> Line
+  draw_unit_square(stage, p) -> Polygon      draw_span(stage, p, (x, y)) -> Line
   scale_vector(stage, p, arrow, factor)
-  axes(stage, x_range=(a, b), y_range=(c, d), where="center") -> Axes
-  graph(stage, ax, f, color=BLUE, label=None) -> graph   (f is a lambda)
-  tangent(stage, ax, f, x_start, x_end)   -- slides, slope read out live
-  area(stage, ax, g, a, b)   riemann(stage, ax, g, a, b, ns=(4, 8, 16, 32))
-  trace(stage, ax, f, x_start, x_end)   -- a dot runs along f
-  number_line(stage, x_range=(a, b)) -> NumberLine
-  point_on_line(stage, nl, x, label=None) -> Dot
-  bars(stage, values, labels=None) -> bars
-  partial_sums(stage, term, n=10) -> (bars, readout)  (term is a lambda k: ...)
-  circle_slices(stage, n=12) -> sectors   unroll_to_rectangle(stage, sectors)
-  right_triangle(stage, a=3, b=2) -> triangle
-  dice_grid(stage, highlight_sum=None) -> cells
-  determinant(stage, p, [[a, b], [c, d]]) -> (square, area_label)
-  eigenvectors(stage, p, [[a, b], [c, d]])  -- eigen-directions stay put
-  taylor(stage, ax, f, a, [f(a), f'(a), f''(a), ...])  -- polynomials close in
-  unit_circle_wave(stage)   -- a turning radius draws a sine wave
-  vector_field(stage, lambda x, y: (u, v))
-  complex_plane(stage) -> cp    multiply_by(stage, cp, z)  -- rotate and scale
-  neural_net(stage, layers=(3, 4, 2)) -> net
-  network(stage, {"A": (x, y), ...}, [("A", "B"), ...]) -> (dots, lines)
-  histogram_grows(stage, lambda rng, k: rng.normal(size=k), bins=[...])
-  wave(stage, ax, amp=1, k=2, omega=2)   superpose(stage, ax, [(a, k, w), ...])
-  fourier_series(stage, ax, n_terms=7)   -- a square wave from odd sines
-  halving_squares(stage, n=7)            -- 1/2 + 1/4 + ... fills the square
-  epsilon_band(stage, ax, g, L, eps=0.5) -- the band narrows around the limit
-  array_bars(stage, [5, 2, 8, ...]) -> bars   swap(stage, bars, i, j)
-  coin_flips(stage, n=30, p=0.5)         -- share of heads settles
+  draw_axes(stage, x_range=(a, b), y_range=(c, d), where="center") -> Axes
+  plot_graph(stage, ax, f, color=BLUE, label=None) -> graph   (f is a lambda)
+  slide_tangent(stage, ax, f, x_start, x_end)   -- slides, slope read out live
+  shade_area(stage, ax, g, a, b)   riemann_refine(stage, ax, g, a, b, ns=(4, 8, 16, 32))
+  trace_graph(stage, ax, f, x_start, x_end)   -- a dot runs along f
+  draw_number_line(stage, x_range=(a, b)) -> NumberLine
+  mark_point(stage, nl, x, label=None) -> Dot
+  draw_bars(stage, values, labels=None) -> bars
+  show_partial_sums(stage, term, n=10) -> (bars, readout)  (term is a lambda k: ...)
+  slice_circle(stage, n=12) -> sectors   unroll_slices(stage, sectors)
+  draw_right_triangle(stage, a=3, b=2) -> triangle
+  draw_dice_grid(stage, highlight_sum=None) -> cells
+  show_determinant(stage, p, [[a, b], [c, d]]) -> (square, area_label)
+  show_eigenvectors(stage, p, [[a, b], [c, d]])  -- eigen-directions stay put
+  taylor_approximate(stage, ax, f, a, [f(a), f'(a), f''(a), ...])  -- polynomials close in
+  circle_to_sine(stage)   -- a turning radius draws a sine wave
+  draw_vector_field(stage, lambda x, y: (u, v))
+  draw_complex_plane(stage) -> cp    multiply_complex(stage, cp, z)  -- rotate and scale
+  draw_neural_net(stage, layers=(3, 4, 2)) -> net
+  draw_network(stage, {"A": (x, y), ...}, [("A", "B"), ...]) -> (dots, lines)
+  grow_histogram(stage, lambda rng, k: rng.normal(size=k), bins=[...])
+  animate_wave(stage, ax, amp=1, k=2, omega=2)   superpose_waves(stage, ax, [(a, k, w), ...])
+  build_fourier_series(stage, ax, n_terms=7)   -- a square wave from odd sines
+  fill_halving_squares(stage, n=7)            -- 1/2 + 1/4 + ... fills the square
+  narrow_epsilon_band(stage, ax, g, L, eps=0.5) -- the band narrows around the limit
+  draw_array(stage, [5, 2, 8, ...]) -> bars   swap_bars(stage, bars, i, j)
+  flip_coins(stage, n=30, p=0.5)         -- share of heads settles
   highlight(stage, m)   pulse(stage, m)
 Regions: "center", "left", "right", "full". Text only through stage.title,
 stage.caption, stage.label and stage.equation.
 """
+
+
+#: Every block that draws something (everything taking a stage, bar the two
+#: emphasis helpers), and those that also move it. Scorecards and the GRPO
+#: reward read these instead of keeping their own lists, which went stale
+#: the day the kit grew.
+KIT_BLOCKS = {n for n, f in list(globals().items())
+              if callable(f) and not n.startswith("_") and not isinstance(f, type)
+              and getattr(f, "__code__", None) is not None
+              and f.__code__.co_varnames[:1] == ("stage",)
+              and n not in {"highlight", "pulse"}}
+KIT_MOVES = {"apply_matrix", "slide_tangent", "riemann_refine", "trace_graph",
+             "scale_vector", "unroll_slices", "show_eigenvectors",
+             "show_determinant", "taylor_approximate", "circle_to_sine",
+             "multiply_complex", "grow_histogram", "animate_wave",
+             "superpose_waves", "build_fourier_series", "narrow_epsilon_band",
+             "swap_bars", "flip_coins"}

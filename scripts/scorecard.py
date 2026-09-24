@@ -15,7 +15,7 @@ beside two that a slide cannot fake:
     data/scorecard/<tag>/, to be looked at before any number is believed.
 
 Coverage is computed on the construct() body only: in kit mode the
-embedded kit source is full of words like "vector" and "tangent".
+embedded kit source is full of words like "draw_vector" and "slide_tangent".
 Runs through forge.app.pipeline, the same code the demo and server use.
 """
 from __future__ import annotations
@@ -34,11 +34,7 @@ sys.path.insert(0, str(ROOT))
 
 from forge.app.pipeline import Options, SwapHost, run  # noqa: E402
 
-KIT_DRAWS = {"plane", "vector", "basis", "apply_matrix", "unit_square",
-             "span_line", "scale_vector", "axes", "graph", "tangent", "area",
-             "riemann", "trace", "number_line", "point_on_line", "bars",
-             "partial_sums", "circle_slices", "unroll_to_rectangle",
-             "right_triangle", "dice_grid"}
+from forge.kit.kit import KIT_BLOCKS as KIT_DRAWS  # noqa: E402
 TEXT = {"Text", "MathTex", "Tex", "Title", "MarkupText", "Paragraph",
         "BulletedList", "Code", "Integer", "DecimalNumber", "Variable"}
 

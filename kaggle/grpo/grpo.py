@@ -76,20 +76,8 @@ _MOTION = {"Transform", "ReplacementTransform", "TransformMatchingTex",
 _MOBJECT = None
 # Kit blocks draw and animate inside the kit, so a kit beat never contains
 # "self.play(" or a Mobject constructor; these count instead.
-_KIT_DRAWS = {"plane", "vector", "basis", "apply_matrix", "unit_square",
-              "span_line", "scale_vector", "axes", "graph", "tangent", "area",
-              "riemann", "trace", "number_line", "point_on_line", "bars",
-              "partial_sums", "circle_slices", "unroll_to_rectangle",
-              "right_triangle", "dice_grid", "determinant", "eigenvectors",
-              "taylor", "unit_circle_wave", "vector_field", "complex_plane",
-              "multiply_by", "neural_net", "network", "histogram_grows",
-              "wave", "superpose", "fourier_series", "halving_squares",
-              "epsilon_band", "array_bars", "coin_flips"}
-_KIT_MOVES = {"apply_matrix", "tangent", "riemann", "trace", "scale_vector",
-              "unroll_to_rectangle", "eigenvectors", "determinant", "taylor",
-              "unit_circle_wave", "multiply_by", "histogram_grows", "wave",
-              "superpose", "fourier_series", "epsilon_band", "swap",
-              "coin_flips"}
+from forge.kit.kit import KIT_BLOCKS as _KIT_DRAWS  # noqa: E402
+from forge.kit.kit import KIT_MOVES as _KIT_MOVES  # noqa: E402
 
 
 def _shape_and_motion(code: str) -> tuple[bool, bool]:
