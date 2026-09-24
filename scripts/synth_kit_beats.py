@@ -35,6 +35,7 @@ from forge.app.pipeline import CODE_SYSTEM_KIT  # noqa: E402
 from forge.app.twostage import (Beat, assemble, beat_prompt,  # noqa: E402
                                 failing_beat, parse_plan, parsing_prefix,
                                 prune_all)
+from filter_kit_beats import FAMILIES  # noqa: E402
 from scorecard import visual  # noqa: E402
 
 D = ROOT / "data" / "planner"
@@ -90,8 +91,14 @@ def arcs(limit: int) -> list[tuple[str, str, list[Beat]]]:
             if ok is not None and rid not in ok:
                 continue
             beats, _ = parse_plan(r["messages"][2]["content"], limit=60)
-            if len(beats) >= 4:
-                out.append((rid, r["messages"][1]["content"], beats[:10]))
+            beats = beats[:10]
+            # Only arcs the kit can draw: a third of the beats must name
+            # something one of its families pictures. An arc about Escher's
+            # lithograph came back as ten identical vector diagrams.
+            drawable = sum(any(re.search(rx, (b.intent + " " + b.narration).lower())
+                               for _, rx in FAMILIES.values()) for b in beats)
+            if len(beats) >= 4 and drawable * 3 >= len(beats):
+                out.append((rid, r["messages"][1]["content"], beats))
     return out[:limit]
 
 
