@@ -60,15 +60,28 @@ def load(adapter: str | None):
     return mlx_load(MODEL, **({"adapter_path": adapter} if adapter else {}))
 
 
-def ask(model, tok, system: str, user: str, max_tokens: int) -> str:
+def ask(model, tok, system: str, user: str, max_tokens: int,
+        temp: float = 0.0, rep_penalty: float = 0.0) -> str:
     from mlx_lm import generate
-    from mlx_lm.sample_utils import make_sampler
+    from mlx_lm.sample_utils import make_logits_processors, make_sampler
     chat = tok.apply_chat_template(
         [{"role": "system", "content": system},
          {"role": "user", "content": user}],
         add_generation_prompt=True, tokenize=False)
+    procs = (make_logits_processors(repetition_penalty=rep_penalty,
+                                    repetition_context_size=256)
+             if rep_penalty else None)
     return generate(model, tok, prompt=chat, max_tokens=max_tokens,
-                    sampler=make_sampler(temp=0.0), verbose=False)
+                    sampler=make_sampler(temp=temp, top_p=0.95 if temp else 0.0),
+                    logits_processors=procs, verbose=False)
+
+
+#: Planner decoding, set from --plan-temp / --plan-rep-penalty. Sampled by
+#: default: on eight hard titles planner v2 wrote 3.8 beats before its first
+#: repeated intent under greedy decoding and 22.6 at temperature 0.5 with a
+#: 1.1 repetition penalty -- real arcs, not paraphrased loops. The coder
+#: stays greedy.
+PLAN_DECODE = {"temp": 0.5, "rep_penalty": 1.1}
 
 
 def plan(model, tok, request: str, stride: int, max_beats: int) -> list:
@@ -81,7 +94,7 @@ def plan(model, tok, request: str, stride: int, max_beats: int) -> list:
         reply = ask(model, tok, PLAN_SYSTEM,
                     f"REQUEST\n{request}\n\nBEATS SO FAR\n{shown}\n\n"
                     f"Write the next {stride} beat(s), numbered from "
-                    f"{len(beats) + 1}.", max_tokens=700)
+                    f"{len(beats) + 1}.", max_tokens=700, **PLAN_DECODE)
         new, ended = parse_plan(reply, limit=stride)
         new = [b for b in new if b.n > len(beats)]
         # A repeated intent ends the arc. Planner v2 wrote 38-51 repeats in
@@ -115,6 +128,8 @@ def main() -> int:
                     help="600 truncated half the untuned run's beats")
     ap.add_argument("--max-beats", type=int, default=24)
     ap.add_argument("--tag", default="twostage")
+    ap.add_argument("--plan-temp", type=float, default=0.5)
+    ap.add_argument("--plan-rep-penalty", type=float, default=1.1)
     ap.add_argument("--salvage", action="store_true",
                     help="after repair, drop beats that still use undefined "
                          "names and render the rest, if half survive")
@@ -130,6 +145,7 @@ def main() -> int:
                          "ratio the way run_hard_eval does -- so the split's "
                          "number sits next to Phase 1's on the same tasks")
     a = ap.parse_args()
+    PLAN_DECODE.update(temp=a.plan_temp, rep_penalty=a.plan_rep_penalty)
 
     hard_tasks = None
     if a.hard:
