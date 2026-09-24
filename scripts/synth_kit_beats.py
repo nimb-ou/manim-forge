@@ -112,7 +112,11 @@ def main() -> int:
     ap.add_argument("--model", default="mistral-medium-latest")
     ap.add_argument("--limit", type=int, default=300)
     ap.add_argument("--pause", type=float, default=2.0)
+    ap.add_argument("--shard", default="0/1",
+                    help="i/n: take every n-th arc starting at i, so several "
+                         "processes share the arcs (and the renders) safely")
     a = ap.parse_args()
+    shard, nshards = (int(x) for x in a.shard.split("/"))
 
     import manim
     mob = {n for n in dir(manim) if isinstance(getattr(manim, n), type)
@@ -131,7 +135,8 @@ def main() -> int:
     OUT.parent.mkdir(parents=True, exist_ok=True)
     done = {json.loads(l)["arc"] for l in SCENES.open() if l.strip()} \
         if SCENES.exists() else set()
-    todo = [x for x in arcs(a.limit) if x[0] not in done]
+    todo = [x for k, x in enumerate(arcs(a.limit))
+            if x[0] not in done and k % nshards == shard]
     print(f"{len(done)} arcs done, {len(todo)} to go", flush=True)
     api = _kit_api()
     rows_made = scenes_ok = 0
