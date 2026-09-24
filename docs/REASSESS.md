@@ -160,3 +160,39 @@ fix, so that fix gets its number.
 
 **5. Handover.** Best: planner v3 (sampled, count-aware repeat stop) +
 coder v2 + salvage + set-up. Kaggle quota out; v4 and GRPO queued.
+
+## Log · 2026-09-24 17:30Z
+
+**1. Arrived.** Nimit watched the best hard-eval render and called it
+"complete nonsense" — correctly. It is text slides; 215 of 289 beats built
+no picture. Everything measured this week (renders, coverage, length) was
+blind to that.
+
+**2. Symptom or thing?** The *thing*: a 7B model writing raw Manim falls
+back on Text because it is the one call that always works. Four days of
+salvage, repair and data cleaning improved whether scenes *render*, not
+whether they *show anything*. That is the rabbit hole: optimising the
+measurable proxy. More harness work on raw Manim would be a fifth layer of
+the same thing.
+
+**3. Critical path — changed.** New centre: **the Forge kit** (forge/kit),
+~35 3Blue1Brown-style blocks (planes, vectors, matrix moves,
+eigenvectors, tangents, Riemann sums, Taylor, unit-circle sine, complex
+multiplication, neural nets, sampling histograms) behind a Stage that owns
+layout. The model chooses blocks and parameters; the picture is
+guaranteed by construction. Next numbers: kit vs raw on 12 hard titles
+(queued, with a smoke first), judged by *visual-beat share* and contact
+sheets looked at, not by coverage.
+
+**4. Missing.**
+- The coder has never been trained on the kit; the A/B is prompt-only. If
+  it helps, the data for coder v5 is teacher-written kit beats, render-
+  verified and visual-checked — build that generator now.
+- GRPO, planner v4 and coder v4 were designed around raw Manim; coder v4
+  (gate-filtered raw data) is now likely the wrong next GPU job. Re-order
+  when the quota resets: kit-trained coder first.
+- Phase 4 app built (forge/serve), kit on by default — ready for Nimit to
+  use once the Mac is free.
+
+**5. Handover.** The product question is now "does the kit make pictures
+that explain", answered by looking at them.
