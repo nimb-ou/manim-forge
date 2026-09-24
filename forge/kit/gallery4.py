@@ -1,0 +1,53 @@
+import sys
+sys.path.insert(0, str(__import__("pathlib").Path(__file__).resolve().parents[2]))
+from manim import *
+from forge.kit.kit import *
+import numpy as np
+
+
+class Gallery4(Scene):
+    def construct(self):
+        stage = Stage(self)
+        stage.title("Bayes, as areas")
+        bayes_square(stage, prior=0.1)
+        stage.clear()
+        stage.title("Gradient descent")
+        ax = draw_axes(stage, x_range=(-3, 3), y_range=(0, 9))
+        f = lambda x: x ** 2 + 0.5
+        plot_graph(stage, ax, f)
+        gradient_descent(stage, ax, f, 2.6, steps=6)
+        stage.clear()
+        stage.title("Convolution")
+        convolve_bars(stage, [1, 2, 3, 2, 1], [1, 1, 1])
+        stage.clear()
+        stage.title("Dot product as projection")
+        p = draw_plane(stage)
+        project_vector(stage, p, (2, 2), (3, 1))
+        stage.clear()
+        stage.title("Another basis")
+        p = draw_plane(stage)
+        basis_grid(stage, p, (1, 0.5), (-0.5, 1))
+        stage.clear()
+        stage.title("Winding a signal")
+        wind_signal(stage, freqs=(3,), run_time=4)
+        stage.clear()
+        stage.title("Prime spirals")
+        prime_spiral(stage, n=1500)
+        stage.clear()
+        stage.title("Heat smooths out")
+        ax = draw_axes(stage, x_range=(0, 6), y_range=(-1, 2))
+        diffuse_heat(stage, ax, lambda x: 1.5 if 2 < x < 3 else 0.0, run_time=3)
+        stage.clear()
+        stage.title("Towers of Hanoi")
+        hanoi_moves(stage, n=3)
+        stage.clear()
+        stage.title("Hamming parity")
+        bit_grid(stage, [0, 1, 1, 0, 1, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 1], highlight_cols=[1, 3])
+        stage.clear()
+        stage.title("A swirling flow")
+        flow_particles(stage, lambda x, y: (-y, x), run_time=3)
+        stage.clear()
+        stage.title("Euler's formula")
+        cp = draw_complex_plane(stage)
+        euler_circle(stage, cp, run_time=3)
+        stage.pause(1)

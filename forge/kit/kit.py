@@ -803,6 +803,307 @@ def flip_coins(stage: Stage, n: int = 30, p: float = 0.5, seed: int = 1,
     return coins, read
 
 
+# -- the second batch: what the hard titles ask for ----------------------------
+
+def bayes_square(stage: Stage, prior: float = 0.01, sensitivity: float = 0.9,
+                 false_pos: float = 0.09, where: str = "center"):
+    """Bayes as areas: a population square split by the prior, each part split
+    by the test, and the positives picked out -- the posterior is the share
+    of the highlighted area that is the condition."""
+    cx, cy, w, h = _REGIONS[where]
+    side = min(w, h) * 0.85
+    x0, y0 = cx - side / 2, cy - side / 2
+    sick_w = max(side * prior, 0.08)
+    well_w = side - sick_w
+
+    def block(x, width, frac, color):
+        top = Rectangle(width=width, height=side * frac, fill_opacity=0.85,
+                        color=color, stroke_width=1)
+        top.move_to([x + width / 2, y0 + side - side * frac / 2, 0])
+        rest = Rectangle(width=width, height=side * (1 - frac), fill_opacity=0.2,
+                         color=color, stroke_width=1)
+        rest.move_to([x + width / 2, y0 + side * (1 - frac) / 2, 0])
+        return top, rest
+
+    outline = Square(side, color=WHITE).move_to([cx, cy, 0])
+    stage.scene.play(Create(outline), run_time=0.6)
+    s_pos, s_neg = block(x0, sick_w, sensitivity, RED)
+    w_pos, w_neg = block(x0 + sick_w, well_w, false_pos, BLUE)
+    stage.scene.play(FadeIn(s_pos), FadeIn(s_neg), FadeIn(w_pos), FadeIn(w_neg),
+                     run_time=1.2)
+    post = prior * sensitivity / (prior * sensitivity + (1 - prior) * false_pos)
+    tag = MathTex(r"P(\text{sick}\mid +) = %.2f" % post, font_size=36)
+    tag.next_to(outline, RIGHT, buff=0.3)
+    stage.scene.play(Circumscribe(VGroup(s_pos, w_pos), color=YELLOW),
+                     FadeIn(tag), run_time=1.2)
+    grp = VGroup(outline, s_pos, s_neg, w_pos, w_neg, tag)
+    stage._objects.append(grp)
+    return grp
+
+
+def gradient_descent(stage: Stage, ax, f, x0: float, lr: float = 0.2,
+                     steps: int = 10, color=YELLOW):
+    """A ball stepping downhill on f by the slope, step by step."""
+    _need(ax, "c2p", "the axes from draw_axes(stage)", "gradient_descent(stage, ax, f, x0)")
+    h = 1e-4
+    x = x0
+    ball = Dot(ax.c2p(x, f(x)), color=color, radius=0.12)
+    stage.scene.play(GrowFromCenter(ball), run_time=0.5)
+    for _ in range(steps):
+        slope = (f(x + h) - f(x - h)) / (2 * h)
+        x = x - lr * slope
+        stage.scene.play(ball.animate.move_to(ax.c2p(x, f(x))), run_time=0.4)
+    stage._objects.append(ball)
+    return ball
+
+
+def convolve_bars(stage: Stage, a, b, where: str = "center"):
+    """Slide b across a; at each shift the products sum to one output bar."""
+    a, b = list(a), list(b)
+    out = np.convolve(a, b)
+    top = max(max(a), max(b), 1e-9)
+    cx, cy, w, h = _REGIONS[where]
+    unit = min(w / (len(a) + 2 * len(b)), 0.7)
+    base_a = cy + 0.6
+    bars_a = VGroup(*[Rectangle(width=unit * 0.8, height=max(v / top * 1.4, 0.02),
+                                fill_opacity=0.8, color=BLUE, stroke_width=0)
+                      .move_to([cx + (i - len(a) / 2) * unit, base_a, 0],
+                               aligned_edge=DOWN) for i, v in enumerate(a)])
+    stage.scene.play(FadeIn(bars_a), run_time=0.6)
+    otop = max(out.max(), 1e-9)
+    base_o = cy - h / 2 + 0.2
+    outs = VGroup()
+    for k in range(len(out)):
+        bars_b = VGroup(*[Rectangle(width=unit * 0.8, height=max(v / top * 1.0, 0.02),
+                                    fill_opacity=0.6, color=YELLOW, stroke_width=0)
+                          .move_to([cx + (k - j - len(a) / 2) * unit, base_a - 1.2, 0],
+                                   aligned_edge=DOWN) for j, v in enumerate(b)])
+        o = Rectangle(width=unit * 0.8, height=max(out[k] / otop * 1.6, 0.02),
+                      fill_opacity=0.9, color=GREEN, stroke_width=0)
+        o.move_to([cx + (k - len(a) / 2) * unit, base_o, 0], aligned_edge=DOWN)
+        stage.scene.play(FadeIn(bars_b), run_time=0.2)
+        stage.scene.play(GrowFromCenter(o), FadeOut(bars_b), run_time=0.3)
+        outs.add(o)
+    grp = VGroup(bars_a, outs)
+    stage._objects.append(grp)
+    return grp
+
+
+def project_vector(stage: Stage, plane_, v, w, color=GREEN):
+    """The shadow of v on w's line: the dot product is its length times |w|."""
+    _need(plane_, "c2p", "the plane from draw_plane(stage)", "project_vector(stage, p, v, w)")
+    v, w = np.array(v, dtype=float), np.array(w, dtype=float)
+    av = draw_vector(stage, plane_, tuple(v), YELLOW)
+    aw = draw_vector(stage, plane_, tuple(w), BLUE)
+    draw_span(stage, plane_, tuple(w), color=BLUE)
+    proj = (v @ w) / (w @ w) * w
+    drop = DashedLine(plane_.c2p(*v), plane_.c2p(*proj), color=GREY_B)
+    shadow = Arrow(plane_.c2p(0, 0), plane_.c2p(*proj), buff=0, color=color)
+    stage.scene.play(Create(drop), GrowArrow(shadow), run_time=1.0)
+    stage._objects += [drop, shadow]
+    return av, aw, shadow
+
+
+def basis_grid(stage: Stage, plane_, b1, b2, color=TEAL):
+    """Another coordinate system over the same plane: the grid spanned by
+    b1 and b2, drawn over the standard one."""
+    _need(plane_, "c2p", "the plane from draw_plane(stage)", "basis_grid(stage, p, b1, b2)")
+    b1, b2 = np.array(b1, dtype=float), np.array(b2, dtype=float)
+    lines = VGroup()
+    for k in range(-4, 5):
+        for d, other in ((b1, b2), (b2, b1)):
+            p0 = k * other - 6 * d
+            p1 = k * other + 6 * d
+            lines.add(Line(plane_.c2p(*p0), plane_.c2p(*p1), color=color,
+                           stroke_width=1.5, stroke_opacity=0.7))
+    stage.scene.play(Create(lines), run_time=1.5)
+    a1 = draw_vector(stage, plane_, tuple(b1), GREEN)
+    a2 = draw_vector(stage, plane_, tuple(b2), RED)
+    stage._objects.append(lines)
+    return lines, a1, a2
+
+
+def wind_signal(stage: Stage, freqs=(3,), wind_from: float = 0.5,
+                wind_to: float = 3.5, run_time: float = 5.0):
+    """The Fourier machine: a signal wound around a circle at a changing
+    winding frequency; its centre of mass jumps out when the winding matches
+    a frequency in the signal."""
+    signal = lambda t: 1 + sum(np.cos(TAU * f * t) for f in freqs) / len(freqs)
+    centre = np.array([0.0, -0.3, 0])
+    scale = 1.3
+    wf = ValueTracker(wind_from)
+
+    def curve():
+        ts = np.linspace(0, 4.5, 600)
+        pts = [centre + scale * signal(t) * np.array(
+            [np.cos(-TAU * wf.get_value() * t), np.sin(-TAU * wf.get_value() * t), 0])
+            for t in ts]
+        from manim import VMobject
+        c = VMobject(color=YELLOW, stroke_width=2)
+        c.set_points_smoothly(pts)
+        return c
+
+    def mass():
+        ts = np.linspace(0, 4.5, 600)
+        z = np.mean([signal(t) * np.exp(-1j * TAU * wf.get_value() * t) for t in ts])
+        return Dot(centre + scale * np.array([z.real, z.imag, 0]), color=RED,
+                   radius=0.1)
+
+    wound = always_redraw(curve)
+    dot = always_redraw(mass)
+    readout = DecimalNumber(wind_from, num_decimal_places=2, font_size=34)
+    readout.add_updater(lambda m: m.set_value(wf.get_value()))
+    lab = VGroup(MathTex(r"\text{winding} =", font_size=34), readout).arrange(RIGHT)
+    lab.move_to([4.2, 2.3, 0])
+    stage.scene.add(wound, dot)
+    stage.scene.play(FadeIn(lab), run_time=0.4)
+    stage.scene.play(wf.animate.set_value(wind_to), run_time=run_time,
+                     rate_func=lambda x: x)
+    stage._objects += [wound, dot, lab]
+    return wound, dot
+
+
+def prime_spiral(stage: Stage, n: int = 2000, where: str = "center"):
+    """Primes plotted at (p, p) in polar coordinates: arms appear."""
+    cx, cy, w, h = _REGIONS[where]
+    sieve = np.ones(n + 1, dtype=bool)
+    sieve[:2] = False
+    for k in range(2, int(n ** 0.5) + 1):
+        if sieve[k]:
+            sieve[k * k::k] = False
+    primes = np.nonzero(sieve)[0]
+    r = min(w, h) / 2 / np.sqrt(n)
+    dots = VGroup(*[Dot([cx + r * np.sqrt(q) * np.cos(q), cy + r * np.sqrt(q) * np.sin(q), 0],
+                        radius=0.025, color=TEAL) for q in primes])
+    stage.scene.play(LaggedStart(*[FadeIn(d) for d in dots], lag_ratio=0.002),
+                     run_time=3.0)
+    stage._objects.append(dots)
+    return dots
+
+
+def diffuse_heat(stage: Stage, ax, f0, t_end: float = 1.5, run_time: float = 4.0,
+                 color=ORANGE):
+    """A temperature curve smoothing out under the heat equation (the high
+    frequencies decay fastest)."""
+    _need(ax, "plot", "the axes from draw_axes(stage)", "diffuse_heat(stage, ax, f0)")
+    x0, x1 = ax.x_range[0], ax.x_range[1]
+    L = x1 - x0
+    xs = np.linspace(x0, x1, 400)
+    ys = np.array([f0(x) for x in xs])
+    ks = np.arange(1, 30)
+    coef = [2 / len(xs) * np.sum(ys * np.sin(k * PI * (xs - x0) / L)) for k in ks]
+    t = ValueTracker(0)
+    u = lambda x: sum(c * np.exp(-(k * PI / L) ** 2 * t.get_value())
+                      * np.sin(k * PI * (x - x0) / L) for c, k in zip(coef, ks))
+    curve = always_redraw(lambda: ax.plot(u, x_range=[x0, x1], color=color))
+    stage.scene.play(Create(curve), run_time=1.0)
+    stage.scene.play(t.animate.set_value(t_end), run_time=run_time)
+    stage._objects.append(curve)
+    return curve
+
+
+def hanoi_moves(stage: Stage, n: int = 3, where: str = "center"):
+    """Towers of Hanoi, solved move by move."""
+    cx, cy, w, h = _REGIONS[where]
+    xs = {"A": cx - w / 3, "B": cx, "C": cx + w / 3}
+    base = cy - h / 2 + 0.5
+    pegs = VGroup(*[Line([x, base, 0], [x, base + 2.4, 0], color=GREY_B,
+                         stroke_width=6) for x in xs.values()])
+    stage.scene.play(Create(pegs), run_time=0.6)
+    discs = {k: Rectangle(width=0.6 + 0.35 * k, height=0.28, fill_opacity=0.9,
+                          color=_PALETTE[k % len(_PALETTE)], stroke_width=1)
+             for k in range(n, 0, -1)}
+    stacks = {"A": list(range(n, 0, -1)), "B": [], "C": []}
+    for i, k in enumerate(stacks["A"]):
+        discs[k].move_to([xs["A"], base + 0.14 + 0.3 * i, 0])
+    stage.scene.play(*[FadeIn(d) for d in discs.values()], run_time=0.6)
+
+    def solve(m, a, c, b):
+        if m == 0:
+            return
+        solve(m - 1, a, b, c)
+        k = stacks[a].pop()
+        stacks[c].append(k)
+        d = discs[k]
+        stage.scene.play(d.animate.move_to([xs[a], base + 2.8, 0]), run_time=0.2)
+        stage.scene.play(d.animate.move_to([xs[c], base + 2.8, 0]), run_time=0.2)
+        stage.scene.play(d.animate.move_to([xs[c], base + 0.14 + 0.3 * (len(stacks[c]) - 1), 0]),
+                         run_time=0.2)
+        solve(m - 1, b, c, a)
+
+    solve(n, "A", "C", "B")
+    grp = VGroup(pegs, *discs.values())
+    stage._objects.append(grp)
+    return grp
+
+
+def bit_grid(stage: Stage, bits, where: str = "center", highlight_cols=None,
+             highlight_rows=None):
+    """A 4x4 grid of bits (Hamming codes); optional parity rows/columns lit."""
+    bits = list(bits)[:16] + [0] * max(0, 16 - len(bits))
+    cells = VGroup()
+    for k, b in enumerate(bits):
+        sq = Square(0.8, stroke_width=1.5, color=GREY_B)
+        sq.add(MathTex(str(b), font_size=36))
+        if b:
+            sq.set_fill(BLUE, opacity=0.35)
+        cells.add(sq)
+    cells.arrange_in_grid(4, 4, buff=0)
+    stage.place(cells, where)
+    stage.scene.play(LaggedStart(*[FadeIn(c) for c in cells], lag_ratio=0.03),
+                     run_time=1.0)
+    lit = []
+    for c in highlight_cols or []:
+        lit += [cells[r * 4 + c] for r in range(4)]
+    for r in highlight_rows or []:
+        lit += [cells[r * 4 + c] for c in range(4)]
+    if lit:
+        stage.scene.play(*[m.animate.set_stroke(YELLOW, width=4) for m in lit],
+                         run_time=0.8)
+    return cells
+
+
+def flow_particles(stage: Stage, f, n: int = 60, run_time: float = 4.0, seed: int = 0):
+    """Particles carried along a 2D field f(x, y) -> (u, v): sources spread,
+    sinks gather, curl swirls."""
+    rng = np.random.default_rng(seed)
+    starts = np.column_stack([rng.uniform(-5, 5, n), rng.uniform(-3, 3, n)])
+    dots = VGroup(*[Dot([x, y, 0], radius=0.05, color=YELLOW) for x, y in starts])
+
+    def carry(mob, dt):
+        for d in mob:
+            x, y, _ = d.get_center()
+            u, v = f(x, y)
+            d.shift(dt * 0.6 * np.array([u, v, 0]))
+
+    stage.scene.add(dots)
+    dots.add_updater(carry)
+    stage.scene.wait(run_time)
+    dots.clear_updaters()
+    stage._objects.append(dots)
+    return dots
+
+
+def euler_circle(stage: Stage, cp, t_end: float = TAU, run_time: float = 4.0):
+    """e^{it} walking the unit circle as t grows, t read out."""
+    _need(cp, "n2p", "the plane from draw_complex_plane(stage)", "euler_circle(stage, cp)")
+    t = ValueTracker(0)
+    circle = Circle(radius=abs(cp.n2p(1)[0] - cp.n2p(0)[0]), color=GREY_B)
+    circle.move_to(cp.n2p(0))
+    arrow = always_redraw(lambda: Arrow(cp.n2p(0), cp.n2p(np.exp(1j * t.get_value())),
+                                        buff=0, color=YELLOW))
+    read = DecimalNumber(0, num_decimal_places=2, font_size=34)
+    read.add_updater(lambda m: m.set_value(t.get_value()))
+    lab = VGroup(MathTex(r"e^{it},\ t =", font_size=34), read).arrange(RIGHT)
+    lab.move_to(cp.n2p(0) + np.array([3.2, 2.2, 0]))
+    stage.scene.play(Create(circle), FadeIn(lab), run_time=0.8)
+    stage.scene.add(arrow)
+    stage.scene.play(t.animate.set_value(t_end), run_time=run_time,
+                     rate_func=lambda x: x)
+    stage._objects += [circle, arrow, lab]
+    return arrow
+
+
 # -- emphasis ------------------------------------------------------------------
 
 def highlight(stage: Stage, m, color=YELLOW):
@@ -858,6 +1159,17 @@ nouns (p, ax, g, v) and animate those -- never a block's name.
   narrow_epsilon_band(stage, ax, g, L, eps=0.5) -- the band narrows around the limit
   draw_array(stage, [5, 2, 8, ...]) -> bars   swap_bars(stage, bars, i, j)
   flip_coins(stage, n=30, p=0.5)         -- share of heads settles
+  bayes_square(stage, prior=0.01, sensitivity=0.9, false_pos=0.09)
+  gradient_descent(stage, ax, f, x0, lr=0.2, steps=10) -- a ball steps downhill
+  convolve_bars(stage, [a...], [b...])   -- b slides over a, sums build output
+  project_vector(stage, p, v, w)         -- v's shadow on w's line
+  basis_grid(stage, p, b1, b2)           -- another basis's grid over the plane
+  wind_signal(stage, freqs=(3,))         -- Fourier: wind a signal round a circle
+  prime_spiral(stage, n=2000)            -- primes at (p, p) in polar
+  diffuse_heat(stage, ax, lambda x: ...) -- a temperature curve smooths out
+  hanoi_moves(stage, n=3)   bit_grid(stage, bits, highlight_cols=[1, 3])
+  flow_particles(stage, lambda x, y: (u, v))  -- particles ride a field
+  euler_circle(stage, cp)                -- e^{it} walks the unit circle
   highlight(stage, m)   pulse(stage, m)
 Regions: "center", "left", "right", "full". Text only through stage.title,
 stage.caption, stage.label and stage.equation.
@@ -878,4 +1190,6 @@ KIT_MOVES = {"apply_matrix", "slide_tangent", "riemann_refine", "trace_graph",
              "show_determinant", "taylor_approximate", "circle_to_sine",
              "multiply_complex", "grow_histogram", "animate_wave",
              "superpose_waves", "build_fourier_series", "narrow_epsilon_band",
-             "swap_bars", "flip_coins"}
+             "swap_bars", "flip_coins", "gradient_descent", "convolve_bars",
+             "wind_signal", "diffuse_heat", "hanoi_moves", "flow_particles",
+             "euler_circle"}
