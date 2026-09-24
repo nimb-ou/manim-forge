@@ -187,8 +187,20 @@ def names_in_scope(bodies: list[str]) -> list[str]:
     return out
 
 
+def kit_source() -> str:
+    """forge/kit/kit.py as text, ready to sit under the scene's preamble.
+
+    Read from disk rather than imported so this module stays dependency
+    free (the GRPO kernel imports it bare). The future import has to be a
+    file's first statement, so it is dropped when the kit is embedded.
+    """
+    from pathlib import Path
+    src = (Path(__file__).resolve().parents[1] / "kit" / "kit.py").read_text()
+    return src.replace("from __future__ import annotations\n", "", 1)
+
+
 def assemble(beats: list[Beat], bodies: list[str],
-             scene: str = "ForgeScene") -> Assembly:
+             scene: str = "ForgeScene", kit: bool = False) -> Assembly:
     """Concatenate beat bodies into one renderable scene, and check it.
 
     Names are checked against Manim's exports plus the builtins plus whatever
@@ -208,8 +220,10 @@ def assemble(beats: list[Beat], bodies: list[str],
     # of beats has no ending unless one is added.
     tail = "" if re.search(r"self\.wait\([^)]*\)\s*$", body) else \
         "\n        self.wait(1)"
-    code = (f"{PREAMBLE}\n\nclass {scene}(Scene):\n"
-            f"    def construct(self):\n{body}{tail}\n")
+    head = f"{PREAMBLE}\n{kit_source()}\n" if kit else PREAMBLE
+    stage = "        stage = Stage(self)\n" if kit else ""
+    code = (f"{head}\n\nclass {scene}(Scene):\n"
+            f"    def construct(self):\n{stage}{body}{tail}\n")
     out = Assembly(code=code, beats=list(beats), bodies=list(bodies))
     if not any(src.strip() for src in bodies):
         # Reported as itself. An empty construct fails to parse, and
@@ -228,8 +242,23 @@ def assemble(beats: list[Beat], bodies: list[str],
     # Parameters are ast.arg, not Name, so defined_names misses them: every
     # `axes.plot(lambda x: x**2)` reported `x` as a name no beat defines, and
     # sent the scene to repair or salvage for nothing.
-    known = (defined_names(tree) | set(dir(builtins)) | {"self"}
-             | {n.arg for n in ast.walk(tree) if isinstance(n, ast.arg)})
+    # Names come from the scene class plus the module's top level. Walking
+    # the whole module let the embedded kit's internals (`for v in values`)
+    # define `v` for every beat.
+    scene_tree = next((n for n in tree.body if isinstance(n, ast.ClassDef)
+                       and n.name == scene), tree)
+    top: set[str] = set()
+    for node in tree.body:
+        if isinstance(node, (ast.FunctionDef, ast.ClassDef)):
+            top.add(node.name)
+        elif isinstance(node, (ast.Assign, ast.AnnAssign)):
+            for t in (node.targets if isinstance(node, ast.Assign)
+                      else [node.target]):
+                top |= {n.id for n in ast.walk(t) if isinstance(n, ast.Name)}
+        elif isinstance(node, (ast.Import, ast.ImportFrom)):
+            top |= {(a.asname or a.name).split(".")[0] for a in node.names}
+    known = (defined_names(scene_tree) | top | set(dir(builtins)) | {"self"}
+             | {n.arg for n in ast.walk(scene_tree) if isinstance(n, ast.arg)})
     try:
         import manim
         known |= {n for n in dir(manim) if not n.startswith("_")}
@@ -250,15 +279,17 @@ def assemble(beats: list[Beat], bodies: list[str],
     # flagging it sent three of eight scenes to a repair that made them worse.
     scene_attrs |= {"mobjects", "camera", "renderer", "foreground_mobjects",
                     "time", "moving_mobjects", "static_mobjects"}
-    set_attrs = {n.attr for n in ast.walk(tree)
+    # `self` means the Scene only inside the scene class; the embedded kit's
+    # own classes (Stage) have their own `self`.
+    set_attrs = {n.attr for n in ast.walk(scene_tree)
                  if isinstance(n, ast.Attribute)
                  and isinstance(n.ctx, ast.Store)
                  and isinstance(n.value, ast.Name) and n.value.id == "self"}
     missing = sorted({
-        n.id for n in ast.walk(tree)
+        n.id for n in ast.walk(scene_tree)
         if isinstance(n, ast.Name) and isinstance(n.ctx, ast.Load)
         and n.id not in known}
-        | {f"self.{n.attr}" for n in ast.walk(tree)
+        | {f"self.{n.attr}" for n in ast.walk(scene_tree)
            if isinstance(n, ast.Attribute) and isinstance(n.ctx, ast.Load)
            and isinstance(n.value, ast.Name) and n.value.id == "self"
            and n.attr not in set_attrs and n.attr not in scene_attrs})
@@ -314,9 +345,10 @@ def beat_prompt(request: str, beats: list[Beat], j: int,
             + (f"\n  narration: {b.narration}" if b.narration else ""))
 
 
-def missing_names(beats: list[Beat], bodies: list[str]) -> list[str]:
+def missing_names(beats: list[Beat], bodies: list[str],
+                  kit: bool = False) -> list[str]:
     """Names the assembled scene uses and nothing defines, or []."""
-    probs = [q for q in assemble(beats, bodies).problems
+    probs = [q for q in assemble(beats, bodies, kit=kit).problems
              if "names no beat" in q]
     return [n.strip() for n in probs[0].split(":", 1)[1].split(",")
             if n.strip()] if probs else []
