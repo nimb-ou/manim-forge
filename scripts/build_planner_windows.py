@@ -59,6 +59,13 @@ def beats_of(plan: str) -> list[str]:
 
 VARIANTS = ROOT / "data" / "planner" / "request_variants.jsonl"
 JUDGED = ROOT / "data" / "planner" / "arc_judgements.jsonl"
+FIXED = ROOT / "data" / "planner" / "plan_synth_fixed.jsonl"
+FIXED_JUDGED = ROOT / "data" / "planner" / "arc_judgements_fixed.jsonl"
+
+
+def _jsonl(path: Path) -> list[dict]:
+    return ([json.loads(l) for l in path.read_text().splitlines() if l.strip()]
+            if path.exists() else [])
 
 
 def intent_of(beat: str) -> str:
@@ -112,9 +119,13 @@ def main() -> int:
                  for l in VARIANTS.read_text().splitlines() if l.strip()}
                 if VARIANTS.exists() else {})
     # Arcs a second teacher judged mathematically wrong (judge_arcs.py).
-    wrong = ({json.loads(l)["id"] for l in JUDGED.read_text().splitlines()
-              if l.strip() and json.loads(l)["verdict"] == "ERROR"}
-             if JUDGED.exists() else set())
+    # An arc judged wrong is replaced by its corrected version (fix_arcs.py)
+    # if a second judgement passed the correction, and dropped otherwise.
+    wrong = {j["id"] for j in _jsonl(JUDGED) if j["verdict"] == "ERROR"}
+    fixed_ok = {j["id"] for j in _jsonl(FIXED_JUDGED) if j["verdict"] == "OK"}
+    fixed = {r["meta"]["id"]: r for r in _jsonl(FIXED)
+             if r["meta"]["id"] in fixed_ok}
+    replaced = 0
     rows, arcs, varied, cut_arcs, cut_beats = [], 0, 0, 0, 0
     judged_out = 0
     for line in a.src.read_text().splitlines():
@@ -122,8 +133,12 @@ def main() -> int:
             continue
         r = json.loads(line)
         if r["meta"].get("id") in wrong:
-            judged_out += 1
-            continue
+            if r["meta"]["id"] in fixed:
+                r = fixed[r["meta"]["id"]]
+                replaced += 1
+            else:
+                judged_out += 1
+                continue
         request = pick_request(r["meta"], r["messages"][1]["content"],
                                variants)
         beats = beats_of(r["messages"][2]["content"])
@@ -181,8 +196,9 @@ def main() -> int:
     a.out.write_text("\n".join(json.dumps(r) for r in rows) + "\n")
     print(f"{len(rows)} windows from {arcs} arcs -> {a.out}"
           + (f" ({varied} arcs asked with a shorter request)" if varied else ""))
-    if judged_out:
-        print(f"  {judged_out} arcs dropped as mathematically wrong")
+    if judged_out or replaced:
+        print(f"  judged wrong: {replaced} replaced by a checked correction, "
+              f"{judged_out} dropped")
     if cut_arcs or cut_beats:
         print(f"  repeated intents: {cut_beats} beats cut, {cut_arcs} arcs "
               f"dropped (under six beats before the first repeat)")

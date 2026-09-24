@@ -41,6 +41,13 @@ def main() -> int:
     ap.add_argument("--provider", default="gemini")
     ap.add_argument("--model", default="gemini-3.7-flash")
     ap.add_argument("--pause", type=float, default=2.0)
+    ap.add_argument("--src", type=Path, default=SRC)
+    ap.add_argument("--out", type=Path, default=OUT)
+    ap.add_argument("--done-marker", default="judge_done")
+    ap.add_argument("--follow", action="store_true",
+                    help="keep polling --src for new arcs until the marker "
+                         "named by --wait-for exists")
+    ap.add_argument("--wait-for", default="")
     a = ap.parse_args()
 
     from forge.synth.teacher import Teacher
@@ -50,12 +57,29 @@ def main() -> int:
         raise TimeoutError("teacher did not answer in time")
     signal.signal(signal.SIGALRM, _impatient)
 
-    done = ({json.loads(l)["id"] for l in OUT.open() if l.strip()}
-            if OUT.exists() else set())
-    rows = [json.loads(l) for l in SRC.open() if l.strip()]
-    todo = [r for r in rows if r["meta"]["id"] not in done]
-    print(f"{len(done)} judged, {len(todo)} to go", flush=True)
+    marker_dir = ROOT / "data" / "planner"
     bad = n = 0
+    while True:
+        done = ({json.loads(l)["id"] for l in a.out.open() if l.strip()}
+                if a.out.exists() else set())
+        rows = ([json.loads(l) for l in a.src.open() if l.strip()]
+                if a.src.exists() else [])
+        todo = [r for r in rows if r["meta"]["id"] not in done]
+        print(f"{len(done)} judged, {len(todo)} to go", flush=True)
+        if not todo:
+            if a.follow and not (marker_dir / a.wait_for).exists():
+                for _ in range(20):
+                    time.sleep(15)
+                continue
+            break
+        n, bad = judge(todo, teacher, a, n, bad)
+    (marker_dir / a.done_marker).write_text(
+        time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()) + "\n")
+    print(f"done: {n} judged, {bad} ERROR", flush=True)
+    return 0
+
+
+def judge(todo, teacher, a, n, bad):
     for r in todo:
         arc = r["messages"][2]["content"].replace("\nEND", "")
         signal.alarm(120)
@@ -72,7 +96,7 @@ def main() -> int:
         head = reply.strip().splitlines()[0].strip().upper() if reply.strip() else ""
         verdict = "ERROR" if head.startswith("ERROR") else \
             "OK" if head.startswith("OK") else "UNCLEAR"
-        with OUT.open("a") as f:
+        with a.out.open("a") as f:
             f.write(json.dumps({"id": r["meta"]["id"], "verdict": verdict,
                                 "why": " ".join(reply.split())[:300],
                                 "judge": f"{a.provider}:{a.model}"},
@@ -82,10 +106,7 @@ def main() -> int:
         if n % 25 == 0:
             print(f"  {n} judged this run, {bad} ERROR", flush=True)
         time.sleep(a.pause)
-    (ROOT / "data" / "planner" / "judge_done").write_text(
-        time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()) + "\n")
-    print(f"done: {n} judged, {bad} ERROR", flush=True)
-    return 0
+    return n, bad
 
 
 if __name__ == "__main__":
