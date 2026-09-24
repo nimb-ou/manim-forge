@@ -89,7 +89,11 @@ def judge(todo, teacher, a, n, bad):
                                        "Plain text only.")
         except Exception as exc:                              # noqa: BLE001
             print(f"  {type(exc).__name__}: {str(exc)[:160]}", flush=True)
-            time.sleep(a.pause * 10)
+            # A 429 is the free daily quota; it comes back in hours, not
+            # seconds, and hammering it only resets the clock.
+            waits = 40 if "429" in str(exc) else 1
+            for _ in range(waits):
+                time.sleep(15)
             continue
         finally:
             signal.alarm(0)
