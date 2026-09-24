@@ -509,3 +509,31 @@ looped past it by counting: "Span of three vectors", "four vectors", …
 "eleven vectors". Repeats are now detected with numerals and number words
 removed (ordinals kept), at inference and in training cuts. The 24-title
 hard eval is re-running with planner v3 + coder v2 and every harness fix.
+
+## The split on the hard eval, with long plans · 2026-09-24
+
+First 24 hard titles, planner v3 (sampled, count-aware repeat stop) +
+coder v2, salvage + set-up repair:
+
+| | rendered | coverage (all) | coverage (rendered) | length ratio | beats |
+|---|---|---|---|---|---|
+| **split, planner v3** | 11/24 | **17.2%** | 21.9% | **20.8%** | 16.8 |
+| split, planner v2 greedy | 13/24 | 4.5% | 5.2% | 1.38% | 3.8 |
+| Phase 1 run 17 (81 titles) | — | 18.8% | — | 3.47% | — |
+| Phase 1 control (81 titles) | — | 8.4% | — | 1.76% | — |
+
+On the numbers the plan set, the split has caught run 17 on coverage and is
+six times longer. **Looking at the renders qualifies that.** The longest
+success ("Cross products in the light of linear transformations", 25 beats,
+199 s) is 27 text objects and no geometry — a title, a determinant, the same
+caption twice, an overlapping label. On the animation gate the rendered
+split scenes score **0.38** (gold 0.73, corpus sources 0.23–0.45): 4 shapes
+to 22 text objects per scene, pacing 0.05. Coverage counts terms in the
+code, and captions contain terms; length counts seconds, and waits fill
+them. These are explained slides, not animations yet.
+
+Consequences: (1) the 24 titles are not 81; the full comparison runs after
+the truncation-fix rerun. (2) GRPO's reward now pays 0.6 for a render, +0.2
+for building a non-text mobject, +0.2 for motion — a reward that is only
+"it renders" would have taught more slides. (3) Coverage and length alone
+cannot be the headline again; the gate score goes beside them.

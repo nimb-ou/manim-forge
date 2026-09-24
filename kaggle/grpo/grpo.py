@@ -63,10 +63,47 @@ def render_ok(code: str) -> bool:
         return r.returncode == 0 and any(Path(d).rglob("ForgeScene.mp4"))
 
 
+import ast as _ast  # noqa: E402
+
+_TEXT = {"Text", "MathTex", "Tex", "Title", "MarkupText", "Paragraph",
+         "BulletedList", "Code", "Integer", "DecimalNumber", "Variable"}
+_MOTION = {"Transform", "ReplacementTransform", "TransformMatchingTex",
+           "TransformMatchingShapes", "Rotate", "Rotating", "MoveAlongPath",
+           "ApplyMatrix", "ApplyPointwiseFunction", "Homotopy",
+           "ValueTracker", "always_redraw", "MoveToTarget"}
+_MOBJECT = None
+
+
+def _shape_and_motion(code: str) -> tuple[bool, bool]:
+    """Does the beat build a non-text mobject, and does anything move?
+
+    The first hard-eval renders were illustrated slides -- one scene had 27
+    text objects and no geometry -- and a reward that is only "it renders"
+    would teach more of them. The animation gate scores whole scenes, and
+    on a single beat it gives `self.wait(1)` more than a real vector beat,
+    so this is a small beat-level bonus instead.
+    """
+    global _MOBJECT
+    import manim
+    if _MOBJECT is None:
+        _MOBJECT = {n for n in dir(manim) if isinstance(getattr(manim, n), type)
+                    and issubclass(getattr(manim, n), manim.Mobject)}
+    try:
+        tree = _ast.parse(code)
+    except SyntaxError:
+        return False, False
+    calls = {n.func.id for n in _ast.walk(tree)
+             if isinstance(n, _ast.Call) and isinstance(n.func, _ast.Name)}
+    shape = bool((calls & _MOBJECT) - _TEXT) or ".plot(" in code
+    motion = bool(calls & _MOTION) or ".animate" in code
+    return shape, motion
+
+
 def score(completion: str, row: dict) -> float:
-    """1.0 renders; 0.2 assembles but fails at runtime; 0.1 names nothing
-    defines; 0.0 does not parse. A beat with no self.play is capped at 0.3 --
-    `self.wait(1)` always renders and teaches nothing."""
+    """Renders: 0.6, +0.2 for a non-text mobject, +0.2 if something moves.
+    0.2 assembles but fails at runtime; 0.1 names nothing defines; 0.0 does
+    not parse. A beat with no self.play is capped at 0.3 -- `self.wait(1)`
+    always renders and teaches nothing."""
     code = extract_code(completion)
     if not code.strip():
         return 0.0
@@ -75,8 +112,12 @@ def score(completion: str, row: dict) -> float:
     asm = assemble(beats, list(row["prefix"]) + [code])
     if asm.problems:
         return 0.1 if any("names no beat" in p for p in asm.problems) else 0.0
-    r = 1.0 if render_ok(asm.code) else 0.2
-    return min(r, 0.3) if "self.play(" not in code else r
+    if not render_ok(asm.code):
+        return 0.2
+    if "self.play(" not in code:
+        return 0.3
+    shape, motion = _shape_and_motion(code)
+    return 0.6 + 0.2 * shape + 0.2 * motion
 
 
 POOL = ThreadPoolExecutor(max_workers=4)
