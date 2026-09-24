@@ -33,14 +33,20 @@ SESSIONS = ROOT / "data" / "sessions"
 HERE = Path(__file__).parent
 
 PLANNER = ROOT / "adapters" / "mlx-planner3"
-CODER = ROOT / "adapters" / "mlx-coder2"
+# The kit coder when it exists. Kit mode by prompt alone does not work -- the
+# raw-Manim coder copies the prompt's example verbatim -- so the kit is on by
+# default only with a coder trained on it.
+KIT_CODER = ROOT / "adapters" / "mlx-coder5-kit"
+CODER = KIT_CODER if (KIT_CODER / "adapters.safetensors").exists() \
+    else ROOT / "adapters" / "mlx-coder2"
+KIT_DEFAULT = CODER == KIT_CODER
 
 
 class JobIn(BaseModel):
     prompt: str = Field(min_length=3, max_length=2000)
     beats: int = Field(default=8, ge=2, le=24)
     quality: str = Field(default="medium", pattern="^(low|medium|high)$")
-    kit: bool = True
+    kit: bool = KIT_DEFAULT
 
 
 @dataclass
@@ -188,4 +194,4 @@ def sessions(limit: int = 20) -> list[dict]:
 def health() -> dict:
     return {"ok": True, "model_loaded": worker.host is not None,
             "queued": worker.q.qsize(),
-            "planner": PLANNER.name, "coder": CODER.name}
+            "planner": PLANNER.name, "coder": CODER.name, "kit": KIT_DEFAULT}

@@ -202,6 +202,7 @@ async function health() {
   } catch { $("health").textContent = "server not reachable"; }
 }
 health(); setInterval(health, 10000);
+fetch("/api/health").then((r) => r.json()).then((h) => { $("kit").value = h.kit ? "1" : "0"; }).catch(() => {});
 
 $("form").onsubmit = async (ev) => {
   ev.preventDefault();
