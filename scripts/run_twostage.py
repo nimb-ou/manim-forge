@@ -27,7 +27,8 @@ import textwrap
 import time
 from pathlib import Path
 
-from forge.app.twostage import (assemble, extract_code, names_in_scope,
+from forge.app.twostage import (assemble, extract_code, failing_beat,
+                                names_in_scope,
                                 parse_plan)
 from forge.harness import RenderHarness
 
@@ -356,6 +357,28 @@ def main() -> int:
         asm.problems.extend(dropped)
         res = h.render(asm.code, quality="low", frames=4) if renderable \
             else None
+        if a.salvage and res is not None and not res.ok:
+            # Runtime salvage: one beat calling `self.camera.frame` kills a
+            # 24-beat scene. Drop the beat the traceback points at and
+            # render again, three times at most, under the same half rule.
+            live = sum(1 for b in bodies if b.strip())
+            for _ in range(3):
+                k = failing_beat(asm.code, res.stderr or "")
+                if k is None or not bodies[k - 1].strip():
+                    break
+                bodies[k - 1] = ""
+                salvaged += 1
+                if salvaged * 2 > live:
+                    break
+                trial = assemble(beats, bodies)
+                if not trial.ok:
+                    break
+                asm = trial
+                print(f"      runtime salvage: beat {k} dropped, re-rendering",
+                      flush=True)
+                res = h.render(asm.code, quality="low", frames=4)
+                if res.ok:
+                    break
         row = {"index": i - 1, "request": req, "beats": len(beats),
                "assembled": renderable,
                "problems": asm.problems, "dropped": len(dropped),

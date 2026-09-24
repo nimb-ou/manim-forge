@@ -263,3 +263,27 @@ def assemble(beats: list[Beat], bodies: list[str],
         out.problems.append(
             "beats use names no beat defines: " + ", ".join(missing[:8]))
     return out
+
+
+def failing_beat(code: str, stderr: str) -> int | None:
+    """Which beat a render traceback points at, from Rich's ``❱ N`` markers.
+
+    A frame counts only if the source Rich prints beside the marker is the
+    text of line N of *this* scene -- library frames have their own line
+    numbers, and a bare number would blame a random beat. The line is then
+    mapped to the ``# beat N:`` comment above it.
+    """
+    lines = code.splitlines()
+    hit = None
+    for m in re.finditer(r"❱\s*(\d+)\s*│(.*)$", stderr, re.M):
+        n = int(m.group(1))
+        snip = m.group(2).replace("│", "").strip()[:25]
+        if 1 <= n <= len(lines) and snip and snip in lines[n - 1]:
+            hit = n
+    if hit is None:
+        return None
+    for k in range(hit - 1, -1, -1):
+        mm = re.match(r"\s*# beat (\d+):", lines[k])
+        if mm:
+            return int(mm.group(1))
+    return None

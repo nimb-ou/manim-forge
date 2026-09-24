@@ -194,3 +194,14 @@ def test_scene_own_attributes_are_not_reported_missing():
                  ["self.play(Create(Circle()))\nself.add(Square())\n"
                   "self.wait()"])
     assert a.ok, a.problems
+
+
+def test_failing_beat_maps_rich_marker_to_beat():
+    from forge.app.twostage import failing_beat
+    code = ("class S(Scene):\n    def construct(self):\n"
+            "        # beat 1: a\n        c = Circle()\n"
+            "        # beat 2: b\n        self.camera.frame.scale(0.8)\n")
+    err = ("│ ❱ 6 │   │   self.camera.frame.scale(0.8)   │\n"
+           "│ ❱ 187 │   raise TypeError(\"x\")   │\n")
+    assert failing_beat(code, err) == 2
+    assert failing_beat(code, "no markers") is None
