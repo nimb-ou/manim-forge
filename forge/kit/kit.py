@@ -33,7 +33,8 @@ from manim import (BLUE, BLUE_D, DOWN, GREEN, GREY, GREY_B, LEFT, ORIGIN,
                    NumberLine, NumberPlane, Polygon, Rectangle, ReplacementTransform,
                    Sector, Square, Tex, Text, Transform, TransformMatchingTex,
                    TracedPath, ValueTracker, VGroup, Write, always_redraw,
-                   config)
+                   config, ArrowVectorField, ComplexPlane, Rotate,
+                   NumberPlane as _NP)
 
 # -- the stage -----------------------------------------------------------------
 
@@ -76,8 +77,10 @@ class Stage:
         if self._title is None:
             self.scene.play(Write(new), run_time=run_time)
         else:
-            self.scene.play(ReplacementTransform(self._title, new),
-                            run_time=run_time)
+            # A cross-fade: morphing one title's letters into another's
+            # reads as garble mid-transition.
+            self.scene.play(FadeOut(self._title, shift=0.2 * UP),
+                            FadeIn(new, shift=0.2 * UP), run_time=run_time)
         self._title = new
         return new
 
@@ -429,6 +432,203 @@ def dice_grid(stage: Stage, where: str = "center", highlight_sum: int | None = N
     return cells
 
 
+# -- more linear algebra ------------------------------------------------------
+
+def determinant(stage: Stage, plane_, matrix, run_time: float = 2.0):
+    """The unit square rides a matrix; its new area is the determinant."""
+    sq = unit_square(stage, plane_)
+    m = np.array(matrix, dtype=float)
+    apply_matrix(stage, plane_, m, riders=[sq], run_time=run_time)
+    d = float(np.linalg.det(m))
+    tag = MathTex(r"\text{area} = %s" % (f"{d:g}"), font_size=36)
+    tag.next_to(sq, RIGHT, buff=0.2)
+    stage.scene.play(FadeIn(tag), run_time=0.6)
+    stage._objects.append(tag)
+    return sq, tag
+
+
+def eigenvectors(stage: Stage, plane_, matrix, run_time: float = 2.5):
+    """Vectors on the eigen-directions stay on their lines as the plane moves;
+    an ordinary vector is knocked off its line."""
+    m = np.array(matrix, dtype=float)
+    vals, vecs = np.linalg.eig(m)
+    riders = []
+    for k in range(2):
+        if abs(np.imag(vals[k])) > 1e-9:
+            continue
+        v = np.real(vecs[:, k])
+        riders.append(span_line(stage, plane_, tuple(v), color=YELLOW))
+        riders.append(vector(stage, plane_, tuple(v), YELLOW))
+    e0 = np.real(vecs[:, 0])
+    # A test vector on neither eigen-line (2D cross product by hand: numpy 2
+    # rejects np.cross on 2-vectors).
+    off_xy = (1, 1) if abs(e0[0] * 1 - e0[1] * 1) > 0.1 else (1, -1)
+    off = vector(stage, plane_, off_xy, RED)
+    riders.append(off)
+    apply_matrix(stage, plane_, m, riders=riders, run_time=run_time)
+    return riders
+
+
+# -- more calculus -------------------------------------------------------------
+
+def taylor(stage: Stage, ax, f, a: float, terms, colors=None, run_time: float = 1.2):
+    """Taylor polynomials about a, one more term each time, closing in on f.
+
+    ``terms`` is a list of the derivatives' values at a: [f(a), f'(a), ...].
+    """
+    import math
+    colors = colors or [RED, ORANGE, YELLOW, GREEN, TEAL, BLUE]
+    xr = (ax.x_range[0], ax.x_range[1])
+    ymin, ymax = ax.y_range[0], ax.y_range[1]
+
+    def poly(n):
+        return lambda x: float(np.clip(
+            sum(terms[k] * (x - a) ** k / math.factorial(k) for k in range(n + 1)),
+            ymin - 1, ymax + 1))
+
+    cur = ax.plot(poly(0), x_range=[*xr], color=colors[0])
+    stage.scene.play(Create(cur), run_time=run_time)
+    for n in range(1, len(terms)):
+        nxt = ax.plot(poly(n), x_range=[*xr], color=colors[n % len(colors)])
+        stage.scene.play(Transform(cur, nxt), run_time=run_time)
+    stage._objects.append(cur)
+    return cur
+
+
+def unit_circle_wave(stage: Stage, turns: float = 1.0, run_time: float = 4.0):
+    """A radius turning on the unit circle, its height drawn out as a sine wave."""
+    c = Circle(radius=1.3, color=GREY_B).move_to([-4.2, -0.1, 0])
+    ax = Axes(x_range=[0, TAU * turns, PI / 2], y_range=[-1.2, 1.2, 1],
+              x_length=7, y_length=2.6, tips=False).move_to([2.2, -0.1, 0])
+    t = ValueTracker(0)
+    tip = lambda: c.get_center() + 1.3 * np.array([np.cos(t.get_value()),
+                                                   np.sin(t.get_value()), 0])
+    radius = always_redraw(lambda: Line(c.get_center(), tip(), color=YELLOW))
+    dot = always_redraw(lambda: Dot(tip(), color=YELLOW))
+    wave = always_redraw(lambda: ax.plot(np.sin, x_range=[0, max(t.get_value(), 1e-3)],
+                                         color=YELLOW))
+    link = always_redraw(lambda: DashedLine(
+        tip(), ax.c2p(t.get_value(), np.sin(t.get_value())), color=GREY))
+    stage.scene.play(Create(c), Create(ax), run_time=1.0)
+    stage.scene.add(radius, dot, wave, link)
+    stage.scene.play(t.animate.set_value(TAU * turns), run_time=run_time,
+                     rate_func=lambda x: x)
+    stage._objects += [c, ax, radius, dot, wave, link]
+    return c, ax, wave
+
+
+def vector_field(stage: Stage, f, where: str = "center"):
+    """Arrows for a 2D field f(x, y) -> (u, v), drawn in."""
+    field = ArrowVectorField(lambda p: np.array([*f(p[0], p[1]), 0.0]),
+                             x_range=[-5, 5, 1], y_range=[-3, 3, 1],
+                             length_func=lambda n: 0.45 * np.tanh(n))
+    stage.place(field, where)
+    stage.scene.play(LaggedStart(*[GrowArrow(a) for a in field], lag_ratio=0.01),
+                     run_time=1.5)
+    return field
+
+
+# -- complex numbers -----------------------------------------------------------
+
+def complex_plane(stage: Stage, where: str = "center"):
+    cp = ComplexPlane(x_range=[-4, 4], y_range=[-3, 3], x_length=7.2,
+                      y_length=5.4,
+                      background_line_style={"stroke_opacity": 0.45})
+    cp.add_coordinates()
+    stage.place(cp, where)
+    stage.scene.play(Create(cp), run_time=1.2)
+    return cp
+
+
+def multiply_by(stage: Stage, cp, z: complex, points=(1 + 0j, 1j),
+                run_time: float = 2.0):
+    """Multiplying by z rotates by its angle and scales by its length: shown on
+    arrows to the given points, which turn and stretch together."""
+    arrows = [Arrow(cp.n2p(0), cp.n2p(w), buff=0, color=c)
+              for w, c in zip(points, _PALETTE)]
+    stage.scene.play(*[GrowArrow(a) for a in arrows], run_time=0.8)
+    ang, r = np.angle(z), abs(z)
+    stage.scene.play(*[a.animate.rotate(ang, about_point=cp.n2p(0))
+                       .scale(r, about_point=cp.n2p(0)) for a in arrows],
+                     run_time=run_time)
+    stage._objects += arrows
+    return arrows
+
+
+# -- networks and graphs -------------------------------------------------------
+
+def neural_net(stage: Stage, layers=(3, 4, 2), where: str = "center",
+               pulse_through: bool = True):
+    """Layers of neurons joined by weights; a signal pulses left to right."""
+    cx, cy, w, h = _REGIONS[where]
+    cols = []
+    for k, n in enumerate(layers):
+        x = cx - w / 2 + w * (k + 0.5) / len(layers)
+        col = VGroup(*[Circle(radius=0.22, color=WHITE, stroke_width=2)
+                       .move_to([x, cy + (h * 0.8) * (0.5 - (i + 0.5) / n), 0])
+                       for i in range(n)])
+        cols.append(col)
+    edges = VGroup(*[Line(a.get_center(), b.get_center(), stroke_width=1,
+                          stroke_opacity=0.5, color=GREY_B, buff=0.22)
+                     for c1, c2 in zip(cols, cols[1:]) for a in c1 for b in c2])
+    stage.scene.play(LaggedStart(*[FadeIn(c) for c in cols], lag_ratio=0.3),
+                     Create(edges), run_time=1.8)
+    if pulse_through:
+        for col in cols:
+            stage.scene.play(*[n.animate.set_fill(TEAL, opacity=0.8) for n in col],
+                             run_time=0.4)
+    net = VGroup(edges, *cols)
+    stage._objects.append(net)
+    return net
+
+
+def network(stage: Stage, nodes, edges, where: str = "center"):
+    """A graph: nodes {name: (x, y)} in [-1, 1]^2, edges [(a, b), ...]."""
+    cx, cy, w, h = _REGIONS[where]
+    pos = {k: np.array([cx + x * w * 0.42, cy + y * h * 0.4, 0])
+           for k, (x, y) in nodes.items()}
+    dots = {k: Dot(p, radius=0.12, color=BLUE) for k, p in pos.items()}
+    tags = VGroup(*[MathTex(str(k), font_size=28).next_to(d, UP, buff=0.1)
+                    for k, d in dots.items()])
+    lines = VGroup(*[Line(pos[a], pos[b], color=GREY_B) for a, b in edges])
+    stage.scene.play(Create(lines), *[GrowFromCenter(d) for d in dots.values()],
+                     FadeIn(tags), run_time=1.5)
+    g = VGroup(lines, *dots.values(), tags)
+    stage._objects.append(g)
+    return dots, lines
+
+
+# -- sampling ------------------------------------------------------------------
+
+def histogram_grows(stage: Stage, sampler, bins, n: int = 400, steps: int = 8,
+                    where: str = "center", color=BLUE, seed: int = 0):
+    """Draw samples in batches and watch the histogram take its shape.
+
+    ``sampler(rng, k)`` returns k samples; ``bins`` is a list of edges.
+    """
+    rng = np.random.default_rng(seed)
+    edges = np.array(bins, dtype=float)
+    counts = np.zeros(len(edges) - 1)
+    width = 8.0 / len(counts)
+    cx, cy, w, h = _REGIONS[where]
+    base = cy - h / 2 + 0.3
+    bars_ = VGroup(*[Rectangle(width=width * 0.9, height=0.01, fill_opacity=0.8,
+                               color=color, stroke_width=0)
+                     .move_to([cx - 4 + width * (i + 0.5), base, 0], aligned_edge=DOWN)
+                     for i in range(len(counts))])
+    stage.scene.add(bars_)
+    for _ in range(steps):
+        counts += np.histogram(sampler(rng, n // steps), bins=edges)[0]
+        top = max(counts.max(), 1)
+        new = VGroup(*[Rectangle(width=width * 0.9, height=max(c / top * (h - 0.8), 0.01),
+                                 fill_opacity=0.8, color=color, stroke_width=0)
+                       .move_to([cx - 4 + width * (i + 0.5), base, 0], aligned_edge=DOWN)
+                       for i, c in enumerate(counts)])
+        stage.scene.play(Transform(bars_, new), run_time=0.5)
+    stage._objects.append(bars_)
+    return bars_
+
+
 # -- emphasis ------------------------------------------------------------------
 
 def highlight(stage: Stage, m, color=YELLOW):
@@ -467,6 +667,15 @@ returns what it made; keep the return value to reuse it in later beats.
   circle_slices(stage, n=12) -> sectors   unroll_to_rectangle(stage, sectors)
   right_triangle(stage, a=3, b=2) -> triangle
   dice_grid(stage, highlight_sum=None) -> cells
+  determinant(stage, p, [[a, b], [c, d]]) -> (square, area_label)
+  eigenvectors(stage, p, [[a, b], [c, d]])  -- eigen-directions stay put
+  taylor(stage, ax, f, a, [f(a), f'(a), f''(a), ...])  -- polynomials close in
+  unit_circle_wave(stage)   -- a turning radius draws a sine wave
+  vector_field(stage, lambda x, y: (u, v))
+  complex_plane(stage) -> cp    multiply_by(stage, cp, z)  -- rotate and scale
+  neural_net(stage, layers=(3, 4, 2)) -> net
+  network(stage, {"A": (x, y), ...}, [("A", "B"), ...]) -> (dots, lines)
+  histogram_grows(stage, lambda rng, k: rng.normal(size=k), bins=[...])
   highlight(stage, m)   pulse(stage, m)
 Regions: "center", "left", "right", "full". Text only through stage.title,
 stage.caption, stage.label and stage.equation.
