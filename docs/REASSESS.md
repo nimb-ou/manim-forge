@@ -126,3 +126,37 @@ it is background — it gets no more of my time unless it breaks.
 **5. Handover.** Best pair planner v2 (sampled) + coder v2. Hard eval
 running; then planner v3 evals; planner v4 queued for the quota reset with
 referee-checked arcs.
+
+## Log · 2026-09-24 11:25Z
+
+**1. Arrived.** Planner v3 measured (33.9 beats before a repeat; loops by
+counting, now caught). The hard eval with planner v3 + all fixes: 10/21
+rendered so far with 11–25-beat scenes, against 13/24 of 3.8-beat scenes
+last night. GRPO kernel + 195 prompts + reward checked locally. Referee:
+988 arcs judged, 705 corrected, only 121 of 432 corrections pass re-check.
+
+**2. Symptom or thing?** Nine commits: two measurements, five harness
+fixes that each came *from* a measurement (lambda args, counting loops,
+truncated beats, set-up repair), one refactor, one supervisor fix. Better
+ratio than the last window. The harness keeps yielding real faults because
+longer scenes exercise more of it — that is expected, but the rule stands:
+each fix needs a before/after number, and the truncation fix does not have
+one yet.
+
+**3. Critical path.** The hard eval result (≈20 min) is the go/no-go on the
+split against run 17. Next Mac job: the same 24 titles with the truncation
+fix, so that fix gets its number.
+
+**4. Missing.**
+- The fixer's 28% pass rate means correcting arcs mostly fails; planner v4
+  will lean on fewer, correct arcs. Do not build more on the fixer — let it
+  finish and use what passes.
+- **Max tokens per beat (900)** is producing truncations on long beats. A
+  larger cap is a one-flag test; do it with the rerun instead of more
+  salvage logic.
+- Nothing has been rendered at medium quality and *looked at* since the
+  demo. A render passing is not a scene being good. Look at two of today's
+  rendered hard titles.
+
+**5. Handover.** Best: planner v3 (sampled, count-aware repeat stop) +
+coder v2 + salvage + set-up. Kaggle quota out; v4 and GRPO queued.
