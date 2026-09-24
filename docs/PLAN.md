@@ -156,53 +156,31 @@ about a model, check that the thing measuring it can express what the model
 did.** A parser that cannot represent a plan reports no plan. A scope list
 that cannot represent an attribute reports no scope.
 
-### The sequence — updated 2026-09-23 evening
+### The sequence — revised 2026-09-25: the kit
 
-Where it stands: planner v1 + coder v2 assemble and render **3 of 8**
-(coder v1: 0 of 8). The dominant remaining failure is cross-beat names — a
-beat animates an object no beat built.
+**Why it changed.** The split's long renders were slides — 215 of 289
+beats built only text — and Nimit, watching one, called it nonsense. A 7B
+model writing raw Manim falls back on Text because Text always works;
+four days of salvage and repair made scenes *render*, not *show*.
 
-1. **Coder v3** — *pushed, waiting for a GPU slot.* Same corpus, but every
-   row now carries the one system prompt inference sends (v2 trained on
-   three different ones, none with the CONSTRUCT rule), and the 98 rows
-   whose reference answer uses a name nothing gives it are gone. Gold beats
-   carry the module constants and functions they read.
-2. **Planner v2** — *training.* 252 synthetic arcs as a separate tier, END
-   on every final window. Collected by `collect-planner2` when it lands.
-   Checked for: END emitted, arc length near real (≈40 beats), and whether
-   it still repeats one intent across beats (v1 wrote "Three shapes, then
-   one group" twelve times).
-3. **Planner v3 data** — *accumulating.* `synth-plans` keeps writing arcs
-   (mistral) and `synth-requests` writes 3–10 word and one-sentence
-   versions of each request (gemini): the hard eval's median prompt is six
-   words and the planner has trained on paragraphs.
-4. **The 8-task split eval after each adapter lands** (v1/v2/v3 × repair on
-   and off), then `run_twostage --hard --n 81` against Phase 1 — control
-   8.4% coverage / 1.76% length, run 17 18.8% / 3.47%. **The split has to
-   beat run 17, not the untuned model.** Not before the assembly failures
-   are under half, or the 81 measure the harness.
-5. **GRPO** last. Revised 23:20Z: the coder alone renders 92.7% of beats on
-   reference prefixes, so the reward is the **whole assembled scene**, with
-   the coder conditioned on its own earlier beats. Kaggle renders Manim +
-   LaTeX at 2.6 s a scene (probed). No further coder SFT: v3's cleaning
-   moved neither measure.
-   **Kaggle GPU quota spent 2026-09-24 02:28Z** (30 h/week: coder v2,
-   planner v2, coder v3, planner v3). Planner v4's data is built and
-   uploaded; `push_when_free.sh` retries hourly until the quota resets.
-   Until then the Mac evaluates what is on disk.
-   **Revised 2026-09-24 12:00Z: the renders are slides.** The split
-   matches run 17 on coverage and is 6x longer, but its rendered scenes
-   score 0.38 on the animation gate (gold 0.73) — the level of the corpus
-   the coder was trained on. Two levers, both for the quota reset:
-   GRPO with a shape/motion bonus (done), and **coder v4 on a
-   gate-filtered mix** — the Phase 2 rebuild that was demoted for lack
-   of a reason now has one.
-6. **Planner v4** on all ~1,800 arcs if v3 shows the cleaning fixed the
-   loops; if v3 still loops, test sampling (temperature, repetition
-   penalty) before training again.
+1. **The Forge kit** (forge/kit, done) — ~50 verb-named 3Blue1Brown blocks
+   (planes, vectors, matrix moves, eigenvectors, determinants, tangents,
+   Riemann sums, Taylor, sine-from-circle, Fourier winding, waves, complex
+   multiplication, neural nets, Bayes squares, sampling, Hanoi, Hamming
+   grids, prime spirals, heat, flows) behind a Stage that owns layout. The
+   model chooses blocks and parameters; the picture is guaranteed.
+2. **Kit data** (running) — a teacher writes kit beats for drawable arcs,
+   render-verified; filtered for relevance (the block's family must match
+   the beat's words) and novelty (no repeated picture). ~50% survive.
+3. **Kit coder v5** (queued) — trained locally with MLX from coder v2 at
+   600 clean rows, then a 12-title scorecard judged by visual-beat share
+   and contact sheets, not coverage.
+4. **At the Kaggle reset**: planner v4 (queued), kit GRPO (render + shape +
+   motion reward, built), a larger kit coder on Kaggle if v5 shows the way.
+5. **The app** (forge/serve, done) switches to the kit coder when it exists.
 
-Checked every 30 minutes by hand (not only the supervisor), and against
-`docs/REASSESS.md` every six hours.
+Prompt-only kit mode was tried and does not work: the untrained coder
+copies the worked example verbatim.
 
 ### What would stop each
 
