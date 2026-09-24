@@ -1,0 +1,13 @@
+{
+  "id": "nimbou/manim-forge-coder-grpo",
+  "title": "Manim Forge - coder GRPO",
+  "code_file": "grpo.py",
+  "language": "python",
+  "kernel_type": "script",
+  "is_private": true,
+  "enable_gpu": true,
+  "enable_internet": true,
+  "dataset_sources": ["nimbou/manim-forge-grpo"],
+  "competition_sources": [],
+  "kernel_sources": []
+}
