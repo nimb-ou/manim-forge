@@ -190,6 +190,13 @@ beat animates an object no beat built.
    planner v2, coder v3, planner v3). Planner v4's data is built and
    uploaded; `push_when_free.sh` retries hourly until the quota resets.
    Until then the Mac evaluates what is on disk.
+   **Revised 2026-09-24 12:00Z: the renders are slides.** The split
+   matches run 17 on coverage and is 6x longer, but its rendered scenes
+   score 0.38 on the animation gate (gold 0.73) — the level of the corpus
+   the coder was trained on. Two levers, both for the quota reset:
+   GRPO with a shape/motion bonus (done), and **coder v4 on a
+   gate-filtered mix** — the Phase 2 rebuild that was demoted for lack
+   of a reason now has one.
 6. **Planner v4** on all ~1,800 arcs if v3 shows the cleaning fixed the
    loops; if v3 still loops, test sampling (temperature, repetition
    penalty) before training again.
