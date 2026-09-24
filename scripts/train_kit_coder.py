@@ -64,6 +64,15 @@ def main() -> int:
         for _ in range(40):
             time.sleep(15)
 
+    # Rows past max_seq lose their whole completion to truncation, leaving no
+    # target tokens: the loss is 0/0 and one NaN poisons every weight after
+    # it -- the first run went NaN within 20 iterations on two such rows.
+    from transformers import AutoTokenizer
+    tok = AutoTokenizer.from_pretrained("Qwen/Qwen2.5-Coder-7B-Instruct")
+    before = len(data)
+    data = [r for r in data if len(tok(tok.apply_chat_template(
+        r["messages"], tokenize=False))["input_ids"]) <= a.max_seq - 16]
+    print(f"{before - len(data)} rows over {a.max_seq} tokens dropped", flush=True)
     valid_scenes = {r["meta"]["scene"] for r in data
                     if int(hashlib.sha256(r["meta"]["scene"].encode())
                            .hexdigest(), 16) % 20 == 0}
@@ -87,8 +96,8 @@ def main() -> int:
                             "keys": lp["keys"]},
         "batch_size": 1, "iters": iters, "learning_rate": a.lr,
         "max_seq_length": a.max_seq, "grad_checkpoint": True,
-        "mask_prompt": True, "steps_per_report": 20, "steps_per_eval": 200,
-        "val_batches": 25, "save_every": 200,
+        "mask_prompt": True, "steps_per_report": 10, "steps_per_eval": 300,
+        "val_batches": 8, "save_every": 100,
         "resume_adapter_file": str(BASE_ADAPTER / "adapters.safetensors"),
         "adapter_path": str(OUT),
     }
