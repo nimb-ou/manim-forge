@@ -5,8 +5,9 @@ what the coder should learn: calls to forge/kit, not raw Manim. mlx-lm can
 LoRA-train the 4-bit 7B on an M4 with gradient checkpointing, so this does
 not wait.
 
-  * data: data/kit/kit_beats.jsonl (synth_kit_beats.py) -- teacher-written
-    kit beats from scenes that rendered, visual beats only -- split by scene;
+  * data: data/kit/kit_beats_clean.jsonl -- teacher kit beats (synth_kit_beats.py)
+    from scenes that rendered, filtered for relevance and novelty
+    (filter_kit_beats.py) -- split by scene;
   * starts from adapters/mlx-coder2 (--resume-adapter-file) with the same
     LoRA shape (rank 16, scale 2.0, the seven projections, all 28 layers),
     so SwapHost can still hot-swap it against the planner;
@@ -28,7 +29,7 @@ import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-SRC = ROOT / "data" / "kit" / "kit_beats.jsonl"
+SRC = ROOT / "data" / "kit" / "kit_beats_clean.jsonl"
 DATA = ROOT / "data" / "kit" / "train_v5"
 BASE_ADAPTER = ROOT / "adapters" / "mlx-coder2"
 OUT = ROOT / "adapters" / "mlx-coder5-kit"
@@ -36,6 +37,10 @@ MODEL = "mlx-community/Qwen2.5-Coder-7B-Instruct-4bit"
 
 
 def rows() -> list[dict]:
+    """The filtered rows, re-filtered from the teacher's output each call:
+    relevance and novelty (filter_kit_beats.py) drop about half."""
+    subprocess.run([sys.executable, str(ROOT / "scripts" / "filter_kit_beats.py")],
+                   capture_output=True)
     return [json.loads(l) for l in SRC.read_text().splitlines() if l.strip()] \
         if SRC.exists() else []
 
@@ -51,15 +56,14 @@ def main() -> int:
                     help="poll until --min-rows exist instead of exiting")
     a = ap.parse_args()
 
-    while len(rows()) < a.min_rows:
+    while len(data := rows()) < a.min_rows:
         if not a.wait:
-            print(f"{len(rows())} rows, need {a.min_rows}")
+            print(f"{len(data)} rows, need {a.min_rows}")
             return 1
-        print(f"  {len(rows())}/{a.min_rows} kit rows", flush=True)
+        print(f"  {len(data)}/{a.min_rows} clean kit rows", flush=True)
         for _ in range(40):
             time.sleep(15)
 
-    data = rows()
     valid_scenes = {r["meta"]["scene"] for r in data
                     if int(hashlib.sha256(r["meta"]["scene"].encode())
                            .hexdigest(), 16) % 20 == 0}
