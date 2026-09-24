@@ -76,11 +76,15 @@ def arcs(limit: int) -> list[tuple[str, str, list[Beat]]]:
     for path in (D / "plan.jsonl", D / "plan_synth.jsonl"):
         if not path.exists():
             continue
-        ok = None
+        # Synthetic arcs the referee judged wrong are skipped; unjudged ones
+        # are used. The coder learns to draw each beat, and a slip in the
+        # narration's mathematics matters much less to that than to the
+        # planner -- requiring a passed judgement left 427 arcs in all.
+        wrong = set()
         if path.name == "plan_synth.jsonl":
             j = D / "arc_judgements.jsonl"
-            ok = {json.loads(l)["id"] for l in j.read_text().splitlines()
-                  if l.strip() and json.loads(l)["verdict"] == "OK"} \
+            wrong = {json.loads(l)["id"] for l in j.read_text().splitlines()
+                     if l.strip() and json.loads(l)["verdict"] == "ERROR"} \
                 if j.exists() else set()
         for l in path.read_text().splitlines():
             if not l.strip():
@@ -88,7 +92,7 @@ def arcs(limit: int) -> list[tuple[str, str, list[Beat]]]:
             r = json.loads(l)
             rid = r["meta"].get("id") or hashlib.sha256(
                 r["messages"][1]["content"].encode()).hexdigest()[:12]
-            if ok is not None and rid not in ok:
+            if rid in wrong:
                 continue
             beats, _ = parse_plan(r["messages"][2]["content"], limit=60)
             beats = beats[:10]
