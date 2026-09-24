@@ -473,3 +473,24 @@ Coder v3 — one system prompt, rows that break the CONSTRUCT rule removed —
 is not better on either measure. At n=8 the gap is two scenes and could be
 noise; it is not evidence *for* v3. v2 stays the default. The step from 3/8
 to 5/8 is the harness, not a model.
+
+## Split on the hard eval · 2026-09-24
+
+First 24 of the 81 hard titles, planner v2 + coder v2, `--salvage`, plans
+stopped at the first repeated intent:
+
+| | rendered | coverage (all) | coverage (rendered) | length ratio |
+|---|---|---|---|---|
+| **split p2+c2** | **13/24** | 4.5% | 5.2% | 1.38% |
+| Phase 1 control | — | 8.4% | — | 1.76% |
+| Phase 1 run 17 | — | 18.8% | — | 3.47% |
+
+The split renders — more than half the hard titles, where Phase 1's
+failures were overwhelmingly render failures — but what it renders is
+tiny: **3.8 beats a plan**, because planner v2 loops and the loop is cut at
+its first repeat. So on the plan's own terms (*the split has to beat run
+17*) it currently loses on coverage and length, and the reason is one
+specific, identified defect in the planner rather than decomposition as
+such. Planner v3 — trained on arcs cut at their first repeat, teacher told
+to END rather than pad — is the test of that; if v3 plans run long without
+looping, this table is re-run on all 81.
