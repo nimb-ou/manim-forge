@@ -88,7 +88,10 @@ def plan(model, tok, request: str, stride: int, max_beats: int) -> list:
     """Feed the planner its own output until it says END or hits the cap."""
     beats: list = []
     for _ in range(max_beats // stride + 1):
-        shown = "\n".join(f"{b.n}. [{b.seconds:g}s] {b.intent}"
+        # A sampled beat can come back without a duration; "[?]" keeps the
+        # history line well-formed instead of crashing the run at beat 20.
+        shown = "\n".join(f"{b.n}. [{f'{b.seconds:g}s' if b.seconds else '?'}] "
+                           f"{b.intent}"
                           for b in beats[-12:]) or \
             "  (nothing yet — open the explanation)"
         reply = ask(model, tok, PLAN_SYSTEM,
