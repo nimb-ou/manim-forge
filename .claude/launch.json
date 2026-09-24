@@ -4,8 +4,25 @@
     {
       "name": "forge",
       "runtimeExecutable": "./.venv/bin/uvicorn",
-      "runtimeArgs": ["forge.app.server:app", "--port", "8765", "--host", "127.0.0.1"],
+      "runtimeArgs": [
+        "forge.app.server:app",
+        "--port",
+        "8765",
+        "--host",
+        "127.0.0.1"
+      ],
       "port": 8765
+    },
+    {
+      "name": "forge-serve",
+      "runtimeExecutable": "./.venv/bin/python",
+      "runtimeArgs": [
+        "-m",
+        "forge.serve",
+        "--port",
+        "8766"
+      ],
+      "port": 8766
     }
   ]
 }
