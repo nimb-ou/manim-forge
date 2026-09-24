@@ -28,7 +28,8 @@ import time
 from pathlib import Path
 
 from forge.app.twostage import (assemble, beat_prompt, extract_code,
-                                failing_beat, names_in_scope,
+                                failing_beat, missing_names,
+                                names_in_scope, prelude_prompt,
                                 parse_plan)
 from forge.harness import RenderHarness
 
@@ -303,6 +304,30 @@ def main() -> int:
             print(f"      after repair: "
                   f"{asm.problems[0][:70] if asm.problems else 'clean'}",
                   flush=True)
+        # Set-up repair: build what every beat assumes, once, up front.
+        missing_now = missing_names(beats, bodies)
+        if missing_now and any(b.strip() for b in bodies):
+            reply = ask(cm, ctok, CODE_SYSTEM,
+                        prelude_prompt(req, bodies, missing_now),
+                        max_tokens=a.beat_tokens)
+            pre = extract_code(reply)
+            try:
+                ast.parse(textwrap.dedent(pre))
+                first = next(k for k, b in enumerate(bodies) if b.strip())
+                trial = list(bodies)
+                trial[first] = textwrap.dedent(pre).strip() + "\n" + \
+                    textwrap.dedent(trial[first])
+                after = missing_names(beats, trial)
+                if len(after) < len(missing_now):
+                    bodies = trial
+                    asm = assemble(beats, bodies)
+                    print(f"      set-up built {len(missing_now) - len(after)}"
+                          f" of {len(missing_now)} missing names", flush=True)
+                else:
+                    print("      set-up rejected (no fewer missing names)",
+                          flush=True)
+            except SyntaxError:
+                print("      set-up did not parse", flush=True)
         salvaged = 0
         if a.salvage:
             # A partial scene over no scene, reported as partial. The beat

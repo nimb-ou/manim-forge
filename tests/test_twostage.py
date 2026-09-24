@@ -215,3 +215,13 @@ def test_beat_prompt_shape():
     assert "NAMES IN SCOPE\n  c" in p
     assert "HELPERS THIS SCENE DEFINES\n  (none)" in p
     assert p.endswith("WRITE THIS BEAT — step 2 of 2\n  intent: it grows")
+
+
+def test_missing_names_and_prelude_prompt():
+    from forge.app.twostage import Beat, missing_names, prelude_prompt
+    beats = [Beat(1, None, "a graph"), Beat(2, None, "a point")]
+    bodies = ["g = axes.plot(lambda x: x**2)\nself.play(Create(g))",
+              "d = Dot(axes.c2p(1, 1))\nself.play(FadeIn(d))"]
+    assert missing_names(beats, bodies) == ["axes"]
+    p = prelude_prompt("parabola", bodies, ["axes"])
+    assert "axes.plot(lambda x: x**2)" in p and "Do not call" in p

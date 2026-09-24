@@ -26,7 +26,6 @@ from __future__ import annotations
 import ast
 import re
 import textwrap
-import textwrap
 from dataclasses import dataclass, field
 
 # The bracketed duration is optional. The untuned model answers
@@ -309,3 +308,35 @@ def beat_prompt(request: str, beats: list[Beat], j: int,
             + (f", about {b.seconds:g} seconds" if b.seconds else "") + "\n"
             f"  intent: {b.intent}"
             + (f"\n  narration: {b.narration}" if b.narration else ""))
+
+
+def missing_names(beats: list[Beat], bodies: list[str]) -> list[str]:
+    """Names the assembled scene uses and nothing defines, or []."""
+    probs = [q for q in assemble(beats, bodies).problems
+             if "names no beat" in q]
+    return [n.strip() for n in probs[0].split(":", 1)[1].split(",")
+            if n.strip()] if probs else []
+
+
+def prelude_prompt(request: str, bodies: list[str], names: list[str]) -> str:
+    """Ask for the set-up code that builds objects later beats assume.
+
+    When one shared object -- `axes`, `network`, `matrix` -- is used by
+    every beat and built by none, repairing the first user rarely works and
+    salvage has to drop most of the scene. The usage lines say what kind of
+    object each name must be (`axes.plot(...)` is an Axes).
+    """
+    usage: list[str] = []
+    for n in names:
+        pat = re.compile(rf"\b{re.escape(n.removeprefix('self.'))}\b")
+        hits = [l.strip() for b in bodies for l in b.splitlines()
+                if pat.search(l)][:2]
+        usage += [f"  {h}" for h in hits]
+    return (f"REQUEST\n{request}\n\nNAMES IN SCOPE\n  (none yet)\n\n"
+            f"HELPERS THIS SCENE DEFINES\n  (none)\n\n"
+            f"WRITE THIS BEAT — the set-up before step 1\n"
+            f"  intent: Construct, without animating them, these objects "
+            f"that the later beats use: {', '.join(names)}. Later beats use "
+            f"them like this:\n" + "\n".join(dict.fromkeys(usage)) +
+            "\n  Assign each name exactly as written. Do not call "
+            "self.play or self.add.")
