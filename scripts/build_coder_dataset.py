@@ -48,6 +48,8 @@ def main() -> int:
     ap.add_argument("--out", type=Path, default=None)
     ap.add_argument("--gold-weight", type=int, default=6)
     ap.add_argument("--valid-frac", type=float, default=0.04)
+    ap.add_argument("--synth-cap", type=int, default=4000,
+                    help="planner: at most this many synthetic windows")
     a = ap.parse_args()
 
     if a.which == "coder":
@@ -64,7 +66,25 @@ def main() -> int:
         # the real ones are repeated. 146 real 3Blue1Brown arcs are the thing
         # being imitated; a teacher's imitation of them is worth less, and at
         # equal weight the next planner number would not say which taught it.
-        rows += load(ROOT / "data" / "planner" / "plan_synth_windows.jsonl")
+        synth = load(ROOT / "data" / "planner" / "plan_synth_windows.jsonl")
+        if a.synth_cap and len(synth) > a.synth_cap:
+            # Whole arcs, chosen by a stable hash, until the cap. 2,544
+            # synthetic arcs make 7,000 windows -- more than twice the real
+            # narration even at its 3x weight, and past the nine-hour
+            # session at one epoch. The real arcs are what is imitated.
+            import hashlib as _h
+            arcs: dict[str, list] = defaultdict(list)
+            for r in synth:
+                arcs[r["meta"]["id"].rsplit(":w", 1)[0]].append(r)
+            order = sorted(arcs, key=lambda k: _h.sha256(k.encode()).hexdigest())
+            kept: list = []
+            for k in order:
+                if len(kept) + len(arcs[k]) > a.synth_cap:
+                    continue
+                kept += arcs[k]
+            print(f"  synthetic capped: {len(kept)} of {len(synth)} windows")
+            synth = kept
+        rows += synth
         out = a.out or ROOT / "kaggle" / "manim-forge-planner"
         key = lambda r: r["meta"]["id"].rsplit(":w", 1)[0]     # noqa: E731
     if not rows:
