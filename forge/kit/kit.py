@@ -138,6 +138,18 @@ class Stage:
         self.scene.wait(seconds)
 
 
+def _need(obj, attr: str, what: str, call: str):
+    """A clear error for the commonest misuse: the wrong thing in a slot.
+
+    Without it, `vector(stage, (1, 0))` fails three frames deep in Manim with
+    "'tuple' object has no attribute 'c2p'", which neither a model nor a
+    repair prompt can act on.
+    """
+    if not hasattr(obj, attr):
+        raise TypeError(f"{call}: expected {what}, got {type(obj).__name__} "
+                        f"{obj!r:.40}")
+
+
 # -- linear algebra ------------------------------------------------------------
 
 def plane(stage: Stage, where: str = "center", x_extent: int = 4,
@@ -160,6 +172,7 @@ def plane(stage: Stage, where: str = "center", x_extent: int = 4,
 
 def vector(stage: Stage, plane_, xy, color=YELLOW, label: str | None = None):
     """An arrow from the plane's origin to (x, y), grown, optionally labelled."""
+    _need(plane_, "c2p", "the plane from plane(stage)", "vector(stage, plane, (x, y))")
     a = Arrow(plane_.c2p(0, 0), plane_.c2p(*xy), buff=0, color=color)
     stage.scene.play(GrowArrow(a), run_time=0.8)
     stage._objects.append(a)
@@ -171,6 +184,7 @@ def vector(stage: Stage, plane_, xy, color=YELLOW, label: str | None = None):
 
 def basis(stage: Stage, plane_):
     """i-hat and j-hat, green and red, labelled."""
+    _need(plane_, "c2p", "the plane from plane(stage)", "basis(stage, plane)")
     i = vector(stage, plane_, (1, 0), GREEN, r"\hat{\imath}")
     j = vector(stage, plane_, (0, 1), RED, r"\hat{\jmath}")
     return i, j
@@ -178,6 +192,7 @@ def basis(stage: Stage, plane_):
 
 def apply_matrix(stage: Stage, plane_, matrix, riders=(), run_time: float = 2.0):
     """Move the grid, and anything riding on it, by a 2x2 matrix."""
+    _need(plane_, "c2p", "the plane from plane(stage)", "apply_matrix(stage, plane, matrix)")
     m = np.array(matrix, dtype=float)
     about = plane_.c2p(0, 0)
     group = VGroup(plane_, *riders)
@@ -187,6 +202,7 @@ def apply_matrix(stage: Stage, plane_, matrix, riders=(), run_time: float = 2.0)
 
 def unit_square(stage: Stage, plane_, color=YELLOW):
     """The unit square on the grid, filled -- the area a determinant scales."""
+    _need(plane_, "c2p", "the plane from plane(stage)", "unit_square(stage, plane)")
     sq = Polygon(plane_.c2p(0, 0), plane_.c2p(1, 0), plane_.c2p(1, 1),
                  plane_.c2p(0, 1), color=color, fill_opacity=0.35,
                  stroke_width=2)
@@ -197,6 +213,7 @@ def unit_square(stage: Stage, plane_, color=YELLOW):
 
 def span_line(stage: Stage, plane_, xy, color=BLUE):
     """Every scalar multiple of one vector: a line through the origin."""
+    _need(plane_, "c2p", "the plane from plane(stage)", "span_line(stage, plane, (x, y))")
     d = np.array([*xy, 0.0]) / (np.linalg.norm(xy) or 1)
     ln = Line(plane_.c2p(*(-8 * d[:2])), plane_.c2p(*(8 * d[:2])),
               color=color, stroke_opacity=0.7)
@@ -228,6 +245,7 @@ def axes(stage: Stage, x_range=(-1, 5), y_range=(-1, 5), where: str = "center",
 
 def graph(stage: Stage, ax, f, x_range=None, color=BLUE, label: str | None = None):
     """Plot f on the axes and draw it."""
+    _need(ax, "plot", "the axes from axes(stage)", "graph(stage, axes, f)")
     xr = x_range or (ax.x_range[0], ax.x_range[1])
     g = ax.plot(f, x_range=[xr[0], xr[1]], color=color)
     stage.scene.play(Create(g), run_time=1.5)
@@ -242,6 +260,7 @@ def graph(stage: Stage, ax, f, x_range=None, color=BLUE, label: str | None = Non
 def tangent(stage: Stage, ax, f, x_start: float, x_end: float,
             color=YELLOW, run_time: float = 3.0):
     """A tangent line sliding along f, with its slope read out live."""
+    _need(ax, "c2p", "the axes from axes(stage)", "tangent(stage, axes, f, x0, x1)")
     t = ValueTracker(x_start)
     h = 1e-4
 
@@ -268,6 +287,7 @@ def tangent(stage: Stage, ax, f, x_start: float, x_end: float,
 
 def area(stage: Stage, ax, g, a: float, b: float, color=BLUE_D):
     """Shade the area under g between a and b."""
+    _need(ax, "get_area", "the axes from axes(stage)", "area(stage, axes, graph, a, b)")
     r = ax.get_area(g, x_range=[a, b], color=color, opacity=0.5)
     stage.scene.play(FadeIn(r), run_time=1.0)
     stage._objects.append(r)
@@ -277,6 +297,7 @@ def area(stage: Stage, ax, g, a: float, b: float, color=BLUE_D):
 def riemann(stage: Stage, ax, g, a: float, b: float, ns=(4, 8, 16, 32),
             color=TEAL):
     """Rectangles under g, refined: 4, 8, 16, 32 strips."""
+    _need(ax, "get_riemann_rectangles", "the axes from axes(stage)", "riemann(stage, axes, graph, a, b)")
     rects = ax.get_riemann_rectangles(g, x_range=[a, b], dx=(b - a) / ns[0],
                                       fill_opacity=0.6, color=color)
     stage.scene.play(Create(rects), run_time=1.2)

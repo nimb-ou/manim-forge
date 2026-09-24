@@ -308,11 +308,16 @@ def failing_beat(code: str, stderr: str) -> int | None:
     mapped to the ``# beat N:`` comment above it.
     """
     lines = code.splitlines()
+    # Only frames inside construct(): an embedded kit sits above it, and its
+    # frames are the deepest in a kit scene's traceback -- blaming one of
+    # them finds no beat and the salvage gave up.
+    start = next((k for k, l in enumerate(lines, 1)
+                  if "def construct(self)" in l), 0)
     hit = None
     for m in re.finditer(r"❱\s*(\d+)\s*│(.*)$", stderr, re.M):
         n = int(m.group(1))
         snip = m.group(2).replace("│", "").strip()[:25]
-        if 1 <= n <= len(lines) and snip and snip in lines[n - 1]:
+        if start < n <= len(lines) and snip and snip in lines[n - 1]:
             hit = n
     if hit is None:
         return None
