@@ -27,7 +27,8 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "scripts"))
 
-from forge.app.twostage import assemble, extract_code, names_in_scope  # noqa: E402
+from forge.app.twostage import (assemble, extract_code,  # noqa: E402
+                                failing_beat, names_in_scope)
 from run_twostage import CODE_SYSTEM, ask, load, plan  # noqa: E402
 
 B, D, G, R, Y, C, X = ("\033[1m", "\033[2m", "\033[32m", "\033[31m",
@@ -156,6 +157,20 @@ def main() -> int:
                       cache_dir=str(ROOT / "data" / "frames"), timeout=600,
                       store_video=True)
     res = h.render(asm.code, quality=a.quality, use_cache=False)
+    for _ in range(3):
+        if res.ok:
+            break
+        k = failing_beat(asm.code, res.stderr or "")
+        if k is None or not bodies[k - 1].strip():
+            break
+        print(f"  {Y}beat {k} failed at runtime ({res.error_kind.value}); "
+              f"dropping it and re-rendering{X}")
+        bodies[k - 1] = ""
+        trial = assemble(beats, bodies)
+        if not trial.ok:
+            break
+        asm = trial
+        res = h.render(asm.code, quality=a.quality, use_cache=False)
     out = ROOT / "data" / "demo"
     out.mkdir(parents=True, exist_ok=True)
     (out / "last_scene.py").write_text(asm.code)
