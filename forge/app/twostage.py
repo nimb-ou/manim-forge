@@ -344,3 +344,22 @@ def prelude_prompt(request: str, bodies: list[str], names: list[str]) -> str:
             f"them like this:\n" + "\n".join(dict.fromkeys(usage)) +
             "\n  Assign each name exactly as written. Do not call "
             "self.play or self.add.")
+
+
+_NUMBER_WORDS = ("zero one two three four five six seven eight nine ten eleven "
+                 "twelve thirteen fourteen fifteen sixteen seventeen eighteen "
+                 "nineteen twenty thirty forty fifty hundred").split()
+# Ordinals stay: "first derivative" and "second derivative" are different
+# beats, "three vectors" and "four vectors" are a loop.
+
+
+def intent_key(intent: str) -> str:
+    """An intent with its counting stripped, for spotting loops.
+
+    Planner v3 avoided exact repeats by counting: "Span of three vectors",
+    "Span of four vectors", ... "Span of eleven vectors" -- a loop that an
+    exact-match rule reads as eleven new beats. Numerals, number words and
+    punctuation are removed before comparing.
+    """
+    words = re.findall(r"[a-z]+", intent.lower())
+    return " ".join(w for w in words if w not in _NUMBER_WORDS)

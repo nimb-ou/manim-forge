@@ -28,7 +28,7 @@ import time
 from pathlib import Path
 
 from forge.app.twostage import (assemble, beat_prompt, extract_code,
-                                failing_beat, missing_names,
+                                failing_beat, intent_key, missing_names,
                                 names_in_scope, prelude_prompt,
                                 parse_plan)
 from forge.harness import RenderHarness
@@ -107,9 +107,9 @@ def plan(model, tok, request: str, stride: int, max_beats: int) -> list:
         # output falls into a loop, and half its synthetic training arcs
         # padded that way. The training windows now cut synthetic arcs at
         # their first repeat, and this is the same rule at inference.
-        seen = {" ".join(b.intent.lower().split()) for b in beats}
+        seen = {intent_key(b.intent) for b in beats}
         for k, b in enumerate(new):
-            key = " ".join(b.intent.lower().split())
+            key = intent_key(b.intent)
             if key in seen:
                 new, ended = new[:k], True
                 break

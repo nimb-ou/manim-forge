@@ -69,8 +69,12 @@ def _jsonl(path: Path) -> list[dict]:
 
 
 def intent_of(beat: str) -> str:
+    """The beat's intent, keyed the way inference detects loops."""
+    import sys
+    sys.path.insert(0, str(ROOT))
+    from forge.app.twostage import intent_key
     m = re.match(r"^\s*\d+\.\s*\[[^\]]*\]\s*(.*?)\s*(?:--|—|$)", beat)
-    return " ".join((m.group(1) if m else beat).lower().split())
+    return intent_key(m.group(1) if m else beat)
 
 
 def first_repeat_cut(beats: list[str]) -> list[str]:

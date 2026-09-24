@@ -225,3 +225,14 @@ def test_missing_names_and_prelude_prompt():
     assert missing_names(beats, bodies) == ["axes"]
     p = prelude_prompt("parabola", bodies, ["axes"])
     assert "axes.plot(lambda x: x**2)" in p and "Do not call" in p
+
+
+def test_intent_key_catches_counting_loops():
+    from forge.app.twostage import intent_key
+    assert intent_key("Span of three vectors.") == intent_key("Span of 11 vectors")
+    assert intent_key("A circle") != intent_key("A square")
+
+
+def test_intent_key_keeps_ordinals():
+    from forge.app.twostage import intent_key
+    assert intent_key("The first derivative") != intent_key("The second derivative")
