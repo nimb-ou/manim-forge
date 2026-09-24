@@ -225,7 +225,11 @@ def assemble(beats: list[Beat], bodies: list[str],
         return out
 
     import builtins
-    known = defined_names(tree) | set(dir(builtins)) | {"self"}
+    # Parameters are ast.arg, not Name, so defined_names misses them: every
+    # `axes.plot(lambda x: x**2)` reported `x` as a name no beat defines, and
+    # sent the scene to repair or salvage for nothing.
+    known = (defined_names(tree) | set(dir(builtins)) | {"self"}
+             | {n.arg for n in ast.walk(tree) if isinstance(n, ast.arg)})
     try:
         import manim
         known |= {n for n in dir(manim) if not n.startswith("_")}
