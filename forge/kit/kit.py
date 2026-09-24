@@ -118,8 +118,12 @@ class Stage:
         self._objects.append(m)
         return m
 
-    def label(self, m, s: str, direction=UP, color=WHITE):
+    def label(self, m, s: str, direction=UP, color=WHITE, **_ignored):
         """A short label beside a mobject (not a caption)."""
+        if isinstance(m, str) and not isinstance(s, str):
+            m, s = s, m                                  # label("x", obj)
+        if isinstance(m, str):                           # label("x") alone
+            return self.caption(m)
         t = self._text(s, 28).set_color(color).next_to(m, direction, buff=0.15)
         self.scene.play(FadeIn(t), run_time=0.5)
         self._objects.append(t)
@@ -136,6 +140,33 @@ class Stage:
 
     def pause(self, seconds: float = 1.0):
         self.scene.wait(seconds)
+
+    # The obvious phrasings, accepted. The teacher's commonest runtime error
+    # across 438 scenes was stage.play / stage.add (23), then a block called
+    # as a method -- stage.draw_plane(...). The stage forwards the first to
+    # the scene and binds the second, rather than failing the beat.
+    def play(self, *anims, **kw):
+        return self.scene.play(*anims, **kw)
+
+    def add(self, *mobjects):
+        return self.scene.add(*mobjects)
+
+    def remove(self, *mobjects):
+        return self.scene.remove(*mobjects)
+
+    def wait(self, seconds: float = 1.0):
+        return self.scene.wait(seconds)
+
+    def __getattr__(self, name: str):
+        f = globals().get(name)
+        if callable(f) and getattr(f, "__code__", None) is not None \
+                and f.__code__.co_varnames[:1] == ("stage",):
+            return lambda *a, **kw: f(self, *a, **kw)
+        raise AttributeError(
+            f"Stage has no {name!r}. Blocks are functions taking the stage "
+            f"first (draw_plane(stage), plot_graph(stage, ax, f)); the stage's "
+            f"own methods are title, caption, equation, label, place, clear, "
+            f"pause.")
 
 
 def _need(obj, attr: str, what: str, call: str):
