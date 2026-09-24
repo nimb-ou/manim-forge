@@ -50,6 +50,40 @@ CODE_SYSTEM = (
     "is wrong unless a line above it makes `dot`."
 )
 
+def _kit_api() -> str:
+    from pathlib import Path as _P
+    src = (_P(__file__).resolve().parents[1] / "kit" / "kit.py").read_text()
+    return src.split('KIT_API = """\\\n', 1)[1].split('"""', 1)[0]
+
+
+#: Kit mode: the coder writes beats as calls to forge/kit, which draw the
+#: picture themselves. The model has not been trained on the kit, so the API
+#: and two worked beats are in the prompt.
+CODE_SYSTEM_KIT = (
+    "You write one beat of a 3Blue1Brown-style animation using the Forge kit, "
+    "a library of building blocks that draw and animate the picture for you. "
+    "Write only the statements for the beat you are asked for -- no class, no "
+    "def, no imports. Show the idea with the kit's pictures; use text only "
+    "through stage.title, stage.caption, stage.label and stage.equation. "
+    "NAMES IN SCOPE lists what earlier beats built; reuse them. Anything else "
+    "you use, make in this beat first. You may also use any Manim call "
+    "(self.play(x.animate...), Transform, ...) on the objects the kit returns."
+    "\n\nTHE KIT\n" + _kit_api() +
+    "\nEXAMPLE -- intent: Two vectors add tip to tail\n"
+    "p = plane(stage)\n"
+    "v = vector(stage, p, (2, 1), YELLOW, \"v\")\n"
+    "w = vector(stage, p, (1, 2), BLUE, \"w\")\n"
+    "stage.caption(\"Slide w so its tail sits on v's tip\")\n"
+    "self.play(w.animate.shift(p.c2p(2, 1) - p.c2p(0, 0)))\n"
+    "s = vector(stage, p, (3, 3), GREEN, \"v + w\")\n"
+    "\nEXAMPLE -- intent: The slope of x squared at every point\n"
+    "ax = axes(stage, x_range=(-1, 3), y_range=(-1, 9))\n"
+    "f = lambda x: x ** 2\n"
+    "g = graph(stage, ax, f, label=\"x^2\")\n"
+    "tangent(stage, ax, f, 0.2, 2.5)\n"
+    "stage.caption(\"The slope grows with x: it is 2x\")\n"
+)
+
 #: Planner decoding. Sampled: on eight hard titles planner v2 wrote 3.8 beats
 #: before its first repeated intent under greedy decoding and 22.6 at
 #: temperature 0.5 with a 1.1 repetition penalty. The coder stays greedy.
@@ -119,14 +153,15 @@ def plan(model, tok, request: str, stride: int, max_beats: int,
 
 
 def write_beat(model, tok, request: str, beats: list[Beat], j: int,
-               bodies: list[str], max_tokens: int) -> tuple[str, str]:
+               bodies: list[str], max_tokens: int,
+               system: str = CODE_SYSTEM) -> tuple[str, str]:
     """One beat's code: two tries to parse, then its parsing prefix.
 
     Returns (body, note); an empty body means the beat was dropped.
     """
     cand = ""
     for _ in range(2):
-        cand = extract_code(ask(model, tok, CODE_SYSTEM,
+        cand = extract_code(ask(model, tok, system,
                                 beat_prompt(request, beats, j, bodies),
                                 max_tokens=max_tokens))
         try:
@@ -224,6 +259,7 @@ class Options:
     quality: str = "medium"
     setup: bool = True
     salvage: bool = True
+    kit: bool = False
 
 
 @dataclass
@@ -268,10 +304,12 @@ def run(request: str, host, emit: Emit, opts: Options | None = None,
     # 2. implement
     emit({"stage": "code", "status": "start"})
     cm, ctok = host.use("coder")
+    system = CODE_SYSTEM_KIT if opts.kit else CODE_SYSTEM
+    kit = opts.kit
     bodies: list[str] = []
     for j, b in enumerate(beats):
         body, why = write_beat(cm, ctok, request, beats, j, bodies,
-                               opts.beat_tokens)
+                               opts.beat_tokens, system)
         bodies.append(body)
         emit({"stage": "code", "beat": b.n, "intent": b.intent, "code": body,
               "note": why})
@@ -280,31 +318,31 @@ def run(request: str, host, emit: Emit, opts: Options | None = None,
 
     # 3. assemble: set-up, then statement-level, then beat-level salvage
     emit({"stage": "assemble", "status": "start"})
-    missing = missing_names(beats, bodies)
+    missing = missing_names(beats, bodies, kit=kit)
     if opts.setup and missing and any(x.strip() for x in bodies):
         pre = parsing_prefix(extract_code(ask(
-            cm, ctok, CODE_SYSTEM, prelude_prompt(request, bodies, missing),
+            cm, ctok, system, prelude_prompt(request, bodies, missing),
             max_tokens=opts.beat_tokens)))
         if pre.strip():
             first = next(k for k, x in enumerate(bodies) if x.strip())
             trial = list(bodies)
             trial[first] = textwrap.dedent(pre).strip() + "\n" + \
                 textwrap.dedent(trial[first])
-            if len(missing_names(beats, trial)) < len(missing):
+            if len(missing_names(beats, trial, kit=kit)) < len(missing):
                 bodies = trial
                 note(f"set-up built {', '.join(missing[:6])}", code=pre)
     live = sum(1 for x in bodies if x.strip())
     if opts.salvage:
-        missing = missing_names(beats, bodies)
+        missing = missing_names(beats, bodies, kit=kit)
         if missing:
             trial, n = prune_statements(bodies, missing)
-            if assemble(beats, trial).ok and \
+            if assemble(beats, trial, kit=kit).ok and \
                     2 * sum("self.play(" in x for x in trial) >= live:
                 bodies = trial
                 note(f"removed {n} lines using {', '.join(missing[:4])}, "
                      f"which nothing builds")
         for _ in range(len(bodies)):
-            missing = missing_names(beats, bodies)
+            missing = missing_names(beats, bodies, kit=kit)
             if not missing:
                 break
             hit = [j for j, x in enumerate(bodies) if x.strip() and any(
@@ -316,7 +354,7 @@ def run(request: str, host, emit: Emit, opts: Options | None = None,
                 bodies[j] = ""
             note(f"dropped beats {', '.join(str(j + 1) for j in hit)} "
                  f"(they use {', '.join(missing[:4])})")
-    asm = assemble(beats, bodies)
+    asm = assemble(beats, bodies, kit=kit)
     kept = sum(1 for x in bodies if x.strip())
     if not asm.ok or kept * 2 < live:
         why = asm.problems[0] if asm.problems else \
@@ -343,7 +381,7 @@ def run(request: str, host, emit: Emit, opts: Options | None = None,
         if k is None or not bodies[k - 1].strip():
             break
         bodies[k - 1] = ""
-        trial = assemble(beats, bodies)
+        trial = assemble(beats, bodies, kit=kit)
         if not trial.ok or 2 * sum(1 for x in bodies if x.strip()) < live:
             break
         asm = trial
