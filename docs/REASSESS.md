@@ -196,3 +196,34 @@ sheets looked at, not by coverage.
 
 **5. Handover.** The product question is now "does the kit make pictures
 that explain", answered by looking at them.
+
+## Log · 2026-09-24 23:40Z
+
+**1. Arrived.** The kit: ~50 blocks, four galleries rendered and looked at.
+Web app (forge/serve). Kit teacher data: ~2,000 raw rows, about half
+surviving the relevance and novelty filter. Measured: prompt-only kit mode
+keeps 0 of 4 beats (the untrained coder copies the example) — so the kit
+must be trained in. Kit coder v5 training locally now (first attempt went
+NaN on two over-long rows; fixed).
+
+**2. Symptom or thing?** The thing, this time: the pictures. Each
+teacher-data problem was found by *looking* — Escher as ten vector
+diagrams, stage.play errors — and fixed at the source (relevance filter,
+forgiving Stage, verb names), not by salvage logic.
+
+**3. Critical path.** Kit coder v5 → 12-title scorecard judged on visual
+share and contact sheets. Nothing else is on it. The planner and GRPO wait
+for the Kaggle reset.
+
+**4. Missing.**
+- Local training is slow (~60 s/iteration under contention; shards paused
+  to help). If v5 takes more than ~10 h, train a smaller first cut
+  (fewer rows) to get *a* number, rather than waiting for a perfect one.
+- The relevance filter is keyword-based; it will pass some wrong pictures.
+  The scorecard's contact sheets are the check.
+- The planner still writes intents for a raw-Manim coder. Once v5 works,
+  the planner's intents should name drawable things; that is planner v5.
+
+**5. Handover.** If v5 draws the right pictures, the product is the web
+app with the kit coder; if not, the next lever is more, better kit data
+(the teacher is the ceiling), not more harness.
