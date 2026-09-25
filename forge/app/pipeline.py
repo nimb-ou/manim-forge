@@ -84,6 +84,21 @@ CODE_SYSTEM_KIT = (
     "stage.caption(\"The slope grows with x: it is 2x\")\n"
 )
 
+#: The kit coder's own prompt, once trained. It learns the kit from its data,
+#: so the 1,293-token API list stays with the teacher: rows drop from ~1,850
+#: tokens to ~600, three times faster to train and to run. Training rows are
+#: rewritten with this prompt (scripts/build_kit_dataset.py).
+CODE_SYSTEM_KIT_TRAINED = (
+    "You write one beat of a 3Blue1Brown-style animation with the Forge kit: "
+    "its blocks (draw_plane, draw_vector, apply_matrix, draw_axes, plot_graph, "
+    "slide_tangent, riemann_refine, ...) take the stage first, draw and "
+    "animate the picture, and return what they made. `stage = Stage(self)` "
+    "exists. Write only this beat's statements -- no class, no def, no "
+    "imports. Show the idea with pictures; text only through stage.title, "
+    "stage.caption, stage.label and stage.equation. Reuse NAMES IN SCOPE; "
+    "make anything else in this beat first."
+)
+
 #: Planner decoding. Sampled: on eight hard titles planner v2 wrote 3.8 beats
 #: before its first repeated intent under greedy decoding and 22.6 at
 #: temperature 0.5 with a 1.1 repetition penalty. The coder stays greedy.
@@ -264,6 +279,7 @@ class Options:
     setup: bool = True
     salvage: bool = True
     kit: bool = False
+    kit_trained: bool = True        # the short prompt; False = prompt-only
 
 
 @dataclass
@@ -308,7 +324,8 @@ def run(request: str, host, emit: Emit, opts: Options | None = None,
     # 2. implement
     emit({"stage": "code", "status": "start"})
     cm, ctok = host.use("coder")
-    system = CODE_SYSTEM_KIT if opts.kit else CODE_SYSTEM
+    system = (CODE_SYSTEM_KIT_TRAINED if opts.kit_trained else CODE_SYSTEM_KIT) \
+        if opts.kit else CODE_SYSTEM
     kit = opts.kit
     bodies: list[str] = []
     for j, b in enumerate(beats):

@@ -30,7 +30,8 @@ SRC = ROOT / "kaggle" / "01_sft.py"
 # Starting sequence length per adapter, measured rather than chosen.
 #   coder    median 323 tokens, p90 441, max 1,312
 #   planner  median 1,013, p90 1,143, 2.2% over 2048
-SEQ = {"coder": (768, 512), "planner": (2048, 1536)}
+#   kit      short trained prompt: see build_kit_dataset.py (measured below)
+SEQ = {"coder": (768, 512), "planner": (2048, 1536), "kit": (1024, 768)}
 
 
 def main() -> int:
