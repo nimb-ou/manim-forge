@@ -86,6 +86,9 @@ def contact_sheet(video: str, out: Path, k: int = 6) -> None:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("--short", action="store_true",
+                    help="the 20 short one-idea prompts (the headline eval) "
+                         "instead of the hard titles")
     ap.add_argument("--n", type=int, default=12)
     ap.add_argument("--start", type=int, default=0)
     ap.add_argument("--planner", default=str(ROOT / "adapters" / "mlx-planner3"))
@@ -100,7 +103,17 @@ def main() -> int:
     mob = {n for n in dir(manim) if isinstance(getattr(manim, n), type)
            and issubclass(getattr(manim, n), manim.Mobject)}
     from forge.evaluate.hard_eval import build_tasks, concept_coverage
-    tasks = build_tasks()[a.start: a.start + a.n]
+    if a.short:
+        from types import SimpleNamespace
+        spec = json.loads((ROOT / "forge" / "evaluate" / "short_prompts.json")
+                          .read_text())["prompts"]
+        # No reference video: coverage is 0 and length is against a nominal
+        # 60 s. The numbers that matter here are renders, visual beats and
+        # the contact sheets.
+        tasks = [SimpleNamespace(prompt=p["prompt"], terms=[], real_seconds=60.0)
+                 for p in spec][a.start: a.start + a.n]
+    else:
+        tasks = build_tasks()[a.start: a.start + a.n]
     out_dir = ROOT / "data" / "scorecard" / a.tag
     out_dir.mkdir(parents=True, exist_ok=True)
     host = SwapHost(a.planner, a.coder)

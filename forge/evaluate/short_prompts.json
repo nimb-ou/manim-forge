@@ -1,0 +1,25 @@
+{
+  "note": "The headline eval from 2026-09-25: one idea, 4-8 beats, 30-90 s. 15 prompts the kit has pictures for, 5 it does not (kit: false), to see what the coder does without a block to lean on.",
+  "prompts": [
+    {"prompt": "why the area of a circle is pi r squared", "kit": true},
+    {"prompt": "what a 2x2 matrix does to the plane", "kit": true},
+    {"prompt": "the determinant as the factor areas are scaled by", "kit": true},
+    {"prompt": "eigenvectors: the directions a transformation only stretches", "kit": true},
+    {"prompt": "the derivative as the slope of the tangent line", "kit": true},
+    {"prompt": "integration as adding up thinner and thinner rectangles", "kit": true},
+    {"prompt": "how Taylor polynomials approximate cos(x)", "kit": true},
+    {"prompt": "why 1/2 + 1/4 + 1/8 + ... equals 1", "kit": true},
+    {"prompt": "sine as the height of a point going round a circle", "kit": true},
+    {"prompt": "adding two waves together", "kit": true},
+    {"prompt": "why multiplying by i rotates by 90 degrees", "kit": true},
+    {"prompt": "Bayes' theorem and the medical test paradox", "kit": true},
+    {"prompt": "gradient descent finding the bottom of a valley", "kit": true},
+    {"prompt": "the dot product as a projection", "kit": true},
+    {"prompt": "what a neural network layer does", "kit": true},
+    {"prompt": "why the angles of a triangle add up to 180 degrees", "kit": false},
+    {"prompt": "the Pythagorean theorem with squares on each side", "kit": false},
+    {"prompt": "how binary counting works", "kit": false},
+    {"prompt": "why there are infinitely many primes", "kit": false},
+    {"prompt": "a pendulum and simple harmonic motion", "kit": false}
+  ]
+}
