@@ -12,7 +12,8 @@ while [ "$(date +%s)" -lt "$end" ]; do
   else
     out=$(.venv/bin/python -u scripts/push_kernel.py "$1" 2>&1)
   fi
-  echo "$(date -u +%m-%dT%H:%MZ) $(echo "$out" | tail -1)"
+  # Every line: the last one was a slug warning that hid the real error.
+  echo "$(date -u +%m-%dT%H:%MZ) $(echo "$out" | grep -v '^$' | tr '\n' ' ' | cut -c1-400)"
   echo "$out" | grep -qi "error" || { echo "pushed $1"; exit 0; }
   steps=40
   echo "$out" | grep -qi "quota" && steps=240
