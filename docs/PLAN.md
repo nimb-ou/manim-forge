@@ -156,31 +156,41 @@ about a model, check that the thing measuring it can express what the model
 did.** A parser that cannot represent a plan reports no plan. A scope list
 that cannot represent an attribute reports no scope.
 
-### The sequence — revised 2026-09-25: the kit
+### Grounded plan — 2026-09-25 evening
 
-**Why it changed.** The split's long renders were slides — 215 of 289
-beats built only text — and Nimit, watching one, called it nonsense. A 7B
-model writing raw Manim falls back on Text because Text always works;
-four days of salvage and repair made scenes *render*, not *show*.
+**What went wrong.** The kit coder's local training sat at iteration 1 for
+~20 hours with the Mac thrashing (11% memory free, load 91), and nothing
+noticed: the 30-minute checks only ran while a turn was active. Before that,
+four days went to harness fixes measured against a target -- 16-minute
+3Blue1Brown videos from a local 7B -- that the field does not reach.
 
-1. **The Forge kit** (forge/kit, done) — ~50 verb-named 3Blue1Brown blocks
-   (planes, vectors, matrix moves, eigenvectors, determinants, tangents,
-   Riemann sums, Taylor, sine-from-circle, Fourier winding, waves, complex
-   multiplication, neural nets, Bayes squares, sampling, Hanoi, Hamming
-   grids, prime spirals, heat, flows) behind a Stage that owns layout. The
-   model chooses blocks and parameters; the picture is guaranteed.
-2. **Kit data** (running) — a teacher writes kit beats for drawable arcs,
-   render-verified; filtered for relevance (the block's family must match
-   the beat's words) and novelty (no repeated picture). ~50% survive.
-3. **Kit coder v5** (queued) — trained locally with MLX from coder v2 at
-   600 clean rows, then a 12-title scorecard judged by visual-beat share
-   and contact sheets, not coverage.
-4. **At the Kaggle reset**: planner v4 (queued), kit GRPO (render + shape +
-   motion reward, built), a larger kit coder on Kaggle if v5 shows the way.
-5. **The app** (forge/serve, done) switches to the kit coder when it exists.
+**What the field does** (researched): TheoremExplainAgent (ACL 2025) and
+Code2Video (ICML 2026) both use planner + coder agents on frontier models
+(o3-mini: 93.8% render success), and the step that lifts quality is a
+*visual critic* -- a VLM looking at rendered frames. Compact models
+fine-tuned on Manim reach ~62% render success on single-scene tasks.
 
-Prompt-only kit mode was tried and does not work: the untrained coder
-copies the worked example verbatim.
+**The plan.**
+1. **Target short scenes**: one idea, 4-8 beats, 30-90 s -- what a person
+   typing a prompt wants and what a 7B with the kit can do. A fixed set of
+   20 short prompts (data/eval/short_prompts.json) replaces the 81 hard
+   titles as the headline; contact sheets are part of every score.
+2. **Train on Kaggle, not the Mac.** The Mac cannot train a 7B beside
+   anything else. It runs inference and evals only.
+3. **Kit coder on Kaggle** at the quota reset, from the relevance-filtered
+   teacher rows, with a *short* system prompt (the trained model learns the
+   kit from data; the 1,293-token API prompt stays with the teacher only):
+   ~600-token rows, 3x faster to train and to run.
+4. **Visual critic on the teacher side**: a VLM (gemini, when its quota
+   allows) checks each teacher scene's contact sheet against its intents;
+   only scenes it passes become training data.
+5. **Then** GRPO on the kit coder (render + shape + motion), and planner v4.
+
+**Stopped.** Raw-Manim harness work; the 81-title full-video eval as the
+headline; local training; three generator shards at once.
+
+**Watching.** A cron job every 30 minutes and a six-hour reassessment, both
+firing while idle.
 
 ### What would stop each
 
