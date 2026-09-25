@@ -114,6 +114,16 @@ def body(row: dict) -> str:
 
 def main() -> int:
     rows = [json.loads(l) for l in SRC.read_text().splitlines() if l.strip()]
+    # The visual critic's verdicts (critic_kit_scenes.py), where it has run:
+    # a beat whose frame a vision model judged not to show its idea is out.
+    critic = ROOT / "data" / "kit" / "critic.jsonl"
+    no = set()
+    if critic.exists():
+        for l in critic.read_text().splitlines():
+            if l.strip():
+                c = json.loads(l)
+                no |= {(c["scene"], int(k)) for k, v in c["verdicts"].items()
+                       if v == "NO"}
     by_scene = defaultdict(list)
     for r in rows:
         by_scene[r["meta"]["scene"]].append(r)
@@ -123,6 +133,9 @@ def main() -> int:
         rs.sort(key=lambda r: r["meta"]["index"])
         seen: set[tuple] = set()
         for r in rs:
+            if (scene, r["meta"]["index"]) in no:
+                why["dropped: the visual critic said no"] += 1
+                continue
             calls = kit_calls(body(r))
             if not calls:
                 kept.append(r)

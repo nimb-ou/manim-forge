@@ -205,6 +205,12 @@ def jobs() -> list[Job]:
               # Paused while the Mac trains: touch data/kit/pause_2.
               done_when=lambda: (ROOT / "data" / "kit" / "pause_2").exists()),
 
+        local("kit-critic", "critic_kit_scenes.py",
+              ROOT / "data" / "kit" / "critic.jsonl",
+              [str(PY), "-u", str(ROOT / "scripts" / "critic_kit_scenes.py")],
+              log=ROOT / "data" / "logs" / "kit_critic.log",
+              note="a vision model checks each teacher scene's frames",
+              stallable=False),
         local("fix-arcs", "fix_arcs.py", d / "plan_synth_fixed.jsonl",
               [str(PY), "-u", str(ROOT / "scripts" / "fix_arcs.py")],
               done_when=lambda: (d / "fix_done").exists(),
