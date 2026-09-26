@@ -6,7 +6,7 @@
 # own command line cannot match the pattern: a waiter that pgreps for text
 # in its own `sh -c` string waits forever, which has happened three times.
 cd "$(dirname "$0")/.." || exit 1
-while pgrep -f "python[0-9.]* -u scripts/(demo|run_twostage|beat_eval|prompt_probe)[.]py" >/dev/null; do
+while pgrep -f "python[0-9.]* -u scripts/(demo|run_twostage|beat_eval|prompt_probe|scorecard|self_kit_beats|train_kit_coder)[.]py" >/dev/null; do
   sleep 30
 done
 exec "$@"

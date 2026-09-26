@@ -113,7 +113,12 @@ def body(row: dict) -> str:
 
 
 def main() -> int:
-    rows = [json.loads(l) for l in SRC.read_text().splitlines() if l.strip()]
+    # Teacher rows and the kit coder's own (self_kit_beats.py) alike.
+    rows = []
+    for src in (SRC, ROOT / "data" / "kit" / "self_beats.jsonl"):
+        if src.exists():
+            rows += [json.loads(l) for l in src.read_text().splitlines()
+                     if l.strip()]
     # The visual critic's verdicts (critic_kit_scenes.py), where it has run:
     # a beat whose frame a vision model judged not to show its idea is out.
     critic = ROOT / "data" / "kit" / "critic.jsonl"
