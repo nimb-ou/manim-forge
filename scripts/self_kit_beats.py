@@ -27,7 +27,8 @@ sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "scripts"))
 
 from forge.app.pipeline import CODE_SYSTEM_KIT_TRAINED, load, write_beat  # noqa: E402
-from forge.app.twostage import assemble, beat_prompt, failing_beat, prune_all  # noqa: E402
+from forge.app.twostage import (assemble, beat_prompt, prune_all,  # noqa: E402
+                                runtime_salvage)
 from scorecard import visual  # noqa: E402
 from synth_kit_beats import arcs  # noqa: E402
 
@@ -66,16 +67,17 @@ def main() -> int:
         bodies, _, _ = prune_all(beats, bodies, kit=True)
         asm = assemble(beats, bodies, kit=True)
         res = h.render(asm.code, quality="low", frames=2) if asm.ok else None
-        tries = 0
-        while res is not None and not res.ok and tries < 3:
-            k = failing_beat(asm.code, res.stderr or "")
-            if k is None or not bodies[k - 1].strip():
+        tried: set[int] = set()
+        for _ in range(5):
+            if res is None or res.ok:
                 break
-            bodies[k - 1] = ""
-            bodies, _, _ = prune_all(beats, bodies, kit=True)
+            fix = runtime_salvage(beats, bodies, asm.code, res.stderr or "",
+                                  kit=True, tried=tried)
+            if fix is None:
+                break
+            bodies = fix[0]
             asm = assemble(beats, bodies, kit=True)
             res = h.render(asm.code, quality="low", frames=2) if asm.ok else None
-            tries += 1
         ok = bool(res and res.ok)
         kept = [j for j, b in enumerate(bodies) if b.strip() and visual(b, mob)] \
             if ok else []

@@ -24,9 +24,9 @@ from pathlib import Path
 from typing import Callable
 
 from forge.app.twostage import (Beat, assemble, beat_prompt, extract_code,
-                                failing_beat, intent_key, missing_names,
+                                intent_key, missing_names,
                                 parse_plan, parsing_prefix, prelude_prompt,
-                                prune_all)
+                                prune_all, runtime_salvage)
 
 MODEL = "mlx-community/Qwen2.5-Coder-7B-Instruct-4bit"
 
@@ -384,7 +384,8 @@ def run(request: str, host, emit: Emit, opts: Options | None = None,
     emit({"stage": "assemble", "status": "done", "kept": kept,
           "of": len(beats), "code": asm.code})
 
-    # 4. render, dropping a beat the traceback blames, three times at most
+    # 4. render; on a runtime error drop the statement the traceback blames
+    # (a second failure in that beat drops the beat), five times at most
     if harness is None:
         from forge.harness import RenderHarness
         root = Path(__file__).resolve().parents[2]
@@ -393,22 +394,21 @@ def run(request: str, host, emit: Emit, opts: Options | None = None,
                                 timeout=600, store_video=True)
     emit({"stage": "render", "status": "start", "quality": opts.quality})
     res = harness.render(asm.code, quality=opts.quality, use_cache=False)
-    for _ in range(3 if opts.salvage else 0):
+    tried: set[int] = set()
+    for _ in range(5 if opts.salvage else 0):
         if res.ok:
             break
-        k = failing_beat(asm.code, res.stderr or "")
-        if k is None or not bodies[k - 1].strip():
+        fix = runtime_salvage(beats, bodies, asm.code, res.stderr or "",
+                              kit=kit, tried=tried)
+        if fix is None:
             break
-        bodies[k - 1] = ""
-        # The dropped beat may have built names later beats use.
-        bodies, _, _ = prune_all(beats, bodies, kit=kit)
-        trial = assemble(beats, bodies, kit=kit)
-        if not trial.ok or 2 * sum(1 for x in bodies if x.strip()) < live:
+        trial_bodies, what = fix
+        trial = assemble(beats, trial_bodies, kit=kit)
+        if not trial.ok or 2 * sum(1 for x in trial_bodies if x.strip()) < live:
             break
-        asm = trial
-        emit({"stage": "render", "note": f"beat {k} failed at runtime "
-              f"({res.error_kind.value}); re-rendering without it"})
-        notes.append(f"runtime: dropped beat {k}")
+        bodies, asm = trial_bodies, trial
+        emit({"stage": "render", "note": f"{what}; re-rendering"})
+        notes.append(what)
         res = harness.render(asm.code, quality=opts.quality, use_cache=False)
     out = Result(request, beats, bodies, asm.code, ok=res.ok,
                  video=res.video_path if res.ok else None,

@@ -253,3 +253,18 @@ def test_prune_statements_follows_what_a_dropped_line_fed():
     assert n == 2
     assert out[0] == "c = Circle()\nself.play(Create(c))"
     assert out[1] == "d = Dot()\nself.play(Create(d))"
+
+
+def test_runtime_salvage_drops_the_statement_then_the_beat():
+    from forge.app.twostage import Beat, assemble, runtime_salvage
+    beats = [Beat(1, None, "axes"), Beat(2, None, "graph")]
+    bodies = ["ax = 1\nbad = boom()\nkeep = ax + 1", "y = ax * 2"]
+    code = assemble(beats, bodies).code
+    n = next(k for k, l in enumerate(code.splitlines(), 1) if "boom()" in l)
+    err = f"│ ❱ {n} │     bad = boom()\nNameError: name 'boom' is not defined"
+    tried: set = set()
+    out, note = runtime_salvage(beats, bodies, code, err, tried=tried)
+    assert "boom" not in out[0] and "ax = 1" in out[0] and out[1].strip()
+    assert "statement of beat 1" in note and "NameError" in note
+    out2, note2 = runtime_salvage(beats, bodies, code, err, tried=tried)
+    assert out2[0] == "" and "dropped beat 1" in note2

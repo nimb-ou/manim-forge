@@ -299,13 +299,13 @@ def assemble(beats: list[Beat], bodies: list[str],
     return out
 
 
-def failing_beat(code: str, stderr: str) -> int | None:
-    """Which beat a render traceback points at, from Rich's ``❱ N`` markers.
+def failing_line(code: str, stderr: str) -> int | None:
+    """The line of this scene a render traceback points at, from Rich's
+    ``❱ N`` markers.
 
     A frame counts only if the source Rich prints beside the marker is the
     text of line N of *this* scene -- library frames have their own line
-    numbers, and a bare number would blame a random beat. The line is then
-    mapped to the ``# beat N:`` comment above it.
+    numbers, and a bare number would blame a random line.
     """
     lines = code.splitlines()
     # Only frames inside construct(): an embedded kit sits above it, and its
@@ -319,13 +319,80 @@ def failing_beat(code: str, stderr: str) -> int | None:
         snip = m.group(2).replace("│", "").strip()[:25]
         if start < n <= len(lines) and snip and snip in lines[n - 1]:
             hit = n
+    return hit
+
+
+def failing_beat(code: str, stderr: str) -> int | None:
+    """Which beat a render traceback points at: the failing line, mapped to
+    the ``# beat N:`` comment above it."""
+    hit = failing_line(code, stderr)
     if hit is None:
         return None
+    lines = code.splitlines()
     for k in range(hit - 1, -1, -1):
         mm = re.match(r"\s*# beat (\d+):", lines[k])
         if mm:
             return int(mm.group(1))
     return None
+
+
+def error_message(stderr: str) -> str:
+    """The exception line at the end of a traceback, e.g. "TypeError: ..."."""
+    got = re.findall(r"^\s*([A-Za-z_.]*(?:Error|Exception)\b:?.*)$", stderr or "",
+                     re.M)
+    return " ".join(got[-1].split())[:200] if got else ""
+
+
+def drop_statement(body: str, line_text: str) -> str | None:
+    """The body without the top-level statement containing ``line_text``,
+    or None if no statement holds that line."""
+    src = textwrap.dedent(body)
+    try:
+        tree = ast.parse(src)
+    except SyntaxError:
+        return None
+    want = " ".join(line_text.split())
+    rows = src.splitlines()
+    for st in tree.body:
+        if any(" ".join(l.split()) == want
+               for l in rows[st.lineno - 1: st.end_lineno]):
+            return "\n".join(ast.get_source_segment(src, x) or ""
+                             for x in tree.body if x is not st)
+    return None
+
+
+def runtime_salvage(beats: list[Beat], bodies: list[str], code: str,
+                    stderr: str, kit: bool = False,
+                    tried: set | None = None) -> tuple[list[str], str] | None:
+    """One repair after a failed render, or None if nothing can be blamed.
+
+    Dropping the whole blamed beat threw away too much: when beat 1 set up
+    the axes and one call in it raised, every later beat lost its axes and
+    was pruned to a caption -- the kit coder's all-text scenes ("the
+    derivative as the slope", "gradient descent") were this. So the first
+    failure in a beat drops only the statement the traceback points at; a
+    second failure in the same beat drops the beat. Either way the scene is
+    re-pruned, since what was dropped may have built names later beats use.
+    ``tried`` carries the beats already cut down once, across calls.
+    """
+    tried = set() if tried is None else tried
+    n = failing_line(code, stderr)
+    k = failing_beat(code, stderr)
+    if n is None or k is None or not bodies[k - 1].strip():
+        return None
+    out = list(bodies)
+    why = error_message(stderr)
+    small = None if k in tried else drop_statement(out[k - 1],
+                                                     code.splitlines()[n - 1])
+    if small is not None and small.strip():
+        tried.add(k)
+        out[k - 1] = small
+        note = f"runtime: dropped a statement of beat {k}"
+    else:
+        out[k - 1] = ""
+        note = f"runtime: dropped beat {k}"
+    out, _, _ = prune_all(beats, out, kit=kit)
+    return out, note + (f" ({why})" if why else "")
 
 
 def beat_prompt(request: str, beats: list[Beat], j: int,
