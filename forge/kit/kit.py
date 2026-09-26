@@ -85,6 +85,16 @@ class Stage:
         return new
 
     def caption(self, s: str, run_time: float = 0.8):
+        # A caption is a phrase, not the narration. The first kit coder put
+        # whole narration sentences here, shrunk to fit the width until they
+        # were unreadable; the first clause, at most ten words, is kept.
+        words = str(s).replace("\n", " ").split()
+        if len(words) > 10:
+            s = " ".join(words[:10])
+            for stop in (". ", "; ", ", "):
+                if stop in s:
+                    s = s.split(stop)[0]
+                    break
         new = self._text(s, 30).to_edge(DOWN, buff=0.35)
         new.scale_to_fit_width(min(new.width, 12.5))
         if self._caption is None:

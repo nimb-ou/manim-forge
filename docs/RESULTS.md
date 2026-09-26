@@ -549,3 +549,22 @@ in a prompt to a 7B model trained on raw Manim; the coder has to be trained
 on it. Teacher-written kit beats (render-verified, visual beats only) are
 being generated in three shards, and a kit coder trains locally at 800
 rows.
+
+## The kit coder · 2026-09-26
+
+Coder v5 trained on Kaggle on 2,062 teacher kit beats (relevance- and
+novelty-filtered, short trained prompt; eval loss 0.547, token accuracy
+86%). Same 20 short one-idea prompts, planner v3, 6 beats:
+
+| coder | rendered | beats that draw something |
+|---|---|---|
+| v2, raw Manim | 16/20 | 34% |
+| **v5, kit** | **17/20** | **66%** |
+
+Looked at: eigenvectors is the real thing — the grid shears with v1 and v2
+riding along and the eigen-lines holding; adding waves superposes real
+waves. The matrix scene draws vectors but never applies the matrix; the
+derivative scene is captions on a blank screen; and the coder puts whole
+narration sentences in captions, shrunk to unreadable. Captions are now
+capped at a clause of ten words by the Stage; the text-only beats are
+GRPO's target.
