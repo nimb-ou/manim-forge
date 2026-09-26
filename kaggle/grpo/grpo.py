@@ -38,7 +38,12 @@ assert sh("apt-get update -qq && DEBIAN_FRONTEND=noninteractive apt-get "
           "install -y -qq libcairo2-dev libpango1.0-dev ffmpeg "
           "texlive-latex-base texlive-latex-extra texlive-fonts-recommended "
           "dvisvgm > /dev/null") == 0
-assert sh(f"{sys.executable} -m pip install -q manim==0.21.0 'trl>=0.19'") == 0
+# The SFT kernel's pins, which it verified: an unpinned trl moved GRPO's
+# config (max_prompt_length is gone in 1.13), and bitsandbytes is not in
+# Kaggle's image -- the first push died at model load without it.
+assert sh(f"{sys.executable} -m pip install -q manim==0.21.0 "
+          "transformers==5.17.0 trl==1.13.0 peft==0.21.0 accelerate==1.15.0 "
+          "datasets==5.0.1 'bitsandbytes>=0.48' huggingface_hub") == 0
 print(f"[setup] {time.time() - T0:.0f}s", flush=True)
 
 DATA = next(Path("/kaggle/input").glob("*/prompts.jsonl")).parent
@@ -198,7 +203,7 @@ cfg = GRPOConfig(
     output_dir=str(WORK / "grpo-out"),
     num_generations=4, per_device_train_batch_size=4,
     gradient_accumulation_steps=2,
-    max_prompt_length=1536, max_completion_length=512,
+    max_completion_length=512,
     temperature=0.8, learning_rate=5e-6, beta=0.04,
     max_steps=3 if SMOKE else 400, logging_steps=1,
     save_steps=25, save_total_limit=2, fp16=True,
