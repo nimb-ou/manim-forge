@@ -74,14 +74,36 @@ if not getattr(_Mobject, "_forge_2d_ok", False):
 
 # -- the stage -----------------------------------------------------------------
 
-_REGIONS = {
+class _Regions(dict):
+    """The four regions, forgiving about how one is named: "LEFT",
+    "top left", a direction constant or an (x, y) point go to the nearest
+    region instead of raising KeyError deep inside a block."""
+
+    def __getitem__(self, where):
+        if isinstance(where, str):
+            w = where.strip().lower()
+            if dict.__contains__(self, w):
+                return dict.__getitem__(self, w)
+            key = "left" if "left" in w else "right" if "right" in w else \
+                "full" if w in ("all", "whole", "screen", "full screen") else "center"
+            return dict.__getitem__(self, key)
+        try:
+            x = float(np.asarray(where, dtype=float).ravel()[0])
+        except (TypeError, ValueError, IndexError):
+            return dict.__getitem__(self, "center")
+        key = "left" if x < -0.5 else "right" if x > 0.5 else "center"
+        return dict.__getitem__(self, key)
+
+
+_REGIONS = _Regions({
     # centre x, centre y, width, height, in frame units (14.2 x 8)
     "center": (0.0, -0.1, 9.0, 5.4),
     "left": (-3.4, -0.1, 6.2, 5.4),
     "right": (3.4, -0.1, 6.2, 5.4),
     "full": (0.0, -0.1, 13.0, 5.8),
-}
+})
 _PALETTE = [BLUE, YELLOW, GREEN, RED, TEAL, ORANGE]
+_CURRENT: list = []      # the live Stage, for block calls that forget it
 
 
 class Stage:
@@ -93,6 +115,7 @@ class Stage:
     """
 
     def __init__(self, scene):
+        _CURRENT[:] = [self]
         self.scene = scene
         self._title = None
         self._caption = None
@@ -205,8 +228,7 @@ class Stage:
 
     def __getattr__(self, name: str):
         f = globals().get(name)
-        if callable(f) and getattr(f, "__code__", None) is not None \
-                and f.__code__.co_varnames[:1] == ("stage",):
+        if callable(f) and getattr(f, "_kit_block", False):
             return lambda *a, **kw: f(self, *a, **kw)
         raise AttributeError(
             f"Stage has no {name!r}. Blocks are functions taking the stage "
@@ -225,6 +247,51 @@ def _need(obj, attr: str, what: str, call: str):
     if not hasattr(obj, attr):
         raise TypeError(f"{call}: expected {what}, got {type(obj).__name__} "
                         f"{obj!r:.40}")
+
+
+def _xy(v):
+    """A 2D or 3D point (tuple, list, array, Manim constant) as a 3D point."""
+    a = np.asarray(v, dtype=float).ravel()
+    return np.array([a[0], a[1] if len(a) > 1 else 0.0, 0.0])
+
+
+def _span(r, ticks: int = 8):
+    """[lo, hi, step] from (lo, hi) or (lo, hi, step); without a step, a
+    1-2-5 step giving about ``ticks`` ticks (a (0, 1000) axis had 1,000
+    numbered ticks)."""
+    r = [float(x) for x in r]
+    lo, hi = min(r[0], r[1]), max(r[0], r[1])
+    if hi == lo:
+        hi = lo + 1
+    if len(r) > 2 and r[2] > 0:
+        return [lo, hi, r[2]]
+    raw = (hi - lo) / ticks
+    mag = 10 ** np.floor(np.log10(raw)) if raw > 0 else 1
+    step = next((m * mag for m in (1, 2, 5, 10) if m * mag >= raw), 10 * mag)
+    return [lo, hi, max(step, 1.0) if hi - lo >= 4 else step]
+
+
+def _graph(ax, g, a=None, b=None):
+    """A plotted graph from either a graph or a plain function (models pass
+    the lambda far more often than the graph plot_graph returned)."""
+    if hasattr(g, "point_from_proportion"):
+        return g
+    lo, hi = ax.x_range[0], ax.x_range[1]
+    if a is not None and b is not None:
+        lo, hi = max(lo, min(a, b)), min(hi, max(a, b))
+    return ax.plot(g, x_range=[lo, hi])
+
+
+def _field(f):
+    """f(x, y) -> (u, v), from a field written either as f(x, y) or f(point)."""
+    def uv(x, y):
+        try:
+            out = f(x, y)
+        except TypeError:
+            out = f(np.array([x, y, 0.0]))
+        out = np.asarray(out, dtype=float).ravel()
+        return out[0], (out[1] if len(out) > 1 else 0.0)
+    return uv
 
 
 # -- basic shapes: the names a model guesses first -----------------------------
@@ -268,7 +335,7 @@ def draw_circle(stage: Stage, radius: float = 1.5, where: str = "center",
 def draw_polygon(stage: Stage, points, where: str = "center", color=BLUE,
                  fill: float = 0.3):
     """A polygon through 2D points [(x, y), ...], drawn."""
-    poly = Polygon(*[np.array([x, y, 0.0]) for x, y in points], color=color,
+    poly = Polygon(*[_xy(q) for q in points], color=color,
                    fill_opacity=fill)
     stage.place(poly, where)
     stage.scene.play(Create(poly), run_time=0.8)
@@ -289,7 +356,7 @@ def draw_dots(stage: Stage, n: int = 9, cols: int | None = None,
 
 def draw_arrow(stage: Stage, start, end, color=YELLOW, label: str | None = None):
     """An arrow between two 2D points, grown."""
-    a = Arrow(np.array([*start, 0.0]), np.array([*end, 0.0]), buff=0, color=color)
+    a = Arrow(_xy(start), _xy(end), buff=0, color=color)
     stage.scene.play(GrowArrow(a), run_time=0.7)
     stage._objects.append(a)
     if label:
@@ -300,7 +367,7 @@ def draw_arrow(stage: Stage, start, end, color=YELLOW, label: str | None = None)
 def draw_line(stage: Stage, start, end, color=WHITE, dashed: bool = False):
     """A line (or dashed line) between two 2D points, drawn."""
     cls = DashedLine if dashed else Line
-    ln = cls(np.array([*start, 0.0]), np.array([*end, 0.0]), color=color)
+    ln = cls(_xy(start), _xy(end), color=color)
     stage.scene.play(Create(ln), run_time=0.6)
     stage._objects.append(ln)
     return ln
@@ -390,7 +457,7 @@ def scale_vector(stage: Stage, plane_, arrow, factor: float, run_time=1.2):
 def draw_axes(stage: Stage, x_range=(-1, 5), y_range=(-1, 5), where: str = "center",
          labels: tuple[str, str] = ("x", "y")):
     """Axes with tick numbers, drawn in a region."""
-    ax = Axes(x_range=[*x_range, 1], y_range=[*y_range, 1],
+    ax = Axes(x_range=_span(x_range), y_range=_span(y_range),
               x_length=8, y_length=5, tips=False,
               axis_config={"include_numbers": True, "font_size": 24})
     stage.place(ax, where)
@@ -430,12 +497,17 @@ def slide_tangent(stage: Stage, ax, f, x_start: float, x_end: float,
     tan = always_redraw(line)
     dot = always_redraw(lambda: Dot(ax.c2p(t.get_value(), f(t.get_value())),
                                     color=color))
-    slope = DecimalNumber(0, num_decimal_places=2, font_size=34)
-    slope.add_updater(lambda m: m.set_value(
-        (f(t.get_value() + h) - f(t.get_value() - h)) / (2 * h)))
+    # Starts at the real slope and updates only once shown: a readout that
+    # gained a minus sign mid-FadeIn changed its glyph count, and Manim's
+    # interpolation failed with "zip() argument 2 is longer than argument 1"
+    # on every tangent that started on a falling stretch.
+    slope = DecimalNumber((f(x_start + h) - f(x_start - h)) / (2 * h),
+                          num_decimal_places=2, font_size=34)
     read = VGroup(MathTex("\\text{slope} =", font_size=34), slope).arrange(RIGHT)
     read.next_to(ax, UP, buff=0.1).shift(3 * RIGHT)
     stage.scene.play(Create(tan), FadeIn(dot), FadeIn(read), run_time=1.0)
+    slope.add_updater(lambda m: m.set_value(
+        (f(t.get_value() + h) - f(t.get_value() - h)) / (2 * h)))
     stage.scene.play(t.animate.set_value(x_end), run_time=run_time)
     stage._objects += [tan, dot, read]
     return tan, dot, read
@@ -444,7 +516,8 @@ def slide_tangent(stage: Stage, ax, f, x_start: float, x_end: float,
 def shade_area(stage: Stage, ax, g, a: float, b: float, color=BLUE_D):
     """Shade the area under g between a and b."""
     _need(ax, "get_area", "the axes from draw_axes(stage)", "shade_area(stage, axes, graph, a, b)")
-    r = ax.get_area(g, x_range=[a, b], color=color, opacity=0.5)
+    a, b = min(a, b), max(a, b)
+    r = ax.get_area(_graph(ax, g, a, b), x_range=[a, b], color=color, opacity=0.5)
     stage.scene.play(FadeIn(r), run_time=1.0)
     stage._objects.append(r)
     return r
@@ -454,6 +527,8 @@ def riemann_refine(stage: Stage, ax, g, a: float, b: float, ns=(4, 8, 16, 32),
             color=TEAL):
     """Rectangles under g, refined: 4, 8, 16, 32 strips."""
     _need(ax, "get_riemann_rectangles", "the axes from draw_axes(stage)", "riemann_refine(stage, axes, graph, a, b)")
+    a, b = min(a, b), max(a, b)
+    g = _graph(ax, g, a, b)
     rects = ax.get_riemann_rectangles(g, x_range=[a, b], dx=(b - a) / ns[0],
                                       fill_opacity=0.6, color=color)
     stage.scene.play(Create(rects), run_time=1.2)
@@ -483,7 +558,7 @@ def trace_graph(stage: Stage, ax, f, x_start: float, x_end: float, color=YELLOW,
 
 def draw_number_line(stage: Stage, x_range=(0, 10), where: str = "center"):
     """A number line with its integers labelled, drawn."""
-    nl = NumberLine(x_range=[*x_range, 1], length=10, include_numbers=True)
+    nl = NumberLine(x_range=_span(x_range, 10), length=10, include_numbers=True)
     stage.place(nl, where)
     stage.scene.play(Create(nl), run_time=1.0)
     return nl
@@ -698,6 +773,7 @@ def circle_to_sine(stage: Stage, turns: float = 1.0, run_time: float = 4.0):
 
 def draw_vector_field(stage: Stage, f, where: str = "center"):
     """Arrows for a 2D field f(x, y) -> (u, v), drawn in."""
+    f = _field(f)
     field = ArrowVectorField(lambda p: np.array([*f(p[0], p[1]), 0.0]),
                              x_range=[-5, 5, 1], y_range=[-3, 3, 1],
                              length_func=lambda n: 0.45 * np.tanh(n))
@@ -787,7 +863,11 @@ def grow_histogram(stage: Stage, sampler, bins, n: int = 400, steps: int = 8,
     ``sampler(rng, k)`` returns k samples; ``bins`` is a list of edges.
     """
     rng = np.random.default_rng(seed)
-    edges = np.array(bins, dtype=float)
+    if np.ndim(bins) == 0:          # a bin count: edges from a pilot sample
+        pilot = np.asarray(sampler(np.random.default_rng(seed + 1), 1000), dtype=float)
+        edges = np.linspace(pilot.min(), pilot.max(), int(bins) + 1)
+    else:
+        edges = np.array(bins, dtype=float)
     counts = np.zeros(len(edges) - 1)
     width = 8.0 / len(counts)
     cx, cy, w, h = _REGIONS[where]
@@ -1226,6 +1306,7 @@ def flow_particles(stage: Stage, f, n: int = 60, run_time: float = 4.0, seed: in
     """Particles carried along a 2D field f(x, y) -> (u, v): sources spread,
     sinks gather, curl swirls."""
     rng = np.random.default_rng(seed)
+    f = _field(f)
     starts = np.column_stack([rng.uniform(-5, 5, n), rng.uniform(-3, 3, n)])
     dots = VGroup(*[Dot([x, y, 0], radius=0.05, color=YELLOW) for x, y in starts])
 
@@ -1364,3 +1445,73 @@ KIT_MOVES = {"apply_matrix", "slide_tangent", "riemann_refine", "trace_graph",
 #: grids. A beat counts as visual only with a block outside this set.
 KIT_SCAFFOLD = {"draw_plane", "draw_axes", "draw_number_line",
                 "draw_complex_plane"}
+
+
+# -- tolerance: how models get a block call slightly wrong ---------------------
+# One bad call in a scene's first beat used to cost the whole scene: the beat
+# was dropped, and every later beat lost the axes it built. These are the
+# near-misses a model makes, each turned into the call it meant:
+#   * the stage left out -- plot_graph(ax, f) -- when a Stage exists;
+#   * a keyword the block does not take (color= on a block without one) --
+#     dropped, not a TypeError; extra positional arguments likewise;
+#   * a function written as a string -- "x**2", "np.sin(x)", "y = x^2",
+#     "lambda x: ..." -- compiled into one.
+import functools as _functools
+import inspect as _inspect
+import math as _math
+import re as _re
+
+_FN_SLOTS = {"f", "g", "term", "f0"}
+
+
+def _as_function(v):
+    if not isinstance(v, str):
+        return v
+    src = _re.sub(r"^\s*(?:y|f\s*\(\s*\w\s*\))\s*=\s*", "", v.strip())
+    src = src.replace("^", "**")
+    if not src.startswith("lambda"):
+        var = next((c for c in ("x", "n", "k", "t") if _re.search(rf"\b{c}\b", src)), "x")
+        src = f"lambda {var}: {src}"
+    env = {k: getattr(np, k) for k in ("sin", "cos", "tan", "exp", "log", "sqrt",
+                                          "abs", "pi", "e", "arctan", "sinh",
+                                          "cosh", "tanh")}
+    env.update(np=np, math=_math)
+    try:
+        fn = eval(src, env)
+        fn(1.0)
+        return fn
+    except Exception:
+        return v
+
+
+def _tolerant(f):
+    sig = _inspect.signature(f)
+    params = list(sig.parameters.values())
+    names = {q.name for q in params}
+    any_kw = any(q.kind is q.VAR_KEYWORD for q in params)
+    any_pos = any(q.kind is q.VAR_POSITIONAL for q in params)
+    n_pos = sum(q.kind in (q.POSITIONAL_ONLY, q.POSITIONAL_OR_KEYWORD) for q in params)
+
+    @_functools.wraps(f)
+    def call(*args, **kw):
+        if (not args or not isinstance(args[0], Stage)) and "stage" not in kw \
+                and _CURRENT:
+            args = (_CURRENT[0],) + args
+        if not any_kw:
+            kw = {k: v for k, v in kw.items() if k in names}
+        if not any_pos and len(args) > n_pos:
+            args = args[:n_pos]
+        try:
+            bound = sig.bind_partial(*args, **kw)
+        except TypeError:
+            return f(*args, **kw)
+        for k in _FN_SLOTS & set(bound.arguments):
+            bound.arguments[k] = _as_function(bound.arguments[k])
+        return f(*bound.args, **bound.kwargs)
+    call._kit_block = True
+    return call
+
+
+for _n in sorted(KIT_BLOCKS | {"highlight", "pulse"}):
+    globals()[_n] = _tolerant(globals()[_n])
+del _n
