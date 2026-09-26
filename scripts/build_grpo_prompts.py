@@ -64,7 +64,9 @@ def main() -> int:
                       cache_dir=str(ROOT / "data" / "frames"), timeout=120)
 
     seen, rows = set(), []
-    files = sorted(glob.glob(str(ROOT / "data" / "bench" / "*.json")))
+    # Kit mode takes its prompts from the teacher's kit beats below; the
+    # bench scenes are raw Manim and rendering their prefixes is wasted.
+    files = [] if a.kit else sorted(glob.glob(str(ROOT / "data" / "bench" / "*.json")))
     for f in files:
         try:
             d = json.loads(Path(f).read_text())
@@ -106,12 +108,16 @@ def main() -> int:
         # prompts -- the kit is the direction; rewarding raw Manim would
         # train the coder harder at the thing that produced slides.
         rows = []
-        src = ROOT / "data" / "kit" / "kit_beats.jsonl"
+        src = ROOT / "data" / "kit" / "kit_beats_clean.jsonl"
         for l in src.read_text().splitlines():
             r = json.loads(l)
             if "prefix" not in r:
                 continue
-            rows.append({"prompt": r["messages"][:2], "prefix": r["prefix"],
+            from forge.app.pipeline import CODE_SYSTEM_KIT_TRAINED
+            rows.append({"prompt": [{"role": "system",
+                                     "content": CODE_SYSTEM_KIT_TRAINED},
+                                    r["messages"][1]],
+                         "prefix": r["prefix"],
                          "intents": r["intents"], "request": r["request"],
                          "j": r["meta"]["index"], "id": r["meta"]["id"],
                          "source": "kit-teacher", "kit": True})
@@ -128,6 +134,13 @@ def main() -> int:
                  OUT / "forge" / "app" / "twostage.py")
     shutil.copy2(ROOT / "forge" / "kit" / "kit.py", OUT / "forge" / "kit" / "kit.py")
     (OUT / "twostage.py").unlink(missing_ok=True)
+    # The adapter GRPO starts from: the kit coder in kit mode.
+    start = (ROOT / "adapters" / "kaggle-coder5-kit" / "adapter") if a.kit \
+        else (ROOT / "adapters" / "kaggle-coder2" / "adapter")
+    (OUT / "coder").mkdir(exist_ok=True)
+    for f in ("adapter_config.json", "adapter_model.safetensors"):
+        shutil.copy2(start / f, OUT / "coder" / f)
+    shutil.rmtree(OUT / "coder2", ignore_errors=True)
     print(f"{len(rows)} prompts -> {OUT / 'prompts.jsonl'}")
     return 0
 

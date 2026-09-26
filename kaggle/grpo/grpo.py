@@ -3,7 +3,7 @@
 # Pushed by scripts/push_kernel.py-style `kaggle kernels push -p kaggle/grpo`.
 # Dataset nimbou/manim-forge-grpo carries prompts.jsonl (beats on top of the
 # coder's own earlier beats, from real two-stage runs), twostage.py (the same
-# assemble() inference uses) and coder2/ (the SFT adapter to start from).
+# assemble() inference uses) and coder/ (the SFT adapter to start from).
 #
 # MF_SMOKE=1 runs three steps to prove the path before spending the session.
 import json
@@ -163,7 +163,7 @@ model = AutoModelForCausalLM.from_pretrained(
 model = prepare_model_for_kbit_training(
     model, use_gradient_checkpointing=True,
     gradient_checkpointing_kwargs={"use_reentrant": False})
-model = PeftModel.from_pretrained(model, str(DATA / "coder2"),
+model = PeftModel.from_pretrained(model, str(DATA / "coder"),
                                   is_trainable=True)
 
 
