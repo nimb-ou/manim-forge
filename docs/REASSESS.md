@@ -255,3 +255,9 @@ prompt), before generating more data.
 
 **5. Handover.** If the fixed kit moves kit v5 past 58% on its own, the
 biggest lever was the kit, and the fuzz belongs in CI.
+
+*22:40Z, looked:* kit v5's "integration as thinner rectangles" contact sheet
+shows axes and x² in all six beats and not one rectangle — the
+riemann_refine-on-a-lambda crash, dropped each time. Consistent with the
+fuzz finding; the same prompt under the fixed kit is the first thing to
+check in c5_fix. No plan change.
