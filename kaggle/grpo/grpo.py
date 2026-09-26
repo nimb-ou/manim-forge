@@ -203,7 +203,9 @@ cfg = GRPOConfig(
     output_dir=str(WORK / "grpo-out"),
     num_generations=4, per_device_train_batch_size=4,
     gradient_accumulation_steps=2,
-    max_completion_length=512,
+    # Completions ran a mean of 74 tokens and at most 118 over 87 steps; a
+    # 512 cap reserved memory for nothing and the run died of OOM at step 87.
+    max_completion_length=256,
     temperature=0.8, learning_rate=5e-6, beta=0.04,
     max_steps=3 if SMOKE else 400, logging_steps=1,
     save_steps=25, save_total_limit=2, fp16=True,
