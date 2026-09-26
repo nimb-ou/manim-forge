@@ -268,3 +268,12 @@ def test_runtime_salvage_drops_the_statement_then_the_beat():
     assert "statement of beat 1" in note and "NameError" in note
     out2, note2 = runtime_salvage(beats, bodies, code, err, tried=tried)
     assert out2[0] == "" and "dropped beat 1" in note2
+
+
+def test_relevance_rejects_the_wrong_subjects_picture():
+    from forge.kit.families import relevant
+    vec = "p = draw_plane(stage)\nv = draw_vector(stage, p, (1, 2))"
+    assert relevant(vec, "a neural network layer, weighted connections") is not True
+    assert relevant(vec, "a vector scaled by two") is True
+    assert relevant("net = draw_neural_net(stage)", "layers of neurons") is True
+    assert relevant("sq = Square()", "anything") is None

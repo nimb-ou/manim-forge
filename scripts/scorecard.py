@@ -167,6 +167,18 @@ def main() -> int:
         json.dumps({"summary": summary, "rows": rows}, indent=1))
     print("\n" + "  ".join(f"{k}={v}" for k, v in summary.items()
                            if k not in ("planner", "coder")))
+    # The honest number: visual, new and about its beat, over planned beats
+    # (rescore.py) -- GRPO v2's 76% visual was a plane and a vector per beat.
+    from rescore import score as _rescore
+    import manim
+    mob = {n for n in dir(manim) if isinstance(getattr(manim, n), type)
+           and issubclass(getattr(manim, n), manim.Mobject)}
+    rs = _rescore(a.tag, mob)
+    summary["relevant_share"] = rs["share_relevant"]
+    (out_dir / "scorecard.json").write_text(
+        json.dumps({"summary": summary, "rows": rows}, indent=1))
+    print(f"relevant_share={rs['share_relevant']}  (visual, new and about the "
+          f"beat, over {rs['planned']} planned beats)")
     print(f"contact sheets: {out_dir}")
     return 0
 

@@ -133,6 +133,8 @@ def main() -> int:
     shutil.copy2(ROOT / "forge" / "app" / "twostage.py",
                  OUT / "forge" / "app" / "twostage.py")
     shutil.copy2(ROOT / "forge" / "kit" / "kit.py", OUT / "forge" / "kit" / "kit.py")
+    shutil.copy2(ROOT / "forge" / "kit" / "families.py",
+                 OUT / "forge" / "kit" / "families.py")
     (OUT / "twostage.py").unlink(missing_ok=True)
     # The adapter GRPO starts from: the kit coder in kit mode.
     start = (ROOT / "adapters" / "kaggle-coder5-kit" / "adapter") if a.kit \

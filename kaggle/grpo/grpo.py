@@ -84,6 +84,7 @@ _MOBJECT = None
 from forge.kit.kit import KIT_BLOCKS as _KIT_DRAWS  # noqa: E402
 from forge.kit.kit import KIT_MOVES as _KIT_MOVES  # noqa: E402
 from forge.kit.kit import KIT_SCAFFOLD as _KIT_SCAFFOLD  # noqa: E402
+from forge.kit.families import relevant as _relevant  # noqa: E402
 
 
 def _shape_and_motion(code: str) -> tuple[bool, bool]:
@@ -120,7 +121,8 @@ def motion_calls(calls, code):
 
 
 def score(completion: str, row: dict) -> float:
-    """Renders: 0.6, +0.2 for a non-text mobject, +0.2 if something moves.
+    """Renders: 0.6, +0.2 for a non-text mobject, +0.2 if something moves,
+    +0.2 if its kit blocks belong to the beat's subject (0.5 if they do not).
     0.2 assembles but fails at runtime; 0.1 names nothing defines; 0.0 does
     not parse. A beat with no self.play is capped at 0.3 -- `self.wait(1)`
     always renders and teaches nothing."""
@@ -142,7 +144,14 @@ def score(completion: str, row: dict) -> float:
     # repeated "plane, then a circle" in every beat for the bonuses.
     if repeats_earlier(code, list(row["prefix"])):
         return 0.4
-    return 0.6 + 0.2 * shape + 0.2 * motion
+    # A picture from the wrong subject earns the render and no bonus: GRPO
+    # v2 drew a plane and a vector for neural networks, Bayes and
+    # backpropagation. Relevance is the training filter's test -- the
+    # block's family words in the beat's intent or the request.
+    fits = _relevant(code, row["intents"][-1] + " " + row.get("request", ""))
+    if fits is False:
+        return 0.5
+    return 0.6 + 0.2 * shape + 0.2 * motion + 0.2 * bool(fits)
 
 
 POOL = ThreadPoolExecutor(max_workers=4)
