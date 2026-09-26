@@ -227,3 +227,31 @@ for the Kaggle reset.
 **5. Handover.** If v5 draws the right pictures, the product is the web
 app with the kit coder; if not, the next lever is more, better kit data
 (the teacher is the ceiling), not more harness.
+
+## Log · 2026-09-26 22:35Z
+
+**1. Arrived.** Kit v5 58% visual-and-new on the 20 short prompts (raw v2
+33%). GRPO v1 gamed its reward (47%); GRPO v2, with the fixed reward, ran
+332/400 steps, reward 0.5 → ~0.9 — being scored now, by eye as well.
+Self-training: 164 arcs, 700/1,150 beats visual; 319 rows survive the
+filters and are in kit v6 (SFT running on Kaggle). Mistral out until the
+budget resets; Gemini critic rate-limited.
+
+**2. Symptom or thing?** The thing. Kit v5's all-caption scenes were not
+the model failing to draw: beat 1 drew, one call in it raised, the salvage
+dropped the whole beat and the rest lost their axes. A fuzz of the kit
+itself found nine blocks that fail on reasonable calls — shade_area and
+riemann_refine on *every* plain function, slide_tangent on any falling
+start. The model was being punished for the kit's bugs, in training data
+(scenes that failed never became rows) and at inference.
+
+**3. Critical path.** Same-kit comparison of GRPO v2, kit v5 and kit v5 +
+planner v4 (queued, ~1.5 h), then kit v6 when it lands. Pick the best
+coder/planner pair for the app.
+
+**4. Missing.** The eval notes now carry the exception text of every
+runtime drop: read them after this round and fix what repeats (kit or
+prompt), before generating more data.
+
+**5. Handover.** If the fixed kit moves kit v5 past 58% on its own, the
+biggest lever was the kit, and the fuzz belongs in CI.
