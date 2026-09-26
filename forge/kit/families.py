@@ -87,3 +87,14 @@ def relevant(code: str, text: str) -> bool | None:
     if not fams:
         return None
     return any(re.search(FAMILIES[f][1], text.lower()) for f in fams)
+
+
+def hint(text: str) -> str:
+    """A line naming the kit blocks whose subject's words appear in ``text``
+    (the request and the beat), for the coder's prompt; "" if none match."""
+    t = text.lower()
+    fams = [f for f, (_, words) in FAMILIES.items() if re.search(words, t)]
+    if not fams:
+        return ""
+    names = [b for f in fams for b in sorted(FAMILIES[f][0])]
+    return "Blocks that draw this subject: " + ", ".join(names[:18]) + "."

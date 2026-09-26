@@ -169,21 +169,36 @@ def plan(model, tok, request: str, stride: int, max_beats: int,
 
 def write_beat(model, tok, request: str, beats: list[Beat], j: int,
                bodies: list[str], max_tokens: int,
-               system: str = CODE_SYSTEM) -> tuple[str, str]:
+               system: str = CODE_SYSTEM, relevance: bool = False
+               ) -> tuple[str, str]:
     """One beat's code: two tries to parse, then its parsing prefix.
+
+    With ``relevance`` (kit only), the prompt names the blocks of the
+    subject the request and beat are about, and a beat drawn only with
+    another subject's blocks -- a vector for a neural network -- is sampled
+    again, twice at most, keeping the first that fits.
 
     Returns (body, note); an empty body means the beat was dropped.
     """
+    from forge.kit.families import hint, relevant
+    user = beat_prompt(request, beats, j, bodies)
+    text = f"{beats[j].intent} {beats[j].narration or ''} {request}"
+    if relevance and (h := hint(text)):
+        user += "\n" + h
     cand = ""
-    for _ in range(2):
-        cand = extract_code(ask(model, tok, system,
-                                beat_prompt(request, beats, j, bodies),
-                                max_tokens=max_tokens))
+    parsed: str | None = None
+    for k in range(4 if relevance else 2):
+        cand = extract_code(ask(model, tok, system, user, max_tokens=max_tokens,
+                                temp=0.7 if k else 0.0))
         try:
             ast.parse(textwrap.dedent(cand))
-            return cand, ""
         except SyntaxError:
             continue
+        if not relevance or relevant(cand, text) is not False:
+            return cand, "" if k == 0 else f"resampled {k}x for a fitting picture"
+        parsed = parsed or cand
+    if parsed is not None:
+        return parsed, "no fitting picture in 4 samples; kept the first"
     head = parsing_prefix(cand)
     # "Animates something" means it calls something: a raw beat's self.play,
     # or a kit block, which plays its own animation (and so never contains
@@ -280,6 +295,7 @@ class Options:
     salvage: bool = True
     kit: bool = False
     kit_trained: bool = True        # the short prompt; False = prompt-only
+    relevance: bool = False         # subject hint + resample off-subject beats
 
 
 @dataclass
@@ -330,7 +346,8 @@ def run(request: str, host, emit: Emit, opts: Options | None = None,
     bodies: list[str] = []
     for j, b in enumerate(beats):
         body, why = write_beat(cm, ctok, request, beats, j, bodies,
-                               opts.beat_tokens, system)
+                               opts.beat_tokens, system,
+                               relevance=opts.relevance and kit)
         bodies.append(body)
         emit({"stage": "code", "beat": b.n, "intent": b.intent, "code": body,
               "note": why})

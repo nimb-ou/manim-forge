@@ -101,6 +101,8 @@ def main() -> int:
     ap.add_argument("--planner", default=str(ROOT / "adapters" / "mlx-planner3"))
     ap.add_argument("--coder", default=str(ROOT / "adapters" / "mlx-coder2"))
     ap.add_argument("--kit", action="store_true")
+    ap.add_argument("--relevance", action="store_true",
+                    help="subject hint in the prompt + resample off-subject beats")
     ap.add_argument("--max-beats", type=int, default=12)
     ap.add_argument("--quality", default="low")
     ap.add_argument("--tag", required=True)
@@ -124,7 +126,8 @@ def main() -> int:
     out_dir = ROOT / "data" / "scorecard" / a.tag
     out_dir.mkdir(parents=True, exist_ok=True)
     host = SwapHost(a.planner, a.coder)
-    opts = Options(max_beats=a.max_beats, quality=a.quality, kit=a.kit)
+    opts = Options(max_beats=a.max_beats, quality=a.quality, kit=a.kit,
+                   relevance=a.relevance)
 
     rows = []
     for i, t in enumerate(tasks, 1):
