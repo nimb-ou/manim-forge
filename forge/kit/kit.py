@@ -227,6 +227,85 @@ def _need(obj, attr: str, what: str, call: str):
                         f"{obj!r:.40}")
 
 
+# -- basic shapes: the names a model guesses first -----------------------------
+# The first two requests in the app reached for draw_square and draw_dots,
+# which did not exist; the kit had eigenvectors but no square.
+
+def draw_square(stage: Stage, side: float = 2.0, where: str = "center",
+                color=BLUE, label: str | None = None, fill: float = 0.3):
+    """A square of the given side (in frame units), drawn, optionally labelled."""
+    sq = Square(side_length=side, color=color, fill_opacity=fill)
+    stage.place(sq, where)
+    stage.scene.play(Create(sq), run_time=0.8)
+    if label:
+        stage.label(sq, label, direction=DOWN, color=color)
+    return sq
+
+
+def draw_rectangle(stage: Stage, width: float = 3.0, height: float = 2.0,
+                   where: str = "center", color=BLUE, label: str | None = None,
+                   fill: float = 0.3):
+    """A rectangle, drawn, optionally labelled."""
+    r = Rectangle(width=width, height=height, color=color, fill_opacity=fill)
+    stage.place(r, where)
+    stage.scene.play(Create(r), run_time=0.8)
+    if label:
+        stage.label(r, label, direction=DOWN, color=color)
+    return r
+
+
+def draw_circle(stage: Stage, radius: float = 1.5, where: str = "center",
+                color=BLUE, label: str | None = None, fill: float = 0.2):
+    """A circle, drawn, optionally labelled."""
+    c = Circle(radius=radius, color=color, fill_opacity=fill)
+    stage.place(c, where)
+    stage.scene.play(Create(c), run_time=0.8)
+    if label:
+        stage.label(c, label, direction=DOWN, color=color)
+    return c
+
+
+def draw_polygon(stage: Stage, points, where: str = "center", color=BLUE,
+                 fill: float = 0.3):
+    """A polygon through 2D points [(x, y), ...], drawn."""
+    poly = Polygon(*[np.array([x, y, 0.0]) for x, y in points], color=color,
+                   fill_opacity=fill)
+    stage.place(poly, where)
+    stage.scene.play(Create(poly), run_time=0.8)
+    return poly
+
+
+def draw_dots(stage: Stage, n: int = 9, cols: int | None = None,
+              where: str = "center", color=YELLOW):
+    """n dots in a grid (cols per row, default near-square), appearing in turn."""
+    cols = cols or max(1, int(np.ceil(np.sqrt(n))))
+    dots = VGroup(*[Dot(radius=0.12, color=color) for _ in range(n)])
+    dots.arrange_in_grid(cols=cols, buff=0.35)
+    stage.place(dots, where)
+    stage.scene.play(LaggedStart(*[GrowFromCenter(d) for d in dots],
+                                 lag_ratio=0.08), run_time=1.2)
+    return dots
+
+
+def draw_arrow(stage: Stage, start, end, color=YELLOW, label: str | None = None):
+    """An arrow between two 2D points, grown."""
+    a = Arrow(np.array([*start, 0.0]), np.array([*end, 0.0]), buff=0, color=color)
+    stage.scene.play(GrowArrow(a), run_time=0.7)
+    stage._objects.append(a)
+    if label:
+        stage.label(a, label, color=color)
+    return a
+
+
+def draw_line(stage: Stage, start, end, color=WHITE, dashed: bool = False):
+    """A line (or dashed line) between two 2D points, drawn."""
+    cls = DashedLine if dashed else Line
+    ln = cls(np.array([*start, 0.0]), np.array([*end, 0.0]), color=color)
+    stage.scene.play(Create(ln), run_time=0.6)
+    stage._objects.append(ln)
+    return ln
+
+
 # -- linear algebra ------------------------------------------------------------
 
 def draw_plane(stage: Stage, where: str = "center", x_extent: int = 4,
@@ -1206,6 +1285,10 @@ nouns (p, ax, g, v) and animate those -- never a block's name.
   stage.equation(tex1, tex2, ..., where="right") -- a derivation, each step
       transforming into the next
   stage.label(m, s)  stage.clear(keep=[...])  stage.pause(seconds)
+  draw_square(stage, side=2, label=None)  draw_rectangle(stage, width, height)
+  draw_circle(stage, radius=1.5)  draw_polygon(stage, [(x, y), ...])
+  draw_dots(stage, n=9, cols=None)  draw_arrow(stage, (x0, y0), (x1, y1))
+  draw_line(stage, (x0, y0), (x1, y1), dashed=False)
   draw_plane(stage, where="center", x_extent=4, y_extent=3) -> NumberPlane
   draw_vector(stage, p, (x, y), color=YELLOW, label=None) -> Arrow
   draw_basis(stage, p) -> (i_hat, j_hat)
