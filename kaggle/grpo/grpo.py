@@ -50,7 +50,7 @@ DATA = next(Path("/kaggle/input").glob("*/prompts.jsonl")).parent
 sys.path.insert(0, str(DATA))
 # The dataset carries forge/app/twostage.py and forge/kit/kit.py in the
 # repo's layout, so assemble(kit=True) finds the kit where it looks for it.
-from forge.app.twostage import Beat, assemble, extract_code  # noqa: E402
+from forge.app.twostage import Beat, assemble, extract_code, repeats_earlier  # noqa: E402
 
 rows = [json.loads(l) for l in (DATA / "prompts.jsonl").open() if l.strip()]
 print(f"[data] {len(rows)} prompts from {DATA}", flush=True)
@@ -83,6 +83,7 @@ _MOBJECT = None
 # "self.play(" or a Mobject constructor; these count instead.
 from forge.kit.kit import KIT_BLOCKS as _KIT_DRAWS  # noqa: E402
 from forge.kit.kit import KIT_MOVES as _KIT_MOVES  # noqa: E402
+from forge.kit.kit import KIT_SCAFFOLD as _KIT_SCAFFOLD  # noqa: E402
 
 
 def _shape_and_motion(code: str) -> tuple[bool, bool]:
@@ -105,8 +106,11 @@ def _shape_and_motion(code: str) -> tuple[bool, bool]:
         return False, False
     calls = {n.func.id for n in _ast.walk(tree)
              if isinstance(n, _ast.Call) and isinstance(n.func, _ast.Name)}
-    shape = bool((calls & _MOBJECT) - _TEXT) or ".plot(" in code \
-        or bool(calls & _KIT_DRAWS)
+    # A background alone (plane, axes) is not a picture: the first GRPO run
+    # learned that an empty grid earned this bonus.
+    shape = bool((calls & _MOBJECT) - _TEXT - {"NumberPlane", "Axes",
+                                                "NumberLine", "ComplexPlane"}) \
+        or ".plot(" in code or bool(calls & (_KIT_DRAWS - _KIT_SCAFFOLD))
     motion = motion_calls(calls, code)
     return shape, motion
 
@@ -134,6 +138,10 @@ def score(completion: str, row: dict) -> float:
     shape, motion = _shape_and_motion(code)
     if "self.play(" not in code and not (kit and (shape or motion)):
         return 0.3
+    # The same picture again earns a render and nothing more: the first run
+    # repeated "plane, then a circle" in every beat for the bonuses.
+    if repeats_earlier(code, list(row["prefix"])):
+        return 0.4
     return 0.6 + 0.2 * shape + 0.2 * motion
 
 

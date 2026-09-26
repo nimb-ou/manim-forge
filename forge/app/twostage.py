@@ -485,3 +485,19 @@ def prune_all(beats: list[Beat], bodies: list[str], kit: bool = False,
         if n == 0:
             break
     return bodies, total, seen
+
+
+def repeats_earlier(body: str, earlier: list[str], threshold: float = 0.6) -> bool:
+    """True if most of this beat's lines already appeared in earlier beats.
+
+    GRPO, paid for drawing shapes, learned to write the same "plane, then a
+    circle" in every beat of a scene. A beat that is mostly lines seen
+    before is the same picture again, whatever it draws.
+    """
+    norm = lambda l: " ".join(l.split())
+    mine = [norm(l) for l in body.splitlines() if l.strip()
+            and not l.strip().startswith(("stage.title", "stage.caption", "#"))]
+    if not mine:
+        return False
+    seen = {norm(l) for b in earlier for l in b.splitlines() if l.strip()}
+    return sum(l in seen for l in mine) / len(mine) >= threshold

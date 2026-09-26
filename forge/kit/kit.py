@@ -1356,3 +1356,11 @@ KIT_MOVES = {"apply_matrix", "slide_tangent", "riemann_refine", "trace_graph",
              "swap_bars", "flip_coins", "gradient_descent", "convolve_bars",
              "wind_signal", "diffuse_heat", "hanoi_moves", "flow_particles",
              "euler_circle"}
+
+
+#: Blocks that only set the stage: a grid, axes, a number line. On their own
+#: they are a background, not a picture -- GRPO found that drawing a bare
+#: plane earned the "draws something" bonus and filled scenes with empty
+#: grids. A beat counts as visual only with a block outside this set.
+KIT_SCAFFOLD = {"draw_plane", "draw_axes", "draw_number_line",
+                "draw_complex_plane"}

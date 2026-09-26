@@ -33,8 +33,10 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from forge.app.pipeline import Options, SwapHost, run  # noqa: E402
+from forge.app.twostage import repeats_earlier  # noqa: E402
 
 from forge.kit.kit import KIT_BLOCKS as KIT_DRAWS  # noqa: E402
+from forge.kit.kit import KIT_SCAFFOLD  # noqa: E402
 TEXT = {"Text", "MathTex", "Tex", "Title", "MarkupText", "Paragraph",
         "BulletedList", "Code", "Integer", "DecimalNumber", "Variable"}
 
@@ -50,7 +52,12 @@ def visual(body: str, mobjects: set[str]) -> bool:
         return False
     calls = {n.func.id for n in ast.walk(tree)
              if isinstance(n, ast.Call) and isinstance(n.func, ast.Name)}
-    return bool(calls & KIT_DRAWS) or bool((calls & mobjects) - TEXT) \
+    # A background (plane, axes) alone is not a picture: GRPO learned to
+    # draw empty grids for the bonus. Content blocks or non-text Mobjects
+    # beyond the scaffold count.
+    return bool(calls & (KIT_DRAWS - KIT_SCAFFOLD)) \
+        or bool((calls & mobjects) - TEXT - {"NumberPlane", "Axes",
+                                             "NumberLine", "ComplexPlane"}) \
         or ".plot(" in body
 
 
@@ -124,7 +131,10 @@ def main() -> int:
         t0 = time.time()
         res = run(t.prompt, host, lambda e: None, opts)
         bodies = [b for b in res.bodies if b.strip()]
-        vis = sum(visual(b, mob) for b in bodies)
+        # Visual and new: a picture repeated from an earlier beat does not
+        # count (GRPO drew the same plane-and-circle five times running).
+        vis = sum(visual(b, mob) and not repeats_earlier(b, bodies[:k])
+                  for k, b in enumerate(bodies))
         cov, hits = concept_coverage(construct_body(res.code), t.terms)
         row = {"title": t.prompt[:70], "ok": res.ok, "beats": len(res.beats),
                "kept": len(bodies), "visual_beats": vis,

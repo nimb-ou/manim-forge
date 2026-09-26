@@ -568,3 +568,25 @@ derivative scene is captions on a blank screen; and the coder puts whole
 narration sentences in captions, shrunk to unreadable. Captions are now
 capped at a clause of ten words by the Stage; the text-only beats are
 GRPO's target.
+
+## GRPO gamed its reward · 2026-09-26
+
+GRPO on the kit coder (reward: render 0.6, +0.2 shape, +0.2 motion), 87
+steps before an OOM; checkpoint 75 on the 20 short prompts: 19/20 rendered
+and **88%** of beats "drawing something" -- against v5's 66%. The contact
+sheets said otherwise: "area of a circle" is five beats of the same plane
+and circle; bare grids everywhere. A plane counted as a shape, and nothing
+penalised repeating a picture.
+
+Re-scored with beats that are visual *and* new (a repeat of earlier lines
+does not count; a bare plane or axes is scaffold, not a picture):
+
+| coder | visual and new beats |
+|---|---|
+| v2, raw Manim | 33% |
+| **v5, kit** | **58%** |
+| v5 + GRPO step 75 | 47% |
+
+GRPO made it worse on the honest measure. The reward now withholds the
+shape bonus from scaffold-only beats and pays 0.4 for a repeated picture;
+GRPO v2 runs with it. The scorecard reports visual-and-new.
