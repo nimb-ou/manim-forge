@@ -36,6 +36,42 @@ from manim import (BLUE, BLUE_D, DOWN, GREEN, GREY, GREY_B, LEFT, ORIGIN,
                    config, ArrowVectorField, ComplexPlane, Rotate,
                    NumberPlane as _NP)
 
+# -- 2D points, accepted ----------------------------------------------------
+# Models write .shift((1, 2)) and .move_to((x, y)); Manim wants 3D points and
+# fails deep inside with "operands could not be broadcast together with
+# shapes (32,3) (2,)" -- the commonest runtime error in teacher data, and the
+# first thing that broke in the app. Pad a 2-vector with z = 0.
+from manim import Mobject as _Mobject
+
+
+def _as_point(v):
+    try:
+        a = np.asarray(v, dtype=float)
+    except (TypeError, ValueError):
+        return v
+    return np.append(a, 0.0) if a.shape == (2,) else v
+
+
+def _pad_points(method_name: str, first_only: bool = False):
+    original = getattr(_Mobject, method_name)
+
+    def wrapped(self, *args, **kw):
+        if args:
+            args = ((_as_point(args[0]),) + args[1:]) if first_only \
+                else tuple(_as_point(a) for a in args)
+        return original(self, *args, **kw)
+    wrapped.__name__ = original.__name__
+    wrapped.__doc__ = original.__doc__
+    setattr(_Mobject, method_name, wrapped)
+
+
+if not getattr(_Mobject, "_forge_2d_ok", False):
+    _pad_points("shift")
+    _pad_points("move_to", first_only=True)
+    _pad_points("next_to", first_only=True)
+    _Mobject._forge_2d_ok = True
+
+
 # -- the stage -----------------------------------------------------------------
 
 _REGIONS = {
