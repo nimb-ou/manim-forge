@@ -169,8 +169,8 @@ def plan(model, tok, request: str, stride: int, max_beats: int,
 
 def write_beat(model, tok, request: str, beats: list[Beat], j: int,
                bodies: list[str], max_tokens: int,
-               system: str = CODE_SYSTEM, relevance: bool = False
-               ) -> tuple[str, str]:
+               system: str = CODE_SYSTEM, relevance: bool = False,
+               exemplar: bool = False) -> tuple[str, str]:
     """One beat's code: two tries to parse, then its parsing prefix.
 
     With ``relevance`` (kit only), the prompt names the blocks of the
@@ -185,6 +185,10 @@ def write_beat(model, tok, request: str, beats: list[Beat], j: int,
     text = f"{beats[j].intent} {beats[j].narration or ''} {request}"
     if relevance and (h := hint(text, signatures=True)):
         user += "\n" + h
+    if exemplar:
+        from forge.kit.exemplars import example
+        if ex := example(f"{request} {beats[j].intent}"):
+            user += "\n\n" + ex
     cand = ""
     parsed: str | None = None
     for k in range(4 if relevance else 2):
@@ -296,6 +300,7 @@ class Options:
     kit: bool = False
     kit_trained: bool = True        # the short prompt; False = prompt-only
     relevance: bool = False         # subject hint + resample off-subject beats
+    exemplar: bool = False          # a hand-written scene for a similar request
 
 
 @dataclass
@@ -347,7 +352,8 @@ def run(request: str, host, emit: Emit, opts: Options | None = None,
     for j, b in enumerate(beats):
         body, why = write_beat(cm, ctok, request, beats, j, bodies,
                                opts.beat_tokens, system,
-                               relevance=opts.relevance and kit)
+                               relevance=opts.relevance and kit,
+                               exemplar=opts.exemplar and kit)
         bodies.append(body)
         emit({"stage": "code", "beat": b.n, "intent": b.intent, "code": body,
               "note": why})

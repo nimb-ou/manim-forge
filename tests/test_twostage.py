@@ -277,3 +277,11 @@ def test_relevance_rejects_the_wrong_subjects_picture():
     assert relevant(vec, "a vector scaled by two") is True
     assert relevant("net = draw_neural_net(stage)", "layers of neurons") is True
     assert relevant("sq = Square()", "anything") is None
+
+
+def test_exemplar_is_same_subject_or_none():
+    from forge.kit.exemplars import example, nearest
+    got = nearest("how bubble sort orders an array")
+    assert got is not None and "sort" in got[0]
+    assert nearest("the history of the Roman empire") is None
+    assert "WORKED EXAMPLE" in example("gradient descent on a cost curve")

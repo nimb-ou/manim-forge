@@ -93,6 +93,8 @@ def contact_sheet(video: str, out: Path, k: int = 6) -> None:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("--heldout", action="store_true",
+                    help="the 20 held-out prompts (forge/evaluate/heldout_prompts.json)")
     ap.add_argument("--short", action="store_true",
                     help="the 20 short one-idea prompts (the headline eval) "
                          "instead of the hard titles")
@@ -101,6 +103,8 @@ def main() -> int:
     ap.add_argument("--planner", default=str(ROOT / "adapters" / "mlx-planner3"))
     ap.add_argument("--coder", default=str(ROOT / "adapters" / "mlx-coder2"))
     ap.add_argument("--kit", action="store_true")
+    ap.add_argument("--exemplar", action="store_true",
+                    help="show the coder the nearest hand-written scene")
     ap.add_argument("--relevance", action="store_true",
                     help="subject hint in the prompt + resample off-subject beats")
     ap.add_argument("--max-beats", type=int, default=12)
@@ -112,9 +116,10 @@ def main() -> int:
     mob = {n for n in dir(manim) if isinstance(getattr(manim, n), type)
            and issubclass(getattr(manim, n), manim.Mobject)}
     from forge.evaluate.hard_eval import build_tasks, concept_coverage
-    if a.short:
+    if a.short or a.heldout:
         from types import SimpleNamespace
-        spec = json.loads((ROOT / "forge" / "evaluate" / "short_prompts.json")
+        name = "heldout_prompts.json" if a.heldout else "short_prompts.json"
+        spec = json.loads((ROOT / "forge" / "evaluate" / name)
                           .read_text())["prompts"]
         # No reference video: coverage is 0 and length is against a nominal
         # 60 s. The numbers that matter here are renders, visual beats and
@@ -127,7 +132,7 @@ def main() -> int:
     out_dir.mkdir(parents=True, exist_ok=True)
     host = SwapHost(a.planner, a.coder)
     opts = Options(max_beats=a.max_beats, quality=a.quality, kit=a.kit,
-                   relevance=a.relevance)
+                   relevance=a.relevance, exemplar=a.exemplar)
 
     rows = []
     for i, t in enumerate(tasks, 1):

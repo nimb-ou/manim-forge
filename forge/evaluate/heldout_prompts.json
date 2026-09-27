@@ -1,0 +1,25 @@
+{
+ "note": "Held out, 2026-09-27: one-idea prompts on topics no kit block and no hand-written scene (scripts/claude_kit_scenes.py) was made for, and none of the 20 short prompts. The short prompts shaped the kit and the hints; this set measures what generalises. Some still have a fitting block (vectors, graphs, bars); none has a block named for it. Do not add blocks or hand-written scenes for these topics.",
+ "prompts": [
+  {"prompt": "why the harmonic series 1 + 1/2 + 1/3 + ... never stops growing"},
+  {"prompt": "the chain rule as a composition of stretches"},
+  {"prompt": "matrix multiplication as doing one transformation after another"},
+  {"prompt": "the Monty Hall problem and why switching wins"},
+  {"prompt": "how compound interest leads to the number e"},
+  {"prompt": "logarithms turn multiplication into addition"},
+  {"prompt": "the birthday paradox: why 23 people is enough"},
+  {"prompt": "what standard deviation measures"},
+  {"prompt": "fitting a straight line to data with least squares"},
+  {"prompt": "how merge sort splits and combines a list"},
+  {"prompt": "Pascal's triangle and where its numbers come from"},
+  {"prompt": "the roots of unity equally spaced on a circle"},
+  {"prompt": "the mean value theorem: somewhere the slope equals the average"},
+  {"prompt": "exponential decay and half-life"},
+  {"prompt": "adding vectors tip to tail"},
+  {"prompt": "why the square root of 2 is irrational"},
+  {"prompt": "the Fibonacci sequence and the golden ratio"},
+  {"prompt": "how a Fourier transform picks out the frequencies in a chord"},
+  {"prompt": "why a matrix with determinant zero squashes the plane onto a line"},
+  {"prompt": "the central limit theorem: sums of dice look like a bell curve"}
+ ]
+}
