@@ -170,7 +170,7 @@ def plan(model, tok, request: str, stride: int, max_beats: int,
 def write_beat(model, tok, request: str, beats: list[Beat], j: int,
                bodies: list[str], max_tokens: int,
                system: str = CODE_SYSTEM, relevance: bool = False,
-               exemplar: bool = False) -> tuple[str, str]:
+               exemplar: bool = False, signatures: bool = True) -> tuple[str, str]:
     """One beat's code: two tries to parse, then its parsing prefix.
 
     With ``relevance`` (kit only), the prompt names the blocks of the
@@ -183,7 +183,7 @@ def write_beat(model, tok, request: str, beats: list[Beat], j: int,
     from forge.kit.families import hint, relevant
     user = beat_prompt(request, beats, j, bodies)
     text = f"{beats[j].intent} {beats[j].narration or ''} {request}"
-    if relevance and (h := hint(text, signatures=True)):
+    if relevance and (h := hint(text, signatures=signatures)):
         user += "\n" + h
     if exemplar:
         from forge.kit.exemplars import example
@@ -302,6 +302,7 @@ class Options:
     relevance: bool = False         # subject hint + resample off-subject beats
     exemplar: bool = False          # a hand-written scene for a similar request
     mark_beats: bool = False        # record each beat's end time (kit only)
+    signatures: bool = True         # the relevance hint says how to call blocks
 
 
 @dataclass
@@ -320,7 +321,7 @@ class Result:
 
 
 def run(request: str, host, emit: Emit, opts: Options | None = None,
-        harness=None) -> Result:
+        harness=None, beats: list[Beat] | None = None) -> Result:
     """Plan, implement, assemble (with set-up and salvage), render."""
     opts = opts or Options()
     t0 = time.time()
@@ -332,12 +333,13 @@ def run(request: str, host, emit: Emit, opts: Options | None = None,
 
     # 1. plan
     emit({"stage": "plan", "status": "start"})
-    pm, ptok = host.use("planner")
-    beats = plan(pm, ptok, request, opts.stride, opts.max_beats,
-                 on_beat=lambda b: emit({
-                     "stage": "plan", "beat": {"n": b.n, "seconds": b.seconds,
-                                               "intent": b.intent,
-                                               "narration": b.narration}}))
+    if beats is None:            # a given plan (evaluations) skips the planner
+        pm, ptok = host.use("planner")
+        beats = plan(pm, ptok, request, opts.stride, opts.max_beats,
+                     on_beat=lambda b: emit({
+                         "stage": "plan", "beat": {"n": b.n, "seconds": b.seconds,
+                                                   "intent": b.intent,
+                                                   "narration": b.narration}}))
     emit({"stage": "plan", "status": "done", "n": len(beats),
           "elapsed": round(time.time() - t0, 1)})
     if not beats:
@@ -355,7 +357,8 @@ def run(request: str, host, emit: Emit, opts: Options | None = None,
         body, why = write_beat(cm, ctok, request, beats, j, bodies,
                                opts.beat_tokens, system,
                                relevance=opts.relevance and kit,
-                               exemplar=opts.exemplar and kit)
+                               exemplar=opts.exemplar and kit,
+                               signatures=opts.signatures)
         bodies.append(body)
         emit({"stage": "code", "beat": b.n, "intent": b.intent, "code": body,
               "note": why})

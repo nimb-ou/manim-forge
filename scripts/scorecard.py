@@ -111,6 +111,12 @@ def main() -> int:
     ap.add_argument("--planner", default=str(ROOT / "adapters" / "mlx-planner3"))
     ap.add_argument("--coder", default=str(ROOT / "adapters" / "mlx-coder2"))
     ap.add_argument("--kit", action="store_true")
+    ap.add_argument("--plans", default="",
+                    help="a plan cache (JSON): prompts found there use the cached "
+                         "beats, others are planned once and added -- so every "
+                         "coder configuration is scored on identical plans")
+    ap.add_argument("--no-signatures", action="store_true",
+                    help="relevance hint names blocks without their calls")
     ap.add_argument("--exemplar", action="store_true",
                     help="show the coder the nearest hand-written scene")
     ap.add_argument("--relevance", action="store_true",
@@ -140,7 +146,8 @@ def main() -> int:
     out_dir.mkdir(parents=True, exist_ok=True)
     host = SwapHost(a.planner, a.coder)
     opts = Options(max_beats=a.max_beats, quality=a.quality, kit=a.kit, mark_beats=True,
-                   relevance=a.relevance, exemplar=a.exemplar)
+                   relevance=a.relevance, exemplar=a.exemplar,
+                   signatures=not a.no_signatures)
 
     rows = []
     for i, t in enumerate(tasks, 1):
@@ -151,7 +158,19 @@ def main() -> int:
         # configuration with the same planner gets the same plan.
         import mlx.core as mx
         mx.random.seed(1000 + i)
-        res = run(t.prompt, host, lambda e: None, opts)
+        given = None
+        if a.plans:
+            from forge.app.twostage import Beat
+            cache_path = Path(a.plans)
+            cache = json.loads(cache_path.read_text()) if cache_path.exists() else {}
+            if t.prompt not in cache:
+                from forge.app.pipeline import plan as _plan
+                pm, ptok = host.use("planner")
+                got = _plan(pm, ptok, t.prompt, opts.stride, opts.max_beats)
+                cache[t.prompt] = [[b.n, b.seconds, b.intent, b.narration] for b in got]
+                cache_path.write_text(json.dumps(cache, indent=1))
+            given = [Beat(*x) for x in cache[t.prompt]]
+        res = run(t.prompt, host, lambda e: None, opts, beats=given)
         bodies = [b for b in res.bodies if b.strip()]
         # Visual and new: a picture repeated from an earlier beat does not
         # count (GRPO drew the same plane-and-circle five times running).
