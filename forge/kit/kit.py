@@ -117,6 +117,7 @@ class Stage:
     def __init__(self, scene):
         _CURRENT[:] = [self]
         self.scene = scene
+        self._last: dict = {}       # newest plane / axes / graph, by slot
         self._title = None
         self._caption = None
         self._objects: list = []
@@ -280,6 +281,34 @@ def _graph(ax, g, a=None, b=None):
     if a is not None and b is not None:
         lo, hi = max(lo, min(a, b)), min(hi, max(a, b))
     return ax.plot(g, x_range=[lo, hi])
+
+
+def _inside(ax, f, lo, hi):
+    """The widest stretch of [lo, hi] where f stays inside the axes' y-range
+    (with a little slack): a parabola plotted over the whole x-range ran
+    off the top of the axes and through the title."""
+    ylo, yhi = ax.y_range[0], ax.y_range[1]
+    slack = 0.05 * (yhi - ylo)
+    xs = np.linspace(lo, hi, 401)
+    with np.errstate(all="ignore"):
+        try:
+            ys = np.array([float(f(x)) for x in xs])
+        except Exception:
+            return lo, hi
+    ok = np.isfinite(ys) & (ys >= ylo - slack) & (ys <= yhi + slack)
+    if ok.all() or not ok.any():
+        return lo, hi
+    best, run, start = (0, 0), 0, 0
+    for i, v in enumerate(ok):
+        if v:
+            if run == 0:
+                start = i
+            run += 1
+            if run > best[1] - best[0]:
+                best = (start, i + 1)
+        else:
+            run = 0
+    return xs[best[0]], xs[best[1] - 1]
 
 
 def _field(f):
@@ -470,6 +499,7 @@ def plot_graph(stage: Stage, ax, f, x_range=None, color=BLUE, label: str | None 
     """Plot f on the axes and draw it."""
     _need(ax, "plot", "the axes from draw_axes(stage)", "plot_graph(stage, axes, f)")
     xr = x_range or (ax.x_range[0], ax.x_range[1])
+    xr = _inside(ax, f, xr[0], xr[1])
     g = ax.plot(f, x_range=[xr[0], xr[1]], color=color)
     stage.scene.play(Create(g), run_time=1.5)
     stage._objects.append(g)
@@ -513,21 +543,37 @@ def slide_tangent(stage: Stage, ax, f, x_start: float, x_end: float,
     return tan, dot, read
 
 
-def shade_area(stage: Stage, ax, g, a: float, b: float, color=BLUE_D):
+def _bounds(stage, ax, g, a, b, x_range):
+    """(g, a, b) from the ways a model writes an interval: (a, b) as one
+    tuple, x_range=, the bounds without the function, or nothing."""
+    if b is None and x_range is None and np.ndim(a) == 1:
+        a, b = a[0], a[1]
+    elif b is None and x_range is not None:
+        a, b = x_range[0], x_range[1]
+    elif b is None and np.ndim(g) == 0 and not callable(g) and a is not None:
+        g, a, b = None, g, a
+    if g is None:
+        g = stage._last.get("graph") or (lambda x: x)
+    if a is None or b is None:
+        a, b = ax.x_range[0], ax.x_range[1]
+    return g, min(a, b), max(a, b)
+
+
+def shade_area(stage: Stage, ax, g=None, a=None, b=None, color=BLUE_D, x_range=None):
     """Shade the area under g between a and b."""
     _need(ax, "get_area", "the axes from draw_axes(stage)", "shade_area(stage, axes, graph, a, b)")
-    a, b = min(a, b), max(a, b)
+    g, a, b = _bounds(stage, ax, g, a, b, x_range)
     r = ax.get_area(_graph(ax, g, a, b), x_range=[a, b], color=color, opacity=0.5)
     stage.scene.play(FadeIn(r), run_time=1.0)
     stage._objects.append(r)
     return r
 
 
-def riemann_refine(stage: Stage, ax, g, a: float, b: float, ns=(4, 8, 16, 32),
-            color=TEAL):
+def riemann_refine(stage: Stage, ax, g=None, a=None, b=None, ns=(4, 8, 16, 32),
+            color=TEAL, x_range=None):
     """Rectangles under g, refined: 4, 8, 16, 32 strips."""
     _need(ax, "get_riemann_rectangles", "the axes from draw_axes(stage)", "riemann_refine(stage, axes, graph, a, b)")
-    a, b = min(a, b), max(a, b)
+    g, a, b = _bounds(stage, ax, g, a, b, x_range)
     g = _graph(ax, g, a, b)
     rects = ax.get_riemann_rectangles(g, x_range=[a, b], dx=(b - a) / ns[0],
                                       fill_opacity=0.6, color=color)
@@ -834,6 +880,7 @@ def draw_neural_net(stage: Stage, layers=(3, 4, 2), where: str = "center",
             stage.scene.play(*[n.animate.set_fill(TEAL, opacity=0.8) for n in col],
                              run_time=0.4)
     net = VGroup(edges, *cols)
+    net.layers, net.edges = list(cols), edges   # models reach for these
     stage._objects.append(net)
     return net
 
@@ -1462,6 +1509,24 @@ import math as _math
 import re as _re
 
 _FN_SLOTS = {"f", "g", "term", "f0"}
+# second-argument slots: the attribute that proves the right thing is there,
+# and the block that makes a default one
+_SLOTS = {"plane_": ("c2p", "draw_plane"), "ax": ("c2p", "draw_axes"),
+          "cp": ("n2p", "draw_complex_plane"), "nl": ("n2p", "draw_number_line")}
+
+# Axes and NumberPlane have c2p; models also call n2p (NumberLine's and
+# ComplexPlane's) on them -- 22 runtime drops in one evaluation round.
+from manim import Axes as _Axes
+
+
+def _axes_n2p(self, x, *rest):
+    if isinstance(x, complex):
+        return self.c2p(x.real, x.imag)
+    return self.c2p(x, rest[0] if rest else 0)
+
+
+if not hasattr(_Axes, "n2p"):
+    _Axes.n2p = _axes_n2p
 
 
 def _as_function(v):
@@ -1492,13 +1557,28 @@ def _tolerant(f):
     any_pos = any(q.kind is q.VAR_POSITIONAL for q in params)
     n_pos = sum(q.kind in (q.POSITIONAL_ONLY, q.POSITIONAL_OR_KEYWORD) for q in params)
 
+    pos_names = [q.name for q in params
+                 if q.kind in (q.POSITIONAL_ONLY, q.POSITIONAL_OR_KEYWORD)]
+    slot = pos_names[1] if len(pos_names) > 1 and pos_names[1] in _SLOTS else None
+
     @_functools.wraps(f)
     def call(*args, **kw):
         if (not args or not isinstance(args[0], Stage)) and "stage" not in kw \
                 and _CURRENT:
             args = (_CURRENT[0],) + args
+        st = args[0] if args and isinstance(args[0], Stage) else None
+        # The plane / axes slot left out or filled with something else
+        # (apply_matrix(stage, matrix)): the newest one of that kind, or a
+        # fresh default one if the scene has none yet.
+        if st is not None and slot and slot not in kw and \
+                (len(args) < 2 or not hasattr(args[1], _SLOTS[slot][0])):
+            have = st._last.get(slot)
+            if have is None:
+                have = globals()[_SLOTS[slot][1]](st)
+            args = (args[0], have) + args[1:]
         if not any_kw:
             kw = {k: v for k, v in kw.items() if k in names}
+        kw = {k: v for k, v in kw.items() if k not in pos_names[:len(args)]}
         if not any_pos and len(args) > n_pos:
             args = args[:n_pos]
         try:
@@ -1507,7 +1587,14 @@ def _tolerant(f):
             return f(*args, **kw)
         for k in _FN_SLOTS & set(bound.arguments):
             bound.arguments[k] = _as_function(bound.arguments[k])
-        return f(*bound.args, **bound.kwargs)
+        out = f(*bound.args, **bound.kwargs)
+        if st is not None:
+            for key, (attr, maker) in _SLOTS.items():
+                if f.__name__ == maker:
+                    st._last[key] = out
+            if f.__name__ == "plot_graph":
+                st._last["graph"] = out
+        return out
     call._kit_block = True
     return call
 

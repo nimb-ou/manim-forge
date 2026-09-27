@@ -392,7 +392,8 @@ def runtime_salvage(beats: list[Beat], bodies: list[str], code: str,
         out[k - 1] = ""
         note = f"runtime: dropped beat {k}"
     out, _, _ = prune_all(beats, out, kit=kit)
-    return out, note + (f" ({why})" if why else "")
+    line = " ".join(code.splitlines()[n - 1].split())[:80]
+    return out, note + (f" ({why})" if why else "") + f" at `{line}`"
 
 
 def beat_prompt(request: str, beats: list[Beat], j: int,

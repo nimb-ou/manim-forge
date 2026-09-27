@@ -150,6 +150,16 @@ CASES: dict[str, tuple[str, list[str]]] = {
     "euler_circle": (CP, ["euler_circle(stage, cp)", "euler_circle(stage, cp, t_end=PI)"]),
     "highlight": ("s = draw_square(stage)\n", ["highlight(stage, s)", "highlight(s)"]),
     "pulse": ("s = draw_square(stage)\n", ["pulse(stage, s)"]),
+    "misuse": ("", [
+        "p = draw_plane(stage)\napply_matrix(stage, [[0, -1], [1, 0]])",
+        "show_determinant(stage, [[2, 1], [1, 2]])", "show_eigenvectors(stage, [[2, 0], [0, 3]])",
+        "ax = draw_axes(stage)\nd = Dot(ax.n2p(2))", "p = draw_plane(stage)\nd = Dot(p.n2p(1))",
+        "ax = draw_axes(stage, (0, 3), (0, 9))\ng = plot_graph(stage, ax, lambda x: x**2)\nshade_area(stage, ax, g, (0, 2))",
+        "ax = draw_axes(stage, (0, 3), (0, 9))\ng = plot_graph(stage, ax, lambda x: x**2)\nshade_area(stage, ax, 0, 2)",
+        "ax = draw_axes(stage, (0, 3), (0, 9))\nriemann_refine(stage, ax, lambda x: x**2, x_range=(0, 2))",
+        "net = draw_neural_net(stage)\nhighlight(stage, net.layers[1])",
+        "draw_right_triangle(stage, 3, 4, a=3)", "draw_vector(stage, (1, 2))",
+        "plot_graph(stage, lambda x: x**2 / 4)"]),
     "stage": ("s = draw_circle(stage)\n", [
         "stage.title('Hello')", "stage.caption('A short caption.')", "stage.equation('a^2 + b^2 = c^2')",
         "stage.equation(r'\\frac{1}{2}', where='left')", "stage.label(s, 'r')", "stage.label('r', s)",
@@ -169,8 +179,8 @@ def scene(block: str, setup: str, calls: list[str], log: str) -> str:
         body.append(f"        try:\n"
                     f"            stage = Stage(self)\n"
                     + "".join(f"            {l}\n" for l in setup.splitlines())
-                    + f"            {c}\n"
-                    f"            {say}('FUZZ OK {block} {i}\\n')\n"
+                    + "".join(f"            {l}\n" for l in c.splitlines())
+                    + f"            {say}('FUZZ OK {block} {i}\\n')\n"
                     f"        except Exception as e:\n"
                     f"            {say}('FUZZ FAIL {block} {i} ' + type(e).__name__ + ' ' + str(e)[:160].replace(chr(10), ' ') + '\\n')\n"
                     f"        self.clear()\n")
