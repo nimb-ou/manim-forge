@@ -319,3 +319,42 @@ coder by metric *and* by reading all 20 sheets → app. Kit v7 is shelved.
 **5. Plan change.** Stop adding tolerance for single guesses; fix the
 prompt (signatures). Next GPU week: SFT with signature hints in every
 prompt, and GRPO from the best of those.
+
+## Log · 2026-09-27 13:40Z
+
+**1. Arrived.** Signature hints: kit v6 63%, GRPO v3 61% (tie; kit v6 in
+the app). Self-training now generates with hints (1,374 rows). GPU quota
+spent until ~Oct 3; Mistral back ~Sep 30.
+
+**2. Looked — all 20 sheets of the shipped configuration (kit v6 + hints),
+by eye.** Clearly good: 3 (dot product as projection, neural network
+layers, binary counting). Mostly good: 2 (matrix on the plane, halving
+series). Partial: 8. Poor: 7 (derivative, Taylor, multiply by i, Bayes,
+gradient descent, primes — a binary counter!, pendulum). Eye score ≈ 43%
+(good 1, partial ½) against the metric's 63%. The metric counts a bare
+square or a lone arrow; the eye asks whether the idea is shown.
+
+**3. Am I spiralling?** The metric has been climbing faster than the
+pictures. Kit tolerance and hints were real gains (the sheets are better
+than this morning's), but I have been optimising a lenient proxy on the
+same 20 prompts that the kit's newest blocks and my hand-written scenes
+were built around. Two corrections:
+  * a **held-out prompt set** on topics no block or hand-written scene was
+    made for (forge/evaluate/heldout_prompts.json) — the generalisation
+    number;
+  * **eye scores** on every run that decides what ships (20 sheets, good /
+    partial / poor), recorded next to the metric.
+
+**4. What the poor scenes share.** Beats that are only captions over
+empty axes even where the right block exists (gradient descent never
+calls gradient_descent; Taylor draws axes and one curve). The coder is
+not choosing the block the beat needs. The lever I have not tried: show
+it a worked scene for a *similar* request (retrieval of one hand-written
+scene as an example). Untrained, the model copied examples verbatim; the
+trained coder copying a gradient-descent example into a gradient-descent
+request would be the right behaviour. Test on held-out prompts only, so
+the example library cannot inflate the number.
+
+**5. Plan.** (a) held-out prompts + eye-score both configurations;
+(b) exemplar retrieval as an option, evaluated on held-out; (c) Oct 3:
+SFT with signature hints + exemplars in prompts, then GRPO.
