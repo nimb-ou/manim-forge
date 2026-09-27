@@ -397,7 +397,7 @@ class RenderHarness:
 
         result = RenderResult(
             ok=True, code_hash=h, scene_class=scene_class, error_kind=ErrorKind.NONE,
-            stdout=stdout[-2000:], video_path=stored_video,
+            stdout=stdout[-2000:], stderr=stderr[-2000:], video_path=stored_video,
             frame_paths=[str(p) for p in frame_paths],
             duration_s=_probe_duration(video), elapsed_s=elapsed,
         )

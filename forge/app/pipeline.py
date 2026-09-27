@@ -301,6 +301,7 @@ class Options:
     kit_trained: bool = True        # the short prompt; False = prompt-only
     relevance: bool = False         # subject hint + resample off-subject beats
     exemplar: bool = False          # a hand-written scene for a similar request
+    mark_beats: bool = False        # record each beat's end time (kit only)
 
 
 @dataclass
@@ -315,6 +316,7 @@ class Result:
     error: str = ""
     notes: list[str] = field(default_factory=list)
     seconds: float = 0.0
+    beat_ends: list[float] = field(default_factory=list)
 
 
 def run(request: str, host, emit: Emit, opts: Options | None = None,
@@ -415,6 +417,12 @@ def run(request: str, host, emit: Emit, opts: Options | None = None,
         harness = RenderHarness(python_bin=str(root / ".venv" / "bin" / "python"),
                                 cache_dir=str(root / "data" / "frames"),
                                 timeout=600, store_video=True)
+    mark = opts.mark_beats and kit
+
+    def marked(bs: list[str]) -> list[str]:
+        return [b + "\nstage.mark()" if b.strip() else b for b in bs] if mark else bs
+    if mark:
+        asm = assemble(beats, marked(bodies), kit=kit)
     emit({"stage": "render", "status": "start", "quality": opts.quality})
     res = harness.render(asm.code, quality=opts.quality, use_cache=False)
     tried: set[int] = set()
@@ -426,14 +434,16 @@ def run(request: str, host, emit: Emit, opts: Options | None = None,
         if fix is None:
             break
         trial_bodies, what = fix
-        trial = assemble(beats, trial_bodies, kit=kit)
+        trial = assemble(beats, marked(trial_bodies), kit=kit)
         if not trial.ok or 2 * sum(1 for x in trial_bodies if x.strip()) < live:
             break
         bodies, asm = trial_bodies, trial
         emit({"stage": "render", "note": f"{what}; re-rendering"})
         notes.append(what)
         res = harness.render(asm.code, quality=opts.quality, use_cache=False)
-    out = Result(request, beats, bodies, asm.code, ok=res.ok,
+    got = re.findall(r"BEAT_ENDS \[([^\]]*)\]", res.stderr or "")
+    ends = [float(x) for x in got[-1].split(",") if x.strip()] if got else []
+    out = Result(request, beats, bodies, asm.code, ok=res.ok, beat_ends=ends,
                  video=res.video_path if res.ok else None,
                  duration=res.duration_s, notes=notes,
                  error="" if res.ok else res.error_kind.value,

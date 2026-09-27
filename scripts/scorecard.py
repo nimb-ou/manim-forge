@@ -61,7 +61,9 @@ def visual(body: str, mobjects: set[str]) -> bool:
         or ".plot(" in body
 
 
-def contact_sheet(video: str, out: Path, k: int = 6) -> None:
+def contact_sheet(video: str, out: Path, k: int = 6, times=None) -> None:
+    """Frames in a grid of three columns: at each beat's end when ``times``
+    (the pipeline's beat marks) are known, else ``k`` evenly spaced."""
     ff = "/opt/homebrew/bin/ffmpeg"
     probe = subprocess.run(["/opt/homebrew/bin/ffprobe", "-v", "error",
                             "-show_entries", "format=duration", "-of",
@@ -70,23 +72,29 @@ def contact_sheet(video: str, out: Path, k: int = 6) -> None:
         dur = float(probe.stdout.strip())
     except ValueError:
         return
+    at = [max(t - 0.15, 0) for t in times] if times else \
+        [dur * (i + 0.5) / k for i in range(k)]
     frames = []
-    for i in range(k):
+    for i, t in enumerate(at):
         f = out.with_suffix(f".{i}.jpg")
-        subprocess.run([ff, "-loglevel", "error", "-y", "-ss",
-                        f"{dur * (i + 0.5) / k:.2f}", "-i", video, "-frames:v",
-                        "1", "-vf", "scale=480:-1", str(f)])
+        subprocess.run([ff, "-loglevel", "error", "-y", "-ss", f"{min(t, dur - 0.05):.2f}",
+                        "-i", video, "-frames:v", "1", "-vf", "scale=480:-1", str(f)])
         if f.exists():
             frames.append(f)
-    if len(frames) == k:
+    if frames:
+        while len(frames) % 3:                       # pad the last row
+            frames.append(frames[-1])
         inputs = sum([["-i", str(f)] for f in frames], [])
-        half = k // 2
-        graph = (f"{''.join(f'[{i}]' for i in range(half))}hstack={half}[a];"
-                 f"{''.join(f'[{i}]' for i in range(half, k))}hstack={half}[b];"
-                 f"[a][b]vstack")
+        rows = [f"{''.join(f'[{i}]' for i in range(r, r + 3))}hstack=3[r{r}]"
+                for r in range(0, len(frames), 3)]
+        n = len(rows)
+        graph = ";".join(rows) + (";" + "".join(f"[r{r}]" for r in range(0, len(frames), 3))
+                                  + f"vstack={n}" if n > 1 else "")
+        if n == 1:
+            graph = graph.replace("[r0]", "")
         subprocess.run([ff, "-loglevel", "error", "-y", *inputs,
                         "-filter_complex", graph, str(out)])
-    for f in frames:
+    for f in set(frames):
         f.unlink(missing_ok=True)
 
 
@@ -131,7 +139,7 @@ def main() -> int:
     out_dir = ROOT / "data" / "scorecard" / a.tag
     out_dir.mkdir(parents=True, exist_ok=True)
     host = SwapHost(a.planner, a.coder)
-    opts = Options(max_beats=a.max_beats, quality=a.quality, kit=a.kit,
+    opts = Options(max_beats=a.max_beats, quality=a.quality, kit=a.kit, mark_beats=True,
                    relevance=a.relevance, exemplar=a.exemplar)
 
     rows = []
@@ -153,7 +161,8 @@ def main() -> int:
         slug = re.sub(r"[^a-z0-9]+", "-", t.prompt.lower())[:40].strip("-")
         (out_dir / f"{i:02d}-{slug}.py").write_text(res.code)
         if res.ok and res.video:
-            contact_sheet(res.video, out_dir / f"{i:02d}-{slug}.jpg")
+            contact_sheet(res.video, out_dir / f"{i:02d}-{slug}.jpg",
+                          times=res.beat_ends)
         rows.append(row)
         print(f"  [{i}/{len(tasks)}] ok={res.ok} beats={row['kept']}/"
               f"{row['beats']} visual={vis}/{row['kept']} cov={cov:.0%} "

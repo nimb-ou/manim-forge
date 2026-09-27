@@ -254,6 +254,15 @@ class Stage:
         self._caption = None if self._caption in gone else self._caption
         self._objects = [m for m in self._objects if id(m) in keep_ids]
 
+    def mark(self):
+        """Record the scene clock at the end of a beat (the pipeline adds
+        one after each beat when asked): contact sheets then show each
+        beat's last frame instead of evenly spaced ones, which caught
+        curves mid-draw and missed pictures that were on screen briefly."""
+        import sys as _sys
+        self._t = getattr(self, "_t", []) + [float(self.scene.renderer.time)]
+        print("BEAT_ENDS", self._t, file=_sys.stderr, flush=True)
+
     def pause(self, seconds: float = 1.0):
         self.scene.wait(seconds)
 
@@ -1806,6 +1815,14 @@ _FN_SLOTS = {"f", "g", "term", "f0"}
 # second-argument slots: the attribute that proves the right thing is there,
 # and the block that makes a default one
 _MOB_PARAMS = {"m", "secs", "bars_", "arrow", "cells"}  # take a picture
+def _on_screen(st, m) -> bool:
+    """Is m (or, for a block's tuple result, any part of it) on screen?"""
+    parts = m if isinstance(m, (tuple, list)) else [m]
+    live = st.scene.mobjects
+    return any(x in live or any(x in y.get_family() for y in live if hasattr(y, "get_family"))
+               for x in parts if hasattr(x, "get_center"))
+
+
 _MAKERS = {"draw_plane", "draw_axes", "draw_complex_plane", "draw_number_line"}
 # Pictures that bring their own frame: drawn over a plane or axes left on
 # screen they are clutter (kit v6 laid angle_sum's triangle over a grid).
@@ -1936,10 +1953,12 @@ def _tolerant(f):
         # coordinate system is a new picture, so the old one is cleared.
         if st is not None and (f.__name__ in _MAKERS or f.__name__ in _STANDALONE):
             old = [m for k, m in st._last.items()
-                   if k in _SLOTS and m is not None and m in st.scene.mobjects]
+                   if (k in _SLOTS or k == "standalone") and m is not None
+                   and _on_screen(st, m)]
             if old:
                 st.clear()
-                st._last = {k: v for k, v in st._last.items() if k not in _SLOTS}
+                st._last = {k: v for k, v in st._last.items()
+                            if k not in _SLOTS and k != "standalone"}
         if not any_pos and len(args) > n_pos:
             args = args[:n_pos]
         try:
@@ -1955,6 +1974,8 @@ def _tolerant(f):
                     st._last[key] = out
             if f.__name__ == "plot_graph":
                 st._last["graph"] = out
+            if f.__name__ in _STANDALONE:
+                st._last["standalone"] = out
         return out
     call._kit_block = True
     return call
