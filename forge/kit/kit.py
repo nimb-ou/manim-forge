@@ -65,7 +65,24 @@ def _pad_points(method_name: str, first_only: bool = False):
     setattr(_Mobject, method_name, wrapped)
 
 
+def _pad_init(cls, point_kw=()):
+    """Let a constructor take 2D points: Polygon((0, 0), (1, 0), (0, 1)),
+    Line((0, 0), (2, 1)), Dot((1, 2)) failed with "could not broadcast
+    input array from shape (1,2) into shape (1,3)"."""
+    original = cls.__init__
+
+    def init(self, *args, **kw):
+        args = tuple(_as_point(a) if np.ndim(a) == 1 else a for a in args)
+        for k in point_kw:
+            if k in kw and np.ndim(kw[k]) == 1:
+                kw[k] = _as_point(kw[k])
+        original(self, *args, **kw)
+    cls.__init__ = init
+
+
 if not getattr(_Mobject, "_forge_2d_ok", False):
+    for _c in (Line, Arrow, DashedLine, Dot, Polygon):
+        _pad_init(_c, ("start", "end", "point"))
     _pad_points("shift")
     _pad_points("move_to", first_only=True)
     _pad_points("next_to", first_only=True)
@@ -219,7 +236,11 @@ class Stage:
             m, s = s, m                                  # label("x", obj)
         if isinstance(m, str):                           # label("x") alone
             return self.caption(m)
-        t = self._text(s, 28).set_color(color).next_to(m, direction, buff=0.15)
+        if isinstance(m, (tuple, list)) and m and not np.isscalar(m[0]):
+            m = m[0]                     # a block's (picture, readout) pair
+        if not hasattr(m, "get_center"):                 # a point: label there
+            m = Dot(_xy(m), radius=0.001, fill_opacity=0)
+        t = self._text(str(s), 28).set_color(color).next_to(m, direction, buff=0.15)
         self.scene.play(FadeIn(t), run_time=0.5)
         self._objects.append(t)
         return t
@@ -256,6 +277,11 @@ class Stage:
         f = globals().get(name)
         if callable(f) and getattr(f, "_kit_block", False):
             return lambda *a, **kw: f(self, *a, **kw)
+        # stage.coords_to_point(...), stage.c2p(...): the newest axes' own
+        for k in ("ax", "plane_", "cp", "nl"):
+            have = self.__dict__.get("_last", {}).get(k)
+            if have is not None and hasattr(have, name):
+                return getattr(have, name)
         raise AttributeError(
             f"Stage has no {name!r}. Blocks are functions taking the stage "
             f"first (draw_plane(stage), plot_graph(stage, ax, f)); the stage's "
@@ -467,10 +493,17 @@ def draw_basis(stage: Stage, plane_):
     return i, j
 
 
-def apply_matrix(stage: Stage, plane_, matrix, riders=(), run_time: float = 2.0):
+def apply_matrix(stage: Stage, plane_, matrix=((1, 1), (0, 1)), riders=(),
+                 run_time: float = 2.0):
     """Move the grid, and anything riding on it, by a 2x2 matrix."""
     _need(plane_, "c2p", "the plane from draw_plane(stage)", "apply_matrix(stage, plane, matrix)")
     m = np.array(matrix, dtype=float)
+    # riders given as (x, y) points: vectors drawn for them first
+    riders = list(riders or [])
+    if riders and not hasattr(riders[0], "get_center") and np.ndim(riders[0]) == 0:
+        riders = [riders]                                # one (x, y) alone
+    riders = [r if hasattr(r, "get_center") else draw_vector(stage, plane_, tuple(r))
+              for r in riders]
     about = plane_.c2p(0, 0)
     group = VGroup(plane_, *riders)
     stage.scene.play(ApplyMatrix(m, group, about_point=about), run_time=run_time)
@@ -537,9 +570,14 @@ def plot_graph(stage: Stage, ax, f, x_range=None, color=BLUE, label: str | None 
     return g
 
 
-def slide_tangent(stage: Stage, ax, f, x_start: float, x_end: float,
-            color=YELLOW, run_time: float = 3.0):
+def slide_tangent(stage: Stage, ax, f, x_start: float | None = None,
+                  x_end: float | None = None, color=YELLOW, run_time: float = 3.0):
     """A tangent line sliding along f, with its slope read out live."""
+    lo, hi = ax.x_range[0], ax.x_range[1]
+    if x_start is None:
+        x_start = lo + 0.2 * (hi - lo)
+    if x_end is None:
+        x_end = min(hi, x_start + 0.5 * (hi - lo))
     _need(ax, "c2p", "the axes from draw_axes(stage)", "slide_tangent(stage, axes, f, x0, x1)")
     t = ValueTracker(x_start)
     h = 1e-4
@@ -639,7 +677,10 @@ def draw_number_line(stage: Stage, x_range=(0, 10), where: str = "center"):
 
 def mark_point(stage: Stage, nl, x: float, color=YELLOW, label: str | None = None):
     """A dot at x on a number line, optionally labelled."""
-    d = Dot(nl.n2p(x), color=color)
+    if np.ndim(x) == 1 and hasattr(nl, "c2p"):          # a point on axes
+        d = Dot(nl.c2p(*list(x)[:2]), color=color)
+    else:
+        d = Dot(nl.n2p(float(np.ravel(x)[0]) if np.ndim(x) else x), color=color)
     stage.scene.play(GrowFromCenter(d), run_time=0.5)
     stage._objects.append(d)
     if label:
@@ -668,6 +709,10 @@ def draw_bars(stage: Stage, values, labels=None, where: str = "center", color=BL
 def show_partial_sums(stage: Stage, term, n: int = 10, where: str = "center",
                  color=YELLOW):
     """Bars of term(1)..term(n) stacking into a running total, read out."""
+    if np.ndim(term) == 1:                    # the terms themselves, as a list
+        vals = [float(v) for v in term]
+        term, n = (lambda k: vals[k - 1]), len(vals)
+    n = int(n) if np.ndim(n) == 0 else 10
     total = 0.0
     sums = []
     for k in range(1, n + 1):
@@ -761,7 +806,7 @@ def draw_dice_grid(stage: Stage, where: str = "center", highlight_sum: int | Non
 
 # -- more linear algebra ------------------------------------------------------
 
-def show_determinant(stage: Stage, plane_, matrix, run_time: float = 2.0):
+def show_determinant(stage: Stage, plane_, matrix=((2, 1), (1, 2)), run_time: float = 2.0):
     """The unit square rides a matrix; its new area is the determinant."""
     sq = draw_unit_square(stage, plane_)
     m = np.array(matrix, dtype=float)
@@ -774,7 +819,7 @@ def show_determinant(stage: Stage, plane_, matrix, run_time: float = 2.0):
     return sq, tag
 
 
-def show_eigenvectors(stage: Stage, plane_, matrix, run_time: float = 2.5):
+def show_eigenvectors(stage: Stage, plane_, matrix=((3, 1), (0, 2)), run_time: float = 2.5):
     """Vectors on the eigen-directions stay on their lines as the plane moves;
     an ordinary vector is knocked off its line."""
     m = np.array(matrix, dtype=float)
@@ -920,8 +965,12 @@ def draw_neural_net(stage: Stage, layers=(3, 4, 2), where: str = "center",
     return net
 
 
-def draw_network(stage: Stage, nodes, edges, where: str = "center"):
+def draw_network(stage: Stage, nodes=None, edges=(), where: str = "center"):
     """A graph: nodes {name: (x, y)} in [-1, 1]^2, edges [(a, b), ...]."""
+    if not isinstance(nodes, dict):          # no graph given: a small one
+        nodes = {"A": (-0.8, 0.5), "B": (0, 0.8), "C": (0.8, 0.3),
+                 "D": (-0.4, -0.6), "E": (0.5, -0.5)}
+        edges = [("A", "B"), ("B", "C"), ("A", "D"), ("D", "E"), ("C", "E"), ("B", "E")]
     cx, cy, w, h = _REGIONS[where]
     pos = {k: np.array([cx + x * w * 0.42, cy + y * h * 0.4, 0])
            for k, (x, y) in nodes.items()}
@@ -1472,6 +1521,7 @@ def squares_on_sides(stage: Stage, a: float = 3, b: float = 4, where: str = "cen
     stage.scene.play(Indicate(sq_a), Indicate(sq_b), run_time=0.8)
     stage.scene.play(Indicate(sq_c), run_time=0.8)
     out = VGroup(grp, *tags)
+    out.squares, out.triangle = [sq_a, sq_b, sq_c], tri
     stage._objects.append(out)
     return out
 
@@ -1480,7 +1530,12 @@ def angle_sum(stage: Stage, points=((-2.6, -1.3), (2.6, -1.3), (0.9, 1.7)),
               where: str = "center"):
     """A triangle's three angles lifted off and laid side by side on a
     straight line: together they make a half turn, 180°."""
-    V = [_xy(q) for q in points]
+    try:
+        V = [_xy(q) for q in points]
+    except (TypeError, ValueError, IndexError):
+        V = []
+    if len(V) != 3:
+        V = [_xy(q) for q in ((-2.6, -1.3), (2.6, -1.3), (0.9, 1.7))]
     tri = Polygon(*V, color=WHITE)
     wedges, spans, colors = [], [], (RED, GREEN, BLUE)
     for i in range(3):
@@ -1745,6 +1800,7 @@ import re as _re
 _FN_SLOTS = {"f", "g", "term", "f0"}
 # second-argument slots: the attribute that proves the right thing is there,
 # and the block that makes a default one
+_MOB_PARAMS = {"m", "secs", "bars_", "arrow", "cells"}  # take a picture
 _SLOTS = {"plane_": ("c2p", "draw_plane"), "ax": ("c2p", "draw_axes"),
           "cp": ("n2p", "draw_complex_plane"), "nl": ("n2p", "draw_number_line")}
 
@@ -1848,7 +1904,16 @@ def _tolerant(f):
             have = st._last.get(slot)
             if have is None:
                 have = globals()[_SLOTS[slot][1]](st)
-            args = (args[0], have) + args[1:]
+            # a wrong picture in the slot is replaced; data is shifted along
+            wrong = len(args) > 1 and hasattr(args[1], "get_center")
+            args = (args[0], have) + args[2 if wrong else 1:]
+        # A plane or axes handed to a block that takes none -- the habit of
+        # block(stage, p, ...) carried over: kit v7 called angle_sum,
+        # squares_on_sides and swing_pendulum that way every time.
+        if st is not None and not slot and len(args) > 1 and \
+                pos_names[1:2] and pos_names[1] not in _MOB_PARAMS and \
+                (hasattr(args[1], "c2p") or hasattr(args[1], "n2p")):
+            args = (args[0],) + args[2:]
         if not any_kw:
             kw = {k: v for k, v in kw.items() if k in names}
         kw = {k: v for k, v in kw.items() if k not in pos_names[:len(args)]}
