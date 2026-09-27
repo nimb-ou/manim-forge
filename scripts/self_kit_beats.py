@@ -61,8 +61,11 @@ def main() -> int:
         beats = beats[: a.beats]
         bodies: list[str] = []
         for j in range(len(beats)):
+            # Generated with the subject hint and signatures, as inference
+            # runs (kit v6: 49% -> 63% on-subject with them); the row keeps
+            # the plain prompt, the dataset builder adds the hint back.
             body, _ = write_beat(model, tok, req, beats, j, bodies, 900,
-                                 CODE_SYSTEM_KIT_TRAINED)
+                                 CODE_SYSTEM_KIT_TRAINED, relevance=True)
             bodies.append(body)
         bodies, _, _ = prune_all(beats, bodies, kit=True)
         asm = assemble(beats, bodies, kit=True)
