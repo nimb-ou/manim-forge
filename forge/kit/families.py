@@ -22,7 +22,7 @@ FAMILIES = {
         r"scal|arrow|direction|space|cramer|cross product|inverse"),
     "calculus": (
         {"draw_axes", "plot_graph", "slide_tangent", "shade_area",
-         "riemann_refine", "trace_graph", "taylor_approximate",
+         "riemann_refine", "trace_graph", "taylor_approximate", "secant_to_tangent",
          "narrow_epsilon_band", "gradient_descent", "diffuse_heat"},
         r"function|graph|curve|slope|derivative|tangent|integra|area|rate|"
         r"limit|approximat|taylor|polynomial|descent|minimi|heat|temperat|"
@@ -30,9 +30,9 @@ FAMILIES = {
         r"accelerat|parabola|epsilon|delta|continu|cost|loss"),
     "waves": (
         {"animate_wave", "superpose_waves", "build_fourier_series",
-         "circle_to_sine", "wind_signal"},
+         "circle_to_sine", "wind_signal", "swing_pendulum"},
         r"wave|frequen|fourier|sine|cosine|oscillat|signal|sound|light|"
-        r"period|vibrat|harmonic|interfer|spectrum"),
+        r"period|vibrat|harmonic|interfer|spectrum|pendulum|swing"),
     "complex": (
         {"draw_complex_plane", "multiply_complex", "euler_circle"},
         r"complex|imaginar|euler|e\^|rotat|\bi\b|unit circle|phase"),
@@ -44,13 +44,14 @@ FAMILIES = {
         r"frequen"),
     "numbers": (
         {"draw_number_line", "mark_point", "fill_halving_squares",
-         "prime_spiral", "show_partial_sums"},
+         "prime_spiral", "show_partial_sums", "count_binary", "sieve_primes"},
         r"number|line|series|sum|half|prime|infinit|fraction|converg|diverg|"
-        r"sequence|integer|count|zeta|harmonic"),
+        r"sequence|integer|count|zeta|harmonic|binary|digit|base|divisib|sieve"),
     "geometry": (
-        {"slice_circle", "unroll_slices", "draw_right_triangle"},
+        {"slice_circle", "unroll_slices", "draw_right_triangle",
+         "squares_on_sides", "angle_sum"},
         r"circle|area|triangle|pythag|\bpi\b|π|radius|circumference|"
-        r"geometr|angle|hypotenuse"),
+        r"geometr|angle|hypotenuse|square|180|degree"),
     "networks and algorithms": (
         {"draw_neural_net", "draw_network", "hanoi_moves", "bit_grid",
          "draw_array", "swap_bars", "convolve_bars", "flow_particles",
@@ -93,8 +94,12 @@ def hint(text: str) -> str:
     """A line naming the kit blocks whose subject's words appear in ``text``
     (the request and the beat), for the coder's prompt; "" if none match."""
     t = text.lower()
-    fams = [f for f, (_, words) in FAMILIES.items() if re.search(words, t)]
+    # Most-matched subject first, so its blocks survive the cut: "the
+    # Pythagorean theorem with squares" also matches linear algebra ("plane"),
+    # and alphabetical order dropped squares_on_sides.
+    hits = {f: len(re.findall(words, t)) for f, (_, words) in FAMILIES.items()}
+    fams = sorted((f for f in hits if hits[f]), key=lambda f: -hits[f])
     if not fams:
         return ""
     names = [b for f in fams for b in sorted(FAMILIES[f][0])]
-    return "Blocks that draw this subject: " + ", ".join(names[:18]) + "."
+    return "Blocks that draw this subject: " + ", ".join(names[:24]) + "."

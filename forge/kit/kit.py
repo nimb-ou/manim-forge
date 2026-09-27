@@ -771,12 +771,20 @@ def show_eigenvectors(stage: Stage, plane_, matrix, run_time: float = 2.5):
 
 # -- more calculus -------------------------------------------------------------
 
-def taylor_approximate(stage: Stage, ax, f, a: float, terms, colors=None, run_time: float = 1.2):
+def taylor_approximate(stage: Stage, ax, f, a: float = 0.0, terms=None, colors=None,
+                       run_time: float = 1.2):
     """Taylor polynomials about a, one more term each time, closing in on f.
 
     ``terms`` is a list of the derivatives' values at a: [f(a), f'(a), ...].
     """
     import math
+    # terms left out, or given as a count: the derivatives at a, from a
+    # polynomial fitted to f around a.
+    if terms is None or np.ndim(terms) == 0:
+        n = 5 if terms is None else int(max(1, min(int(terms), 8)))
+        xs = np.linspace(a - 1.0, a + 1.0, 81)
+        fit = np.polynomial.Polynomial.fit(xs - a, [f(x) for x in xs], 12).convert()
+        terms = [float(fit.deriv(k)(0.0)) if k else float(fit(0.0)) for k in range(n)]
     colors = colors or [RED, ORANGE, YELLOW, GREEN, TEAL, BLUE]
     xr = (ax.x_range[0], ax.x_range[1])
     ymin, ymax = ax.y_range[0], ax.y_range[1]
@@ -1326,7 +1334,10 @@ def hanoi_moves(stage: Stage, n: int = 3, where: str = "center"):
 def bit_grid(stage: Stage, bits, where: str = "center", highlight_cols=None,
              highlight_rows=None):
     """A 4x4 grid of bits (Hamming codes); optional parity rows/columns lit."""
-    bits = list(bits)[:16] + [0] * max(0, 16 - len(bits))
+    if isinstance(bits, (int, np.integer)):      # bit_grid(stage, 11)
+        bits = [int(c) for c in format(int(bits), "b")]
+    bits = [int(float(b)) for b in np.asarray(bits).ravel() if str(b).strip()]
+    bits = bits[:16] + [0] * max(0, 16 - len(bits))
     cells = VGroup()
     for k, b in enumerate(bits):
         sq = Square(0.8, stroke_width=1.5, color=GREY_B)
@@ -1404,6 +1415,195 @@ def pulse(stage: Stage, m):
     return m
 
 
+
+# -- classic pictures ----------------------------------------------------------
+# Pictures the short evaluation asked for and the kit could not draw: the
+# coder stacked squares inside one another for "squares on the sides", drew
+# a caption for "the angles add up to 180", and invented count_to for
+# binary counting.
+
+def squares_on_sides(stage: Stage, a: float = 3, b: float = 4, where: str = "center"):
+    """A right triangle with a square on each side: a² and b² fill c²."""
+    c = float(np.hypot(a, b))
+    P0, P1, P2 = np.array([0., 0, 0]), np.array([a, 0., 0]), np.array([0., b, 0])
+    n = np.array([b, a, 0.])                          # outward from the hypotenuse
+    tri = Polygon(P0, P1, P2, color=WHITE, fill_opacity=0.2)
+    sq_a = Polygon(P0, P1, P1 + [0, -a, 0], P0 + [0, -a, 0], color=BLUE, fill_opacity=0.45)
+    sq_b = Polygon(P0, P0 + [-b, 0, 0], P2 + [-b, 0, 0], P2, color=GREEN, fill_opacity=0.45)
+    sq_c = Polygon(P1, P2, P2 + n, P1 + n, color=YELLOW, fill_opacity=0.35)
+    num = lambda v: f"{v:g}"
+    tags = [MathTex(f"a^2 = {num(a * a)}"), MathTex(f"b^2 = {num(b * b)}"),
+            MathTex(f"c^2 = {num(round(c * c, 2))}")]
+    grp = VGroup(tri, sq_a, sq_b, sq_c)
+    stage.place(grp, where)
+    k = grp.width / (a + b + max(a, b) + 1e-9)
+    for t, sq in zip(tags, (sq_a, sq_b, sq_c)):
+        t.scale(min(1.0, max(0.45, 2.2 * k))).move_to(sq.get_center())
+    stage.scene.play(Create(tri), run_time=0.8)
+    for sq, t in ((sq_a, tags[0]), (sq_b, tags[1]), (sq_c, tags[2])):
+        stage.scene.play(GrowFromCenter(sq), FadeIn(t), run_time=0.8)
+    stage.scene.play(Indicate(sq_a), Indicate(sq_b), run_time=0.8)
+    stage.scene.play(Indicate(sq_c), run_time=0.8)
+    out = VGroup(grp, *tags)
+    stage._objects.append(out)
+    return out
+
+
+def angle_sum(stage: Stage, points=((-2.6, -1.3), (2.6, -1.3), (0.9, 1.7)),
+              where: str = "center"):
+    """A triangle's three angles lifted off and laid side by side on a
+    straight line: together they make a half turn, 180°."""
+    V = [_xy(q) for q in points]
+    tri = Polygon(*V, color=WHITE)
+    wedges, spans, colors = [], [], (RED, GREEN, BLUE)
+    for i in range(3):
+        v, p, q = V[i], V[(i + 1) % 3], V[(i + 2) % 3]
+        a1 = np.arctan2(*(p - v)[1::-1])
+        a2 = np.arctan2(*(q - v)[1::-1])
+        span = (a2 - a1) % TAU
+        start = a1
+        if span > PI:
+            start, span = a2, TAU - span
+        wedges.append(Sector(arc_center=v, radius=0.6, start_angle=start, angle=span,
+                             color=colors[i], fill_opacity=0.75, stroke_width=0))
+        spans.append(span)
+    grp = VGroup(tri, *wedges)
+    stage.place(grp, where)
+    stage.scene.play(Create(tri), run_time=0.8)
+    stage.scene.play(LaggedStart(*[FadeIn(w) for w in wedges], lag_ratio=0.3), run_time=1.0)
+    base = tri.get_bottom() + 0.9 * DOWN
+    line = Line(base + 2 * LEFT, base + 2 * RIGHT, color=GREY_B)
+    stage.scene.play(Create(line), run_time=0.5)
+    moved, t0 = [], 0.0
+    for w, span in zip(wedges, spans):
+        target = Sector(arc_center=base, radius=0.9, start_angle=t0, angle=span,
+                        color=w.get_fill_color(), fill_opacity=0.75, stroke_width=0)
+        c = w.copy()
+        stage.scene.play(Transform(c, target), run_time=0.9)
+        moved.append(c)
+        t0 += span
+    tag = MathTex(r"180^\circ", font_size=40).next_to(base, DOWN, buff=0.15)
+    stage.scene.play(FadeIn(tag), run_time=0.5)
+    out = VGroup(grp, line, *moved, tag)
+    stage._objects.append(out)
+    return out
+
+
+def count_binary(stage: Stage, bits: int = 4, upto: int | None = None,
+                 where: str = "center", step_time: float = 0.45):
+    """Bits under their place values (8 4 2 1) counting up, the decimal
+    value alongside."""
+    bits = int(max(1, min(bits, 8)))
+    upto = min(2 ** bits - 1, 15 if upto is None else int(upto))
+    cells = VGroup(*[Square(0.9, color=GREY_B) for _ in range(bits)]).arrange(RIGHT, buff=0)
+    places = VGroup(*[MathTex(str(2 ** (bits - 1 - i)), font_size=28, color=GREY_B)
+                      .next_to(cells[i], UP, buff=0.15) for i in range(bits)])
+    digits = VGroup(*[MathTex("0", font_size=44).move_to(cells[i]) for i in range(bits)])
+    value = Integer(0, font_size=56, color=YELLOW)
+    eq = VGroup(MathTex("=", font_size=48), value).arrange(RIGHT).next_to(cells, RIGHT, buff=0.5)
+    grp = VGroup(cells, places, digits, eq)
+    stage.place(grp, where)
+    stage.scene.play(Create(cells), FadeIn(places), FadeIn(digits), FadeIn(eq), run_time=1.0)
+    shown = ["0"] * bits
+    for n in range(1, upto + 1):
+        s = format(n, f"0{bits}b")
+        anims = []
+        for i, ch in enumerate(s):
+            if shown[i] != ch:
+                shown[i] = ch
+                new = MathTex(ch, font_size=44).move_to(cells[i])
+                anims.append(Transform(digits[i], new))
+                anims.append(cells[i].animate.set_fill(BLUE, opacity=0.4 if ch == "1" else 0))
+        value.set_value(n)
+        stage.scene.play(*anims, run_time=step_time)
+    stage._objects.append(grp)
+    return grp
+
+
+def secant_to_tangent(stage: Stage, ax, f, x0: float, h: float = 2.0,
+                      run_time: float = 3.0, color=YELLOW):
+    """A secant through x0 and x0 + h; h shrinks and the secant becomes the
+    tangent, its slope read out (the derivative as a limit)."""
+    _need(ax, "c2p", "the axes from draw_axes(stage)", "secant_to_tangent(stage, ax, f, x0)")
+    hv = ValueTracker(h)
+
+    def slope():
+        d = hv.get_value()
+        return (f(x0 + d) - f(x0)) / d
+
+    def line():
+        k = slope()
+        return Line(ax.c2p(x0 - 1.5, f(x0) - 1.5 * k), ax.c2p(x0 + 1.5 + hv.get_value(),
+                    f(x0) + (1.5 + hv.get_value()) * k), color=color)
+
+    sec = always_redraw(line)
+    p = Dot(ax.c2p(x0, f(x0)), color=color)
+    q = always_redraw(lambda: Dot(ax.c2p(x0 + hv.get_value(), f(x0 + hv.get_value())),
+                                  color=RED))
+    num = DecimalNumber(slope(), num_decimal_places=2, font_size=34)
+    read = VGroup(MathTex(r"\text{slope} =", font_size=34), num).arrange(RIGHT)
+    read.next_to(ax, UP, buff=0.1).shift(3 * RIGHT)
+    stage.scene.play(Create(sec), FadeIn(p), FadeIn(q), FadeIn(read), run_time=1.0)
+    num.add_updater(lambda m: m.set_value(slope()))
+    stage.scene.play(hv.animate.set_value(0.01 if h > 0 else -0.01), run_time=run_time)
+    stage._objects += [sec, p, q, read]
+    return sec, read
+
+
+def swing_pendulum(stage: Stage, length: float = 2.4, amplitude: float = 0.5,
+                   swings: float = 2.0, period: float = 2.0):
+    """A pendulum swinging, its angle traced against time beside it: the
+    trace is a cosine (simple harmonic motion)."""
+    pivot = np.array([-4.0, 2.0, 0])
+    t = ValueTracker(0)
+    theta = lambda: amplitude * np.cos(TAU * t.get_value() / period)
+    bob_at = lambda: pivot + length * np.array([np.sin(theta()), -np.cos(theta()), 0])
+    rod = always_redraw(lambda: Line(pivot, bob_at(), color=GREY_B))
+    bob = always_redraw(lambda: Dot(bob_at(), radius=0.16, color=YELLOW))
+    total = swings * period
+    ax = Axes(x_range=[0, total, period / 2], y_range=[-1.2 * amplitude, 1.2 * amplitude,
+              amplitude / 2], x_length=6.5, y_length=3, tips=False).move_to([2.6, -0.2, 0])
+    lab = ax.get_axis_labels(MathTex("t"), MathTex(r"\theta"))
+    trace = always_redraw(lambda: ax.plot(
+        lambda s: amplitude * np.cos(TAU * s / period),
+        x_range=[0, max(t.get_value(), 1e-3)], color=YELLOW))
+    stage.scene.play(Create(ax), FadeIn(lab), FadeIn(Dot(pivot, radius=0.05)), run_time=0.8)
+    stage.scene.add(rod, bob, trace)
+    stage.scene.play(t.animate.set_value(total), run_time=total, rate_func=lambda x: x)
+    stage._objects += [rod, bob, ax, lab, trace]
+    return ax, trace
+
+
+def sieve_primes(stage: Stage, n: int = 50, where: str = "center"):
+    """The sieve of Eratosthenes: each prime's multiples fade out, the
+    primes are what is left."""
+    n = int(max(10, min(n, 100)))
+    cols = 10
+    cells = VGroup(*[VGroup(Square(0.62, stroke_width=1, color=GREY_B),
+                            Text(str(k), font_size=20)) for k in range(1, n + 1)])
+    cells.arrange_in_grid(cols=cols, buff=0.04)
+    stage.place(cells, where)
+    stage.scene.play(FadeIn(cells), run_time=0.8)
+    stage.scene.play(cells[0].animate.set_opacity(0.15), run_time=0.3)
+    out = set()
+    palette = [RED, ORANGE, GREEN, TEAL, BLUE]
+    for i, p in enumerate(q for q in range(2, int(n ** 0.5) + 1)):
+        if p in out:
+            continue
+        col = palette[i % len(palette)]
+        multiples = [m for m in range(p * p, n + 1, p) if m not in out]
+        out |= set(multiples)
+        stage.scene.play(cells[p - 1][0].animate.set_fill(col, opacity=0.6), run_time=0.3)
+        if multiples:
+            stage.scene.play(*[cells[m - 1].animate.set_opacity(0.15) for m in multiples],
+                             run_time=0.6)
+    primes = [k for k in range(2, n + 1) if k not in out]
+    stage.scene.play(*[cells[k - 1][0].animate.set_fill(YELLOW, opacity=0.5) for k in primes],
+                     run_time=0.8)
+    stage._objects.append(cells)
+    return cells
+
+
 KIT_API = """\
 stage = Stage(self) already exists. Every block plays its own animation and
 returns what it made; keep the return value to reuse it in later beats.
@@ -1462,6 +1662,12 @@ nouns (p, ax, g, v) and animate those -- never a block's name.
   flow_particles(stage, lambda x, y: (u, v))  -- particles ride a field
   euler_circle(stage, cp)                -- e^{it} walks the unit circle
   highlight(stage, m)   pulse(stage, m)
+  squares_on_sides(stage, a=3, b=4)      -- squares on a right triangle's sides
+  angle_sum(stage)                       -- a triangle's angles laid on a line: 180°
+  count_binary(stage, bits=4)            -- bits count up under 8 4 2 1
+  secant_to_tangent(stage, ax, f, x0)    -- secant shrinks to the tangent
+  swing_pendulum(stage)                  -- pendulum, its angle traced as a cosine
+  sieve_primes(stage, n=50)              -- multiples fall away, primes remain
 Regions: "center", "left", "right", "full". Text only through stage.title,
 stage.caption, stage.label and stage.equation.
 """
@@ -1483,7 +1689,8 @@ KIT_MOVES = {"apply_matrix", "slide_tangent", "riemann_refine", "trace_graph",
              "superpose_waves", "build_fourier_series", "narrow_epsilon_band",
              "swap_bars", "flip_coins", "gradient_descent", "convolve_bars",
              "wind_signal", "diffuse_heat", "hanoi_moves", "flow_particles",
-             "euler_circle"}
+             "euler_circle", "squares_on_sides", "angle_sum", "count_binary",
+             "secant_to_tangent", "swing_pendulum", "sieve_primes"}
 
 
 #: Blocks that only set the stage: a grid, axes, a number line. On their own
@@ -1528,8 +1735,47 @@ def _axes_n2p(self, x, *rest):
 if not hasattr(_Axes, "n2p"):
     _Axes.n2p = _axes_n2p
 
+# ax.c2p((x, y)) -- one point, not two numbers -- failed with "setting an
+# array element with a sequence" (three runtime drops in one run).
+if not getattr(_Axes, "_forge_c2p_ok", False):
+    _c2p = _Axes.coords_to_point
+
+    def _coords_to_point(self, *coords, **kw):
+        if len(coords) == 1 and np.ndim(coords[0]) == 1 and len(coords[0]) in (2, 3):
+            coords = tuple(coords[0][:2])
+        return _c2p(self, *coords, **kw)
+    _Axes.coords_to_point = _coords_to_point
+    _Axes.c2p = _coords_to_point
+    _Axes._forge_c2p_ok = True
+
+# A LaTeX string that does not compile (models write \frac{a}{b with a brace
+# missing, or unicode) raised and cost its beat; it becomes plain text.
+_ManimMathTex, _ManimTex = MathTex, Tex
+
+
+def _tex_or_text(cls, args, kw):
+    try:
+        return cls(*args, **kw)
+    except (ValueError, RuntimeError, OSError) as e:
+        if not any(w in str(e).lower() for w in ("latex", "dvi", "tex")):
+            raise
+        raw = " ".join(str(a) for a in args)
+        raw = _re.sub(r"\\[A-Za-z]+", " ", raw).replace("$", "")
+        raw = " ".join(_re.sub(r"[{}]", "", raw).split()) or "?"
+        return Text(raw, font_size=kw.get("font_size", 36), color=kw.get("color", WHITE))
+
+
+def MathTex(*args, **kw):  # noqa: N802 -- stands in for manim's MathTex
+    return _tex_or_text(_ManimMathTex, args, kw)
+
+
+def Tex(*args, **kw):  # noqa: N802
+    return _tex_or_text(_ManimTex, args, kw)
+
 
 def _as_function(v):
+    if hasattr(v, "underlying_function"):      # a plotted graph for its function
+        return v.underlying_function
     if not isinstance(v, str):
         return v
     src = _re.sub(r"^\s*(?:y|f\s*\(\s*\w\s*\))\s*=\s*", "", v.strip())
