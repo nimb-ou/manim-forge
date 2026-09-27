@@ -1806,6 +1806,7 @@ _FN_SLOTS = {"f", "g", "term", "f0"}
 # second-argument slots: the attribute that proves the right thing is there,
 # and the block that makes a default one
 _MOB_PARAMS = {"m", "secs", "bars_", "arrow", "cells"}  # take a picture
+_MAKERS = {"draw_plane", "draw_axes", "draw_complex_plane", "draw_number_line"}
 _SLOTS = {"plane_": ("c2p", "draw_plane"), "ax": ("c2p", "draw_axes"),
           "cp": ("n2p", "draw_complex_plane"), "nl": ("n2p", "draw_number_line")}
 
@@ -1922,6 +1923,15 @@ def _tolerant(f):
         if not any_kw:
             kw = {k: v for k, v in kw.items() if k in names}
         kw = {k: v for k, v in kw.items() if k not in pos_names[:len(args)]}
+        # A new plane or axes over one still on screen: two coordinate
+        # systems drawn on top of each other (GRPO v3's waves scene). A new
+        # coordinate system is a new picture, so the old one is cleared.
+        if st is not None and f.__name__ in _MAKERS:
+            old = [m for k, m in st._last.items()
+                   if k in _SLOTS and m is not None and m in st.scene.mobjects]
+            if old:
+                st.clear()
+                st._last = {k: v for k, v in st._last.items() if k not in _SLOTS}
         if not any_pos and len(args) > n_pos:
             args = args[:n_pos]
         try:
