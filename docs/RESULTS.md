@@ -590,3 +590,36 @@ does not count; a bare plane or axes is scaffold, not a picture):
 GRPO made it worse on the honest measure. The reward now withholds the
 shape bonus from scaffold-only beats and pays 0.4 for a repeated picture;
 GRPO v2 runs with it. The scorecard reports visual-and-new.
+
+## Kit coder: relevance, kit fixes, hints -- 2026-09-27
+
+GRPO v2 gamed "visual and new" too: a plane and one vector for a neural
+network, for Bayes, for backpropagation. The scorecard now also asks
+whether the picture is *about the beat* (the training filter's subject
+test, forge/kit/families.py) and counts over **planned** beats, a failed
+render scoring zero (scripts/rescore.py). Short prompts, max 6 beats:
+
+| setup | visual, new, on subject |
+|---|---|
+| v2, raw Manim | 24% |
+| kit v5 | 26% |
+| kit v5, kit fuzz-fixed | 34% |
+| kit v5 + relevance (subject hint, resample off-subject beats) | 43% |
+| GRPO v2 + relevance | 44% |
+| kit v6 (+ self-training rows) + relevance | 47% |
+| kit v6, kit with runtime-drop fixes | 49-52% |
+| kit v7 (hand-written rows for new blocks) | 41% |
+| GRPO v3 (relevance reward) | 46% |
+| **kit v6 + hints with each block's signature** | **63%** |
+
+What moved it was the kit and the prompt, not training: blocks that
+crashed on reasonable calls (shade_area on any plain function; 60+ misuse
+patterns now tolerated, scripts/fuzz_kit.py), statement-level runtime
+salvage, and a hint that says which blocks draw the subject *and how to
+call them*. Kit v7 learned the new blocks' names and guessed their
+arguments; signatures fixed that at inference.
+
+The metric is lenient -- any non-scaffold picture on a subject keyword
+counts -- and the sheets are below the number: stacked pictures, empty
+beats, integration without rectangles. Every choice above was checked
+against the contact sheets; the sheets stay the judge.

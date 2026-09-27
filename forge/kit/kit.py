@@ -1807,6 +1807,14 @@ _FN_SLOTS = {"f", "g", "term", "f0"}
 # and the block that makes a default one
 _MOB_PARAMS = {"m", "secs", "bars_", "arrow", "cells"}  # take a picture
 _MAKERS = {"draw_plane", "draw_axes", "draw_complex_plane", "draw_number_line"}
+# Pictures that bring their own frame: drawn over a plane or axes left on
+# screen they are clutter (kit v6 laid angle_sum's triangle over a grid).
+_STANDALONE = {"angle_sum", "squares_on_sides", "count_binary", "sieve_primes",
+               "swing_pendulum", "circle_to_sine", "draw_dice_grid", "bayes_square",
+               "draw_neural_net", "draw_network", "flip_coins", "grow_histogram",
+               "hanoi_moves", "bit_grid", "prime_spiral", "fill_halving_squares",
+               "slice_circle", "draw_right_triangle", "wind_signal",
+               "show_partial_sums", "draw_bars", "draw_array", "convolve_bars"}
 _SLOTS = {"plane_": ("c2p", "draw_plane"), "ax": ("c2p", "draw_axes"),
           "cp": ("n2p", "draw_complex_plane"), "nl": ("n2p", "draw_number_line")}
 
@@ -1926,7 +1934,7 @@ def _tolerant(f):
         # A new plane or axes over one still on screen: two coordinate
         # systems drawn on top of each other (GRPO v3's waves scene). A new
         # coordinate system is a new picture, so the old one is cleared.
-        if st is not None and f.__name__ in _MAKERS:
+        if st is not None and (f.__name__ in _MAKERS or f.__name__ in _STANDALONE):
             old = [m for k, m in st._last.items()
                    if k in _SLOTS and m is not None and m in st.scene.mobjects]
             if old:
