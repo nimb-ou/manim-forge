@@ -122,7 +122,7 @@ def main() -> int:
             user = dict(r["messages"][1])
             said = re.findall(r"^\s*(?:intent|narration):\s*(.*)$",
                               user["content"], re.M)
-            h = hint(" ".join(said) + " " + r["request"], signatures=True)
+            h = hint(" ".join(said) + " " + r["request"])
             if h:
                 user["content"] += "\n" + h
             rows.append({"prompt": [{"role": "system",

@@ -115,8 +115,8 @@ def main() -> int:
                     help="a plan cache (JSON): prompts found there use the cached "
                          "beats, others are planned once and added -- so every "
                          "coder configuration is scored on identical plans")
-    ap.add_argument("--no-signatures", action="store_true",
-                    help="relevance hint names blocks without their calls")
+    ap.add_argument("--signatures", action="store_true",
+                    help="relevance hint gives each block's call (off: names only)")
     ap.add_argument("--exemplar", action="store_true",
                     help="show the coder the nearest hand-written scene")
     ap.add_argument("--relevance", action="store_true",
@@ -147,7 +147,7 @@ def main() -> int:
     host = SwapHost(a.planner, a.coder)
     opts = Options(max_beats=a.max_beats, quality=a.quality, kit=a.kit, mark_beats=True,
                    relevance=a.relevance, exemplar=a.exemplar,
-                   signatures=not a.no_signatures)
+                   signatures=a.signatures)
 
     rows = []
     for i, t in enumerate(tasks, 1):

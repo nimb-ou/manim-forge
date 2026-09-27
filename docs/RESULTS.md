@@ -623,3 +623,24 @@ The metric is lenient -- any non-scaffold picture on a subject keyword
 counts -- and the sheets are below the number: stacked pictures, empty
 beats, integration without rectangles. Every choice above was checked
 against the contact sheets; the sheets stay the judge.
+
+### Correction: the same comparison on identical plans -- 2026-09-28
+
+The table above compares single unseeded runs. The planner samples, so two
+runs of one configuration score the coder on different plans: the same
+setup scored 56% and 37% on the held-out prompts. Re-run with every prompt's
+plan cached (scorecard --plans), kit v6, visual + new + on subject:
+
+| configuration | 20 short | 20 held-out |
+|---|---|---|
+| no hint | 37% | 25% |
+| **relevance, block names** | **58%** | **39%** |
+| relevance, names + signatures | 45% | 37% |
+| names + signatures + a hand-written example | 46% | 36% |
+
+The subject hint helps on both sets; the signatures and the in-prompt
+example do not (the earlier "49 -> 63% for signatures" was noise). Looked
+at: integration, same plan -- names only draws the curve, strips, the
+shaded area; with signatures, stray steps and empty axes. The app uses
+names only. Held-out (topics nothing was built for) stays ~20 points
+under the short prompts: that gap is what training has to close.

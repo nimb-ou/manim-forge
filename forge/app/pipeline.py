@@ -170,7 +170,7 @@ def plan(model, tok, request: str, stride: int, max_beats: int,
 def write_beat(model, tok, request: str, beats: list[Beat], j: int,
                bodies: list[str], max_tokens: int,
                system: str = CODE_SYSTEM, relevance: bool = False,
-               exemplar: bool = False, signatures: bool = True) -> tuple[str, str]:
+               exemplar: bool = False, signatures: bool = False) -> tuple[str, str]:
     """One beat's code: two tries to parse, then its parsing prefix.
 
     With ``relevance`` (kit only), the prompt names the blocks of the
@@ -302,7 +302,9 @@ class Options:
     relevance: bool = False         # subject hint + resample off-subject beats
     exemplar: bool = False          # a hand-written scene for a similar request
     mark_beats: bool = False        # record each beat's end time (kit only)
-    signatures: bool = True         # the relevance hint says how to call blocks
+    # The relevance hint with each block's call: 45%/37% (short/held-out) vs
+    # 58%/39% for names only, on identical plans -- off.
+    signatures: bool = False
 
 
 @dataclass

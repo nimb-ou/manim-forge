@@ -44,7 +44,7 @@ def main() -> int:
         # The subject hint write_beat(relevance=True) adds at inference.
         user = dict(r["messages"][1])
         said = re.findall(r"^\s*(?:intent|narration):\s*(.*)$", user["content"], re.M)
-        h = hint(" ".join(said) + " " + r.get("request", ""), signatures=True)
+        h = hint(" ".join(said) + " " + r.get("request", ""))
         if h:
             user["content"] += "\n" + h
         msgs = [{"role": "system", "content": CODE_SYSTEM_KIT_TRAINED},
