@@ -369,3 +369,34 @@ cached per prompt (scorecard --plans) so configurations differ only in the
 coder; an ablation on 40 prompts (short + held-out) is running — signature
 hints, none, + exemplar, names only. Decisions wait for it; the app keeps
 relevance + signatures (no evidence it hurts) and no exemplar.
+
+## Log · 2026-09-28 19:20Z
+
+**1. Arrived.** Ablation on identical cached plans (kit v6), half done.
+Short prompts: signature hints 45% on-subject vs no hints 37% (visual-new
+51% vs 56%: the hint trades generic pictures for on-subject ones).
+Held-out, signature hints: 37%; held-out without hints, + exemplar and
+names-only still running (~4 h). Self-training at 1,433 rows.
+
+**2. Looked.** Bayes, same plan, both configurations (beat-end frames):
+with hints, beats 1-2 are a real Bayes square, P(sick|+) = 0.09; without,
+grids, overlapping labels and a formula. The metric and the sheets agree
+on this pair. Both degrade after beat 2: overlapping Text labels, empty
+axes, a formula alone. Coherence past the opening beats is the common
+failure, with or without hints.
+
+**3. Spiralling?** No — this round fixed the measurement (plans fixed,
+beat-end frames, held-out set) instead of moving a number. The honest
+figures are lower than yesterday's headline: ~40% of planned beats show
+an on-subject picture, and by eye fewer.
+
+**4. Critical path.** Finish the ablation → ship the best inference
+configuration. Then the two levers left on this week's hardware:
+  * the planner: intents like "Table of true positives" invite text
+    beats; planner v4 vs v3 needs its own evaluation (plans differ by
+    design, so several seeds each);
+  * the teacher returns ~Sep 30: kit data written with signature hints and
+    the new blocks, then SFT on Oct 3 when the GPU quota resets.
+
+**5. Plan change.** None until the ablation ends; no new kit patches for
+single guesses.
