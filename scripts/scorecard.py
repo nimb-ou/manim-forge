@@ -145,6 +145,12 @@ def main() -> int:
     rows = []
     for i, t in enumerate(tasks, 1):
         t0 = time.time()
+        # The planner samples (temperature 0.5): unseeded, two runs of the
+        # same prompt got different plans and per-prompt swings of 0/6 to
+        # 4/6 swamped the comparison. Seeded per prompt, every
+        # configuration with the same planner gets the same plan.
+        import mlx.core as mx
+        mx.random.seed(1000 + i)
         res = run(t.prompt, host, lambda e: None, opts)
         bodies = [b for b in res.bodies if b.strip()]
         # Visual and new: a picture repeated from an earlier beat does not
