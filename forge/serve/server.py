@@ -36,7 +36,9 @@ PLANNER = ROOT / "adapters" / "mlx-planner3"
 # The kit coder when it exists. Kit mode by prompt alone does not work -- the
 # raw-Manim coder copies the prompt's example verbatim -- so the kit is on by
 # default only with a coder trained on it.
-KIT_CODER = ROOT / "adapters" / "mlx-coder5-kit"
+# Kit v6 (teacher + self-training rows): 47% visual, new and on-subject on
+# the short prompts with relevance, vs 43% for v5 and 44% for GRPO v2.
+KIT_CODER = ROOT / "adapters" / "mlx-coder6-kit"
 CODER = KIT_CODER if (KIT_CODER / "adapters.safetensors").exists() \
     else ROOT / "adapters" / "mlx-coder2"
 KIT_DEFAULT = CODER == KIT_CODER
