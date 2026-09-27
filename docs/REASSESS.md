@@ -358,3 +358,14 @@ the example library cannot inflate the number.
 **5. Plan.** (a) held-out prompts + eye-score both configurations;
 (b) exemplar retrieval as an option, evaluated on held-out; (c) Oct 3:
 SFT with signature hints + exemplars in prompts, then GRPO.
+
+*17:20Z — the numbers were noisier than the differences.* Same
+configuration (kit v6 + signature hints), held-out prompts: 56% unseeded,
+37% with the planner seeded. The planner samples at temperature 0.5, so
+each run scores the coder on different plans; on 20 prompts that moves the
+score ~20 points. Today's comparisons (49 → 63% for signatures, exemplar
+34 vs 56%) were single unseeded runs and are not established. Now: plans
+cached per prompt (scorecard --plans) so configurations differ only in the
+coder; an ablation on 40 prompts (short + held-out) is running — signature
+hints, none, + exemplar, names only. Decisions wait for it; the app keeps
+relevance + signatures (no evidence it hurts) and no exemplar.
