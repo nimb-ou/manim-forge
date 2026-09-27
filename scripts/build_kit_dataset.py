@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -20,6 +21,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from forge.app.pipeline import CODE_SYSTEM_KIT_TRAINED  # noqa: E402
+from forge.kit.families import hint  # noqa: E402
 
 SRC = ROOT / "data" / "kit" / "kit_beats_clean.jsonl"
 OUT = ROOT / "kaggle" / "manim-forge-kit"
@@ -39,15 +41,25 @@ def main() -> int:
     train, valid = [], []
     dropped = 0
     for r in rows:
+        # The subject hint write_beat(relevance=True) adds at inference.
+        user = dict(r["messages"][1])
+        said = re.findall(r"^\s*(?:intent|narration):\s*(.*)$", user["content"], re.M)
+        h = hint(" ".join(said) + " " + r.get("request", ""))
+        if h:
+            user["content"] += "\n" + h
         msgs = [{"role": "system", "content": CODE_SYSTEM_KIT_TRAINED},
-                r["messages"][1], r["messages"][2]]
+                user, r["messages"][2]]
         if n_tokens(msgs) > 1000:
             dropped += 1
             continue
         meta = {k: str(v) for k, v in r["meta"].items()}
         scene = r["meta"]["scene"]
         held = int(hashlib.sha256(scene.encode()).hexdigest(), 16) % 20 == 0
-        (valid if held else train).append({"messages": msgs, "meta": meta})
+        # Hand-written rows are the only ones using the newest blocks, and
+        # there are few of them: each counts four times in training.
+        copies = 4 if r["meta"].get("source") == "kit-claude" and not held else 1
+        for _ in range(copies):
+            (valid if held else train).append({"messages": msgs, "meta": meta})
     OUT.mkdir(parents=True, exist_ok=True)
     for name, part in (("train", train), ("valid", valid)):
         (OUT / f"{name}.jsonl").write_text(

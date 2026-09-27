@@ -49,9 +49,11 @@ def body(row: dict) -> str:
 
 
 def main() -> int:
-    # Teacher rows and the kit coder's own (self_kit_beats.py) alike.
+    # Teacher rows, the kit coder's own (self_kit_beats.py) and the
+    # hand-written ones (claude_kit_scenes.py) alike.
     rows = []
-    for src in (SRC, ROOT / "data" / "kit" / "self_beats.jsonl"):
+    for src in (SRC, ROOT / "data" / "kit" / "self_beats.jsonl",
+                ROOT / "data" / "kit" / "claude_beats.jsonl"):
         if src.exists():
             rows += [json.loads(l) for l in src.read_text().splitlines()
                      if l.strip()]

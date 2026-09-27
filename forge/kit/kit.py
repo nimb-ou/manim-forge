@@ -165,8 +165,33 @@ class Stage:
         self._caption = new
         return new
 
+    def _make_room(self, where: str, run_time: float = 0.8):
+        """Move the picture out of a side region about to be written in.
+
+        Models draw axes or a plane in the centre and then write an
+        equation "right", on top of the graph (the derivative scene's limit
+        formula sat across the curve). The stage's pictures that overlap the
+        region are scaled into the opposite side first.
+        """
+        if where not in ("left", "right"):
+            return
+        from manim import Group
+        cx, _, w, _ = _REGIONS[where]
+        objs = [m for m in self._objects if m in self.scene.mobjects
+                and m is not self._title and m is not self._caption]
+        if not objs:
+            return
+        grp = Group(*objs)
+        lo, hi = grp.get_left()[0], grp.get_right()[0]
+        if hi <= cx - w / 2 + 0.2 or lo >= cx + w / 2 - 0.2:
+            return
+        ox, oy, ow, oh = _REGIONS["left" if where == "right" else "right"]
+        k = min(1.0, ow / max(grp.width, 1e-6), oh / max(grp.height, 1e-6))
+        self.scene.play(grp.animate.scale(k).move_to([ox, oy, 0]), run_time=run_time)
+
     def equation(self, *tex: str, where: str = "right", run_time: float = 1.2):
         """A derivation: each step transforms into the next, in a region."""
+        self._make_room(where)
         cx, cy, w, h = _REGIONS[where]
         cur = MathTex(tex[0], font_size=40).move_to([cx, cy + h / 4, 0])
         cur.scale_to_fit_width(min(cur.width, w))
@@ -492,6 +517,7 @@ def draw_axes(stage: Stage, x_range=(-1, 5), y_range=(-1, 5), where: str = "cent
     stage.place(ax, where)
     lab = ax.get_axis_labels(MathTex(labels[0]), MathTex(labels[1]))
     stage.scene.play(Create(ax), FadeIn(lab), run_time=1.5)
+    stage._objects.append(lab)      # moves with the axes when room is made
     return ax
 
 
@@ -507,6 +533,7 @@ def plot_graph(stage: Stage, ax, f, x_range=None, color=BLUE, label: str | None 
         t = MathTex(label, color=color, font_size=32).next_to(
             g.get_end(), UP + RIGHT, buff=0.1)
         stage.scene.play(FadeIn(t), run_time=0.5)
+        stage._objects.append(t)
     return g
 
 
