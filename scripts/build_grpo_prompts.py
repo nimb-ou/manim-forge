@@ -57,6 +57,8 @@ def main() -> int:
     ap.add_argument("--max-per-scene", type=int, default=8)
     ap.add_argument("--kit", action="store_true",
                     help="prompts from teacher kit beats instead of bench runs")
+    ap.add_argument("--start", default="",
+                    help="PEFT adapter dir GRPO starts from (default: kit v5)")
     a = ap.parse_args()
 
     from forge.harness import RenderHarness
@@ -114,9 +116,18 @@ def main() -> int:
             if "prefix" not in r:
                 continue
             from forge.app.pipeline import CODE_SYSTEM_KIT_TRAINED
+            from forge.kit.families import hint
+            # The subject hint, as write_beat(relevance=True) adds it at
+            # inference: intent, narration and request.
+            user = dict(r["messages"][1])
+            said = re.findall(r"^\s*(?:intent|narration):\s*(.*)$",
+                              user["content"], re.M)
+            h = hint(" ".join(said) + " " + r["request"])
+            if h:
+                user["content"] += "\n" + h
             rows.append({"prompt": [{"role": "system",
                                      "content": CODE_SYSTEM_KIT_TRAINED},
-                                    r["messages"][1]],
+                                    user],
                          "prefix": r["prefix"],
                          "intents": r["intents"], "request": r["request"],
                          "j": r["meta"]["index"], "id": r["meta"]["id"],
@@ -137,7 +148,8 @@ def main() -> int:
                  OUT / "forge" / "kit" / "families.py")
     (OUT / "twostage.py").unlink(missing_ok=True)
     # The adapter GRPO starts from: the kit coder in kit mode.
-    start = (ROOT / "adapters" / "kaggle-coder5-kit" / "adapter") if a.kit \
+    start = Path(a.start) if a.start else \
+        (ROOT / "adapters" / "kaggle-coder5-kit" / "adapter") if a.kit \
         else (ROOT / "adapters" / "kaggle-coder2" / "adapter")
     (OUT / "coder").mkdir(exist_ok=True)
     for f in ("adapter_config.json", "adapter_model.safetensors"):

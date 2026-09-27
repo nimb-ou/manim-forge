@@ -224,7 +224,7 @@ cfg = GRPOConfig(
     # 512 cap reserved memory for nothing and the run died of OOM at step 87.
     max_completion_length=256,
     temperature=0.8, learning_rate=5e-6, beta=0.04,
-    max_steps=3 if SMOKE else 400, logging_steps=1,
+    max_steps=3 if SMOKE else 260, logging_steps=1,
     save_steps=25, save_total_limit=2, fp16=True,
     gradient_checkpointing=True,
     gradient_checkpointing_kwargs={"use_reentrant": False},
