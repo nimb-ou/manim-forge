@@ -621,7 +621,12 @@ def _bounds(stage, ax, g, a, b, x_range):
         g = stage._last.get("graph") or (lambda x: x)
     if a is None or b is None:
         a, b = ax.x_range[0], ax.x_range[1]
-    return g, min(a, b), max(a, b)
+    # inside the axes: shading past the x-range drew a block off the chart
+    lo, hi = ax.x_range[0], ax.x_range[1]
+    a, b = (min(max(v, lo), hi) for v in (min(a, b), max(a, b)))
+    if b - a < 1e-6:
+        a, b = lo, hi
+    return g, a, b
 
 
 def shade_area(stage: Stage, ax, g=None, a=None, b=None, color=BLUE_D, x_range=None):
@@ -1039,7 +1044,7 @@ def animate_wave(stage: Stage, ax, amp: float = 1.0, k: float = 2.0, omega: floa
 
 
 def superpose_waves(stage: Stage, ax, parts, t_end: float = 4.0):
-    """Two or more waves moving together, and their sum drawn in white.
+    """Waves parts=[(amp, k, omega), ...] moving together, their sum in white.
 
     ``parts`` is a list of (amp, k, omega)."""
     _need(ax, "plot", "the axes from draw_axes(stage)", "superpose_waves(stage, axes, parts)")

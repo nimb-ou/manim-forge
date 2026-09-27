@@ -289,3 +289,33 @@ is queued.
 
 **5. Plan change.** Relevance on by default in the app (it costs up to
 3 extra samples per off-subject beat). Fuzz the kit whenever it changes.
+
+## Log · 2026-09-27 08:20Z
+
+**1. Arrived.** Six classic-picture blocks, 31 hand-written scenes, kit v7
+(hand-written rows ×4, name hints in prompts), GRPO v3 (relevance reward).
+Same kit, short prompts, relevance on: kit v6 49%, kit v7 41%; GRPO v3
+scoring. Kit v7 is worse: it reaches for the new blocks and guesses their
+arguments (swing_pendulum(stage, p, m, angle=30), superpose_waves(stage,
+ax, [g1, g2])); two rounds of kit tolerance did not close the gap.
+
+**2. Spiralling?** Partly. The last three rounds were kit tolerance for a
+model's guesses — useful, but it chases each new guess. The root cause is
+that the prompt names blocks without saying how to call them. Now the hint
+carries each block's signature and one-line purpose (from the functions
+themselves); that is one change, not another round of patches.
+
+**3. Looked:** kit v6's "integration" scored 6/6 relevant-visual; the
+sheet shows shading, then empty axes, a shaded block off the chart, one
+tiny rectangle. The metric (any non-scaffold picture, on subject by
+keywords) is lenient — real quality is well below 49%. Shading is now
+clamped to the axes. A vision judge is the missing measurement: Gemini is
+rate-limited; I can read the 20 sheets myself for the decisions that matter
+(which coder ships), and should.
+
+**4. Critical path.** Signature hints on kit v6 and GRPO v3 → pick the
+coder by metric *and* by reading all 20 sheets → app. Kit v7 is shelved.
+
+**5. Plan change.** Stop adding tolerance for single guesses; fix the
+prompt (signatures). Next GPU week: SFT with signature hints in every
+prompt, and GRPO from the best of those.

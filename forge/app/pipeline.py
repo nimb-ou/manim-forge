@@ -183,7 +183,7 @@ def write_beat(model, tok, request: str, beats: list[Beat], j: int,
     from forge.kit.families import hint, relevant
     user = beat_prompt(request, beats, j, bodies)
     text = f"{beats[j].intent} {beats[j].narration or ''} {request}"
-    if relevance and (h := hint(text)):
+    if relevance and (h := hint(text, signatures=True)):
         user += "\n" + h
     cand = ""
     parsed: str | None = None

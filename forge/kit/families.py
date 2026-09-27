@@ -90,7 +90,7 @@ def relevant(code: str, text: str) -> bool | None:
     return any(re.search(FAMILIES[f][1], text.lower()) for f in fams)
 
 
-def hint(text: str) -> str:
+def hint(text: str, signatures: bool = False) -> str:
     """A line naming the kit blocks whose subject's words appear in ``text``
     (the request and the beat), for the coder's prompt; "" if none match."""
     t = text.lower()
@@ -102,4 +102,34 @@ def hint(text: str) -> str:
     if not fams:
         return ""
     names = [b for f in fams for b in sorted(FAMILIES[f][0])]
-    return "Blocks that draw this subject: " + ", ".join(names[:24]) + "."
+    if not signatures:
+        return "Blocks that draw this subject: " + ", ".join(names[:24]) + "."
+    # With how to call each: kit v7 knew the new blocks' names from the
+    # hint and guessed their arguments -- swing_pendulum(stage, p, m,
+    # angle=30), superpose_waves(stage, ax, [g1, g2]) -- and crashed.
+    sig = _signatures()
+    lines = [sig.get(b, f"{b}(stage, ...)") for b in names[:14]]
+    return "Blocks that draw this subject:\n" + "\n".join(f"  {l}" for l in lines)
+
+
+_SIG: dict[str, str] = {}
+_QUIET = {"color", "run_time", "where", "colors", "seed", "labels"}
+
+
+def _signatures() -> dict[str, str]:
+    """block -> how to call it: required arguments and the defaults worth
+    knowing, then the first line of its docstring."""
+    if not _SIG:
+        import inspect
+        from forge.kit import kit
+        for name in sorted(kit.KIT_BLOCKS):
+            fn = getattr(kit, name)
+            parts = []
+            for q in inspect.signature(fn).parameters.values():
+                if q.default is inspect.Parameter.empty:
+                    parts.append(q.name.rstrip("_"))
+                elif q.name not in _QUIET and len(parts) < 6:
+                    parts.append(f"{q.name}={q.default!r}")
+            doc = (inspect.getdoc(fn) or "").split("\n")[0].rstrip(".")
+            _SIG[name] = f"{name}({', '.join(parts)})" + (f"  -- {doc}" if doc else "")
+    return _SIG
