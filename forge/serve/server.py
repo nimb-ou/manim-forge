@@ -94,8 +94,11 @@ class Worker(threading.Thread):
                     job.emit({"stage": "loading", "note": "loading the model "
                               "(once per server start, ~20 s)"})
                     self.host = SwapHost(str(PLANNER), str(CODER))
+                # Relevance (subject hint + resampling off-subject beats)
+                # with the kit: 34% -> 43% on-subject pictures, short evals.
                 opts = Options(max_beats=job.spec.beats,
-                               quality=job.spec.quality, kit=job.spec.kit)
+                               quality=job.spec.quality, kit=job.spec.kit,
+                               relevance=job.spec.kit)
                 res = run(job.spec.prompt, self.host, job.emit, opts)
                 self._log(job, res)
             except Exception as exc:                          # noqa: BLE001

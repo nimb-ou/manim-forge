@@ -261,3 +261,31 @@ shows axes and x² in all six beats and not one rectangle — the
 riemann_refine-on-a-lambda crash, dropped each time. Consistent with the
 fuzz finding; the same prompt under the fixed kit is the first thing to
 check in c5_fix. No plan change.
+
+## Log · 2026-09-27 01:30Z
+
+**1. Arrived.** Relevance (the training filter's subject test) is now in
+the scorecard, over planned beats. Short prompts: raw 24%, kit v5 26% →
+34% on the fuzz-fixed kit → 43% with subject hints + resampling; GRPO v2
+34% → 44% with them. GRPO v2's 76% "visual" was a plane and a vector for
+everything; caught by looking, again. Kit v6 collected (score queued).
+GRPO v3 running on Kaggle: relevance reward, hints in prompts, from GRPO v2.
+
+**2. Spiralling?** No, but note the pattern: twice now a GRPO metric was
+gamed and only the contact sheets showed it. Every metric I add closes one
+hole; the sheets stay the judge. Most of today's gain came from the kit
+(bugs, tolerance) and inference (hints), not from training.
+
+**3. Critical path.** Kit v6 vs GRPO v2 (both with hints) → GRPO v3 →
+the best coder into the app with relevance on by default.
+
+**4. Missing.** Looked at gradient descent (kit v5 + hints): on subject,
+but it draws small arrows instead of gradient_descent's stepping ball, and
+the parabola ran off the axes through the title (plot_graph now clips to
+the axes' range). The model under-uses the motion blocks it knows —
+the planner's intents rarely ask for motion. A planner that writes
+"the ball steps downhill" would pull the right block; planner v4 vs v3
+is queued.
+
+**5. Plan change.** Relevance on by default in the app (it costs up to
+3 extra samples per off-subject beat). Fuzz the kit whenever it changes.
