@@ -1,0 +1,4177 @@
+[
+ {
+  "request": "what does it actually mean for a matrix to transform space?",
+  "beats": [
+   {
+    "seconds": 10,
+    "intent": "A grid with i-hat, j-hat and a yellow vector (1, 2)",
+    "narration": "Start with the grid, the two basis arrows, and a yellow vector one across and two up."
+   },
+   {
+    "seconds": 12,
+    "intent": "The matrix [[2, 1], [0, 1]] applied to the whole grid, the arrows riding along",
+    "narration": "Apply the matrix with columns two, zero and one, one. Every grid line stays straight and evenly spaced, and the origin stays put."
+   },
+   {
+    "seconds": 10,
+    "intent": "i-hat landing at (2, 0) and j-hat landing at (1, 1), both pulsed",
+    "narration": "Look where the basis arrows landed: i-hat at two, zero and j-hat at one, one. Those are exactly the matrix's columns."
+   },
+   {
+    "seconds": 12,
+    "intent": "The yellow vector landing at (4, 2), one new i-hat plus two new j-hats",
+    "narration": "The yellow vector was one i-hat plus two j-hats, so it lands at two, zero plus two times one, one: four, two."
+   },
+   {
+    "seconds": 10,
+    "intent": "A fresh grid turned a quarter turn by the matrix [[0, -1], [1, 0]]",
+    "narration": "A different matrix gives a different motion: columns zero, one and minus one, zero turn the whole plane a quarter turn."
+   },
+   {
+    "seconds": 10,
+    "intent": "The two transformed grids side by side, the landed basis arrows lit on each",
+    "narration": "Either way the recipe is the same: the columns say where the basis goes, and everything else follows."
+   }
+  ]
+ },
+ {
+  "request": "show me a shear transformation",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "A grid with the unit square resting on i-hat and j-hat",
+    "narration": "Here is the unit square, sitting on the two basis arrows."
+   },
+   {
+    "seconds": 12,
+    "intent": "The shear [[1, 1], [0, 1]] sliding the grid sideways, the square leaning into a parallelogram",
+    "narration": "Apply the shear: i-hat stays put while j-hat tips over to one, one. Each row of the grid slides sideways by its height."
+   },
+   {
+    "seconds": 10,
+    "intent": "The parallelogram with its base 1 and height 1 marked",
+    "narration": "The square became a parallelogram, but its base is still one and its height is still one."
+   },
+   {
+    "seconds": 10,
+    "intent": "The shear replayed with the determinant readout holding at 1",
+    "narration": "So the area does not change: the determinant of a shear is one."
+   },
+   {
+    "seconds": 10,
+    "intent": "A vector (2, 0) on the x-axis that the shear leaves exactly in place",
+    "narration": "Vectors along the x-axis do not move at all under this shear."
+   },
+   {
+    "seconds": 10,
+    "intent": "The x-axis line glowing while every other direction tilts",
+    "narration": "That line is the shear's only eigen-direction, with eigenvalue one."
+   }
+  ]
+ },
+ {
+  "request": "how do I rotate a vector by 30 degrees using a matrix",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "i-hat, j-hat and a vector (2, 1) on the grid",
+    "narration": "Here are the basis arrows and a vector two across and one up."
+   },
+   {
+    "seconds": 12,
+    "intent": "i-hat swinging 30 degrees round the unit circle to (cos 30°, sin 30°)",
+    "narration": "Rotate i-hat by thirty degrees: it lands at cos thirty, sin thirty, about 0.87, 0.5."
+   },
+   {
+    "seconds": 10,
+    "intent": "j-hat swinging to (-sin 30°, cos 30°), still at right angles to the new i-hat",
+    "narration": "j-hat turns the same amount and lands at minus 0.5, 0.87."
+   },
+   {
+    "seconds": 12,
+    "intent": "The rotation matrix applied to the whole grid, the vector (2, 1) riding along",
+    "narration": "Use those landing spots as the columns and apply the matrix: the whole grid turns thirty degrees, and the vector with it."
+   },
+   {
+    "seconds": 10,
+    "intent": "The unit square turned but the same size, area readout 1",
+    "narration": "Rotations keep lengths and angles, so the square only turns, and its area stays one."
+   },
+   {
+    "seconds": 10,
+    "intent": "The rotation applied twice more, the vector now 90 degrees from where it began",
+    "narration": "Apply it three times in all and the vector has turned ninety degrees."
+   }
+  ]
+ },
+ {
+  "request": "what's an eigenvector, visually?",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "A grid with a fan of vectors pointing out from the origin",
+    "narration": "Scatter some arrows around the origin and watch what one matrix does to each."
+   },
+   {
+    "seconds": 12,
+    "intent": "The matrix [[3, 1], [0, 2]] applied, most arrows knocked off their lines",
+    "narration": "Apply the matrix with columns three, zero and one, two. Most arrows get turned off the line they started on."
+   },
+   {
+    "seconds": 10,
+    "intent": "An arrow along the x-axis staying on its line, stretched to three times its length",
+    "narration": "But an arrow along the x-axis stays on its line; it is only stretched, by three."
+   },
+   {
+    "seconds": 10,
+    "intent": "The arrow (1, -1) staying on its own line, stretched to (2, -2)",
+    "narration": "The arrow one, minus one also stays on its line: it lands on two, minus two, stretched by two."
+   },
+   {
+    "seconds": 12,
+    "intent": "Both eigen-lines drawn while the grid transforms, arrows on them only stretching",
+    "narration": "These special directions are the eigenvectors, and the stretch factors three and two are their eigenvalues."
+   },
+   {
+    "seconds": 10,
+    "intent": "The transformation replayed with only the two eigen-lines lit",
+    "narration": "Know the eigenvectors and how much each stretches, and you know the whole transformation."
+   }
+  ]
+ },
+ {
+  "request": "why is the determinant the area scale factor",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "The unit square on a grid, area 1",
+    "narration": "Start with the unit square, area one."
+   },
+   {
+    "seconds": 12,
+    "intent": "The matrix [[3, 0], [0, 2]] stretching the square into a 3-by-2 rectangle, area readout 6",
+    "narration": "Stretch x by three and y by two: the unit square becomes a three by two rectangle of area six."
+   },
+   {
+    "seconds": 10,
+    "intent": "Every little grid cell across the plane becoming a 3-by-2 rectangle too",
+    "narration": "Every cell of the grid grows the same way, so every shape's area is multiplied by six."
+   },
+   {
+    "seconds": 12,
+    "intent": "The matrix [[2, 1], [1, 2]] turning the unit square into a parallelogram, area readout 3",
+    "narration": "Now a slanted matrix: the square becomes a parallelogram of area two times two minus one times one, which is three."
+   },
+   {
+    "seconds": 10,
+    "intent": "The parallelogram sitting over three unit squares' worth of the grid",
+    "narration": "The determinant, ad minus bc, counts exactly that: how many times bigger each area gets."
+   },
+   {
+    "seconds": 10,
+    "intent": "The rectangle of area 6 and the parallelogram of area 3 side by side",
+    "narration": "Stretched straight or slanted, the determinant is the factor by which the transformation scales area."
+   }
+  ]
+ },
+ {
+  "request": "what does a negative determinant mean geometrically?",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "A green i-hat and a red j-hat on the grid, red counter-clockwise from green",
+    "narration": "Colour i-hat green and j-hat red. Red sits a quarter turn counter-clockwise from green."
+   },
+   {
+    "seconds": 12,
+    "intent": "The matrix [[0, 1], [1, 0]] flipping the grid across the line y = x",
+    "narration": "Apply the matrix that swaps the two coordinates: the plane flips over the diagonal line y equals x."
+   },
+   {
+    "seconds": 10,
+    "intent": "The red arrow now clockwise from the green one",
+    "narration": "Now red sits clockwise of green. The plane has been turned over like a page."
+   },
+   {
+    "seconds": 10,
+    "intent": "The flipped unit square with determinant readout -1",
+    "narration": "The square's area is unchanged, but the determinant is minus one: the minus sign records the flip."
+   },
+   {
+    "seconds": 12,
+    "intent": "The matrix [[1, 2], [3, 1]] stretching and flipping the square, readout -5",
+    "narration": "This matrix has determinant one minus six, minus five: it scales areas by five and flips the plane."
+   },
+   {
+    "seconds": 10,
+    "intent": "The flipped parallelogram with the green and red arrows on its sides",
+    "narration": "The size of the determinant is the area factor; its sign says whether the plane was turned over."
+   }
+  ]
+ },
+ {
+  "request": "span of two vectors",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "Two vectors v = (1, 1) and w = (2, -1) on the grid",
+    "narration": "Take v, one across and one up, and w, two across and one down."
+   },
+   {
+    "seconds": 12,
+    "intent": "v scaled by -2, -1, 0.5 and 2, its tips sweeping out a line through the origin",
+    "narration": "Scaling v alone reaches only the points of one line through the origin."
+   },
+   {
+    "seconds": 12,
+    "intent": "Tips of a·v + b·w for many a and b dotting the whole plane",
+    "narration": "Scale both and add them, and the tips reach every point of the plane."
+   },
+   {
+    "seconds": 10,
+    "intent": "The point (4, 1) reached as two copies of v plus one copy of w",
+    "narration": "For example, two v plus w is four, one."
+   },
+   {
+    "seconds": 10,
+    "intent": "w swapped for (-2, -2), every combination landing on v's line",
+    "narration": "Now choose a second vector along the same line as v. Every combination stays on that one line."
+   },
+   {
+    "seconds": 10,
+    "intent": "The full plane and the single line side by side",
+    "narration": "Two vectors in different directions span the plane; two along one line span only that line."
+   }
+  ]
+ },
+ {
+  "request": "what happens when you multiply a vector by a number",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "A vector v = (2, 1) on the grid",
+    "narration": "Here is a vector v, two across and one up."
+   },
+   {
+    "seconds": 10,
+    "intent": "v stretched to 2v = (4, 2), same direction, twice as long",
+    "narration": "Multiply by two and the arrow keeps its direction but doubles in length."
+   },
+   {
+    "seconds": 10,
+    "intent": "v shrunk to 0.5v = (1, 0.5)",
+    "narration": "Multiply by one half and it shrinks to half its length."
+   },
+   {
+    "seconds": 10,
+    "intent": "v flipped to -v = (-2, -1), pointing backwards",
+    "narration": "Multiply by minus one and it flips to point the opposite way."
+   },
+   {
+    "seconds": 10,
+    "intent": "The line through the origin traced by every multiple of v",
+    "narration": "Every scaled copy of v lies on the same line through the origin."
+   },
+   {
+    "seconds": 8,
+    "intent": "2v, 0.5v and -v lined up together on that line",
+    "narration": "Scaling changes the length, and a negative number reverses the arrow, but it never leaves the line."
+   }
+  ]
+ },
+ {
+  "request": "change of basis, what is actually going on",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "The standard grid with the vector (3, 3)",
+    "narration": "In our usual grid this arrow is three across and three up."
+   },
+   {
+    "seconds": 12,
+    "intent": "A second grid built from b1 = (2, 1) and b2 = (-1, 1) laid over the plane",
+    "narration": "Someone else measures with basis vectors b1 equals two, one and b2 equals minus one, one. Their grid lines are slanted."
+   },
+   {
+    "seconds": 10,
+    "intent": "The arrow (3, 3) reached as 2 steps along b1 and 1 step along b2",
+    "narration": "In their grid the same arrow is two steps of b1 plus one of b2, so they call it two, one."
+   },
+   {
+    "seconds": 10,
+    "intent": "The matrix with columns b1, b2 sending (2, 1) onto (3, 3)",
+    "narration": "The matrix whose columns are b1 and b2 translates: it sends their two, one to our three, three."
+   },
+   {
+    "seconds": 10,
+    "intent": "Its inverse carrying (3, 3) back to (2, 1)",
+    "narration": "Its inverse goes the other way, from our coordinates to theirs."
+   },
+   {
+    "seconds": 10,
+    "intent": "Both grids overlaid, one arrow tagged (3, 3) and (2, 1)",
+    "narration": "One arrow, two descriptions: coordinates depend on the basis, the vector itself does not."
+   }
+  ]
+ },
+ {
+  "request": "how does an inverse matrix undo a transformation",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "A grid with the unit square and a vector (1, 1)",
+    "narration": "Mark the unit square and a vector one, one."
+   },
+   {
+    "seconds": 12,
+    "intent": "A = [[2, 1], [0, 1]] stretching and shearing the grid, the vector landing at (3, 1)",
+    "narration": "Apply A: i-hat goes to two, zero and j-hat to one, one, so the vector lands at three, one."
+   },
+   {
+    "seconds": 12,
+    "intent": "The inverse [[0.5, -0.5], [0, 1]] applied next, the grid sliding back",
+    "narration": "Now apply the inverse, with columns one half, zero and minus one half, one."
+   },
+   {
+    "seconds": 10,
+    "intent": "Everything back in place: the vector at (1, 1), the square restored",
+    "narration": "Everything returns: the vector is back at one, one, and the square is a square again."
+   },
+   {
+    "seconds": 10,
+    "intent": "The square's area doubling under A, then halving under the inverse",
+    "narration": "A doubles every area, so its inverse must halve it: determinants two and one half multiply to one."
+   },
+   {
+    "seconds": 8,
+    "intent": "A and its inverse played back to back, the grid ending unmoved",
+    "narration": "Doing A and then its inverse is the same as doing nothing at all."
+   }
+  ]
+ },
+ {
+  "request": "matrix that mirrors the plane across the y-axis",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "A vector (3, 1) and the unit square on the grid",
+    "narration": "Here is a vector three, one and the unit square."
+   },
+   {
+    "seconds": 12,
+    "intent": "The matrix [[-1, 0], [0, 1]] flipping the grid across the y-axis",
+    "narration": "Send x to minus x and keep y: the grid mirrors across the y-axis."
+   },
+   {
+    "seconds": 10,
+    "intent": "The vector landing at (-3, 1), its mirror image",
+    "narration": "The vector lands at minus three, one, its reflection."
+   },
+   {
+    "seconds": 10,
+    "intent": "A vector (0, 2) on the y-axis staying exactly where it is",
+    "narration": "Anything lying on the mirror line does not move."
+   },
+   {
+    "seconds": 10,
+    "intent": "The flip applied a second time, the grid back where it started",
+    "narration": "Flip twice and you are back: this matrix is its own inverse."
+   },
+   {
+    "seconds": 10,
+    "intent": "The mirrored unit square with determinant readout -1",
+    "narration": "Area is kept but orientation reverses, so the determinant is minus one."
+   }
+  ]
+ },
+ {
+  "request": "can you show vector projection with a picture",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "Vectors v = (2, 3) and w = (3, 1) on the grid",
+    "narration": "Take v equals two, three and w equals three, one."
+   },
+   {
+    "seconds": 10,
+    "intent": "The line through w stretched across the plane",
+    "narration": "Extend w into a full line through the origin."
+   },
+   {
+    "seconds": 12,
+    "intent": "A dashed drop from v's tip meeting w's line at a right angle",
+    "narration": "Drop a perpendicular from the tip of v onto that line."
+   },
+   {
+    "seconds": 10,
+    "intent": "v's shadow on w's line lit, ending at (2.7, 0.9)",
+    "narration": "The shadow is the projection: v dot w is nine and w dot w is ten, so it is nine tenths of w."
+   },
+   {
+    "seconds": 10,
+    "intent": "v turned to (-1, 3), perpendicular to w, its shadow shrinking to a point",
+    "narration": "Turn v until it is perpendicular to w and its shadow vanishes: the dot product is zero."
+   },
+   {
+    "seconds": 10,
+    "intent": "v swung further to (-3, 1), its shadow pointing opposite to w",
+    "narration": "Swing further and the shadow points backwards: the dot product is negative."
+   }
+  ]
+ },
+ {
+  "request": "what does a diagonal matrix do to the plane",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "A grid with the unit square and a vector (1, 1)",
+    "narration": "Here is the unit square and the diagonal vector one, one."
+   },
+   {
+    "seconds": 12,
+    "intent": "The matrix [[2, 0], [0, 0.5]] stretching x by 2 and squeezing y by half",
+    "narration": "The diagonal matrix two, one half doubles every x and halves every y."
+   },
+   {
+    "seconds": 10,
+    "intent": "The unit square becoming a 2-by-0.5 rectangle, area readout 1",
+    "narration": "The square becomes a long thin rectangle, still of area one."
+   },
+   {
+    "seconds": 10,
+    "intent": "Arrows on the x-axis and y-axis staying on their axes",
+    "narration": "Arrows along the axes stay on their axes: they are the eigenvectors."
+   },
+   {
+    "seconds": 10,
+    "intent": "The vector (1, 1) tipping toward the x-axis, landing at (2, 0.5)",
+    "narration": "Every other arrow tips toward the stretched direction, like one, one landing on two, one half."
+   },
+   {
+    "seconds": 8,
+    "intent": "The two axes lit as eigen-lines with stretch factors 2 and 0.5",
+    "narration": "For a diagonal matrix, the axes are the eigenvectors and the diagonal entries are the eigenvalues."
+   }
+  ]
+ },
+ {
+  "request": "how do you turn a vector into a unit vector",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "The vector v = (3, 4) with the unit circle drawn at the origin",
+    "narration": "Here is v equals three, four, and the circle of radius one."
+   },
+   {
+    "seconds": 10,
+    "intent": "The right triangle under v with legs 3 and 4 and hypotenuse 5",
+    "narration": "Its legs are three and four, so its length is five."
+   },
+   {
+    "seconds": 12,
+    "intent": "v scaled by 1/5, shrinking to (0.6, 0.8) and touching the unit circle",
+    "narration": "Divide by the length: v shrinks to 0.6, 0.8, which sits exactly on the unit circle."
+   },
+   {
+    "seconds": 10,
+    "intent": "Vectors (-2, 0) and (1, 1) each scaled onto the unit circle",
+    "narration": "Any nonzero vector divided by its length lands on the unit circle, keeping its direction."
+   },
+   {
+    "seconds": 8,
+    "intent": "All the unit vectors fanned around the circle",
+    "narration": "A unit vector keeps only the direction; its length is always one."
+   }
+  ]
+ },
+ {
+  "request": "what is a vector field",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "The field (-y, x) drawn as arrows all over the plane",
+    "narration": "A vector field puts an arrow at every point. Here the arrow at x, y is minus y, x."
+   },
+   {
+    "seconds": 10,
+    "intent": "Arrows growing longer farther from the origin",
+    "narration": "The farther from the origin, the longer the arrow."
+   },
+   {
+    "seconds": 12,
+    "intent": "Particles dropped into the field, circling the origin",
+    "narration": "Drop particles in and let them follow the arrows: they circle around the origin."
+   },
+   {
+    "seconds": 10,
+    "intent": "The field (x, y) drawn instead, every arrow pointing outward",
+    "narration": "Change the field to x, y and every arrow points away from the centre."
+   },
+   {
+    "seconds": 12,
+    "intent": "Particles in the new field streaming away from the origin",
+    "narration": "Now particles stream outward: the origin is a source."
+   },
+   {
+    "seconds": 10,
+    "intent": "The swirling field and the outward field side by side",
+    "narration": "One field circulates and the other spreads out: the pictures behind curl and divergence."
+   }
+  ]
+ },
+ {
+  "request": "why does multiplying by i rotate 90 degrees",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "The complex plane with z = 2 + i marked",
+    "narration": "Mark the complex number two plus i."
+   },
+   {
+    "seconds": 10,
+    "intent": "z multiplied by i, turning a quarter turn to -1 + 2i",
+    "narration": "i times two plus i is two i plus i squared, which is minus one plus two i: a quarter turn."
+   },
+   {
+    "seconds": 10,
+    "intent": "Multiplied by i again, landing at -2 - i, opposite z",
+    "narration": "Once more and it lands at minus two minus i, pointing exactly opposite."
+   },
+   {
+    "seconds": 10,
+    "intent": "Third and fourth multiplications bringing z round to 1 - 2i and back to 2 + i",
+    "narration": "Two more quarter turns bring it all the way home."
+   },
+   {
+    "seconds": 10,
+    "intent": "The four points 2+i, -1+2i, -2-i, 1-2i as the corners of a square",
+    "narration": "The four stops form a square around the origin."
+   },
+   {
+    "seconds": 8,
+    "intent": "The number 1 turned onto i, then onto -1",
+    "narration": "Two quarter turns take one to minus one, which is exactly why i squared is minus one."
+   }
+  ]
+ },
+ {
+  "request": "why do complex numbers add their angles when you multiply them",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "The complex plane with 1 on the real axis and z = 1 + i",
+    "narration": "Mark one on the real axis and z equals one plus i."
+   },
+   {
+    "seconds": 10,
+    "intent": "z's length √2 and its 45° angle marked",
+    "narration": "z has length root two and sits at forty-five degrees."
+   },
+   {
+    "seconds": 12,
+    "intent": "The whole plane multiplied by 1 + i: 1 lands on 1 + i, everything turned 45° and stretched by √2",
+    "narration": "Multiplying by one plus i turns the whole plane by forty-five degrees and stretches it by root two."
+   },
+   {
+    "seconds": 10,
+    "intent": "z carried to (1 + i)^2 = 2i on the imaginary axis",
+    "narration": "So z times itself lands at two i: angle ninety degrees, length two."
+   },
+   {
+    "seconds": 10,
+    "intent": "A third multiplication landing at -2 + 2i, at 135°",
+    "narration": "Once more: angle one hundred thirty-five degrees, length two root two, at minus two plus two i."
+   },
+   {
+    "seconds": 8,
+    "intent": "The points 1, 1+i, 2i, -2+2i spiralling outward",
+    "narration": "Each multiplication adds forty-five degrees and multiplies the length by root two: angles add, lengths multiply."
+   }
+  ]
+ },
+ {
+  "request": "e^(i pi) = -1 but make it visual",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "The complex plane with the unit circle",
+    "narration": "Draw the complex plane and the circle of radius one."
+   },
+   {
+    "seconds": 12,
+    "intent": "A dot e^{it} walking around the unit circle as t grows",
+    "narration": "As t grows, e to the i t walks around the unit circle at speed one."
+   },
+   {
+    "seconds": 10,
+    "intent": "The dot at t = π/2, sitting at i",
+    "narration": "After a quarter of the way round, t equals pi over two, it sits at i."
+   },
+   {
+    "seconds": 10,
+    "intent": "The dot at t = π, half way round, arriving at -1",
+    "narration": "After travelling pi, half the circumference, it arrives at minus one."
+   },
+   {
+    "seconds": 10,
+    "intent": "The dot's shadow on the real axis tracing cos t and on the imaginary axis sin t",
+    "narration": "Its across position is cos t and its up position is sin t."
+   },
+   {
+    "seconds": 10,
+    "intent": "The full lap at t = 2π, back at 1",
+    "narration": "After two pi it is home at one: e to the two pi i is one."
+   }
+  ]
+ },
+ {
+  "request": "what does the complex conjugate look like",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "z = 3 + 2i on the complex plane",
+    "narration": "Mark z equals three plus two i."
+   },
+   {
+    "seconds": 10,
+    "intent": "Its conjugate 3 - 2i drawn as the mirror image across the real axis",
+    "narration": "The conjugate flips the sign of the imaginary part: it is z mirrored in the real axis."
+   },
+   {
+    "seconds": 10,
+    "intent": "z and its conjugate combined, landing at 6 on the real axis",
+    "narration": "Add them and the imaginary parts cancel: six, twice the real part."
+   },
+   {
+    "seconds": 12,
+    "intent": "z multiplied by its conjugate, the angles cancelling, landing at 13 on the real axis",
+    "narration": "Multiplying turns by z's angle and back by the same angle, and scales by the length twice: nine plus four, thirteen."
+   },
+   {
+    "seconds": 10,
+    "intent": "A circle of radius √13 through z and its conjugate",
+    "narration": "So z times its conjugate is always the length squared."
+   }
+  ]
+ },
+ {
+  "request": "why is the derivative of sin x equal to cos x",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "The graph of sin x on axes",
+    "narration": "Here is the sine wave."
+   },
+   {
+    "seconds": 12,
+    "intent": "A tangent line sliding along sin x, its slope read out",
+    "narration": "Slide a tangent line along it and read off its slope."
+   },
+   {
+    "seconds": 10,
+    "intent": "At x = 0 the slope reading 1; at x = π/2 the tangent flat",
+    "narration": "At zero the slope is one; at the peak, pi over two, the tangent is flat."
+   },
+   {
+    "seconds": 10,
+    "intent": "At x = π the slope reading -1",
+    "narration": "At pi the curve falls most steeply, slope minus one."
+   },
+   {
+    "seconds": 12,
+    "intent": "The slopes plotted as a second curve, which is cos x",
+    "narration": "Plot every slope as a height and a new wave appears: cos x."
+   },
+   {
+    "seconds": 10,
+    "intent": "sin x and cos x together, the tangent sliding once more",
+    "narration": "Where sine is steepest, cosine is largest; where sine peaks, cosine crosses zero."
+   }
+  ]
+ },
+ {
+  "request": "definition of the derivative using limits",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "The parabola y = x^2 with a point P at x = 1",
+    "narration": "Take the parabola y equals x squared and the point P at x equals one."
+   },
+   {
+    "seconds": 10,
+    "intent": "A second point Q at x = 2 and the secant through P and Q, slope 3",
+    "narration": "Join P to a second point Q at x equals two. The secant's slope is four minus one over one: three."
+   },
+   {
+    "seconds": 12,
+    "intent": "Q sliding toward P, the secant turning",
+    "narration": "Move Q to x equals one plus h. The slope is one plus h squared minus one, over h, which is two plus h."
+   },
+   {
+    "seconds": 10,
+    "intent": "Q at x = 1.1 with the secant slope reading 2.1",
+    "narration": "At h equals one tenth the slope is 2.1."
+   },
+   {
+    "seconds": 10,
+    "intent": "The secant settling onto the tangent at P, slope 2",
+    "narration": "As h shrinks to zero, the secants settle onto the tangent line of slope two."
+   },
+   {
+    "seconds": 8,
+    "intent": "The tangent line at P alone on the parabola",
+    "narration": "That limiting slope is the derivative of x squared at one."
+   }
+  ]
+ },
+ {
+  "request": "area under a curve using rectangles",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "The curve y = x^2 on axes from 0 to 2",
+    "narration": "Here is y equals x squared between zero and two."
+   },
+   {
+    "seconds": 10,
+    "intent": "The region under it from 0 to 2 shaded",
+    "narration": "We want the area of this shaded region."
+   },
+   {
+    "seconds": 10,
+    "intent": "Four rectangles under the curve, their total a rough estimate",
+    "narration": "Four rectangles give a rough estimate, with gaps along the curve."
+   },
+   {
+    "seconds": 12,
+    "intent": "The rectangles refining to 8, 16 and 32, the gaps shrinking",
+    "narration": "Use more and thinner rectangles and the gaps shrink."
+   },
+   {
+    "seconds": 10,
+    "intent": "The rectangles' total reading closer and closer to 8/3",
+    "narration": "Their total closes in on eight thirds, about 2.67."
+   },
+   {
+    "seconds": 8,
+    "intent": "The shaded region alone, labelled 8/3",
+    "narration": "That limit is the integral of x squared from zero to two."
+   }
+  ]
+ },
+ {
+  "request": "fundamental theorem of calculus intuition",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "The line y = t on axes with the area from 0 to x = 1 shaded",
+    "narration": "Shade the area under y equals t from zero up to x."
+   },
+   {
+    "seconds": 12,
+    "intent": "The right edge x sliding from 1 to 3, the shaded area growing",
+    "narration": "Slide x to the right and the shaded area grows."
+   },
+   {
+    "seconds": 10,
+    "intent": "A thin strip of width dx at the right edge, height x",
+    "narration": "Moving x by a little dx adds a thin strip whose height is the function's value there."
+   },
+   {
+    "seconds": 10,
+    "intent": "The area so far plotted as the curve A(x) = x^2/2",
+    "narration": "Plot the area so far against x: it follows x squared over two."
+   },
+   {
+    "seconds": 12,
+    "intent": "A tangent sliding along A(x), its slope matching the height of y = t at each x",
+    "narration": "The slope of the area curve at each x equals the height of the original line at x."
+   },
+   {
+    "seconds": 10,
+    "intent": "The two graphs stacked, the area curve above and the original line below",
+    "narration": "The rate at which area accumulates is the function itself: integration and differentiation undo each other."
+   }
+  ]
+ },
+ {
+  "request": "what does the limit of 1 + 1/x as x goes to infinity actually mean",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "The curve y = 1 + 1/x on axes for x from 1 to 20",
+    "narration": "Here is y equals one plus one over x."
+   },
+   {
+    "seconds": 10,
+    "intent": "A dashed horizontal line at y = 1",
+    "narration": "As x grows the curve creeps down toward the line y equals one."
+   },
+   {
+    "seconds": 12,
+    "intent": "A band of half-width 0.5 around y = 1, the curve inside it for good past x = 2",
+    "narration": "Draw a band half a unit either side of one. Past x equals two, the curve stays inside it."
+   },
+   {
+    "seconds": 12,
+    "intent": "The band narrowing to 0.1, the curve inside it past x = 10",
+    "narration": "Narrow the band to one tenth: past x equals ten the curve stays inside."
+   },
+   {
+    "seconds": 10,
+    "intent": "The band narrowing again, a later cutoff found each time",
+    "narration": "However narrow the band, there is a point beyond which the curve never leaves it."
+   },
+   {
+    "seconds": 8,
+    "intent": "The curve hugging y = 1 inside a hair-thin band",
+    "narration": "That is exactly what it means for the limit to equal one."
+   }
+  ]
+ },
+ {
+  "request": "taylor series for sin x animation",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "sin x on axes from -2π to 2π",
+    "narration": "Here is the sine wave."
+   },
+   {
+    "seconds": 10,
+    "intent": "The line y = x hugging sin x near 0",
+    "narration": "The first approximation is the tangent line y equals x, good only near zero."
+   },
+   {
+    "seconds": 10,
+    "intent": "The cubic x - x^3/6 bending with sin x a little farther out",
+    "narration": "Subtract x cubed over six and the curve bends with the sine a little farther out."
+   },
+   {
+    "seconds": 12,
+    "intent": "Adding x^5/120 and x^7/5040, each polynomial matching over a wider stretch",
+    "narration": "Add x to the fifth over one hundred twenty, then the seventh-power term: each hugs the wave over a wider range."
+   },
+   {
+    "seconds": 10,
+    "intent": "The degree 9 polynomial lying on sin x out past ±π",
+    "narration": "By degree nine the polynomial is almost on top of the sine out past plus and minus pi."
+   },
+   {
+    "seconds": 8,
+    "intent": "The earlier approximations fading, the last one on sin x",
+    "narration": "More terms of the series pin the polynomial to the wave over a longer and longer stretch."
+   }
+  ]
+ },
+ {
+  "request": "how does the taylor polynomial for cos x build up",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "cos x on axes from -6 to 6",
+    "narration": "Here is the cosine curve."
+   },
+   {
+    "seconds": 10,
+    "intent": "The flat line y = 1 touching cos x at 0",
+    "narration": "Start with its value at zero: the flat line y equals one."
+   },
+   {
+    "seconds": 10,
+    "intent": "The parabola 1 - x^2/2 bending down with it",
+    "narration": "Subtract x squared over two and the parabola bends down with the cosine."
+   },
+   {
+    "seconds": 10,
+    "intent": "Adding x^4/24, the curve hugging cos x out to about ±2",
+    "narration": "Add x to the fourth over twenty-four and the match extends to about plus or minus two."
+   },
+   {
+    "seconds": 12,
+    "intent": "Higher even powers closing in farther along the wave",
+    "narration": "Each new even-power term extends the match farther along the wave."
+   },
+   {
+    "seconds": 8,
+    "intent": "The polynomials shown symmetric about the y-axis like cos x",
+    "narration": "Cosine is symmetric about the y-axis, so only even powers ever appear."
+   }
+  ]
+ },
+ {
+  "request": "why is the derivative zero at a maximum or minimum",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "The cubic y = x^3 - 3x on axes",
+    "narration": "Here is y equals x cubed minus three x, with one hill and one valley."
+   },
+   {
+    "seconds": 12,
+    "intent": "A tangent sliding from x = -2 to x = 2, its slope readout changing sign",
+    "narration": "Slide a tangent along it and watch the slope go from positive, to negative, to positive again."
+   },
+   {
+    "seconds": 10,
+    "intent": "The tangent flat at the hilltop x = -1, slope 0",
+    "narration": "At the top of the hill, x equals minus one, the tangent is flat."
+   },
+   {
+    "seconds": 10,
+    "intent": "The tangent flat again at the valley x = 1",
+    "narration": "At the bottom of the valley, x equals one, it is flat again."
+   },
+   {
+    "seconds": 10,
+    "intent": "The slope curve 3x^2 - 3 plotted, crossing zero at x = -1 and x = 1",
+    "narration": "The derivative, three x squared minus three, crosses zero at exactly those two points."
+   },
+   {
+    "seconds": 8,
+    "intent": "Both flat points marked on the cubic",
+    "narration": "At a smooth peak or valley the slope switches sign, so it must pass through zero."
+   }
+  ]
+ },
+ {
+  "request": "concave up vs concave down, what does the second derivative show",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "sin x on axes from 0 to 2π",
+    "narration": "Take the sine curve from zero to two pi."
+   },
+   {
+    "seconds": 12,
+    "intent": "A tangent sliding from 0 to π, its slope falling from 1 to -1",
+    "narration": "From zero to pi the slope keeps falling: the curve bends downward, concave down."
+   },
+   {
+    "seconds": 12,
+    "intent": "The tangent sliding on from π to 2π, its slope rising back to 1",
+    "narration": "From pi to two pi the slope rises again: the curve bends upward, concave up."
+   },
+   {
+    "seconds": 10,
+    "intent": "The inflection point at x = π marked where the bending switches",
+    "narration": "At pi the bending switches direction: an inflection point."
+   },
+   {
+    "seconds": 10,
+    "intent": "The second derivative -sin x plotted, negative then positive",
+    "narration": "The second derivative, minus sin x, is negative on the first half and positive on the second."
+   },
+   {
+    "seconds": 8,
+    "intent": "The two curves together, bends matched to signs",
+    "narration": "Negative second derivative means bending down; positive means bending up."
+   }
+  ]
+ },
+ {
+  "request": "why is the area of a circle pi r squared",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "A circle of radius r",
+    "narration": "Here is a circle of radius r."
+   },
+   {
+    "seconds": 10,
+    "intent": "The circle cut into 12 pizza slices",
+    "narration": "Cut it into twelve equal slices."
+   },
+   {
+    "seconds": 12,
+    "intent": "The slices unrolled and laid alternately tip up and tip down in a bumpy strip",
+    "narration": "Lay the slices in a row, alternating tip up and tip down."
+   },
+   {
+    "seconds": 10,
+    "intent": "More, thinner slices, the strip straightening toward a rectangle",
+    "narration": "With more and thinner slices the bumpy strip straightens into a rectangle."
+   },
+   {
+    "seconds": 10,
+    "intent": "The rectangle's long side half the circumference, πr, and short side r",
+    "narration": "Its long side is half the circumference, pi r, and its short side is the radius r."
+   },
+   {
+    "seconds": 8,
+    "intent": "The rectangle with area πr times r = πr^2",
+    "narration": "So the circle's area is pi r times r: pi r squared."
+   }
+  ]
+ },
+ {
+  "request": "does 1/2 + 1/4 + 1/8 + ... really add up to 1?",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "An empty unit square",
+    "narration": "Start with a square of area one."
+   },
+   {
+    "seconds": 10,
+    "intent": "Half of the square filled in",
+    "narration": "Fill in one half."
+   },
+   {
+    "seconds": 10,
+    "intent": "A quarter more filled, then an eighth",
+    "narration": "Then a quarter, half of what is left, then an eighth."
+   },
+   {
+    "seconds": 12,
+    "intent": "Pieces halving again and again, the filled region creeping toward the whole square",
+    "narration": "Each new piece fills half of the gap that remains."
+   },
+   {
+    "seconds": 10,
+    "intent": "Partial sums as bars: 0.5, 0.75, 0.875, 0.9375 rising toward 1",
+    "narration": "The running totals climb: one half, three quarters, seven eighths, fifteen sixteenths."
+   },
+   {
+    "seconds": 8,
+    "intent": "The square nearly full, the leftover gap 1/2^n shrinking to nothing",
+    "narration": "After n pieces the gap is one over two to the n, which shrinks to zero, so the sum is exactly one."
+   }
+  ]
+ },
+ {
+  "request": "sum of 1 over n squared, where does it converge",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "A bar of height 1 for k = 1",
+    "narration": "The first term is one."
+   },
+   {
+    "seconds": 10,
+    "intent": "Bars 1, 1/4, 1/9, 1/16 shrinking fast",
+    "narration": "The terms one over k squared shrink quickly: a quarter, a ninth, a sixteenth."
+   },
+   {
+    "seconds": 12,
+    "intent": "The running total climbing: 1, 1.25, 1.36, 1.42",
+    "narration": "Add them up as you go: one, one and a quarter, about 1.36, about 1.42."
+   },
+   {
+    "seconds": 10,
+    "intent": "Partial sums out to 10 terms flattening near 1.55",
+    "narration": "After ten terms the total is about 1.55 and growing slowly."
+   },
+   {
+    "seconds": 10,
+    "intent": "A dashed line at π^2/6 ≈ 1.645 above the bars",
+    "narration": "The totals never pass pi squared over six, about 1.645."
+   },
+   {
+    "seconds": 8,
+    "intent": "Partial sums as bars levelling off under the line",
+    "narration": "The terms shrink fast enough that the sum settles at pi squared over six."
+   }
+  ]
+ },
+ {
+  "request": "1 - 1/3 + 1/5 - 1/7 ... equals pi over 4?? show me",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "Bars for the terms 1, -1/3, 1/5, -1/7 alternating up and down",
+    "narration": "The terms are one over the odd numbers, with alternating signs."
+   },
+   {
+    "seconds": 10,
+    "intent": "Running totals as bars: 1, 0.667, 0.867, 0.724",
+    "narration": "The running total jumps down, up, down: one, 0.667, 0.867, 0.724."
+   },
+   {
+    "seconds": 12,
+    "intent": "The partial sums zigzagging above and below a dashed line at π/4 ≈ 0.785",
+    "narration": "The totals zigzag above and below a single value, about 0.785."
+   },
+   {
+    "seconds": 10,
+    "intent": "Twenty terms, the zigzag narrowing",
+    "narration": "The swings shrink as the terms shrink."
+   },
+   {
+    "seconds": 10,
+    "intent": "A quarter of the unit circle, area π/4, beside the bars",
+    "narration": "That value is pi over four, the area of a quarter of the unit circle."
+   },
+   {
+    "seconds": 8,
+    "intent": "The partial sums pinched toward π/4",
+    "narration": "The series converges to pi over four, though slowly: each swing is only one over the next odd number."
+   }
+  ]
+ },
+ {
+  "request": "how can an infinitely long region have finite area",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "The curve y = 1/x^2 on axes for x from 1 to 10",
+    "narration": "Here is y equals one over x squared, starting at x equals one."
+   },
+   {
+    "seconds": 10,
+    "intent": "The area under it from 1 to 2 shaded, reading 1/2",
+    "narration": "The area from one to two is one half."
+   },
+   {
+    "seconds": 10,
+    "intent": "The shading stretched to x = 4, reading 3/4",
+    "narration": "Out to four the area is three quarters."
+   },
+   {
+    "seconds": 12,
+    "intent": "The shading stretched to x = 10, reading 0.9",
+    "narration": "Out to ten it is nine tenths."
+   },
+   {
+    "seconds": 10,
+    "intent": "The shaded area readout following 1 - 1/b as the right edge b slides out",
+    "narration": "In general the area from one to b is one minus one over b."
+   },
+   {
+    "seconds": 8,
+    "intent": "The endless tail shaded, total area 1",
+    "narration": "As b goes to infinity the area approaches one: an infinitely long region with finite area."
+   }
+  ]
+ },
+ {
+  "request": "why does sin x / x approach 1 as x goes to 0",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "The unit circle with a small angle x at the centre",
+    "narration": "Draw the unit circle and a small angle x at its centre."
+   },
+   {
+    "seconds": 10,
+    "intent": "The vertical segment sin x and the arc of length x marked",
+    "narration": "The vertical side has length sin x; the arc it cuts off has length x."
+   },
+   {
+    "seconds": 12,
+    "intent": "The angle shrinking, the arc and the vertical segment becoming almost equal",
+    "narration": "Shrink the angle and the arc and the segment become almost the same length."
+   },
+   {
+    "seconds": 10,
+    "intent": "The graph of sin x / x on axes with a hole at x = 0",
+    "narration": "Plot sin x over x. It is undefined at zero itself."
+   },
+   {
+    "seconds": 10,
+    "intent": "A band around y = 1 narrowing as x approaches 0, the curve staying inside",
+    "narration": "However narrow a band around one, near enough to zero the curve stays in it."
+   },
+   {
+    "seconds": 8,
+    "intent": "The curve reaching toward 1 from both sides",
+    "narration": "Small arcs and their sines are nearly equal, so their ratio tends to one."
+   }
+  ]
+ },
+ {
+  "request": "newton's method for finding roots, visually",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "The curve y = x^2 - 3 crossing the x-axis near 1.73",
+    "narration": "We want the positive root of x squared minus three, the square root of three."
+   },
+   {
+    "seconds": 10,
+    "intent": "A first guess x0 = 2 and the tangent at (2, 1)",
+    "narration": "Guess two. The curve is at height one there, with slope four."
+   },
+   {
+    "seconds": 10,
+    "intent": "The tangent hitting the x-axis at x1 = 1.75",
+    "narration": "Follow the tangent down to the axis: it lands at 1.75."
+   },
+   {
+    "seconds": 10,
+    "intent": "A new tangent at x1 landing at 1.732",
+    "narration": "Repeat from 1.75: the next tangent lands at about 1.7321."
+   },
+   {
+    "seconds": 10,
+    "intent": "The guesses marked on a number line, crowding onto √3 ≈ 1.73205",
+    "narration": "The guesses crowd onto the root, the number of correct digits roughly doubling each step."
+   },
+   {
+    "seconds": 8,
+    "intent": "The last tangent almost touching the root",
+    "narration": "Newton's method replaces the curve with its tangent line and solves that instead, again and again."
+   }
+  ]
+ },
+ {
+  "request": "how does gradient descent work",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "The bowl y = x^2 on axes with a ball at x = 3",
+    "narration": "Here is a bowl, y equals x squared, and a ball at x equals three."
+   },
+   {
+    "seconds": 10,
+    "intent": "The tangent at the ball, slope 6",
+    "narration": "The slope there is six, so downhill is to the left."
+   },
+   {
+    "seconds": 12,
+    "intent": "The ball stepping downhill, x going 3, 1.8, 1.08",
+    "narration": "Each step moves against the slope by the learning rate, 0.2, times the slope."
+   },
+   {
+    "seconds": 10,
+    "intent": "The steps getting shorter as the slope flattens",
+    "narration": "As the bowl flattens, the slope shrinks and so do the steps."
+   },
+   {
+    "seconds": 10,
+    "intent": "The ball settling at the bottom, x = 0",
+    "narration": "At the bottom the slope is zero, so the ball stops moving."
+   },
+   {
+    "seconds": 8,
+    "intent": "The trail of shrinking steps along the parabola",
+    "narration": "Following the slope downhill in small steps finds the minimum."
+   }
+  ]
+ },
+ {
+  "request": "what happens if the learning rate is too big in gradient descent",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "The bowl y = x^2 with a ball at x = 2",
+    "narration": "Put the ball at x equals two on the bowl y equals x squared."
+   },
+   {
+    "seconds": 10,
+    "intent": "Learning rate 0.2: the ball stepping smoothly down to 0",
+    "narration": "With learning rate 0.2 each step keeps sixty percent of x, so it glides to the bottom."
+   },
+   {
+    "seconds": 12,
+    "intent": "Learning rate 0.9: the ball jumping across the bowl, 2, -1.6, 1.28, zigzagging in",
+    "narration": "With 0.9 each step overshoots to the other side, but lands a bit lower each time."
+   },
+   {
+    "seconds": 12,
+    "intent": "Learning rate 1.1: each jump overshooting farther, 2, -2.4, 2.88, climbing out",
+    "narration": "With 1.1 each jump lands higher than the last: the ball flies out of the bowl."
+   },
+   {
+    "seconds": 10,
+    "intent": "The three trails on the bowl side by side",
+    "narration": "Too small is slow, a bit too large zigzags, and too large diverges."
+   }
+  ]
+ },
+ {
+  "request": "slope field for dy/dx = x",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "Short arrows at every grid point with slope x, the field (1, x)",
+    "narration": "At each point draw a short arrow with slope equal to x."
+   },
+   {
+    "seconds": 10,
+    "intent": "Arrows flat along the y-axis and steeper farther left and right",
+    "narration": "On the y-axis the arrows are flat; farther out they get steeper."
+   },
+   {
+    "seconds": 12,
+    "intent": "A particle released at (-2, 2) following the arrows, tracing a parabola",
+    "narration": "Release a particle at minus two, two and let it follow the arrows."
+   },
+   {
+    "seconds": 10,
+    "intent": "Several particles from different starts tracing stacked parabolas",
+    "narration": "Particles from other starting points trace the same shape, shifted up or down."
+   },
+   {
+    "seconds": 10,
+    "intent": "The curve y = x^2/2 plotted over the field, fitting the arrows",
+    "narration": "The curve through minus two, two is y equals x squared over two, whose slope is x everywhere."
+   },
+   {
+    "seconds": 8,
+    "intent": "The family y = x^2/2 + C drawn across the field",
+    "narration": "Every solution is that parabola plus a constant."
+   }
+  ]
+ },
+ {
+  "request": "how does heat spread along a metal rod",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "A temperature curve on axes: a hot spike in the middle of a cold rod",
+    "narration": "Heat the middle of a cold rod: the temperature is a sharp spike."
+   },
+   {
+    "seconds": 12,
+    "intent": "The spike smoothing out and spreading as time runs",
+    "narration": "Let time run: heat flows outward and the spike spreads."
+   },
+   {
+    "seconds": 10,
+    "intent": "The peak dropping while the sides warm",
+    "narration": "The peak cools while its neighbours warm up."
+   },
+   {
+    "seconds": 10,
+    "intent": "A two-bump temperature curve diffusing into one smooth hump",
+    "narration": "Start with two hot spots and they blur into one hump."
+   },
+   {
+    "seconds": 10,
+    "intent": "Bumps marked concave down cooling, dips marked concave up warming",
+    "narration": "Where the curve bends down the rod cools; where it bends up it warms. The rate is the second derivative."
+   },
+   {
+    "seconds": 8,
+    "intent": "The temperature flattening toward a level line",
+    "narration": "With insulated ends the rod settles at one even temperature."
+   }
+  ]
+ },
+ {
+  "request": "what are amplitude and wavelength of a wave",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "A sine wave travelling to the right on axes",
+    "narration": "Here is a wave moving to the right."
+   },
+   {
+    "seconds": 10,
+    "intent": "The amplitude marked as the height of a crest above the axis",
+    "narration": "The amplitude is how high a crest rises above the middle."
+   },
+   {
+    "seconds": 10,
+    "intent": "The wavelength marked from one crest to the next",
+    "narration": "The wavelength is the distance from one crest to the next."
+   },
+   {
+    "seconds": 10,
+    "intent": "The same wave with amplitude doubled",
+    "narration": "Double the amplitude and the crests rise twice as high."
+   },
+   {
+    "seconds": 10,
+    "intent": "The wave with k doubled, crests packed twice as close",
+    "narration": "Double the wave number k and the wavelength halves."
+   },
+   {
+    "seconds": 10,
+    "intent": "The wave with omega doubled, sliding twice as fast",
+    "narration": "Double omega with k fixed and the wave moves twice as fast: its speed is omega over k."
+   }
+  ]
+ },
+ {
+  "request": "why do two waves sometimes cancel each other out",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "Two identical sine waves on axes",
+    "narration": "Take two identical waves."
+   },
+   {
+    "seconds": 10,
+    "intent": "Their sum: a wave twice as tall",
+    "narration": "In step, crest meets crest and the sum is twice as tall."
+   },
+   {
+    "seconds": 12,
+    "intent": "One wave shifted half a wavelength, their sum a flat line",
+    "narration": "Shift one by half a wavelength and every crest meets a trough: they cancel completely."
+   },
+   {
+    "seconds": 10,
+    "intent": "Waves with slightly different frequencies adding into beats",
+    "narration": "With slightly different frequencies they drift in and out of step."
+   },
+   {
+    "seconds": 10,
+    "intent": "The sum swelling and fading in a slow loud-soft envelope",
+    "narration": "The sum swells and fades: beats, at the difference of the two frequencies."
+   },
+   {
+    "seconds": 8,
+    "intent": "The in-step, opposite, and beating sums shown together",
+    "narration": "Whether waves reinforce or cancel depends only on how their crests line up."
+   }
+  ]
+ },
+ {
+  "request": "standing waves on a string",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "A wave moving right on axes",
+    "narration": "Send a wave to the right along a string."
+   },
+   {
+    "seconds": 10,
+    "intent": "An identical wave moving left over it",
+    "narration": "Send an identical wave to the left."
+   },
+   {
+    "seconds": 12,
+    "intent": "Their sum: a standing wave pulsing in place",
+    "narration": "Their sum does not travel at all; it just pulses up and down in place."
+   },
+   {
+    "seconds": 10,
+    "intent": "Nodes marked where the string never moves",
+    "narration": "At the nodes the two waves always cancel, so the string stays still."
+   },
+   {
+    "seconds": 10,
+    "intent": "Antinodes swinging widest halfway between nodes",
+    "narration": "Halfway between, at the antinodes, it swings the most."
+   },
+   {
+    "seconds": 8,
+    "intent": "The node spacing marked as half a wavelength",
+    "narration": "Neighbouring nodes are half a wavelength apart."
+   }
+  ]
+ },
+ {
+  "request": "how can you make a square wave out of sine waves",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "A square wave on axes",
+    "narration": "Here is a square wave, jumping between two levels."
+   },
+   {
+    "seconds": 10,
+    "intent": "The single sine wave sin x under it",
+    "narration": "Start with one sine wave of the same period, scaled by four over pi."
+   },
+   {
+    "seconds": 10,
+    "intent": "sin 3x / 3 added, the corners sharpening",
+    "narration": "Add a third-frequency sine at one third the size: the top flattens and the sides steepen."
+   },
+   {
+    "seconds": 12,
+    "intent": "sin 5x / 5 and sin 7x / 7 added in turn",
+    "narration": "Keep adding odd frequencies with sizes one over five, one over seven."
+   },
+   {
+    "seconds": 10,
+    "intent": "Seven odd terms nearly square, with a small overshoot at each jump",
+    "narration": "With seven terms it is nearly square, apart from a small overshoot beside each jump."
+   },
+   {
+    "seconds": 8,
+    "intent": "The partial sums compared against the square wave",
+    "narration": "A square wave is an infinite sum of odd sine waves."
+   }
+  ]
+ },
+ {
+  "request": "explain convolution using two dice",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "Bars for one die: six equal bars of 1/6",
+    "narration": "One die: six faces, each with probability one sixth."
+   },
+   {
+    "seconds": 10,
+    "intent": "A second die's bars flipped and sliding over the first",
+    "narration": "Flip the second die's bars and slide them across the first."
+   },
+   {
+    "seconds": 12,
+    "intent": "At each shift, overlapping products summed into an output bar",
+    "narration": "At each shift, multiply overlapping bars and add: that is the chance of that total."
+   },
+   {
+    "seconds": 10,
+    "intent": "Output bars rising to a peak at 7 and falling: 1 to 6 to 1 over 36",
+    "narration": "The results rise from one thirty-sixth at two to six thirty-sixths at seven, then fall."
+   },
+   {
+    "seconds": 10,
+    "intent": "The 6x6 dice grid with the six cells summing to 7 lit",
+    "narration": "Check with the grid: six of the thirty-six pairs sum to seven."
+   },
+   {
+    "seconds": 8,
+    "intent": "The output bars beside the grid",
+    "narration": "Convolving two distributions gives the distribution of their sum."
+   }
+  ]
+ },
+ {
+  "request": "moving average as a convolution",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "A jagged signal drawn as bars",
+    "narration": "Here is a noisy signal."
+   },
+   {
+    "seconds": 10,
+    "intent": "A window of three equal weights, 1/3 each",
+    "narration": "Take a window of three weights, each one third."
+   },
+   {
+    "seconds": 12,
+    "intent": "The window sliding along the signal, each output bar the average of three neighbours",
+    "narration": "Slide it along: each output is the average of three neighbouring values."
+   },
+   {
+    "seconds": 10,
+    "intent": "The output bars, smoother than the input",
+    "narration": "The spikes are softened: the output is smoother."
+   },
+   {
+    "seconds": 10,
+    "intent": "A window of five weights, 1/5 each, giving smoother output still",
+    "narration": "A wider window of five averages over more and smooths more."
+   },
+   {
+    "seconds": 8,
+    "intent": "Signal and both smoothed outputs compared",
+    "narration": "A moving average is a convolution with a flat window."
+   }
+  ]
+ },
+ {
+  "request": "simple pendulum motion explained",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "A pendulum swinging from 20 degrees",
+    "narration": "Pull a pendulum out twenty degrees and let go."
+   },
+   {
+    "seconds": 10,
+    "intent": "Its angle traced against time as a cosine curve",
+    "narration": "Trace its angle over time: a cosine curve."
+   },
+   {
+    "seconds": 10,
+    "intent": "The period marked from one peak of the trace to the next",
+    "narration": "The period is the time from one peak to the next."
+   },
+   {
+    "seconds": 10,
+    "intent": "The bob fastest at the bottom and stopped at the ends",
+    "narration": "It moves fastest at the bottom and stops for an instant at each end."
+   },
+   {
+    "seconds": 10,
+    "intent": "A smaller swing drawn with the same period",
+    "narration": "For small swings the period barely depends on how far it swings."
+   },
+   {
+    "seconds": 8,
+    "intent": "The pendulum and its trace together, period 2π√(L/g)",
+    "narration": "It depends on the length: the period is two pi root L over g."
+   }
+  ]
+ },
+ {
+  "request": "why is the path of a thrown ball a parabola",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "Axes with a ball launched at 4 m/s across and 8 m/s up",
+    "narration": "Throw a ball with four metres per second across and eight up, taking g as ten."
+   },
+   {
+    "seconds": 10,
+    "intent": "The ball's path traced as a curve y = 2x - 5x^2/16",
+    "narration": "Across it moves steadily; up it slows. Together the path is a parabola."
+   },
+   {
+    "seconds": 10,
+    "intent": "Velocity arrows along the path, the across part constant, the up part shrinking then reversing",
+    "narration": "The horizontal speed never changes; gravity only eats into the vertical speed."
+   },
+   {
+    "seconds": 10,
+    "intent": "The peak at x = 3.2 m, height 3.2 m, with a horizontal velocity arrow",
+    "narration": "At the top, after 0.8 seconds, the vertical speed is zero: 3.2 metres across and 3.2 up."
+   },
+   {
+    "seconds": 10,
+    "intent": "The landing point at x = 6.4 m, the path mirror-symmetric",
+    "narration": "It lands at 6.4 metres, after 1.6 seconds, the way down mirroring the way up."
+   },
+   {
+    "seconds": 8,
+    "intent": "The whole parabola with its velocity arrows",
+    "narration": "Constant speed across plus steady acceleration down makes a parabola."
+   }
+  ]
+ },
+ {
+  "request": "velocity as the slope of a position-time graph",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "Position x = t^2 plotted against time",
+    "narration": "Here is position growing as t squared."
+   },
+   {
+    "seconds": 10,
+    "intent": "The chord from t = 1 to t = 3, slope 4: the average velocity",
+    "narration": "From one to three seconds it covers eight metres in two seconds: average velocity four."
+   },
+   {
+    "seconds": 10,
+    "intent": "A tangent sliding along the curve, slope read out live",
+    "narration": "The instantaneous velocity is the slope of the tangent."
+   },
+   {
+    "seconds": 10,
+    "intent": "The tangent at t = 2 with slope 4",
+    "narration": "At t equals two the slope is four."
+   },
+   {
+    "seconds": 10,
+    "intent": "Velocity v = 2t plotted as a straight line",
+    "narration": "Collect the slopes and velocity is a straight line, two t."
+   },
+   {
+    "seconds": 8,
+    "intent": "Position curve and velocity line together",
+    "narration": "Steeper position graph, faster motion: velocity is the slope."
+   }
+  ]
+ },
+ {
+  "request": "why is distance the area under a velocity graph",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "A constant velocity v = 2 for 3 seconds, the area under it a 2-by-3 rectangle",
+    "narration": "At a steady two metres per second for three seconds you go six metres: the rectangle's area."
+   },
+   {
+    "seconds": 10,
+    "intent": "The accelerating velocity v = 2t on axes",
+    "narration": "Now the speed grows: v equals two t."
+   },
+   {
+    "seconds": 10,
+    "intent": "Thin rectangles under v = 2t, each speed times a short time",
+    "narration": "Over a short time the speed is nearly constant, so each thin rectangle is a little distance."
+   },
+   {
+    "seconds": 12,
+    "intent": "The rectangles refining into the triangle under the line",
+    "narration": "More, thinner rectangles fill the triangle."
+   },
+   {
+    "seconds": 10,
+    "intent": "The triangle's area: half of 3 times 6 = 9",
+    "narration": "The triangle has area one half times three times six: nine metres."
+   },
+   {
+    "seconds": 8,
+    "intent": "Position x = t^2 reaching 9 at t = 3",
+    "narration": "And indeed position t squared is nine at three seconds."
+   }
+  ]
+ },
+ {
+  "request": "hooke's law and the spring force graph",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "A force-extension line F = 20x on axes",
+    "narration": "For a spring with constant twenty newtons per metre, force grows in a straight line with stretch."
+   },
+   {
+    "seconds": 10,
+    "intent": "A dot tracing up the line, double the extension giving double the force",
+    "narration": "Stretch it twice as far and it pulls back twice as hard."
+   },
+   {
+    "seconds": 10,
+    "intent": "A stiffer spring's steeper line F = 40x",
+    "narration": "A stiffer spring has a steeper line."
+   },
+   {
+    "seconds": 10,
+    "intent": "The area under F = 20x from 0 to 0.3 shaded, 0.9 J",
+    "narration": "The work to stretch it 0.3 metres is the triangle's area: half of 0.3 times 6, or 0.9 joules."
+   },
+   {
+    "seconds": 10,
+    "intent": "Stored energy (1/2)kx^2 as a parabola",
+    "narration": "Stored energy is one half k x squared, a parabola."
+   },
+   {
+    "seconds": 8,
+    "intent": "Force line and energy parabola side by side",
+    "narration": "Force grows linearly with stretch, energy grows with its square."
+   }
+  ]
+ },
+ {
+  "request": "electric field lines around a point charge",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "Arrows pointing out from a positive charge at the origin",
+    "narration": "Around a positive charge the field points straight outward."
+   },
+   {
+    "seconds": 10,
+    "intent": "Arrows shrinking with distance",
+    "narration": "The field weakens with the square of the distance, so arrows shrink quickly."
+   },
+   {
+    "seconds": 10,
+    "intent": "A test charge released, flying outward along the arrows",
+    "narration": "A positive test charge is pushed away."
+   },
+   {
+    "seconds": 10,
+    "intent": "The field of a negative charge, every arrow pointing inward",
+    "narration": "Around a negative charge the arrows point inward."
+   },
+   {
+    "seconds": 12,
+    "intent": "A plus and minus pair, particles streaming from + to -",
+    "narration": "Put the two together and the field lines run from the positive charge to the negative one."
+   },
+   {
+    "seconds": 8,
+    "intent": "The dipole field with its curved lines",
+    "narration": "The field of a pair is the sum of the two fields at every point."
+   }
+  ]
+ },
+ {
+  "request": "in circular motion why is the velocity perpendicular to the radius",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "A dot moving around a circle with a radius arrow from the centre",
+    "narration": "A dot moves around a circle at steady speed."
+   },
+   {
+    "seconds": 10,
+    "intent": "The velocity arrow drawn tangent to the circle",
+    "narration": "Its velocity points along the circle, tangent to it."
+   },
+   {
+    "seconds": 10,
+    "intent": "The right angle between radius and velocity marked",
+    "narration": "Since the distance from the centre never changes, the velocity can have no part along the radius."
+   },
+   {
+    "seconds": 10,
+    "intent": "Velocity arrows at four points around the circle, each turned a quarter from the last",
+    "narration": "The speed is constant but the direction keeps turning."
+   },
+   {
+    "seconds": 10,
+    "intent": "Acceleration arrows at the same points, each pointing to the centre",
+    "narration": "That turning is an acceleration, and it points toward the centre."
+   },
+   {
+    "seconds": 8,
+    "intent": "Radius, velocity and acceleration arrows on one dot",
+    "narration": "Size v squared over r, direction inward: centripetal acceleration."
+   }
+  ]
+ },
+ {
+  "request": "block on a ramp force components",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "A ramp drawn as a right triangle at 30 degrees with a block on it",
+    "narration": "A block rests on a ramp tilted thirty degrees."
+   },
+   {
+    "seconds": 10,
+    "intent": "The weight arrow pointing straight down from the block",
+    "narration": "Gravity pulls it straight down with its weight."
+   },
+   {
+    "seconds": 12,
+    "intent": "The weight split into arrows along the ramp and perpendicular to it",
+    "narration": "Split the weight into a part along the slope and a part into the slope."
+   },
+   {
+    "seconds": 10,
+    "intent": "The along-ramp arrow half the length of the weight: mg sin 30°",
+    "narration": "The part along the slope is mg sin thirty, exactly half the weight."
+   },
+   {
+    "seconds": 10,
+    "intent": "The ramp tilted to 60 degrees, the along-ramp arrow growing to about 0.87 mg",
+    "narration": "Tilt it to sixty degrees and the part along the slope grows to about 0.87 of the weight."
+   },
+   {
+    "seconds": 8,
+    "intent": "Both ramps side by side with their arrows",
+    "narration": "The steeper the ramp, the more of gravity pulls along it."
+   }
+  ]
+ },
+ {
+  "request": "why does light get dimmer with distance, inverse square law",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "A point source with rays spreading onto a 1-by-1 square at distance 1",
+    "narration": "Light from a point spreads out. At distance one it covers one square."
+   },
+   {
+    "seconds": 10,
+    "intent": "At distance 2 the same rays covering a 2-by-2 block, 4 squares",
+    "narration": "At twice the distance the same light covers a square twice as wide: four squares."
+   },
+   {
+    "seconds": 10,
+    "intent": "At distance 3 the rays covering 9 squares",
+    "narration": "At three times the distance it covers nine."
+   },
+   {
+    "seconds": 10,
+    "intent": "Brightness per square as bars 1, 1/4, 1/9",
+    "narration": "The same light shared among more squares: a quarter as bright, then a ninth."
+   },
+   {
+    "seconds": 10,
+    "intent": "The curve y = 1/x^2 on axes",
+    "narration": "Brightness falls as one over distance squared."
+   },
+   {
+    "seconds": 8,
+    "intent": "The bars sitting on the curve",
+    "narration": "Double the distance, a quarter of the brightness."
+   }
+  ]
+ },
+ {
+  "request": "why does doubling your speed quadruple kinetic energy",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "Axes with kinetic energy KE = v^2 for a 2 kg mass, a parabola",
+    "narration": "For a two kilogram mass, kinetic energy is one half m v squared: v squared joules."
+   },
+   {
+    "seconds": 10,
+    "intent": "A dot at v = 10 on the parabola, energy 100 J",
+    "narration": "At ten metres per second it carries one hundred joules."
+   },
+   {
+    "seconds": 10,
+    "intent": "The dot sliding to v = 20, energy 400 J",
+    "narration": "At twenty it carries four hundred: double the speed, four times the energy."
+   },
+   {
+    "seconds": 10,
+    "intent": "Stopping distance bars in the ratio 1 to 4 for the two speeds",
+    "narration": "With the same braking force, stopping distance goes with energy, so it is four times longer too."
+   },
+   {
+    "seconds": 10,
+    "intent": "The velocity-time line of a steady braking from 20, its triangle area four times the one from 10",
+    "narration": "Braking steadily, the distance is the triangle under the velocity line: twice as tall and twice as long."
+   },
+   {
+    "seconds": 8,
+    "intent": "The parabola with both points marked",
+    "narration": "Energy grows with the square of speed."
+   }
+  ]
+ },
+ {
+  "request": "why is 7 the most common roll with two dice",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "Two dice as a 6x6 grid of all 36 outcomes",
+    "narration": "Lay out every pair of rolls as a six by six grid: thirty-six equally likely cells."
+   },
+   {
+    "seconds": 10,
+    "intent": "The six cells summing to 7 lit along a diagonal",
+    "narration": "The cells that sum to seven run along a diagonal: six of them."
+   },
+   {
+    "seconds": 10,
+    "intent": "The single cells for 2 and for 12 lit in the corners",
+    "narration": "A two needs double ones and a twelve needs double sixes: one cell each."
+   },
+   {
+    "seconds": 10,
+    "intent": "The five cells summing to 6 and the five summing to 8 lit",
+    "narration": "Six and eight each have five cells."
+   },
+   {
+    "seconds": 12,
+    "intent": "Bars of cell counts for sums 2 to 12 rising and falling in a triangle",
+    "narration": "Count the cells for each sum and the bars make a triangle, peaking at seven."
+   },
+   {
+    "seconds": 8,
+    "intent": "The grid and the bars together, the 7 bar at 6/36",
+    "narration": "Seven wins because more pairs make it: six out of thirty-six, one in six."
+   }
+  ]
+ },
+ {
+  "request": "if I flip a coin 1000 times will I get exactly half heads",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "Coins flipped one by one with a running share of heads",
+    "narration": "Flip a fair coin again and again and track the share of heads."
+   },
+   {
+    "seconds": 10,
+    "intent": "After 10 flips the share sitting at 0.7",
+    "narration": "After ten flips we have seven heads: early on, luck dominates."
+   },
+   {
+    "seconds": 12,
+    "intent": "Hundreds more flips, the share wobbling closer and closer to 0.5",
+    "narration": "As the flips pile up, the share wobbles less and less around one half."
+   },
+   {
+    "seconds": 10,
+    "intent": "The share at 1000 flips within a few hundredths of 0.5 but not exactly on it",
+    "narration": "After a thousand flips it is close to one half, but exactly five hundred heads is unlikely."
+   },
+   {
+    "seconds": 10,
+    "intent": "A biased coin with p = 0.7, its share settling at 0.7",
+    "narration": "A biased coin settles at its own probability instead."
+   },
+   {
+    "seconds": 8,
+    "intent": "The two running shares side by side",
+    "narration": "The share of heads converges to the true probability: the law of large numbers."
+   }
+  ]
+ },
+ {
+  "request": "I tested positive for a rare disease, how worried should I be",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "A square of 1000 people with a thin sliver of 10 who have the disease",
+    "narration": "Picture a thousand people; one percent, ten of them, have the disease."
+   },
+   {
+    "seconds": 10,
+    "intent": "9 of the 10 sick people shaded as testing positive",
+    "narration": "The test catches ninety percent of them: nine positives."
+   },
+   {
+    "seconds": 10,
+    "intent": "About 89 of the 990 healthy people shaded as false positives",
+    "narration": "It also wrongly flags nine percent of the healthy: about eighty-nine."
+   },
+   {
+    "seconds": 12,
+    "intent": "All the positives gathered: 9 true next to 89 false",
+    "narration": "Gather everyone who tested positive: nine really sick, eighty-nine not."
+   },
+   {
+    "seconds": 10,
+    "intent": "The true positives as a slice of all positives: 9 out of 98, about 9%",
+    "narration": "So a positive result means about a nine percent chance of disease."
+   },
+   {
+    "seconds": 8,
+    "intent": "The square redrawn with a 1-in-10 prior, true positives now about 53%",
+    "narration": "If one in ten had it to begin with, the same test would give about fifty-three percent. The prior matters."
+   }
+  ]
+ },
+ {
+  "request": "probability of getting exactly 5 heads in 10 flips",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "Ten coins flipped at once",
+    "narration": "Flip ten coins at once and count the heads."
+   },
+   {
+    "seconds": 10,
+    "intent": "Bars for 0 to 10 heads with heights C(10, k) out of 1024",
+    "narration": "There are 1024 equally likely sequences; the number with k heads is ten choose k."
+   },
+   {
+    "seconds": 10,
+    "intent": "The bar at 5 lit: 252 of 1024, about 24.6%",
+    "narration": "Exactly five heads happens in 252 ways, about a quarter of the time."
+   },
+   {
+    "seconds": 10,
+    "intent": "The bars at 0 and 10 lit: one way each",
+    "narration": "All tails or all heads happens in just one way each, one in 1024."
+   },
+   {
+    "seconds": 12,
+    "intent": "A histogram of many simulated rounds of ten flips growing to match the bars",
+    "narration": "Simulate many rounds and the histogram of head counts grows into the same shape."
+   },
+   {
+    "seconds": 8,
+    "intent": "Histogram and exact bars overlaid",
+    "narration": "Five is the most likely count, yet it still happens less than a quarter of the time."
+   }
+  ]
+ },
+ {
+  "request": "on average how many rolls until I get a six",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "Bars for rolls 1 to 12 with heights (5/6)^(k-1) × 1/6",
+    "narration": "The chance the first six arrives on roll k is five sixths to the k minus one, times one sixth."
+   },
+   {
+    "seconds": 10,
+    "intent": "The first bar 1/6 and the second 5/36 lit",
+    "narration": "On the first roll the chance is one sixth; on the second, five sixths times one sixth."
+   },
+   {
+    "seconds": 10,
+    "intent": "Each bar 5/6 the height of the one before",
+    "narration": "Each bar is five sixths of the one before, shrinking by the same factor every roll."
+   },
+   {
+    "seconds": 12,
+    "intent": "A histogram of simulated waiting times filling in over the bars",
+    "narration": "Simulate many runs and the waiting times match the bars."
+   },
+   {
+    "seconds": 10,
+    "intent": "The average waiting time marked at 6 on a number line",
+    "narration": "The average wait is six rolls, one over one sixth."
+   },
+   {
+    "seconds": 8,
+    "intent": "Bars and the mean marker together",
+    "narration": "A long tail of unlucky runs balances the many quick sixes, and the mean lands at six."
+   }
+  ]
+ },
+ {
+  "request": "random walk, how far do you get after n steps",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "A number line with a walker at 0",
+    "narration": "A walker starts at zero on a number line."
+   },
+   {
+    "seconds": 10,
+    "intent": "Coin flips moving the walker one step left or right",
+    "narration": "Each coin flip sends it one step right for heads, left for tails."
+   },
+   {
+    "seconds": 12,
+    "intent": "A histogram of many walkers' positions after 100 steps, centred on 0",
+    "narration": "Run thousands of walkers for a hundred steps: the positions pile up around zero."
+   },
+   {
+    "seconds": 10,
+    "intent": "The typical distance of about 10 marked either side of 0",
+    "narration": "A typical walker ends about ten steps away, the square root of one hundred."
+   },
+   {
+    "seconds": 12,
+    "intent": "The histogram after 400 steps, twice as wide",
+    "narration": "After four hundred steps the spread doubles, not quadruples."
+   },
+   {
+    "seconds": 8,
+    "intent": "The two histograms stacked",
+    "narration": "The typical distance grows like the square root of the number of steps."
+   }
+  ]
+ },
+ {
+  "request": "chance of at least one six when rolling two dice",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "Two dice as a 6x6 grid",
+    "narration": "Lay out all thirty-six pairs of rolls."
+   },
+   {
+    "seconds": 10,
+    "intent": "The six cells with a 6 on the first die lit",
+    "narration": "Six cells have a six on the first die."
+   },
+   {
+    "seconds": 10,
+    "intent": "The six cells with a 6 on the second die lit, overlapping at (6, 6)",
+    "narration": "Six have a six on the second die, and one cell, double six, is in both."
+   },
+   {
+    "seconds": 10,
+    "intent": "Their union, 11 cells lit",
+    "narration": "Together that is eleven cells, not twelve: eleven thirty-sixths."
+   },
+   {
+    "seconds": 10,
+    "intent": "The other 25 cells with no six lit instead",
+    "narration": "Or count the rest: twenty-five cells have no six, which is five sixths squared."
+   },
+   {
+    "seconds": 8,
+    "intent": "The 11 lit cells beside the 25 unlit ones",
+    "narration": "One minus twenty-five thirty-sixths is eleven thirty-sixths, about thirty percent."
+   }
+  ]
+ },
+ {
+  "request": "if the first die shows 3, what's the chance the total is 8",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "Two dice as a 6x6 grid",
+    "narration": "Here are all thirty-six outcomes for two dice."
+   },
+   {
+    "seconds": 10,
+    "intent": "The row where the first die is 3 lit: 6 cells",
+    "narration": "Knowing the first die is three leaves only this row of six cells."
+   },
+   {
+    "seconds": 10,
+    "intent": "Inside that row, the single cell (3, 5) summing to 8",
+    "narration": "Only three and five makes eight: one cell out of six."
+   },
+   {
+    "seconds": 10,
+    "intent": "Without the condition, the five cells summing to 8 across the grid",
+    "narration": "Without that knowledge, eight has five cells out of thirty-six."
+   },
+   {
+    "seconds": 10,
+    "intent": "The row for a first die of 1, with no cell reaching 8",
+    "narration": "If the first die were one, eight would be impossible: zero out of six."
+   },
+   {
+    "seconds": 8,
+    "intent": "The full grid dimmed and the conditioning row bright",
+    "narration": "Conditioning shrinks the grid to the cells still possible and counts within them."
+   }
+  ]
+ },
+ {
+  "request": "expected value of a die roll",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "Bars for faces 1 to 6, each of height 1/6",
+    "narration": "Each face of a fair die has probability one sixth."
+   },
+   {
+    "seconds": 10,
+    "intent": "A number line under the bars with a pivot at 3.5 balancing them",
+    "narration": "The expected value is the balance point: one plus two up to six, over six, is 3.5."
+   },
+   {
+    "seconds": 12,
+    "intent": "A histogram of simulated rolls flattening toward six equal bars",
+    "narration": "Roll many times and each face comes up about a sixth of the time."
+   },
+   {
+    "seconds": 10,
+    "intent": "The running average of rolls marked sliding toward 3.5",
+    "narration": "The average of the rolls drifts toward 3.5, a value no single roll can show."
+   },
+   {
+    "seconds": 10,
+    "intent": "A loaded die's bars leaning toward 6, the pivot moving right to 4.5",
+    "narration": "Load the die, with six coming up half the time and the others a tenth each, and the balance point moves to 4.5."
+   },
+   {
+    "seconds": 8,
+    "intent": "Fair and loaded bars with their pivots",
+    "narration": "Expected value is the probability-weighted average: the centre of mass of the bars."
+   }
+  ]
+ },
+ {
+  "request": "how can you estimate pi by throwing random darts",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "A quarter circle of radius 1 inside a unit square",
+    "narration": "Draw a quarter circle of radius one inside a unit square."
+   },
+   {
+    "seconds": 10,
+    "intent": "Random dots landing all over the square",
+    "narration": "Throw random darts uniformly at the square."
+   },
+   {
+    "seconds": 10,
+    "intent": "The dots inside the arc lit",
+    "narration": "Light up the ones that land inside the quarter circle."
+   },
+   {
+    "seconds": 12,
+    "intent": "The share of dots inside settling near π/4 ≈ 0.785",
+    "narration": "The share inside tends to the ratio of areas, pi over four."
+   },
+   {
+    "seconds": 10,
+    "intent": "Four times the share climbing and settling near 3.14",
+    "narration": "Multiply by four and you get an estimate of pi."
+   },
+   {
+    "seconds": 8,
+    "intent": "The square full of dots with the arc outlined",
+    "narration": "More darts, better estimate, though the error shrinks only slowly."
+   }
+  ]
+ },
+ {
+  "request": "does a coin remember its previous flips",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "Two coins both showing heads",
+    "narration": "Suppose the last two flips were heads."
+   },
+   {
+    "seconds": 10,
+    "intent": "The next flip's bars: heads 1/2, tails 1/2",
+    "narration": "The coin has no memory: the next flip is still fifty-fifty."
+   },
+   {
+    "seconds": 12,
+    "intent": "All 8 sequences of three flips as a 3-column bit grid",
+    "narration": "List all eight sequences of three flips; each has probability one eighth."
+   },
+   {
+    "seconds": 10,
+    "intent": "The rows HHH and HHT lit, equally likely",
+    "narration": "Three heads in a row and two heads then a tail are equally likely: one eighth each."
+   },
+   {
+    "seconds": 12,
+    "intent": "Coins flipped many times, the share of heads right after streaks still settling at 0.5",
+    "narration": "Look only at flips that follow a streak of heads: they still come up heads half the time."
+   },
+   {
+    "seconds": 8,
+    "intent": "The bit grid with its eight equal rows",
+    "narration": "Independent flips mean past results do not change the next one."
+   }
+  ]
+ },
+ {
+  "request": "bubble sort step by step",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "The array [5, 2, 8, 1, 9, 3] as bars",
+    "narration": "Here are six numbers as bars of different heights."
+   },
+   {
+    "seconds": 10,
+    "intent": "5 and 2 compared and swapped",
+    "narration": "Compare neighbours from the left: five is bigger than two, so swap them."
+   },
+   {
+    "seconds": 12,
+    "intent": "The first pass carrying 9 to the right end",
+    "narration": "Keep comparing and swapping: the largest bar, nine, bubbles all the way to the end."
+   },
+   {
+    "seconds": 12,
+    "intent": "The second pass carrying 8 into place before 9",
+    "narration": "The second pass carries eight into the second-to-last slot."
+   },
+   {
+    "seconds": 10,
+    "intent": "Further passes until no swaps happen",
+    "narration": "Keep passing until a pass makes no swaps."
+   },
+   {
+    "seconds": 8,
+    "intent": "The sorted bars 1, 2, 3, 5, 8, 9",
+    "narration": "Each pass places one more bar, so bubble sort takes about n squared comparisons."
+   }
+  ]
+ },
+ {
+  "request": "selection sort visualized",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "The array [4, 7, 1, 6, 3] as bars",
+    "narration": "Start with five bars in a jumble."
+   },
+   {
+    "seconds": 10,
+    "intent": "The shortest bar, 1, found and swapped to the front",
+    "narration": "Scan for the smallest, one, and swap it into the first slot."
+   },
+   {
+    "seconds": 10,
+    "intent": "The smallest remaining, 3, swapped into the second slot",
+    "narration": "Scan the rest for the smallest, three, and swap it into the second slot."
+   },
+   {
+    "seconds": 10,
+    "intent": "4 found already in the third slot, left in place",
+    "narration": "Four is already the smallest left, so it stays."
+   },
+   {
+    "seconds": 10,
+    "intent": "The sorted bars 1, 3, 4, 6, 7",
+    "narration": "After that everything is in order."
+   },
+   {
+    "seconds": 8,
+    "intent": "The scanned region shrinking by one bar each pass",
+    "narration": "Each pass scans the unsorted part once, so the work adds up to about n squared over two comparisons."
+   }
+  ]
+ },
+ {
+  "request": "how does insertion sort work",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "The array [6, 3, 5, 1, 4] as bars, the first bar marked sorted",
+    "narration": "Treat the first bar as a sorted hand of one card."
+   },
+   {
+    "seconds": 10,
+    "intent": "3 swapped in front of 6",
+    "narration": "Take three and slide it left past six."
+   },
+   {
+    "seconds": 10,
+    "intent": "5 slid in between 3 and 6",
+    "narration": "Take five and slide it left until it sits between three and six."
+   },
+   {
+    "seconds": 12,
+    "intent": "1 slid all the way to the front",
+    "narration": "One is smaller than everything, so it slides all the way to the front."
+   },
+   {
+    "seconds": 10,
+    "intent": "4 slid in between 3 and 5, giving 1, 3, 4, 5, 6",
+    "narration": "Finally four slides in between three and five."
+   },
+   {
+    "seconds": 8,
+    "intent": "The sorted bars with the sorted region grown to the full array",
+    "narration": "Like sorting cards in your hand: fast on nearly sorted input, about n squared in the worst case."
+   }
+  ]
+ },
+ {
+  "request": "quicksort partition, explain it with bars",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "The array [7, 2, 9, 4, 1, 8, 5] as bars, the last bar 5 lit as pivot",
+    "narration": "Pick the last bar, five, as the pivot."
+   },
+   {
+    "seconds": 12,
+    "intent": "Bars shorter than 5 swapped to the left side one by one",
+    "narration": "Walk through the bars and swap every one smaller than five to the left side."
+   },
+   {
+    "seconds": 10,
+    "intent": "The pivot swapped into place between the short bars and the tall ones",
+    "narration": "Swap the pivot in between: everything left of it is smaller, everything right is bigger."
+   },
+   {
+    "seconds": 10,
+    "intent": "The left group [2, 4, 1] and right group [7, 9, 8] partitioned the same way",
+    "narration": "Five is now in its final spot. Sort each side the same way."
+   },
+   {
+    "seconds": 10,
+    "intent": "The fully sorted bars 1, 2, 4, 5, 7, 8, 9",
+    "narration": "When every group is down to one bar, the whole array is sorted."
+   },
+   {
+    "seconds": 8,
+    "intent": "The pivots of each round lit in their final places",
+    "narration": "Good pivots split each group roughly in half, so on average quicksort needs far fewer comparisons than n squared."
+   }
+  ]
+ },
+ {
+  "request": "binary search, how does it find a number so fast",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "The sorted array [2, 5, 8, 12, 16, 23, 38, 56, 72, 91] as bars",
+    "narration": "Here are ten numbers in sorted order. We are looking for twenty-three."
+   },
+   {
+    "seconds": 10,
+    "intent": "The middle bar 16 lit; the left half greyed out",
+    "narration": "Check the middle: sixteen is too small, so twenty-three must be to its right."
+   },
+   {
+    "seconds": 10,
+    "intent": "The middle of the right half, 56, lit; its right side greyed out",
+    "narration": "In the right half the middle is fifty-six, too big: throw away everything from there on."
+   },
+   {
+    "seconds": 10,
+    "intent": "Two bars left, 23 and 38; 23 lit as found",
+    "narration": "Two bars remain, and the first is twenty-three: found in three checks."
+   },
+   {
+    "seconds": 10,
+    "intent": "A bar of 1000 items halving to 500, 250, ... 1 in about 10 steps",
+    "narration": "Every check halves what is left, so a thousand items need only about ten checks."
+   },
+   {
+    "seconds": 8,
+    "intent": "The three checks marked on the original array",
+    "narration": "It only works because the array is sorted: that is what lets us discard half each time."
+   }
+  ]
+ },
+ {
+  "request": "how do you count in binary",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "Four bits under place values 8, 4, 2, 1, all zero",
+    "narration": "Four switches, worth eight, four, two and one."
+   },
+   {
+    "seconds": 12,
+    "intent": "The bits counting up from 0000 to 0111",
+    "narration": "Count up: the ones bit flips every step, the twos bit every two steps, the fours bit every four."
+   },
+   {
+    "seconds": 10,
+    "intent": "0111 rolling over to 1000, the carry rippling left",
+    "narration": "At seven every bit is on, so adding one carries all the way: eight."
+   },
+   {
+    "seconds": 10,
+    "intent": "The pattern 1011 with the 8, 2 and 1 places lit, adding to 11",
+    "narration": "Read any pattern by adding the lit place values: one-zero-one-one is eight plus two plus one, eleven."
+   },
+   {
+    "seconds": 10,
+    "intent": "The count reaching 1111 = 15",
+    "narration": "Four bits count up to fifteen, sixteen values in all."
+   },
+   {
+    "seconds": 8,
+    "intent": "The full column of 16 patterns",
+    "narration": "Each extra bit doubles how many numbers you can write."
+   }
+  ]
+ },
+ {
+  "request": "how do computers store negative numbers, two's complement",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "Four bits under place values -8, 4, 2, 1",
+    "narration": "In four-bit two's complement, the top bit is worth minus eight."
+   },
+   {
+    "seconds": 10,
+    "intent": "The pattern 0101 lit, reading 5",
+    "narration": "Zero-one-zero-one is four plus one: five."
+   },
+   {
+    "seconds": 10,
+    "intent": "Every bit flipped to 1010",
+    "narration": "To negate, first flip every bit."
+   },
+   {
+    "seconds": 10,
+    "intent": "Adding 1 gives 1011, reading -8 + 2 + 1 = -5",
+    "narration": "Then add one: one-zero-one-one is minus eight plus two plus one, minus five."
+   },
+   {
+    "seconds": 12,
+    "intent": "0101 and 1011 added with carries, the result 0000 with the carry dropped",
+    "narration": "Add five and minus five in binary and every column carries: the four bits are all zero."
+   },
+   {
+    "seconds": 8,
+    "intent": "The 16 patterns arranged from -8 to 7",
+    "narration": "Four bits cover minus eight to seven, and ordinary addition just works."
+   }
+  ]
+ },
+ {
+  "request": "tower of hanoi solution",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "Three pegs with three discs stacked on the left",
+    "narration": "Move the whole stack to the right peg, one disc at a time, never a big disc on a small one."
+   },
+   {
+    "seconds": 10,
+    "intent": "The top two discs moved to the middle peg in three moves",
+    "narration": "First move the top two discs out of the way, to the middle peg: three moves."
+   },
+   {
+    "seconds": 10,
+    "intent": "The largest disc moved to the right peg",
+    "narration": "Now the biggest disc is free: move it to the right."
+   },
+   {
+    "seconds": 10,
+    "intent": "The two small discs moved onto it in three more moves",
+    "narration": "Then move the two small discs on top of it, three more moves."
+   },
+   {
+    "seconds": 12,
+    "intent": "The full 7-move solution replayed",
+    "narration": "Seven moves in all."
+   },
+   {
+    "seconds": 8,
+    "intent": "The move count for n discs: 1, 3, 7, 15 as bars",
+    "narration": "Each extra disc doubles the work plus one: two to the n minus one moves."
+   }
+  ]
+ },
+ {
+  "request": "breadth first search on a graph",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "A network A to F with edges A-B, A-C, B-D, C-D, C-E, D-F, E-F",
+    "narration": "Here is a small network, and we start at A."
+   },
+   {
+    "seconds": 10,
+    "intent": "A lit, then its neighbours B and C lit",
+    "narration": "Breadth-first search first visits everything one step from A: B and C."
+   },
+   {
+    "seconds": 10,
+    "intent": "The next ring, D and E, lit",
+    "narration": "Then everything two steps away: D and E."
+   },
+   {
+    "seconds": 10,
+    "intent": "F lit last, three steps out",
+    "narration": "Then F, three steps away."
+   },
+   {
+    "seconds": 10,
+    "intent": "The edges used to discover each node drawn as a tree from A",
+    "narration": "The edges that first reached each node form a tree of shortest routes."
+   },
+   {
+    "seconds": 8,
+    "intent": "The network with nodes coloured by distance from A",
+    "narration": "Visiting in rings finds the fewest-edge path to every node."
+   }
+  ]
+ },
+ {
+  "request": "depth first search explained",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "A network A to F with edges A-B, A-C, B-D, C-D, C-E, D-F, E-F",
+    "narration": "Same network, starting at A."
+   },
+   {
+    "seconds": 10,
+    "intent": "A to B to D lit, diving deep before looking around",
+    "narration": "Depth-first search dives as far as it can: A, then B, then D."
+   },
+   {
+    "seconds": 10,
+    "intent": "From D on to C, then E, then F",
+    "narration": "From D it goes to C, then on to E, then F."
+   },
+   {
+    "seconds": 10,
+    "intent": "The search backing up with nothing left unvisited",
+    "narration": "At F there is nowhere new to go, so it backs up."
+   },
+   {
+    "seconds": 10,
+    "intent": "The visit order A, B, D, C, E, F with its tree of edges",
+    "narration": "The visit order is A, B, D, C, E, F, a long thin tree."
+   },
+   {
+    "seconds": 8,
+    "intent": "The depth-first tree beside the breadth-first rings",
+    "narration": "Breadth-first goes wide in rings; depth-first goes deep and backtracks."
+   }
+  ]
+ },
+ {
+  "request": "dijkstra's algorithm shortest path",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "A weighted network: A-B 4, A-C 1, C-B 2, B-D 1, C-D 5, D-E 3",
+    "narration": "Each road has a length. We want the shortest route from A to E."
+   },
+   {
+    "seconds": 10,
+    "intent": "A at distance 0, C settled at 1",
+    "narration": "Start at A. The nearest unsettled node is C, at distance one."
+   },
+   {
+    "seconds": 10,
+    "intent": "B settled at 3 through C, beating the direct road of 4",
+    "narration": "Through C, B is one plus two, three, shorter than the direct four."
+   },
+   {
+    "seconds": 10,
+    "intent": "D settled at 4 through B",
+    "narration": "D is then three plus one, four, better than six through C."
+   },
+   {
+    "seconds": 10,
+    "intent": "E settled at 7 through D",
+    "narration": "Finally E is four plus three, seven."
+   },
+   {
+    "seconds": 8,
+    "intent": "The shortest path A, C, B, D, E lit",
+    "narration": "Always settling the nearest unsettled node guarantees each distance is final."
+   }
+  ]
+ },
+ {
+  "request": "what happens in a forward pass of a neural network",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "A neural net with 3 inputs, 4 hidden neurons and 2 outputs",
+    "narration": "Three inputs feed four hidden neurons, which feed two outputs."
+   },
+   {
+    "seconds": 10,
+    "intent": "The input neurons lit with values",
+    "narration": "Put numbers into the input layer."
+   },
+   {
+    "seconds": 12,
+    "intent": "Signals flowing along the edges into the hidden layer",
+    "narration": "Each hidden neuron adds up the inputs, each times a weight on its edge, plus a bias."
+   },
+   {
+    "seconds": 10,
+    "intent": "Hidden neurons lighting up by how active they are",
+    "narration": "Then it squashes that sum through an activation function."
+   },
+   {
+    "seconds": 10,
+    "intent": "Signals flowing on to the two outputs",
+    "narration": "The outputs do the same with the hidden values."
+   },
+   {
+    "seconds": 8,
+    "intent": "The brighter output lit as the answer",
+    "narration": "A forward pass is layer after layer of weighted sums and squashing."
+   }
+  ]
+ },
+ {
+  "request": "how does a perceptron decide which side a point is on",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "A plane with red dots on one side and blue dots on the other",
+    "narration": "Two groups of points: red and blue."
+   },
+   {
+    "seconds": 10,
+    "intent": "A straight line splitting the plane between them",
+    "narration": "A perceptron draws a straight line between them."
+   },
+   {
+    "seconds": 10,
+    "intent": "A weight vector w drawn perpendicular to the line",
+    "narration": "The line is set by a weight vector w, at right angles to it."
+   },
+   {
+    "seconds": 10,
+    "intent": "A point's projection onto w landing past the line, classified blue",
+    "narration": "A point is judged by its dot product with w: past the threshold, blue; short of it, red."
+   },
+   {
+    "seconds": 12,
+    "intent": "A misclassified dot nudging w, the line turning to fix it",
+    "narration": "When a point is wrong, the rule adds or subtracts it from w, turning the line."
+   },
+   {
+    "seconds": 8,
+    "intent": "The final line cleanly separating the colours",
+    "narration": "If a separating line exists, these nudges eventually find one."
+   }
+  ]
+ },
+ {
+  "request": "n vs n squared, why does it matter for algorithms",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "Axes with the line y = n and the curve y = n^2 for n from 0 to 10",
+    "narration": "Compare a linear algorithm, n steps, with a quadratic one, n squared steps."
+   },
+   {
+    "seconds": 10,
+    "intent": "At n = 10: 10 versus 100 marked",
+    "narration": "At ten items, ten steps versus a hundred."
+   },
+   {
+    "seconds": 10,
+    "intent": "Bars for n = 10, 100, 1000 on each side",
+    "narration": "At a thousand items: a thousand steps versus a million."
+   },
+   {
+    "seconds": 10,
+    "intent": "A dot tracing the n^2 curve racing away from the line",
+    "narration": "The quadratic curve pulls away faster and faster."
+   },
+   {
+    "seconds": 10,
+    "intent": "Doubling n: the line's value doubles, the curve's quadruples",
+    "narration": "Double the input and the linear work doubles, but the quadratic work quadruples."
+   },
+   {
+    "seconds": 8,
+    "intent": "Both graphs zoomed out, the line nearly flat beside the curve",
+    "narration": "For big inputs, the growth rate matters more than any constant factor."
+   }
+  ]
+ },
+ {
+  "request": "sieve of eratosthenes",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "The numbers 2 to 50 laid out in a grid",
+    "narration": "Write out the numbers from two to fifty."
+   },
+   {
+    "seconds": 10,
+    "intent": "2 circled and its multiples 4, 6, 8, ... falling away",
+    "narration": "Two is prime; cross out every multiple of two."
+   },
+   {
+    "seconds": 10,
+    "intent": "3 circled and its remaining multiples falling away",
+    "narration": "The next survivor, three, is prime; cross out its multiples."
+   },
+   {
+    "seconds": 10,
+    "intent": "5 and 7 circled, their multiples falling away",
+    "narration": "Then five, then seven."
+   },
+   {
+    "seconds": 10,
+    "intent": "The 15 surviving primes lit",
+    "narration": "Seven squared is forty-nine, so after seven every survivor up to fifty is prime: fifteen of them."
+   },
+   {
+    "seconds": 8,
+    "intent": "The prime grid alone",
+    "narration": "Any composite number up to fifty has a factor of seven or less, so it has already been crossed out."
+   }
+  ]
+ },
+ {
+  "request": "why do primes make spirals when plotted in polar coordinates",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "Whole numbers n plotted at radius n and angle n radians",
+    "narration": "Plot each whole number n at distance n from the centre, at angle n radians."
+   },
+   {
+    "seconds": 10,
+    "intent": "Only the primes kept, a thousand dots",
+    "narration": "Now keep only the primes."
+   },
+   {
+    "seconds": 12,
+    "intent": "Zooming out to 2000: the primes lining up along spiral arms",
+    "narration": "Zoom out and the primes gather along spiral arms."
+   },
+   {
+    "seconds": 10,
+    "intent": "The numbers n, n + 44, n + 88 lit, landing almost on one ray since 44 radians is just over 7 turns",
+    "narration": "Forty-four radians is just over seven full turns, so numbers forty-four apart land almost in line, making gently curving arms."
+   },
+   {
+    "seconds": 10,
+    "intent": "Arms with no primes, where n + 44k is always even",
+    "narration": "Some arms are empty because every number on them shares a factor with forty-four."
+   },
+   {
+    "seconds": 8,
+    "intent": "The spiral with prime-rich arms lit",
+    "narration": "The spirals come from how whole numbers wrap around in radians; the gaps come from divisibility."
+   }
+  ]
+ },
+ {
+  "request": "how does a parity bit catch errors",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "A bit grid row 1011001 with a parity column",
+    "narration": "Send seven bits: one-zero-one-one-zero-zero-one."
+   },
+   {
+    "seconds": 10,
+    "intent": "The four 1s counted and the parity bit set to 0 to keep the count even",
+    "narration": "It has four ones, already even, so the parity bit is zero."
+   },
+   {
+    "seconds": 10,
+    "intent": "One bit flipped in transit, the row now showing five 1s",
+    "narration": "Noise flips one bit on the way."
+   },
+   {
+    "seconds": 10,
+    "intent": "The receiver's count lit as odd, the row flagged",
+    "narration": "The receiver counts five ones, odd, so it knows something went wrong."
+   },
+   {
+    "seconds": 10,
+    "intent": "Two bits flipped, the count even again, unflagged",
+    "narration": "But if two bits flip, the count is even again and the error slips through."
+   },
+   {
+    "seconds": 8,
+    "intent": "A grid of rows with parity on rows and columns, the bad bit at their crossing",
+    "narration": "Add parity on both rows and columns and a single flipped bit is found where the bad row and bad column cross."
+   }
+  ]
+ },
+ {
+  "request": "xor explained with bits",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "Two rows of bits: 1100 over 1010",
+    "narration": "Line up two rows of bits."
+   },
+   {
+    "seconds": 10,
+    "intent": "Columns where the bits differ lit",
+    "narration": "XOR gives one where the bits differ and zero where they match."
+   },
+   {
+    "seconds": 10,
+    "intent": "The result row 0110 filled in beneath",
+    "narration": "One-one-zero-zero XOR one-zero-one-zero is zero-one-one-zero."
+   },
+   {
+    "seconds": 10,
+    "intent": "The result XORed with 1010 again, giving back 1100",
+    "narration": "XOR the result with the second row again and you get the first row back."
+   },
+   {
+    "seconds": 10,
+    "intent": "A row XORed with itself, every bit turning 0",
+    "narration": "Anything XOR itself is all zeros."
+   },
+   {
+    "seconds": 8,
+    "intent": "The three rows with the key row 1010 highlighted",
+    "narration": "That undo property is why XOR is used to hide and recover data with a key."
+   }
+  ]
+ },
+ {
+  "request": "why does a set with n elements have 2^n subsets",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "A branching tree: first element in or out",
+    "narration": "Build a subset by deciding, one element at a time, in or out."
+   },
+   {
+    "seconds": 10,
+    "intent": "Each branch splitting again for the second element: 4 leaves",
+    "narration": "Two choices for the first, two for the second: four branches."
+   },
+   {
+    "seconds": 10,
+    "intent": "The third split giving 8 leaves",
+    "narration": "A third element doubles it again: eight."
+   },
+   {
+    "seconds": 12,
+    "intent": "The 8 leaves as rows of a 3-column bit grid, 1 meaning in",
+    "narration": "Write each leaf as three bits, one for in and zero for out: the eight subsets."
+   },
+   {
+    "seconds": 10,
+    "intent": "The rows 000 and 111 lit: the empty set and the whole set",
+    "narration": "All zeros is the empty set; all ones is the whole set."
+   },
+   {
+    "seconds": 8,
+    "intent": "Leaf counts 2, 4, 8, 16 as doubling bars",
+    "narration": "Every new element doubles the count: two to the n subsets."
+   }
+  ]
+ },
+ {
+  "request": "the seven bridges of konigsberg",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "A network: island A joined to banks B and C by two bridges each and to D by one; B-D and C-D",
+    "narration": "Four land masses and seven bridges."
+   },
+   {
+    "seconds": 10,
+    "intent": "A walk starting at B trying to cross every edge once and getting stuck",
+    "narration": "Try to walk across every bridge exactly once. You always get stuck."
+   },
+   {
+    "seconds": 10,
+    "intent": "Each node labelled with its degree: A 5, B 3, C 3, D 3",
+    "narration": "Count the bridges at each land mass: five, three, three, three. All odd."
+   },
+   {
+    "seconds": 10,
+    "intent": "A middle node with edges paired in and out",
+    "narration": "Passing through a place uses bridges in pairs, one in and one out."
+   },
+   {
+    "seconds": 10,
+    "intent": "Only the start and end nodes allowed an odd count",
+    "narration": "So only the start and the finish can have an odd number of bridges."
+   },
+   {
+    "seconds": 8,
+    "intent": "The network with four odd nodes lit",
+    "narration": "Four odd places is too many: no such walk exists."
+   }
+  ]
+ },
+ {
+  "request": "how does pagerank work",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "A network of four pages A, B, C, D with links between them",
+    "narration": "Four web pages link to each other."
+   },
+   {
+    "seconds": 10,
+    "intent": "A random surfer dot hopping along links",
+    "narration": "Imagine a surfer who clicks a random link on every page."
+   },
+   {
+    "seconds": 12,
+    "intent": "Bars for the share of time spent on each page growing",
+    "narration": "Track how much of the time the surfer spends on each page."
+   },
+   {
+    "seconds": 10,
+    "intent": "Page C, with the most incoming links, getting the tallest bar",
+    "narration": "Pages that many others link to get visited most."
+   },
+   {
+    "seconds": 10,
+    "intent": "A link from C making B's bar grow",
+    "narration": "A link from a popular page counts for more, because the surfer is there more often."
+   },
+   {
+    "seconds": 8,
+    "intent": "The network with node sizes set by the bars",
+    "narration": "PageRank is the share of time the random surfer spends on each page."
+   }
+  ]
+ },
+ {
+  "request": "pigeonhole principle and hash collisions",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "Ten slots drawn as empty bars",
+    "narration": "A hash table has ten slots."
+   },
+   {
+    "seconds": 10,
+    "intent": "Keys dropping into slots one at a time",
+    "narration": "Put keys in, each landing in a slot."
+   },
+   {
+    "seconds": 10,
+    "intent": "Ten keys filling ten slots with none shared, the luckiest case",
+    "narration": "Even in the luckiest case ten keys fill all ten slots."
+   },
+   {
+    "seconds": 12,
+    "intent": "The eleventh key landing on a filled slot, the collision lit",
+    "narration": "The eleventh key must share a slot: there are more keys than slots."
+   },
+   {
+    "seconds": 10,
+    "intent": "Twenty-one keys in ten slots, at least one slot holding three",
+    "narration": "Put in twenty-one keys and some slot must hold at least three, since ten slots of two hold only twenty."
+   },
+   {
+    "seconds": 8,
+    "intent": "Slot bars of uneven heights",
+    "narration": "More items than boxes forces a box to hold two: the pigeonhole principle."
+   }
+  ]
+ },
+ {
+  "request": "k-means clustering with a simple example",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "Points 1, 2, 4, 8, 9, 11 on a number line with two centres at 0 and 5",
+    "narration": "Six points on a line and two starting guesses for cluster centres, at zero and five."
+   },
+   {
+    "seconds": 10,
+    "intent": "Each point coloured by its nearer centre: 1 and 2 with 0, the rest with 5",
+    "narration": "Give each point to its nearer centre."
+   },
+   {
+    "seconds": 10,
+    "intent": "Each centre moving to the mean of its points: 1.5 and 8",
+    "narration": "Move each centre to the average of its points: one and a half, and eight."
+   },
+   {
+    "seconds": 10,
+    "intent": "Point 4 switching to the left cluster",
+    "narration": "Now four is closer to the left centre, so it switches."
+   },
+   {
+    "seconds": 10,
+    "intent": "Centres moving again to 7/3 and 28/3, then staying put",
+    "narration": "The centres move to about 2.33 and 9.33, and nothing changes after that."
+   },
+   {
+    "seconds": 8,
+    "intent": "The two final clusters coloured on the line",
+    "narration": "Assign, average, repeat: k-means settles when no point changes side."
+   }
+  ]
+ },
+ {
+  "request": "show me the collatz sequence starting from 6",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "A bar of height 6",
+    "narration": "Start at six. If a number is even, halve it; if odd, triple it and add one."
+   },
+   {
+    "seconds": 10,
+    "intent": "Bars 6, 3, 10, 5 appearing one after another",
+    "narration": "Six is even, so three. Three is odd, so ten. Ten halves to five."
+   },
+   {
+    "seconds": 10,
+    "intent": "The bar jumping to 16, then halving down 8, 4, 2, 1",
+    "narration": "Five goes up to sixteen, then it halves all the way down: eight, four, two, one."
+   },
+   {
+    "seconds": 12,
+    "intent": "Bars for the sequence from 7 climbing as high as 52 before falling to 1",
+    "narration": "Start at seven and it wanders much higher, up to fifty-two, before it also falls to one after sixteen steps."
+   },
+   {
+    "seconds": 8,
+    "intent": "Bars of the number of steps to reach 1 for starting values 1 to 20",
+    "narration": "Every starting number anyone has tried eventually reaches one, but nobody has proved it always does."
+   }
+  ]
+ },
+ {
+  "request": "prove the pythagorean theorem visually",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "A right triangle with legs 3 and 4",
+    "narration": "Take a right triangle with legs three and four."
+   },
+   {
+    "seconds": 10,
+    "intent": "A square built on each side of the triangle",
+    "narration": "Build a square on each of its three sides."
+   },
+   {
+    "seconds": 10,
+    "intent": "The leg squares filled with 9 and 16 unit cells",
+    "narration": "The squares on the legs hold nine and sixteen unit squares."
+   },
+   {
+    "seconds": 12,
+    "intent": "The 25 cells from the two leg squares rearranged to fill the square on the hypotenuse",
+    "narration": "Together those twenty-five squares exactly fill the square on the long side."
+   },
+   {
+    "seconds": 10,
+    "intent": "The hypotenuse square labelled 25, side 5",
+    "narration": "So the hypotenuse is five."
+   },
+   {
+    "seconds": 8,
+    "intent": "The three squares with a^2 + b^2 = c^2 beside them",
+    "narration": "For every right triangle, the two smaller squares add up to the largest."
+   }
+  ]
+ },
+ {
+  "request": "why do the angles in a triangle add up to 180 degrees",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "A triangle with its three angles coloured",
+    "narration": "Colour the three corners of a triangle."
+   },
+   {
+    "seconds": 10,
+    "intent": "The three corners torn off",
+    "narration": "Tear off the three corners."
+   },
+   {
+    "seconds": 12,
+    "intent": "The corners laid side by side along a straight line",
+    "narration": "Lay them side by side, point to point."
+   },
+   {
+    "seconds": 10,
+    "intent": "The three angles filling exactly a straight line, 180°",
+    "narration": "They fill a straight line exactly: one hundred eighty degrees."
+   },
+   {
+    "seconds": 10,
+    "intent": "A long thin triangle, its corners also filling a straight line",
+    "narration": "Try a different triangle and the corners still make a straight line."
+   },
+   {
+    "seconds": 8,
+    "intent": "A line through one vertex parallel to the opposite side, with the matching angles marked",
+    "narration": "The reason: a line parallel to one side makes equal alternate angles with the other two sides."
+   }
+  ]
+ },
+ {
+  "request": "why is the area of a triangle half base times height",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "A triangle with base 4 and height 3",
+    "narration": "Here is a triangle with base four and height three."
+   },
+   {
+    "seconds": 10,
+    "intent": "The 4-by-3 rectangle drawn around it",
+    "narration": "Draw the rectangle that just encloses it."
+   },
+   {
+    "seconds": 10,
+    "intent": "The height line splitting the triangle and rectangle into two halves each",
+    "narration": "Drop the height: it splits the rectangle into two smaller rectangles."
+   },
+   {
+    "seconds": 12,
+    "intent": "Each small rectangle cut by its diagonal into two equal triangles",
+    "narration": "Each smaller rectangle is cut in half by a side of the triangle."
+   },
+   {
+    "seconds": 10,
+    "intent": "The triangle's two pieces shaded, filling half the rectangle",
+    "narration": "So the triangle is exactly half the rectangle."
+   },
+   {
+    "seconds": 8,
+    "intent": "The triangle with area 1/2 × 4 × 3 = 6",
+    "narration": "Half of four times three: six."
+   }
+  ]
+ },
+ {
+  "request": "area of a parallelogram, why base times height",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "A 3-by-2 rectangle on a grid",
+    "narration": "Start with a three by two rectangle: area six."
+   },
+   {
+    "seconds": 12,
+    "intent": "The shear [[1, 1], [0, 1]] leaning the rectangle into a parallelogram",
+    "narration": "Shear it: each horizontal line slides sideways by its height."
+   },
+   {
+    "seconds": 10,
+    "intent": "The parallelogram's base 3 and height 2 marked",
+    "narration": "The base is still three and the height is still two."
+   },
+   {
+    "seconds": 10,
+    "intent": "A triangle cut off the left end and moved to the right end",
+    "narration": "Cut the triangle off one end and slide it to the other."
+   },
+   {
+    "seconds": 10,
+    "intent": "The pieces reassembled into the original 3-by-2 rectangle",
+    "narration": "It fits back into the rectangle."
+   },
+   {
+    "seconds": 8,
+    "intent": "The parallelogram labelled base × height = 6",
+    "narration": "So a parallelogram's area is base times height, however far it leans."
+   }
+  ]
+ },
+ {
+  "request": "how do you find the sum of interior angles of a polygon",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "A pentagon",
+    "narration": "Take any pentagon."
+   },
+   {
+    "seconds": 10,
+    "intent": "Diagonals from one corner cutting it into 3 triangles",
+    "narration": "Draw the diagonals from one corner: they split it into three triangles."
+   },
+   {
+    "seconds": 10,
+    "intent": "Each triangle's angles adding to 180°",
+    "narration": "Each triangle's angles add up to one hundred eighty degrees."
+   },
+   {
+    "seconds": 10,
+    "intent": "The pentagon's angles made of those triangles': 3 × 180 = 540°",
+    "narration": "Together the triangles' angles make up the pentagon's: five hundred forty degrees."
+   },
+   {
+    "seconds": 12,
+    "intent": "A hexagon cut into 4 triangles, 720°",
+    "narration": "A hexagon splits into four triangles: seven hundred twenty degrees."
+   },
+   {
+    "seconds": 8,
+    "intent": "Bars of angle sums for 3 to 8 sides growing by 180 each time",
+    "narration": "An n-sided polygon splits into n minus two triangles: the angles add to n minus two times one eighty."
+   }
+  ]
+ },
+ {
+  "request": "if you double the sides of a triangle what happens to the area",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "A small right triangle with legs 2 and 1 on a grid",
+    "narration": "Take a triangle with legs two and one, area one."
+   },
+   {
+    "seconds": 10,
+    "intent": "The triangle scaled by 2, its sides doubled",
+    "narration": "Double every side."
+   },
+   {
+    "seconds": 12,
+    "intent": "The big triangle tiled by four copies of the small one",
+    "narration": "The bigger triangle can be tiled with four copies of the small one."
+   },
+   {
+    "seconds": 10,
+    "intent": "The triangle scaled by 3, tiled by nine copies",
+    "narration": "Triple the sides and it takes nine copies."
+   },
+   {
+    "seconds": 10,
+    "intent": "Bars of area 1, 4, 9 for scale factors 1, 2, 3",
+    "narration": "Areas grow with the square of the scale factor."
+   },
+   {
+    "seconds": 8,
+    "intent": "The three similar triangles nested at one corner",
+    "narration": "Scale lengths by k and areas scale by k squared."
+   }
+  ]
+ },
+ {
+  "request": "what do m and b mean in y = mx + b",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "The line y = x on axes",
+    "narration": "Here is the line y equals x."
+   },
+   {
+    "seconds": 10,
+    "intent": "The slope m increasing from 1 to 3, the line tilting steeper",
+    "narration": "Raise m and the line gets steeper: m is the rise for each step across."
+   },
+   {
+    "seconds": 10,
+    "intent": "m becoming negative, the line tilting downhill",
+    "narration": "Make m negative and the line runs downhill."
+   },
+   {
+    "seconds": 10,
+    "intent": "b changing from 0 to 2, the line sliding up the y-axis",
+    "narration": "Change b and the line slides up or down: b is where it crosses the y-axis."
+   },
+   {
+    "seconds": 10,
+    "intent": "The line y = 2x + 1 with a one-across, two-up step drawn from (0, 1)",
+    "narration": "For y equals two x plus one: start at one on the y-axis, then go up two for every one across."
+   },
+   {
+    "seconds": 8,
+    "intent": "Several lines with the same slope and different b, all parallel",
+    "narration": "Same m, different b: parallel lines."
+   }
+  ]
+ },
+ {
+  "request": "vertex and roots of a quadratic",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "The parabola y = x^2 - 4x + 3 on axes",
+    "narration": "Here is y equals x squared minus four x plus three."
+   },
+   {
+    "seconds": 10,
+    "intent": "The two roots at x = 1 and x = 3 marked on the x-axis",
+    "narration": "It crosses the x-axis at one and three, since it factors as x minus one times x minus three."
+   },
+   {
+    "seconds": 10,
+    "intent": "The vertex at (2, -1) marked, halfway between the roots",
+    "narration": "The lowest point sits halfway between the roots, at x equals two, height minus one."
+   },
+   {
+    "seconds": 10,
+    "intent": "A dashed axis of symmetry at x = 2",
+    "narration": "The parabola is symmetric about the vertical line x equals two."
+   },
+   {
+    "seconds": 12,
+    "intent": "The parabola shifted up by 2, now crossing nowhere",
+    "narration": "Shift it up by two and its lowest point is above the axis: no real roots."
+   },
+   {
+    "seconds": 8,
+    "intent": "The original and shifted parabolas together",
+    "narration": "Whether the vertex is below, on, or above the axis decides two, one, or no real roots."
+   }
+  ]
+ },
+ {
+  "request": "completing the square with actual squares",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "A square of side x",
+    "narration": "Start with x squared as a square of side x."
+   },
+   {
+    "seconds": 10,
+    "intent": "A 6-by-x rectangle split into two 3-by-x strips",
+    "narration": "Take six x as a rectangle, and cut it into two strips, each three by x."
+   },
+   {
+    "seconds": 10,
+    "intent": "The strips attached to two sides of the square, leaving a missing corner",
+    "narration": "Attach one strip to the right side and one to the top. A corner is missing."
+   },
+   {
+    "seconds": 10,
+    "intent": "The missing 3-by-3 corner filled in dashed",
+    "narration": "The missing corner is three by three, area nine."
+   },
+   {
+    "seconds": 12,
+    "intent": "The completed square of side x + 3",
+    "narration": "Fill it in and you have a square of side x plus three."
+   },
+   {
+    "seconds": 8,
+    "intent": "The square with its corner marked: x^2 + 6x = (x + 3)^2 - 9",
+    "narration": "So x squared plus six x is x plus three squared, minus the nine we added."
+   }
+  ]
+ },
+ {
+  "request": "why is (a + b)^2 not a^2 + b^2",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "A square of side a + b, with a and b marked along each side",
+    "narration": "Draw a square whose side is a plus b."
+   },
+   {
+    "seconds": 10,
+    "intent": "Lines dividing it into four pieces",
+    "narration": "Split each side at the point between a and b."
+   },
+   {
+    "seconds": 10,
+    "intent": "The a-by-a square and the b-by-b square lit",
+    "narration": "Two pieces are squares: a squared and b squared."
+   },
+   {
+    "seconds": 12,
+    "intent": "The two a-by-b rectangles lit",
+    "narration": "But there are also two rectangles, each a by b."
+   },
+   {
+    "seconds": 10,
+    "intent": "All four areas adding to a^2 + 2ab + b^2",
+    "narration": "So the whole area is a squared plus two a b plus b squared."
+   },
+   {
+    "seconds": 8,
+    "intent": "The square with the two rectangles glowing",
+    "narration": "The two rectangles are the part people forget."
+   }
+  ]
+ },
+ {
+  "request": "difference of squares geometric proof",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "A square of side a with a small b-by-b square cut from its corner",
+    "narration": "Take an a by a square and cut out a b by b corner. The area left is a squared minus b squared."
+   },
+   {
+    "seconds": 10,
+    "intent": "The L-shaped leftover cut into two rectangles",
+    "narration": "Cut the leftover L into two rectangles."
+   },
+   {
+    "seconds": 12,
+    "intent": "One rectangle moved and turned to line up with the other",
+    "narration": "Move one rectangle and turn it to line up with the other."
+   },
+   {
+    "seconds": 10,
+    "intent": "A single long rectangle of sides a + b and a - b",
+    "narration": "Together they make one rectangle, a plus b long and a minus b wide."
+   },
+   {
+    "seconds": 8,
+    "intent": "The rectangle labelled a^2 - b^2 = (a + b)(a - b)",
+    "narration": "So a squared minus b squared equals a plus b times a minus b."
+   }
+  ]
+ },
+ {
+  "request": "why do the odd numbers add up to square numbers",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "A single dot",
+    "narration": "One dot: one squared."
+   },
+   {
+    "seconds": 10,
+    "intent": "Three dots added in an L around it, making a 2-by-2 square",
+    "narration": "Add three dots in an L and you have a two by two square."
+   },
+   {
+    "seconds": 10,
+    "intent": "Five more dots in an L, making a 3-by-3 square",
+    "narration": "Add five more around the corner: three by three."
+   },
+   {
+    "seconds": 12,
+    "intent": "Seven and then nine dots making 4-by-4 and 5-by-5 squares",
+    "narration": "Seven more, then nine more: four by four, then five by five."
+   },
+   {
+    "seconds": 10,
+    "intent": "The L-shapes coloured differently inside the 5-by-5 square",
+    "narration": "Each L is the next odd number, and each fits around the last square."
+   },
+   {
+    "seconds": 8,
+    "intent": "The 5-by-5 square labelled 1 + 3 + 5 + 7 + 9 = 25",
+    "narration": "The first n odd numbers add up to n squared."
+   }
+  ]
+ },
+ {
+  "request": "sum of 1 + 2 + ... + n formula",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "A staircase of dots with rows of 1, 2, 3, 4, 5",
+    "narration": "Stack rows of one, two, three, four and five dots into a staircase."
+   },
+   {
+    "seconds": 10,
+    "intent": "A second copy of the staircase, turned upside down",
+    "narration": "Make a second copy and turn it upside down."
+   },
+   {
+    "seconds": 12,
+    "intent": "The two staircases fitted together into a 5-by-6 rectangle",
+    "narration": "Fit them together: they make a rectangle five rows tall and six dots wide."
+   },
+   {
+    "seconds": 10,
+    "intent": "The rectangle's 30 dots, twice the sum",
+    "narration": "That rectangle has thirty dots, which is twice the sum."
+   },
+   {
+    "seconds": 10,
+    "intent": "The staircase alone with 15 dots",
+    "narration": "So one staircase has fifteen dots."
+   },
+   {
+    "seconds": 8,
+    "intent": "The rectangle labelled n(n + 1) / 2",
+    "narration": "In general the sum of one to n is n times n plus one, over two."
+   }
+  ]
+ },
+ {
+  "request": "which is bigger, 3/4 or 2/3, on a number line",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "A number line from 0 to 1",
+    "narration": "Draw a number line from zero to one."
+   },
+   {
+    "seconds": 10,
+    "intent": "The line cut into quarters, 3/4 marked",
+    "narration": "Cut it into four equal parts and count three: three quarters."
+   },
+   {
+    "seconds": 10,
+    "intent": "The line cut into thirds, 2/3 marked",
+    "narration": "Cut it into three equal parts and count two: two thirds."
+   },
+   {
+    "seconds": 10,
+    "intent": "Both cut into twelfths: 9/12 and 8/12",
+    "narration": "Cut into twelfths, three quarters is nine twelfths and two thirds is eight twelfths."
+   },
+   {
+    "seconds": 10,
+    "intent": "The gap of 1/12 between the two marks lit",
+    "narration": "Three quarters is bigger, by one twelfth."
+   },
+   {
+    "seconds": 8,
+    "intent": "Both points on one line, 3/4 to the right",
+    "narration": "On a number line, further right is bigger."
+   }
+  ]
+ },
+ {
+  "request": "adding and subtracting negative numbers on a number line",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "A number line from -6 to 6 with a dot at -3",
+    "narration": "Start at minus three."
+   },
+   {
+    "seconds": 10,
+    "intent": "An arrow of 5 steps to the right landing at 2",
+    "narration": "Adding five moves five steps right: minus three plus five is two."
+   },
+   {
+    "seconds": 10,
+    "intent": "From 2, an arrow of 4 steps left landing at -2",
+    "narration": "Subtracting four moves four steps left, to minus two."
+   },
+   {
+    "seconds": 10,
+    "intent": "Adding -4 drawn as the same leftward arrow",
+    "narration": "Adding minus four is the same move: four steps left."
+   },
+   {
+    "seconds": 12,
+    "intent": "Subtracting -3 drawn as a 3-step arrow to the right",
+    "narration": "Subtracting minus three reverses the reversed direction: three steps right."
+   },
+   {
+    "seconds": 8,
+    "intent": "The four moves drawn one after another on the line",
+    "narration": "Adding a negative moves left; taking away a negative moves right."
+   }
+  ]
+ },
+ {
+  "request": "multiplication as the area of a rectangle",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "A 3-by-4 grid of dots",
+    "narration": "Three rows of four dots."
+   },
+   {
+    "seconds": 10,
+    "intent": "The dots as unit squares forming a 3-by-4 rectangle",
+    "narration": "Make each dot a unit square: a three by four rectangle."
+   },
+   {
+    "seconds": 10,
+    "intent": "The rectangle's 12 squares counted",
+    "narration": "Its area is twelve, which is three times four."
+   },
+   {
+    "seconds": 12,
+    "intent": "The rectangle turned a quarter turn into 4-by-3",
+    "narration": "Turn it on its side: four rows of three, still twelve."
+   },
+   {
+    "seconds": 10,
+    "intent": "A 2.5-by-4 rectangle with half-squares along one edge",
+    "narration": "The same picture handles fractions: two and a half by four is ten."
+   },
+   {
+    "seconds": 8,
+    "intent": "The 3-by-4 and 4-by-3 rectangles side by side",
+    "narration": "Area pictures show why multiplication does not care about order."
+   }
+  ]
+ },
+ {
+  "request": "distributive property with rectangles",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "A 7-by-13 rectangle",
+    "narration": "Here is a rectangle seven tall and thirteen wide."
+   },
+   {
+    "seconds": 10,
+    "intent": "A line splitting the width into 10 and 3",
+    "narration": "Split thirteen into ten plus three."
+   },
+   {
+    "seconds": 10,
+    "intent": "The two pieces labelled 7 × 10 = 70 and 7 × 3 = 21",
+    "narration": "The pieces have areas seventy and twenty-one."
+   },
+   {
+    "seconds": 10,
+    "intent": "The pieces together totalling 91",
+    "narration": "Together, ninety-one: seven times thirteen."
+   },
+   {
+    "seconds": 12,
+    "intent": "An a-by-(b + c) rectangle split into a × b and a × c pieces",
+    "narration": "With letters: a times b plus c is a b plus a c."
+   },
+   {
+    "seconds": 8,
+    "intent": "The split rectangle with both pieces glowing",
+    "narration": "Splitting a side splits the area: that is the distributive law."
+   }
+  ]
+ },
+ {
+  "request": "solving 2x + 1 < 7 on a number line",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "A number line from -2 to 6",
+    "narration": "Draw a number line."
+   },
+   {
+    "seconds": 10,
+    "intent": "The inequality turned into x < 3 by subtracting 1 and halving, the point 3 marked",
+    "narration": "Subtract one and halve: x is less than three."
+   },
+   {
+    "seconds": 10,
+    "intent": "An open circle at 3 and everything to its left shaded",
+    "narration": "Mark three with an open circle, since three itself does not work, and shade everything to its left."
+   },
+   {
+    "seconds": 10,
+    "intent": "Test dots at 0 and 4, one inside the shading and one out",
+    "narration": "Check: at zero, one is less than seven, true. At four, nine is not less than seven."
+   },
+   {
+    "seconds": 12,
+    "intent": "The inequality -2x > 4 shaded to the left of -2, the direction flipped",
+    "narration": "Dividing by a negative flips the inequality: minus two x greater than four gives x less than minus two."
+   },
+   {
+    "seconds": 8,
+    "intent": "Both solution sets shaded on the line",
+    "narration": "An inequality's answer is a whole stretch of the number line."
+   }
+  ]
+ },
+ {
+  "request": "graph of absolute value",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "The graph y = |x|, a V on axes",
+    "narration": "The absolute value graph is a V with its point at the origin."
+   },
+   {
+    "seconds": 10,
+    "intent": "Points at x = -3 and x = 3 both at height 3",
+    "narration": "Minus three and three are both three away from zero."
+   },
+   {
+    "seconds": 10,
+    "intent": "The V slid right to y = |x - 2|, point at 2",
+    "narration": "Change to x minus two and the V slides right to two."
+   },
+   {
+    "seconds": 10,
+    "intent": "The horizontal line y = 3 crossing y = |x| at -3 and 3",
+    "narration": "Where is the absolute value less than three? Between the crossings."
+   },
+   {
+    "seconds": 12,
+    "intent": "The stretch -3 < x < 3 shaded on a number line under the graph",
+    "narration": "So |x| less than three means x between minus three and three."
+   },
+   {
+    "seconds": 8,
+    "intent": "The V and the shaded interval together",
+    "narration": "Absolute value measures distance from zero."
+   }
+  ]
+ },
+ {
+  "request": "how do sine and cosine come from the unit circle",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "A radius turning inside the unit circle",
+    "narration": "Turn a radius of length one around a circle."
+   },
+   {
+    "seconds": 10,
+    "intent": "The tip's height traced out to the right as a sine wave",
+    "narration": "Plot the height of its tip as it turns: a sine wave."
+   },
+   {
+    "seconds": 10,
+    "intent": "The tip's horizontal position marked as cos θ",
+    "narration": "Its horizontal position is the cosine."
+   },
+   {
+    "seconds": 10,
+    "intent": "The radius at 90°, height 1 and cosine 0",
+    "narration": "At ninety degrees the height is one and the across is zero."
+   },
+   {
+    "seconds": 12,
+    "intent": "The radius completing a full turn, the wave completing one period",
+    "narration": "One full turn, three hundred sixty degrees, draws one full period."
+   },
+   {
+    "seconds": 8,
+    "intent": "The circle and the wave side by side",
+    "narration": "Sine is height on the unit circle; cosine is the across."
+   }
+  ]
+ },
+ {
+  "request": "what is a radian",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "A circle with its radius drawn",
+    "narration": "Take a circle and its radius."
+   },
+   {
+    "seconds": 10,
+    "intent": "An arc as long as the radius laid around the circle, its angle marked 1 radian",
+    "narration": "Bend a piece of string as long as the radius around the edge. The angle it spans is one radian."
+   },
+   {
+    "seconds": 10,
+    "intent": "Three radian arcs around the circle, nearly half way",
+    "narration": "Three of them nearly reach half way round."
+   },
+   {
+    "seconds": 10,
+    "intent": "Half the circle marked as π radians",
+    "narration": "Half way is exactly pi radians, about 3.14 lengths of the radius."
+   },
+   {
+    "seconds": 10,
+    "intent": "The full turn marked 2π radians, about 6.28 arcs",
+    "narration": "A full turn is two pi radians."
+   },
+   {
+    "seconds": 8,
+    "intent": "One radian beside 57.3°",
+    "narration": "One radian is about fifty-seven degrees."
+   }
+  ]
+ },
+ {
+  "request": "how do graph transformations work, like shifting a parabola",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "The parabola y = x^2 on axes",
+    "narration": "Start with y equals x squared."
+   },
+   {
+    "seconds": 10,
+    "intent": "y = (x - 2)^2: the parabola sliding 2 right",
+    "narration": "Replace x by x minus two and the graph slides two to the right."
+   },
+   {
+    "seconds": 10,
+    "intent": "y = (x - 2)^2 + 1: sliding 1 up",
+    "narration": "Add one outside and it slides up by one."
+   },
+   {
+    "seconds": 10,
+    "intent": "y = 2(x - 2)^2 + 1: stretched vertically, narrower",
+    "narration": "Multiply by two and it stretches vertically, looking narrower."
+   },
+   {
+    "seconds": 12,
+    "intent": "y = -(x - 2)^2 + 1: flipped upside down",
+    "narration": "A minus sign outside flips it upside down."
+   },
+   {
+    "seconds": 8,
+    "intent": "The original and all four transformed parabolas together",
+    "narration": "Inside changes shift sideways; outside changes shift, stretch or flip vertically."
+   }
+  ]
+ },
+ {
+  "request": "why is an inverse function a reflection in y = x",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "The line y = 2x + 1 and the dashed line y = x",
+    "narration": "Here is y equals two x plus one and the diagonal y equals x."
+   },
+   {
+    "seconds": 10,
+    "intent": "The point (1, 3) on the line and its swapped partner (3, 1)",
+    "narration": "The point one, three is on the line. Its inverse sends three back to one."
+   },
+   {
+    "seconds": 10,
+    "intent": "The inverse line y = (x - 1)/2 drawn through the swapped points",
+    "narration": "Swap x and y everywhere: the inverse is x minus one over two."
+   },
+   {
+    "seconds": 10,
+    "intent": "The two lines mirrored across y = x",
+    "narration": "Swapping coordinates reflects every point across the diagonal."
+   },
+   {
+    "seconds": 12,
+    "intent": "y = x^2 for x ≥ 0 and y = √x mirrored the same way",
+    "narration": "The same happens for x squared and square root, on x at least zero."
+   },
+   {
+    "seconds": 8,
+    "intent": "Both pairs of mirrored graphs",
+    "narration": "An inverse undoes a function, so its graph is the original reflected in y equals x."
+   }
+  ]
+ },
+ {
+  "request": "exponential vs linear growth",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "Axes with the line y = 10x and the curve y = 2^x",
+    "narration": "Compare adding ten each step with doubling each step."
+   },
+   {
+    "seconds": 10,
+    "intent": "Early on the line far above the curve",
+    "narration": "At first the steady line is way ahead: at x equals three, thirty versus eight."
+   },
+   {
+    "seconds": 12,
+    "intent": "The curve catching up and crossing just before x = 6",
+    "narration": "Just before x equals six, the doubling curve catches up."
+   },
+   {
+    "seconds": 10,
+    "intent": "At x = 10: 100 versus 1024",
+    "narration": "By ten it is 1024 against 100."
+   },
+   {
+    "seconds": 10,
+    "intent": "Bars for x = 5, 10, 20: 50 vs 32, 100 vs 1024, 200 vs about a million",
+    "narration": "At twenty, two hundred against about a million."
+   },
+   {
+    "seconds": 8,
+    "intent": "Zoomed-out axes, the line flat against the soaring curve",
+    "narration": "Doubling always overtakes adding, however generous the adding."
+   }
+  ]
+ },
+ {
+  "request": "why is sin squared plus cos squared equal to 1",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "The unit circle with a radius at angle θ",
+    "narration": "Take a radius of length one at angle theta."
+   },
+   {
+    "seconds": 10,
+    "intent": "A right triangle under the radius with legs cos θ and sin θ",
+    "narration": "Drop a vertical line: the triangle has across cos theta and height sin theta."
+   },
+   {
+    "seconds": 10,
+    "intent": "Squares on the legs and on the hypotenuse of length 1",
+    "narration": "Pythagoras says the squares on the legs add up to the square on the hypotenuse."
+   },
+   {
+    "seconds": 10,
+    "intent": "The legs' squares labelled sin^2 θ and cos^2 θ, the hypotenuse square 1",
+    "narration": "The hypotenuse is one, so sine squared plus cosine squared is one."
+   },
+   {
+    "seconds": 12,
+    "intent": "The radius turning, the triangle changing but the identity holding",
+    "narration": "Turn the radius to any angle and the triangle changes, but the sum stays one."
+   },
+   {
+    "seconds": 8,
+    "intent": "The triangle at 30°: 1/4 + 3/4 = 1",
+    "narration": "At thirty degrees: one quarter plus three quarters."
+   }
+  ]
+ },
+ {
+  "request": "where does pi come from, circumference",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "A circle of diameter 1 resting on a number line at 0",
+    "narration": "Take a circle with diameter one and stand it on a number line at zero."
+   },
+   {
+    "seconds": 12,
+    "intent": "The circle rolling one full turn along the line",
+    "narration": "Roll it along the line for one full turn."
+   },
+   {
+    "seconds": 10,
+    "intent": "The mark where it stops, just past 3.14",
+    "narration": "It stops just past 3.14: the circumference is pi."
+   },
+   {
+    "seconds": 10,
+    "intent": "A circle of diameter 2 rolling to 2π",
+    "narration": "A circle twice as wide rolls twice as far."
+   },
+   {
+    "seconds": 10,
+    "intent": "Three diameters laid around the circle, with a small gap left",
+    "narration": "Three diameters almost wrap around, with a bit left over."
+   },
+   {
+    "seconds": 8,
+    "intent": "Both circles and their rolled lengths on the line",
+    "narration": "Every circle's circumference is pi times its diameter."
+   }
+  ]
+ },
+ {
+  "request": "exterior angles of a polygon sum to 360",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "A pentagon with an arrow walking along its first side",
+    "narration": "Walk around a pentagon."
+   },
+   {
+    "seconds": 10,
+    "intent": "The arrow turning at each corner, the turn angle marked",
+    "narration": "At each corner you turn by the exterior angle."
+   },
+   {
+    "seconds": 12,
+    "intent": "The five turns completed, the arrow facing its starting direction",
+    "narration": "After all five corners you face the way you started."
+   },
+   {
+    "seconds": 10,
+    "intent": "The five turn angles fitted together into a full circle",
+    "narration": "Put the five turns together and they make one full turn."
+   },
+   {
+    "seconds": 10,
+    "intent": "A hexagon walked the same way, its six turns also a full circle",
+    "narration": "A hexagon's six turns also make one full turn."
+   },
+   {
+    "seconds": 8,
+    "intent": "Both polygons with their turns fanned into 360°",
+    "narration": "The exterior angles of any convex polygon add up to three hundred sixty degrees."
+   }
+  ]
+ },
+ {
+  "request": "solving two equations at once, where do the lines meet",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "The line y = x + 1 on axes",
+    "narration": "Here is y equals x plus one."
+   },
+   {
+    "seconds": 10,
+    "intent": "The line y = -x + 5 on the same axes",
+    "narration": "And here is y equals minus x plus five."
+   },
+   {
+    "seconds": 10,
+    "intent": "The crossing point (2, 3) marked",
+    "narration": "They cross at two, three."
+   },
+   {
+    "seconds": 10,
+    "intent": "A dot tracing each line, both reaching (2, 3)",
+    "narration": "That point lies on both lines, so it satisfies both equations: three is two plus one, and three is minus two plus five."
+   },
+   {
+    "seconds": 12,
+    "intent": "The second line replaced by y = x + 3, parallel, with no crossing",
+    "narration": "If the second line were parallel, they would never meet: no solution."
+   },
+   {
+    "seconds": 8,
+    "intent": "The crossing and the parallel pair side by side",
+    "narration": "Solving two equations means finding where their graphs meet."
+   }
+  ]
+ },
+ {
+  "request": "prime factorization tree for 60",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "The number 60 as the top node of a tree",
+    "narration": "Start with sixty."
+   },
+   {
+    "seconds": 10,
+    "intent": "60 splitting into 6 and 10",
+    "narration": "Split it as six times ten."
+   },
+   {
+    "seconds": 10,
+    "intent": "6 splitting into 2 and 3, 10 into 2 and 5",
+    "narration": "Six is two times three and ten is two times five."
+   },
+   {
+    "seconds": 10,
+    "intent": "The prime leaves 2, 3, 2, 5 lit",
+    "narration": "The leaves are all prime: two, three, two and five."
+   },
+   {
+    "seconds": 12,
+    "intent": "A second tree from 60 = 4 × 15 ending in the same leaves",
+    "narration": "Start instead with four times fifteen and you reach the same primes."
+   },
+   {
+    "seconds": 8,
+    "intent": "Both trees with their leaves 2 × 2 × 3 × 5",
+    "narration": "Every whole number breaks into primes in exactly one way."
+   }
+  ]
+ },
+ {
+  "request": "euclid's algorithm for gcd with rectangles",
+  "beats": [
+   {
+    "seconds": 8,
+    "intent": "A 30-by-12 rectangle",
+    "narration": "Take a thirty by twelve rectangle."
+   },
+   {
+    "seconds": 10,
+    "intent": "Two 12-by-12 squares cut off, leaving a 6-by-12 strip",
+    "narration": "Cut off the biggest squares you can: two twelve by twelve squares, leaving six by twelve."
+   },
+   {
+    "seconds": 10,
+    "intent": "The 6-by-12 strip cut into two 6-by-6 squares with nothing left",
+    "narration": "Now cut squares from the strip: two six by six squares fit exactly."
+   },
+   {
+    "seconds": 10,
+    "intent": "The whole rectangle tiled by 6-by-6 squares",
+    "narration": "So six by six squares tile the whole rectangle."
+   },
+   {
+    "seconds": 12,
+    "intent": "A 22-by-8 rectangle cut into two 8-squares, one 6-square, then three 2-squares",
+    "narration": "Try twenty-two by eight: two squares of eight leave six by eight, one square of six leaves six by two, and three squares of two finish it."
+   },
+   {
+    "seconds": 8,
+    "intent": "Both tilings side by side, GCDs 6 and 2",
+    "narration": "The last square size is the greatest common divisor: six for the first, two for the second."
+   }
+  ]
+ }
+]
