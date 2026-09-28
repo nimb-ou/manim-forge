@@ -222,6 +222,9 @@ class Stage:
 
     def equation(self, *tex: str, where: str = "right", run_time: float = 1.2):
         """A derivation: each step transforms into the next, in a region."""
+        old = getattr(self, "_equation", None)
+        if old is not None and old in self.scene.mobjects:   # one at a time
+            self.scene.play(FadeOut(old), run_time=0.5)
         self._make_room(where)
         cx, cy, w, h = _REGIONS[where]
         cur = MathTex(tex[0], font_size=40).move_to([cx, cy + h / 4, 0])
@@ -233,6 +236,7 @@ class Stage:
             self.scene.play(TransformMatchingTex(cur, nxt), run_time=run_time)
             cur = nxt
         self._objects.append(cur)
+        self._equation = cur
         return cur
 
     # regions ------------------------------------------------------------
@@ -903,7 +907,12 @@ def show_eigenvectors(stage: Stage, plane_, matrix=((3, 1), (0, 2)), run_time: f
     e0 = np.real(vecs[:, 0])
     # A test vector on neither eigen-line (2D cross product by hand: numpy 2
     # rejects np.cross on 2-vectors).
-    off_xy = (1, 1) if abs(e0[0] * 1 - e0[1] * 1) > 0.1 else (1, -1)
+    # A test vector on neither eigen-line: (1, -1) is itself an eigenvector
+    # of the y = x reflection, and then nothing visibly turned.
+    lines = [np.real(vecs[:, k]) for k in range(2) if abs(np.imag(vals[k])) < 1e-9]
+    off_xy = next((c for c in ((1, 1), (1, -1), (2, 1), (1, 2), (1, 0), (0, 1))
+                   if all(abs(c[0] * e[1] - c[1] * e[0]) > 0.15 * np.hypot(*c) * np.hypot(*e)
+                          for e in lines)), (2, 1))
     off = draw_vector(stage, plane_, off_xy, RED)
     riders.append(off)
     apply_matrix(stage, plane_, m, riders=riders, run_time=run_time)
@@ -1515,7 +1524,8 @@ def flow_particles(stage: Stage, f, n: int = 60, run_time: float = 4.0, seed: in
     sinks gather, curl swirls."""
     rng = np.random.default_rng(seed)
     f = _field(f)
-    starts = np.column_stack([rng.uniform(-5, 5, n), rng.uniform(-3, 3, n)])
+    # Inside the picture area, clear of the title and caption.
+    starts = np.column_stack([rng.uniform(-4.5, 4.5, n), rng.uniform(-2.3, 2.3, n)])
     dots = VGroup(*[Dot([x, y, 0], radius=0.05, color=YELLOW) for x, y in starts])
 
     def carry(mob, dt):
