@@ -428,3 +428,19 @@ sets by metric and by eye.
 plans for poor scenes read like lecture notes ("Understanding the mean and
 standard deviation"). If planner v4 is no better, the planner's training
 data (intents that name a picture) is the next thing to fix, not the coder.
+
+## Log · 2026-09-28 06:40Z (rebase, 12-hour autonomous block)
+
+**Arrived.** A vision judge (Gemini flash-latest; the critic's model had
+been out of quota for days) — and under it every inference configuration
+is 38-50%, within noise: the names/signatures/exemplar results were the
+keyword metric's. The web app was giving up on scenes the evals salvaged
+(ANSI-coloured tracebacks) — fixed and verified in the app. Eight Claude
+subagents write teacher scenes (100 done, 100 in progress, all rendered and
+looked at); their reports found a dozen systematic kit bugs (equations over
+pictures, labels left behind, cut captions), fixed.
+
+**Spiralling?** The inference-tuning thread is closed: no more hint or
+prompt variants. Remaining levers, in order: kit rendering quality
+(measured by the judge now), then training data (teacher scenes → kit v8 +
+planner v5 at the Oct 3 reset, automated).

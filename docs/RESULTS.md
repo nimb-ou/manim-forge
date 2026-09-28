@@ -648,3 +648,26 @@ under the short prompts: that gap is what training has to close.
 Planner v4 vs v3, same coder (kit v6 + names hint), same seeds, one plan
 per prompt: short 46% vs 58%, held-out 42% vs 39%. Mixed and within one
 plan's sampling noise; planner v3 stays in the app.
+
+### Judged by a vision model -- 2026-09-28
+
+The relevance share is a keyword test on code. scripts/judge_sheets.py asks
+Gemini (gemini-flash-latest), beat by beat, whether the beat's last frame
+shows a picture that illustrates its intent; share over planned beats. The
+same runs as the table above (identical plans):
+
+| configuration | 20 short | 20 held-out |
+|---|---|---|
+| no hint | 50% | 38% |
+| relevance, block names | 45% | 40% |
+| relevance, names + signatures | 43% | 42% |
+| names hint, planner v4 | 38% | 41% |
+
+Under the judge the configurations are within noise of one another (about
+±5 points on ~115 beats): the subject hint moved the keyword metric, not
+the pictures. What a viewer would call a good beat is about 40-45% of
+planned beats, whatever the inference settings. The judge is now the
+headline; the keyword share stays as a cheap diagnostic. The remaining
+levers are the kit's rendering (fixes from the teacher batches, being
+measured) and training data (Claude-written teacher scenes, for the Oct 3
+SFT).
