@@ -169,7 +169,7 @@ class Stage:
         if len(words) > 10:
             s = " ".join(words[:10])
             for stop in (". ", "; ", ", "):
-                if stop in s:
+                if stop in s and len(s.split(stop)[0].split()) >= 3:
                     s = s.split(stop)[0]
                     break
         new = self._text(s, 30).to_edge(DOWN, buff=0.35)
@@ -194,17 +194,31 @@ class Stage:
             return
         from manim import Group
         cx, _, w, _ = _REGIONS[where]
-        objs = [m for m in self._objects if m in self.scene.mobjects
-                and m is not self._title and m is not self._caption]
-        if not objs:
+        # Everything on screen but the title and caption: blocks that fade
+        # their parts in one by one never put their returned group on the
+        # scene, so moving only the stage's own objects left bars, networks
+        # and dots behind while their labels moved (the teacher batches).
+        tops = [m for m in self.scene.mobjects
+                if m is not self._title and m is not self._caption]
+        if not tops:
             return
-        grp = Group(*objs)
-        lo, hi = grp.get_left()[0], grp.get_right()[0]
+        # Sized by what is on the frame: a sheared plane's grid runs far
+        # past it and made the picture shrink to nothing.
+        sized = [m for m in tops if m.width < 16 and m.height < 10] or tops
+        box = Group(*sized)
+        lo, hi = box.get_left()[0], box.get_right()[0]
         if hi <= cx - w / 2 + 0.2 or lo >= cx + w / 2 - 0.2:
             return
         ox, oy, ow, oh = _REGIONS["left" if where == "right" else "right"]
-        k = min(1.0, ow / max(grp.width, 1e-6), oh / max(grp.height, 1e-6))
-        self.scene.play(grp.animate.scale(k).move_to([ox, oy, 0]), run_time=run_time)
+        k = min(1.0, ow / max(box.width, 1e-6), oh / max(box.height, 1e-6))
+        centre = box.get_center()
+        grp = Group(*tops)
+        self.scene.play(grp.animate.scale(k, about_point=centre)
+                        .shift(np.array([ox, oy, 0]) - centre), run_time=run_time)
+        # Unwrap: left as one group on the scene, a later clear(keep=[ax])
+        # faded the group -- axes and all.
+        self.scene.remove(grp)
+        self.scene.add(*tops)
 
     def equation(self, *tex: str, where: str = "right", run_time: float = 1.2):
         """A derivation: each step transforms into the next, in a region."""
@@ -371,6 +385,16 @@ def _inside(ax, f, lo, hi):
     return xs[best[0]], xs[best[1] - 1]
 
 
+_CALLABLE: dict = {}
+
+
+def _callable_graph(cls):
+    if cls not in _CALLABLE:
+        _CALLABLE[cls] = type(cls.__name__, (cls,),
+                              {"__call__": lambda self, x: self.underlying_function(x)})
+    return _CALLABLE[cls]
+
+
 def _field(f):
     """f(x, y) -> (u, v), from a field written either as f(x, y) or f(point)."""
     def uv(x, y):
@@ -426,7 +450,10 @@ def draw_polygon(stage: Stage, points, where: str = "center", color=BLUE,
     """A polygon through 2D points [(x, y), ...], drawn."""
     poly = Polygon(*[_xy(q) for q in points], color=color,
                    fill_opacity=fill)
-    stage.place(poly, where)
+    if where is None:                  # at its own coordinates
+        stage._objects.append(poly)
+    else:
+        stage.place(poly, where)
     stage.scene.play(Create(poly), run_time=0.8)
     return poly
 
@@ -489,8 +516,11 @@ def draw_vector(stage: Stage, plane_, xy, color=YELLOW, label: str | None = None
     stage.scene.play(GrowArrow(a), run_time=0.8)
     stage._objects.append(a)
     if label:
-        stage.label(a, label, direction=RIGHT if xy[0] >= 0 else LEFT,
-                    color=color)
+        side = RIGHT if xy[0] >= 0 else LEFT
+        t = stage.label(a, label, direction=side, color=color)
+        # The label rides the tip: apply_matrix moves the arrow, and a label
+        # left behind pointed the wrong way after a reflection.
+        t.add_updater(lambda m, a=a, side=side: m.next_to(a.get_end(), side, buff=0.15))
     return a
 
 
@@ -533,8 +563,12 @@ def draw_unit_square(stage: Stage, plane_, color=YELLOW):
 def draw_span(stage: Stage, plane_, xy, color=BLUE):
     """Every scalar multiple of one vector: a line through the origin."""
     _need(plane_, "c2p", "the plane from draw_plane(stage)", "draw_span(stage, plane, (x, y))")
-    d = np.array([*xy, 0.0]) / (np.linalg.norm(xy) or 1)
-    ln = Line(plane_.c2p(*(-8 * d[:2])), plane_.c2p(*(8 * d[:2])),
+    d = np.array([*xy[:2], 0.0]) / (np.linalg.norm(xy[:2]) or 1)
+    # Out to the plane's edge, not ±8 units through the title.
+    xr = getattr(plane_, "x_range", (-4, 4))
+    yr = getattr(plane_, "y_range", (-3, 3))
+    reach = min(abs(xr[1]) / (abs(d[0]) or 1e-9), abs(yr[1]) / (abs(d[1]) or 1e-9))
+    ln = Line(plane_.c2p(*(-reach * d[:2])), plane_.c2p(*(reach * d[:2])),
               color=color, stroke_opacity=0.7)
     stage.scene.play(Create(ln), run_time=1.0)
     stage._objects.append(ln)
@@ -553,13 +587,17 @@ def scale_vector(stage: Stage, plane_, arrow, factor: float, run_time=1.2):
 def draw_axes(stage: Stage, x_range=(-1, 5), y_range=(-1, 5), where: str = "center",
          labels: tuple[str, str] = ("x", "y")):
     """Axes with tick numbers, drawn in a region."""
-    ax = Axes(x_range=_span(x_range), y_range=_span(y_range),
-              x_length=8, y_length=5, tips=False,
-              axis_config={"include_numbers": True, "font_size": 24})
+    xs, ys = _span(x_range), _span(y_range)
+    whole = all(float(v).is_integer() for v in xs + ys)   # "12", not "12.0"
+    ax = Axes(x_range=xs, y_range=ys, x_length=8, y_length=5, tips=False,
+              axis_config={"include_numbers": True, "font_size": 24,
+                           "decimal_number_config": {"num_decimal_places": 0 if whole else 1}})
     stage.place(ax, where)
     lab = ax.get_axis_labels(MathTex(labels[0]), MathTex(labels[1]))
     stage.scene.play(Create(ax), FadeIn(lab), run_time=1.5)
-    stage._objects.append(lab)      # moves with the axes when room is made
+    # Part of the axes: moved with them, and kept by clear(keep=[ax]).
+    stage.scene.remove(lab)
+    ax.add(lab)
     return ax
 
 
@@ -569,6 +607,9 @@ def plot_graph(stage: Stage, ax, f, x_range=None, color=BLUE, label: str | None 
     xr = x_range or (ax.x_range[0], ax.x_range[1])
     xr = _inside(ax, f, xr[0], xr[1])
     g = ax.plot(f, x_range=[xr[0], xr[1]], color=color)
+    # Callable like the function it plots: models write g(x) for a height
+    # on the curve ("'ParametricFunction' object is not callable", twice).
+    g.__class__ = _callable_graph(type(g))
     stage.scene.play(Create(g), run_time=1.5)
     stage._objects.append(g)
     if label:
@@ -594,8 +635,9 @@ def slide_tangent(stage: Stage, ax, f, x_start: float | None = None,
     def line():
         x = t.get_value()
         k = (f(x + h) - f(x - h)) / (2 * h)
-        p0 = ax.c2p(x - 1.2, f(x) - 1.2 * k)
-        p1 = ax.c2p(x + 1.2, f(x) + 1.2 * k)
+        d = 1.2 / np.sqrt(1 + k * k)   # steep tangents ran through the title
+        p0 = ax.c2p(x - d, f(x) - d * k)
+        p1 = ax.c2p(x + d, f(x) + d * k)
         return Line(p0, p1, color=color)
 
     tan = always_redraw(line)
@@ -717,6 +759,7 @@ def draw_bars(stage: Stage, values, labels=None, where: str = "center", color=BL
                         for l, b in zip(labels, group)])
         stage.scene.play(FadeIn(tags), run_time=0.5)
         group.add(tags)
+        group.tags = tags
     return group
 
 
@@ -1153,9 +1196,14 @@ def swap_bars(stage: Stage, bars_, i: int, j: int, run_time: float = 0.6):
     items = bars_[0] if isinstance(bars_[0], VGroup) and len(bars_) == 2 else bars_
     a, b = items[i], items[j]
     xa, xb = a.get_x(), b.get_x()
-    stage.scene.play(a.animate.set_x(xb), b.animate.set_x(xa),
-                     run_time=run_time)
+    moves = [a.animate.set_x(xb), b.animate.set_x(xa)]
+    tags = getattr(bars_, "tags", None)     # draw_array's values go along
+    if tags is not None and max(i, j) < len(tags):
+        moves += [tags[i].animate.set_x(xb), tags[j].animate.set_x(xa)]
+    stage.scene.play(*moves, run_time=run_time)
     items.submobjects[i], items.submobjects[j] = b, a
+    if tags is not None and max(i, j) < len(tags):
+        tags.submobjects[i], tags.submobjects[j] = tags[j], tags[i]
     return bars_
 
 
@@ -1294,10 +1342,10 @@ def basis_grid(stage: Stage, plane_, b1, b2, color=TEAL):
     _need(plane_, "c2p", "the plane from draw_plane(stage)", "basis_grid(stage, p, b1, b2)")
     b1, b2 = np.array(b1, dtype=float), np.array(b2, dtype=float)
     lines = VGroup()
-    for k in range(-4, 5):
+    for k in range(-3, 4):            # kept near the plane, not across the frame
         for d, other in ((b1, b2), (b2, b1)):
-            p0 = k * other - 6 * d
-            p1 = k * other + 6 * d
+            p0 = k * other - 3 * d
+            p1 = k * other + 3 * d
             lines.add(Line(plane_.c2p(*p0), plane_.c2p(*p1), color=color,
                            stroke_width=1.5, stroke_opacity=0.7))
     stage.scene.play(Create(lines), run_time=1.5)
@@ -1526,6 +1574,9 @@ def squares_on_sides(stage: Stage, a: float = 3, b: float = 4, where: str = "cen
             MathTex(f"c^2 = {num(round(c * c, 2))}")]
     grp = VGroup(tri, sq_a, sq_b, sq_c)
     stage.place(grp, where)
+    _, _, rw, rh = _REGIONS[where]
+    if grp.width < 0.6 * rw and grp.height < 0.6 * rh:   # (1, 1) came out tiny
+        grp.scale(min(0.8 * rw / grp.width, 0.8 * rh / grp.height))
     k = grp.width / (a + b + max(a, b) + 1e-9)
     for t, sq in zip(tags, (sq_a, sq_b, sq_c)):
         t.scale(min(1.0, max(0.45, 2.2 * k))).move_to(sq.get_center())
@@ -1818,9 +1869,9 @@ _MOB_PARAMS = {"m", "secs", "bars_", "arrow", "cells"}  # take a picture
 def _on_screen(st, m) -> bool:
     """Is m (or, for a block's tuple result, any part of it) on screen?"""
     parts = m if isinstance(m, (tuple, list)) else [m]
-    live = st.scene.mobjects
-    return any(x in live or any(x in y.get_family() for y in live if hasattr(y, "get_family"))
-               for x in parts if hasattr(x, "get_center"))
+    live = {id(y) for t in st.scene.mobjects for y in t.get_family()}
+    return any(id(p) in live for x in parts if hasattr(x, "get_family")
+               for p in x.get_family())
 
 
 _MAKERS = {"draw_plane", "draw_axes", "draw_complex_plane", "draw_number_line"}

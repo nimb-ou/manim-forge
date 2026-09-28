@@ -285,3 +285,15 @@ def test_exemplar_is_same_subject_or_none():
     assert got is not None and "sort" in got[0]
     assert nearest("the history of the Roman empire") is None
     assert "WORKED EXAMPLE" in example("gradient descent on a cost curve")
+
+
+def test_failing_line_reads_a_coloured_traceback():
+    from forge.app.twostage import Beat, assemble, error_message, failing_line
+    beats = [Beat(1, None, "a")]
+    code = assemble(beats, ["x = 1\ny = boom(x)"]).code
+    n = next(k for k, l in enumerate(code.splitlines(), 1) if "boom(x)" in l)
+    err = (f"\x1b[31m│\x1b[0m \x1b[31m❱ \x1b[0m{n} \x1b[2m│   │   \x1b[0my = "
+           f"\x1b[1;4mboom(x)\x1b[0m   \x1b[31m│\x1b[0m\n"
+           "\x1b[1;91mNameError: \x1b[0mname 'boom' is not defined")
+    assert failing_line(code, err) == n
+    assert error_message(err).startswith("NameError")

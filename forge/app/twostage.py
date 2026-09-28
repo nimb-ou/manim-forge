@@ -299,6 +299,9 @@ def assemble(beats: list[Beat], bodies: list[str],
     return out
 
 
+_ANSI = re.compile(r"\x1b\[[0-9;?]*[A-Za-z]")
+
+
 def failing_line(code: str, stderr: str) -> int | None:
     """The line of this scene a render traceback points at, from Rich's
     ``❱ N`` markers.
@@ -307,6 +310,11 @@ def failing_line(code: str, stderr: str) -> int | None:
     text of line N of *this* scene -- library frames have their own line
     numbers, and a bare number would blame a random line.
     """
+    # Rich colours the traceback when the renderer's environment looks like
+    # a terminal (the web app's did): "\x1b[31m❱ \x1b[0m2023". Unstripped,
+    # no marker matched, nothing was blamed, and the app gave up on scenes
+    # the evaluation (no colours) salvaged.
+    stderr = _ANSI.sub("", stderr or "")
     lines = code.splitlines()
     # Only frames inside construct(): an embedded kit sits above it, and its
     # frames are the deepest in a kit scene's traceback -- blaming one of
@@ -338,8 +346,8 @@ def failing_beat(code: str, stderr: str) -> int | None:
 
 def error_message(stderr: str) -> str:
     """The exception line at the end of a traceback, e.g. "TypeError: ..."."""
-    got = re.findall(r"^\s*([A-Za-z_.]*(?:Error|Exception)\b:?.*)$", stderr or "",
-                     re.M)
+    got = re.findall(r"^\s*([A-Za-z_.]*(?:Error|Exception)\b:?.*)$",
+                     _ANSI.sub("", stderr or ""), re.M)
     return " ".join(got[-1].split())[:200] if got else ""
 
 
