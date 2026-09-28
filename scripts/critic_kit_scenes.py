@@ -54,8 +54,11 @@ Answer one line per beat, exactly "k: YES" or "k: NO"."""
 def scenes() -> dict[str, dict]:
     """For each scene, its longest rendered prefix: bodies and intents."""
     best: dict[str, dict] = {}
-    lines = SRC.read_text().splitlines() + \
-        (SELF.read_text().splitlines() if SELF.exists() else [])
+    # Self-training scenes first: the model's own output is the riskier data
+    # (a shaded block through the title passed every other filter), and
+    # Gemini's rate limits mean not everything is judged before an SFT.
+    lines = (SELF.read_text().splitlines() if SELF.exists() else []) + \
+        SRC.read_text().splitlines()
     for l in lines:
         if not l.strip():
             continue
