@@ -733,13 +733,17 @@ def trace_graph(stage: Stage, ax, f, x_start: float, x_end: float, color=YELLOW,
 
 def draw_number_line(stage: Stage, x_range=(0, 10), where: str = "center"):
     """A number line with its integers labelled, drawn."""
-    nl = NumberLine(x_range=_span(x_range, 10), length=10, include_numbers=True)
+    xs = _span(x_range, 10)
+    nl = NumberLine(x_range=xs, length=10, include_numbers=True,
+                    decimal_number_config={"num_decimal_places":
+                                           0 if all(float(v).is_integer() for v in xs) else 1})
     stage.place(nl, where)
     stage.scene.play(Create(nl), run_time=1.0)
     return nl
 
 
-def mark_point(stage: Stage, nl, x: float, color=YELLOW, label: str | None = None):
+def mark_point(stage: Stage, nl, x: float, color=YELLOW, label: str | None = None,
+               direction=UP):
     """A dot at x on a number line, optionally labelled."""
     if np.ndim(x) == 1 and hasattr(nl, "c2p"):          # a point on axes
         d = Dot(nl.c2p(*list(x)[:2]), color=color)
@@ -748,7 +752,7 @@ def mark_point(stage: Stage, nl, x: float, color=YELLOW, label: str | None = Non
     stage.scene.play(GrowFromCenter(d), run_time=0.5)
     stage._objects.append(d)
     if label:
-        stage.label(d, label, color=color)
+        stage.label(d, label, direction=direction, color=color)
     return d
 
 
