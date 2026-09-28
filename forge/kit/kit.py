@@ -212,6 +212,12 @@ class Stage:
         ox, oy, ow, oh = _REGIONS["left" if where == "right" else "right"]
         k = min(1.0, ow / max(box.width, 1e-6), oh / max(box.height, 1e-6))
         centre = box.get_center()
+        # Live readouts and redrawn shapes (a slope value, a pendulum on a
+        # fixed pivot) are frozen where they are: moving them while they
+        # update crashed ("zip() argument 2 is longer") or pulled them back.
+        for m in tops:
+            for x in m.get_family():
+                x.clear_updaters()
         grp = Group(*tops)
         self.scene.play(grp.animate.scale(k, about_point=centre)
                         .shift(np.array([ox, oy, 0]) - centre), run_time=run_time)
@@ -600,10 +606,16 @@ def draw_axes(stage: Stage, x_range=(-1, 5), y_range=(-1, 5), where: str = "cent
          labels: tuple[str, str] = ("x", "y")):
     """Axes with tick numbers, drawn in a region."""
     xs, ys = _span(x_range), _span(y_range)
-    whole = all(float(v).is_integer() for v in xs + ys)   # "12", not "12.0"
+
+    def places(r):                    # "12", not "12.0"; "0.25" keeps two
+        step = r[2]
+        if all(float(v).is_integer() for v in r):
+            return 0
+        return 1 if float(step * 10).is_integer() else 2
     ax = Axes(x_range=xs, y_range=ys, x_length=8, y_length=5, tips=False,
-              axis_config={"include_numbers": True, "font_size": 24,
-                           "decimal_number_config": {"num_decimal_places": 0 if whole else 1}})
+              axis_config={"include_numbers": True, "font_size": 24},
+              x_axis_config={"decimal_number_config": {"num_decimal_places": places(xs)}},
+              y_axis_config={"decimal_number_config": {"num_decimal_places": places(ys)}})
     stage.place(ax, where)
     lab = ax.get_axis_labels(MathTex(labels[0]), MathTex(labels[1]))
     stage.scene.play(Create(ax), FadeIn(lab), run_time=1.5)
@@ -738,9 +750,10 @@ def trace_graph(stage: Stage, ax, f, x_start: float, x_end: float, color=YELLOW,
 def draw_number_line(stage: Stage, x_range=(0, 10), where: str = "center"):
     """A number line with its integers labelled, drawn."""
     xs = _span(x_range, 10)
+    dp = 0 if all(float(v).is_integer() for v in xs) else \
+        (1 if float(xs[2] * 10).is_integer() else 2)       # 0.25 keeps two places
     nl = NumberLine(x_range=xs, length=10, include_numbers=True,
-                    decimal_number_config={"num_decimal_places":
-                                           0 if all(float(v).is_integer() for v in xs) else 1})
+                    decimal_number_config={"num_decimal_places": dp})
     stage.place(nl, where)
     stage.scene.play(Create(nl), run_time=1.0)
     return nl
