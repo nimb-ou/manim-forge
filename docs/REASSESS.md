@@ -444,3 +444,26 @@ pictures, labels left behind, cut captions), fixed.
 prompt variants. Remaining levers, in order: kit rendering quality
 (measured by the judge now), then training data (teacher scenes → kit v8 +
 planner v5 at the Oct 3 reset, automated).
+
+## Log · 2026-09-28 09:20Z
+
+**Arrived.** Kit after the teacher-reported fixes, judged: short 51%,
+held-out 37% (before: 45 / 40) — within noise; the fixes were for how
+pictures look and for the teacher data, and the judge is lenient on
+layout (it passed a vector running off the frame; apply_matrix now zooms
+out). 231 Claude-written scenes → 879 coder rows + 231 planner arcs, all
+rendering on the current kit, tracked in forge/kit/teacher/. Self-training
+2,462 rows. The third wave of teacher agents stopped on the Claude spend
+limit before writing anything.
+
+**Looked.** Held-out "matrix multiplication": rotation then stretch, the
+arrow carried off the frame in beat 5 — judged YES; the judge checks
+subject, not framing.
+
+**Spiralling?** No: inference work is closed, and the kit is being fixed
+from systematic reports, not single guesses. The next real measurement is
+kit v8 + planner v5 (Oct 3, automated), judged on both sets.
+
+**Plan.** Until then: self-training continues; Mistral watched; no new
+inference experiments. If Claude usage is available again, one more wave
+of longer (5-6 beat) teacher scenes and planner-only arcs.
