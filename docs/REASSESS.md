@@ -400,3 +400,31 @@ configuration. Then the two levers left on this week's hardware:
 
 **5. Plan change.** None until the ablation ends; no new kit patches for
 single guesses.
+
+## Log · 2026-09-29 01:20Z
+
+**1. Arrived.** The identical-plan ablation finished: names-only hint
+58% / 39% (short / held-out), signatures 45 / 37, + exemplar 46 / 36, no
+hint 37 / 25. The app, self-training and the dataset builders use names
+only. Self-training: 1,855 rows (~400 since the switch).
+
+**2. Looked.** Held-out "central limit theorem", names hint: horizontal
+lines labelled P(S = k), a dice grid, one bar — on the subject, wrong
+picture; grow_histogram (the right block) never called. Held-out quality
+matches its number: well under half.
+
+**3. Spiralling?** No. Yesterday's headline numbers were corrected by a
+better measurement rather than defended, and the one inference change the
+evidence supports shipped. What is left at inference is small; the gap
+between short (58%) and held-out (39%) prompts is a training gap.
+
+**4. Critical path.** (a) planner v4 vs v3 on identical seeds (queued,
+the only untested model); (b) Sep 30: teacher kit data, broad topics, the
+new blocks in its API, names hint in prompts — never the held-out topics;
+(c) Oct 3: SFT on teacher + self + hand-written rows, then score on both
+sets by metric and by eye.
+
+**5. Missing.** A way to see the planner's contribution separately: the
+plans for poor scenes read like lecture notes ("Understanding the mean and
+standard deviation"). If planner v4 is no better, the planner's training
+data (intents that name a picture) is the next thing to fix, not the coder.
