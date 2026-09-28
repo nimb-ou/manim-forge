@@ -87,6 +87,25 @@ def main() -> int:
             "meta": {"id": f"plan-{sid}", "source": "plan-claude", "task": "plan-window",
                      "n_beats": str(len(beats)), "request": req, "final": "True"}})
         print(f"  ok   {sid}: {req[:60]} ({len(beats)} beats)", flush=True)
+    # Planner-only arcs (forge/kit/teacher/plans_*.json): intents that name a
+    # drawable picture, no code -- the planner's rows need no render.
+    for f in sorted(BATCHES.glob("plans_*.json")):
+        for k, arc in enumerate(json.loads(f.read_text())):
+            bs = arc["beats"]
+            if not 2 <= len(bs) <= 6:
+                continue
+            text = "\n".join(f"{j + 1}. [{int(b.get('seconds') or 10)}s] {b['intent']} -- "
+                             f"{b.get('narration', '')}".rstrip(" -")
+                             for j, b in enumerate(bs))
+            plans.append({"messages": [
+                {"role": "system", "content": PLAN_SYSTEM},
+                {"role": "user", "content": f"REQUEST\n{arc['request']}\n\nBEATS SO FAR\n"
+                 "  (nothing yet — open the explanation)\n\nWrite the next 6 beat(s), "
+                 "numbered from 1. Stop early and write END if the explanation is complete."},
+                {"role": "assistant", "content": text + "\nEND"}],
+                "meta": {"id": f"plan-claude:{f.stem}:{k}", "source": "plan-claude",
+                         "task": "plan-window", "n_beats": str(len(bs)),
+                         "request": arc["request"], "final": "True"}})
     OUT.write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rows))
     PLANS.write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in plans))
     print(f"{len(rows)} coder rows, {len(plans)} plans from {len(todo) - bad}/{len(todo)} "
