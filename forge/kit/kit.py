@@ -564,6 +564,21 @@ def apply_matrix(stage: Stage, plane_, matrix=((1, 1), (0, 1)), riders=(),
     about = plane_.c2p(0, 0)
     group = VGroup(plane_, *riders)
     stage.scene.play(ApplyMatrix(m, group, about_point=about), run_time=run_time)
+    # A stretching matrix carried arrows off the frame and the grid across
+    # the title (held-out "matrix multiplication"; three teacher batches).
+    # If the riders now leave the picture area, zoom the whole view out
+    # about the origin until they fit -- the grid scales with them, so the
+    # picture stays true, only smaller.
+    if riders:
+        box = VGroup(*riders)
+        lim_x, lim_y = 6.4, 2.9
+        far = max(np.abs(box.get_corner(UP + RIGHT) - about)[0], np.abs(box.get_corner(DOWN + LEFT) - about)[0],
+                  1e-6) / lim_x
+        far_y = max(np.abs(box.get_corner(UP + RIGHT) - about)[1], np.abs(box.get_corner(DOWN + LEFT) - about)[1],
+                    1e-6) / lim_y
+        k = 1 / max(far, far_y)
+        if k < 0.95:
+            stage.scene.play(group.animate.scale(k, about_point=about), run_time=0.8)
     return group
 
 
