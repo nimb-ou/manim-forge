@@ -489,3 +489,26 @@ planner datasets (teacher + self + Claude rows) and pushes kit v8 and
 planner v5; the supervisor collects them. Then: score on cached plans,
 judge both sets, look at sheets, ship if it beats kit v6 on held-out.
 Mistral watched hourly (still 402).
+
+## Log · 2026-09-28 19:30Z
+
+**Arrived.** Self-training finished the teacher's arcs (777/780, 3,706
+rows) and now runs on the 411 Claude-written arcs (~300 rows in an hour;
+their picture-naming intents keep most beats).
+
+**Looked.** A self-training scene on a Claude arc ("area under a velocity
+graph"): v = 2t shaded to t = 4 on axes only 3 high — a block through the
+title — and four of six frames the same picture. The keyword filter passes
+it. Self rows are ~55% of the kit rows the Oct 3 SFT would see; unfiltered
+by eye, they would teach this.
+
+**Change.** The vision critic now covers self-training scenes as well as
+teacher scenes, on Gemini models with quota (its old model had been
+failing with 429s for days); filter_kit_beats drops every beat it judges
+NO, and the Oct 3 launcher builds from the filtered set. shade_area clips
+the curve to the axes. If the critic has not covered most self scenes by
+Oct 3, the SFT should down-weight or drop unjudged self rows — decide then
+from its coverage.
+
+**Spiralling?** No. This is the training-data quality gate the plan
+called for on day one, finally with a working model behind it.
