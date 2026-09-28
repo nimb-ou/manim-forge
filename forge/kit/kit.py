@@ -395,6 +395,14 @@ def _callable_graph(cls):
     return _CALLABLE[cls]
 
 
+def _readout_corner(ax, read):
+    """A live readout inside the axes' top-right corner. Above the axes it
+    collided with the title whenever the axes were tall."""
+    read.move_to(ax.get_corner(UP + RIGHT) + np.array([-read.width / 2 - 0.1,
+                                                       -read.height / 2 - 0.05, 0]))
+    return read
+
+
 def _field(f):
     """f(x, y) -> (u, v), from a field written either as f(x, y) or f(point)."""
     def uv(x, y):
@@ -650,7 +658,7 @@ def slide_tangent(stage: Stage, ax, f, x_start: float | None = None,
     slope = DecimalNumber((f(x_start + h) - f(x_start - h)) / (2 * h),
                           num_decimal_places=2, font_size=34)
     read = VGroup(MathTex("\\text{slope} =", font_size=34), slope).arrange(RIGHT)
-    read.next_to(ax, UP, buff=0.1).shift(3 * RIGHT)
+    _readout_corner(ax, read)
     stage.scene.play(Create(tan), FadeIn(dot), FadeIn(read), run_time=1.0)
     slope.add_updater(lambda m: m.set_value(
         (f(t.get_value() + h) - f(t.get_value() - h)) / (2 * h)))
@@ -1689,7 +1697,7 @@ def secant_to_tangent(stage: Stage, ax, f, x0: float, h: float = 2.0,
                                   color=RED))
     num = DecimalNumber(slope(), num_decimal_places=2, font_size=34)
     read = VGroup(MathTex(r"\text{slope} =", font_size=34), num).arrange(RIGHT)
-    read.next_to(ax, UP, buff=0.1).shift(3 * RIGHT)
+    _readout_corner(ax, read)
     stage.scene.play(Create(sec), FadeIn(p), FadeIn(q), FadeIn(read), run_time=1.0)
     num.add_updater(lambda m: m.set_value(slope()))
     stage.scene.play(hv.animate.set_value(0.01 if h > 0 else -0.01), run_time=run_time)
