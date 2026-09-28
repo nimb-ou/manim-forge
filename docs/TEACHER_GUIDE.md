@@ -95,4 +95,5 @@ show a clear picture in every beat.
   mean value theorem; exponential decay / half-life; adding vectors tip to
   tail; √2 irrational; Fibonacci / golden ratio; Fourier transform of a
   chord; determinant zero squashing the plane; central limit theorem.
-- Edit anything outside `data/kit/claude_scenes/`.
+- Edit anything outside `data/kit/claude_scenes/`. (Finished batches are
+  moved to `forge/kit/teacher/`, which is tracked; `data/` is not.)

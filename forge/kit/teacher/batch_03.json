@@ -1,0 +1,627 @@
+[
+ {
+  "request": "why do two parallel vectors only span a line and not the whole plane",
+  "beats": [
+   {
+    "intent": "Two arrows v = (2, 1) and w = (-3, -1.5) lying along one line",
+    "narration": "Take v, two across and one up, and w, which points the opposite way along the very same line.",
+    "code": "stage.title(\"Span of parallel vectors\")\np = draw_plane(stage)\nv = draw_vector(stage, p, (2, 1))\nw = draw_vector(stage, p, (-3, -1.5), color=ORANGE)\nstage.caption(\"Yellow v, orange w = -1.5 v\")"
+   },
+   {
+    "intent": "v stretched and flipped, its tip sliding along the same line",
+    "narration": "Scale v by any number: it grows, shrinks or flips, but its tip never leaves that line.",
+    "code": "scale_vector(stage, p, v, 1.5)\nscale_vector(stage, p, v, -0.5)\nstage.caption(\"Every multiple of v stays on its line\")"
+   },
+   {
+    "intent": "The span drawn as one blue line through the origin",
+    "narration": "Every combination a v plus b w lands on this one line: that line is the whole span.",
+    "code": "ln = draw_span(stage, p, (2, 1))\npulse(stage, ln)\nstage.caption(\"All combinations av + bw lie on this line\")"
+   },
+   {
+    "intent": "A red vector u = (-1, 2) off the line that no combination reaches",
+    "narration": "A vector off the line, like u, can never be built from v and w, because w adds no new direction.",
+    "code": "u = draw_vector(stage, p, (-1, 2), color=RED, label=\"u\")\nstage.equation(r\"a\\vec{v} + b\\vec{w} = (a - 1.5b)\\,\\vec{v}\", where=\"right\")"
+   }
+  ]
+ },
+ {
+  "request": "what does changing to a new basis look like in 2D",
+  "beats": [
+   {
+    "intent": "The standard grid with i-hat, j-hat and the vector v = (3, 1)",
+    "narration": "In the usual basis, v is three steps along i-hat and one step along j-hat.",
+    "code": "stage.title(\"A new basis\")\np = draw_plane(stage)\ni_hat, j_hat = draw_basis(stage, p)\nv = draw_vector(stage, p, (3, 1))\nstage.caption(\"Standard coordinates: v = (3, 1)\")"
+   },
+   {
+    "intent": "A teal grid spanned by b1 = (1, 1) and b2 = (-1, 1) laid over the plane",
+    "narration": "Now pick two new basis vectors, b1 and b2. Their multiples draw a tilted grid of their own.",
+    "code": "stage.clear(keep=[p, v])\ngrid, b1, b2 = basis_grid(stage, p, (1, 1), (-1, 1))\nstage.caption(\"New basis: b1 = (1, 1), b2 = (-1, 1)\")"
+   },
+   {
+    "intent": "v reached by two steps along b1 and one step back along b2",
+    "narration": "To reach v on the new grid, go two steps along b1, then one step backwards along b2.",
+    "code": "s1 = draw_vector(stage, p, (2, 2), color=GREEN)\ns2 = draw_arrow(stage, p.c2p(2, 2), p.c2p(3, 1), color=RED)\nstage.caption(\"v = 2 b1 - 1 b2\")"
+   },
+   {
+    "intent": "The same arrow v with new coordinates (2, -1), as a matrix product",
+    "narration": "So the same arrow has new coordinates two and minus one. The matrix with b1 and b2 as columns turns them back into three and one.",
+    "code": "stage.clear(keep=[p, v, s1, s2])\nstage.equation(r\"\\begin{bmatrix}1 & -1\\\\ 1 & 1\\end{bmatrix}\\begin{bmatrix}2\\\\ -1\\end{bmatrix} = \\begin{bmatrix}3\\\\ 1\\end{bmatrix}\", where=\"right\")"
+   }
+  ]
+ },
+ {
+  "request": "what are the eigenvalues of a diagonal matrix",
+  "beats": [
+   {
+    "intent": "The grid with i-hat, j-hat and a yellow vector (1, 1)",
+    "narration": "Here are the two basis vectors and one diagonal vector, before the matrix acts.",
+    "code": "stage.title(\"Diagonal matrices\")\np = draw_plane(stage)\ni_hat, j_hat = draw_basis(stage, p)\nv = draw_vector(stage, p, (1, 1))"
+   },
+   {
+    "intent": "The grid stretched by 2 across and squashed by one half up: i-hat and j-hat only change length",
+    "narration": "The matrix with 2 and one half on its diagonal stretches across and squashes up. i-hat and j-hat keep their directions; the diagonal vector tips over.",
+    "code": "apply_matrix(stage, p, [[2, 0], [0, 0.5]], riders=[i_hat, j_hat, v])\nstage.caption(\"The axes only stretch; (1, 1) turns\")"
+   },
+   {
+    "intent": "On a fresh grid, vectors along the axes stay on their lines while a red one is knocked off",
+    "narration": "Run it again with the eigen-directions marked. Anything on the x or y axis stays on its line.",
+    "code": "stage.clear()\np2 = draw_plane(stage)\nshow_eigenvectors(stage, p2, [[2, 0], [0, 0.5]])\nstage.caption(\"The axes are the eigenvectors\")"
+   },
+   {
+    "intent": "An x-arrow doubling and a y-arrow halving, beside the matrix and its eigenvalues",
+    "narration": "The stretch factors are sitting on the diagonal: two along x, one half along y. Those are the eigenvalues.",
+    "code": "stage.clear()\np3 = draw_plane(stage, where=\"left\")\ne1 = draw_vector(stage, p3, (1, 0), color=GREEN)\ne2 = draw_vector(stage, p3, (0, 2), color=RED)\nscale_vector(stage, p3, e1, 2)\nscale_vector(stage, p3, e2, 0.5)\nstage.equation(r\"\\begin{bmatrix}2 & 0\\\\ 0 & 0.5\\end{bmatrix}\", r\"\\lambda_1 = 2,\\ \\lambda_2 = 0.5\", where=\"right\")"
+   }
+  ]
+ },
+ {
+  "request": "show that a linear transformation keeps grid lines parallel and evenly spaced",
+  "beats": [
+   {
+    "intent": "Five evenly spaced dots along the grid line y = 1",
+    "narration": "Put five dots on one grid line, each exactly one unit from the next.",
+    "code": "stage.title(\"Straight and evenly spaced\")\np = draw_plane(stage)\npts = [mark_point(stage, p, (k, 1)) for k in range(-2, 3)]\nstage.caption(\"Five dots, one unit apart\")"
+   },
+   {
+    "intent": "The grid moved by the matrix [[1, 1], [-0.5, 1]], the dots riding along",
+    "narration": "Now apply a linear map. The grid tilts and stretches, but no line bends, and parallel lines stay parallel.",
+    "code": "apply_matrix(stage, p, [[1, 1], [-0.5, 1]], riders=pts)\nstage.caption(\"Grid lines stay straight and parallel\")"
+   },
+   {
+    "intent": "A dashed ruler through the moved dots: still in a row, gaps still equal",
+    "narration": "Lay a ruler through the dots. They are still on one straight line, and the gaps between them are still equal.",
+    "code": "ruler = draw_line(stage, pts[0].get_center(), pts[-1].get_center(), color=RED, dashed=True)\nstage.caption(\"Equal steps before, equal steps after\")"
+   },
+   {
+    "intent": "The inverse matrix carries grid, dots and ruler back to y = 1",
+    "narration": "Undo the map with its inverse and everything slides back: the ruler lies flat on the line y equals one again.",
+    "code": "apply_matrix(stage, p, [[2 / 3, -2 / 3], [1 / 3, 2 / 3]], riders=pts + [ruler])\nstage.caption(\"The inverse puts every dot back\")"
+   }
+  ]
+ },
+ {
+  "request": "why do the columns of a matrix tell you where i-hat and j-hat go",
+  "beats": [
+   {
+    "intent": "i-hat and j-hat on the grid",
+    "narration": "Start with the two basis vectors, i-hat along x and j-hat along y.",
+    "code": "stage.title(\"Columns are landing spots\")\np = draw_plane(stage)\ni_hat, j_hat = draw_basis(stage, p)\nstage.caption(\"i-hat = (1, 0), j-hat = (0, 1)\")"
+   },
+   {
+    "intent": "Two target dots at the matrix columns (2, 1) and (-1, 1)",
+    "narration": "Take the matrix with columns two, one and minus one, one. Mark each column as a point.",
+    "code": "t1 = mark_point(stage, p, (2, 1), color=GREEN, label=\"(2, 1)\")\nt2 = mark_point(stage, p, (-1, 1), color=RED, label=\"(-1, 1)\")\nstage.caption(\"Matrix columns: (2, 1) and (-1, 1)\")"
+   },
+   {
+    "intent": "The grid moves and i-hat and j-hat land exactly on the two dots",
+    "narration": "Apply the matrix. i-hat lands on the first column, j-hat on the second.",
+    "code": "apply_matrix(stage, p, [[2, -1], [1, 1]], riders=[i_hat, j_hat])\nstage.caption(\"i-hat lands on column 1, j-hat on column 2\")"
+   },
+   {
+    "intent": "On a clean grid, v = (1, 1) lands on column one plus column two, (1, 2)",
+    "narration": "Any vector follows: one i-hat plus one j-hat lands on the first column plus the second, the point one, two.",
+    "code": "stage.clear()\np2 = draw_plane(stage)\nv = draw_vector(stage, p2, (1, 1))\nt = mark_point(stage, p2, (1, 2), color=YELLOW, label=\"(1, 2)\")\napply_matrix(stage, p2, [[2, -1], [1, 1]], riders=[v])\nstage.caption(\"(1, 1) goes to (2, 1) + (-1, 1)\")"
+   }
+  ]
+ },
+ {
+  "request": "why is the slope of a straight line the same everywhere",
+  "beats": [
+   {
+    "intent": "The line y = 0.5x + 1 on axes",
+    "narration": "Here is a straight line: it climbs half a unit for every unit across.",
+    "code": "stage.title(\"Constant slope\")\nax = draw_axes(stage, x_range=(-1, 6), y_range=(-1, 5))\nf = lambda x: 0.5 * x + 1\ng = plot_graph(stage, ax, f, label=\"y = 0.5x + 1\")"
+   },
+   {
+    "intent": "A tangent sliding along the line, its slope reading 0.50 the whole way",
+    "narration": "Slide a tangent along it. The slope readout never moves off one half.",
+    "code": "tan = slide_tangent(stage, ax, f, 0, 5)\nstage.caption(\"Same slope at every point\")"
+   },
+   {
+    "intent": "Two rise-over-run steps, at x = 0 and at x = 3, exactly the same size",
+    "narration": "Step two across from anywhere on the line and you always rise exactly one.",
+    "code": "stage.clear(keep=[ax, g])\nrun1 = draw_line(stage, ax.c2p(0, 1), ax.c2p(2, 1), color=GREEN)\nrise1 = draw_line(stage, ax.c2p(2, 1), ax.c2p(2, 2), color=RED)\nrun2 = draw_line(stage, ax.c2p(3, 2.5), ax.c2p(5, 2.5), color=GREEN)\nrise2 = draw_line(stage, ax.c2p(5, 2.5), ax.c2p(5, 3.5), color=RED)\nstage.label(run1, \"2\", direction=DOWN, color=GREEN)\nstage.label(rise1, \"1\", direction=RIGHT, color=RED)\nstage.label(run2, \"2\", direction=DOWN, color=GREEN)\nstage.label(rise2, \"1\", direction=RIGHT, color=RED)"
+   },
+   {
+    "intent": "Rise over run written out: one over two",
+    "narration": "Rise over run is one over two wherever you measure it, so the slope is constant.",
+    "code": "stage.equation(r\"m = \\frac{\\Delta y}{\\Delta x} = \\frac{1}{2}\", where=\"right\")"
+   }
+  ]
+ },
+ {
+  "request": "what does the second derivative actually measure",
+  "beats": [
+   {
+    "intent": "The curve y = x cubed over six",
+    "narration": "Take the curve x cubed over six. It bends down on the left and up on the right.",
+    "code": "stage.title(\"The slope of the slope\")\nax = draw_axes(stage, x_range=(-3, 3), y_range=(-6, 6))\nf = lambda x: x ** 3 / 6\ng = plot_graph(stage, ax, f, label=\"f(x) = x^3/6\")"
+   },
+   {
+    "intent": "A tangent sliding across: its slope falls to zero, then rises again",
+    "narration": "Slide a tangent across. The slope shrinks to zero in the middle and then grows again.",
+    "code": "tan = slide_tangent(stage, ax, f, -2.5, 2.5)\nstage.caption(\"The slope itself is changing\")"
+   },
+   {
+    "intent": "The slope plotted as its own curve, the parabola x squared over two",
+    "narration": "Plot that slope at every x: it is the parabola x squared over two, the first derivative.",
+    "code": "stage.clear(keep=[ax, g])\nfp = lambda x: x ** 2 / 2\ngp = plot_graph(stage, ax, fp, color=YELLOW, label=\"f'(x)\")"
+   },
+   {
+    "intent": "A tangent on the slope curve, reading off the second derivative",
+    "narration": "Now take the slope of that curve. Its readout is exactly x: the second derivative, how fast the slope changes.",
+    "code": "stage.clear(keep=[ax, g, gp])\ntan2 = slide_tangent(stage, ax, fp, -2, 2, color=RED)\nstage.equation(r\"f''(x) = x\", where=\"right\")"
+   }
+  ]
+ },
+ {
+  "request": "show exponential growth where something doubles every step",
+  "beats": [
+   {
+    "intent": "Seven bars, each twice as tall as the one before",
+    "narration": "Start with one and double it at every step: one, two, four, eight, up to sixty-four.",
+    "code": "stage.title(\"Doubling\")\nbars = draw_bars(stage, [1, 2, 4, 8, 16, 32, 64], labels=[0, 1, 2, 3, 4, 5, 6])\nstage.caption(\"Each bar is twice the last\")"
+   },
+   {
+    "intent": "Thirty-two dots: what five doublings of a single dot make",
+    "narration": "Five doublings of a single dot already gives thirty-two of them.",
+    "code": "stage.clear()\ndots = draw_dots(stage, 32, cols=8)\nstage.caption(\"After five doublings: 32 dots\")"
+   },
+   {
+    "intent": "The curve y = 2 to the x through the doubling points",
+    "narration": "Join the doubling points with a smooth curve: y equals two to the x.",
+    "code": "stage.clear()\nax = draw_axes(stage, x_range=(0, 5), y_range=(0, 32))\nf = lambda x: 2 ** x\ng = plot_graph(stage, ax, f, label=\"2^x\")\npts = [mark_point(stage, ax, (k, 2 ** k)) for k in range(6)]"
+   },
+   {
+    "intent": "A dot running up the curve, climbing faster at each step",
+    "narration": "Ride along the curve: each step up is as big as everything that came before it.",
+    "code": "trace_graph(stage, ax, f, 0, 5)\nstage.equation(r\"N(t) = N_0 \\cdot 2^{t}\", where=\"right\")"
+   }
+  ]
+ },
+ {
+  "request": "what does it mean for a function to be continuous",
+  "beats": [
+   {
+    "intent": "A dot tracing a smooth curve without lifting off",
+    "narration": "A continuous function is one you can draw without lifting your pen.",
+    "code": "stage.title(\"Continuous means no jumps\")\nax = draw_axes(stage, x_range=(-3, 3), y_range=(-2, 2))\nf = lambda x: np.sin(x) + 0.3 * x\ntrace_graph(stage, ax, f, -3, 3)\nstage.caption(\"Drawn without lifting the pen\")"
+   },
+   {
+    "intent": "A step function that jumps from -1 to 1 at x = 0",
+    "narration": "This one jumps. Just left of zero it is minus one, and at zero it leaps up to one.",
+    "code": "stage.clear(keep=[ax])\nleft = plot_graph(stage, ax, lambda x: -1 + 0 * x, x_range=(-3, 0), color=RED)\nright = plot_graph(stage, ax, lambda x: 1 + 0 * x, x_range=(0, 3), color=RED)\nhole = Circle(radius=0.1, color=RED).move_to(ax.c2p(0, -1))\nstage.play(Create(hole))\nend = mark_point(stage, ax, (0, 1), color=RED)\nstage.caption(\"A jump at x = 0: not continuous\")"
+   },
+   {
+    "intent": "Points on the smooth curve closing in on x = 1 from both sides",
+    "narration": "On the smooth curve, points closing in on x equals one from either side head for the same height, f of one.",
+    "code": "stage.clear(keep=[ax])\ng = plot_graph(stage, ax, f)\nnear = [mark_point(stage, ax, (x, f(x)), color=BLUE) for x in (0.1, 0.5, 0.8, 1.2, 1.5, 1.9)]\nhit = mark_point(stage, ax, (1, f(1)), color=GREEN, label=\"f(1)\")"
+   },
+   {
+    "intent": "The rule: the limit equals the value",
+    "narration": "That is continuity: the limit as x approaches a equals the value at a.",
+    "code": "stage.equation(r\"\\lim_{x \\to a} f(x) = f(a)\", where=\"right\")"
+   }
+  ]
+ },
+ {
+  "request": "which rectangle with perimeter 12 has the biggest area",
+  "beats": [
+   {
+    "intent": "A thin 5-by-1 rectangle beside a 4-by-2 one, both with perimeter 12",
+    "narration": "Both rectangles have perimeter twelve, but the fatter one holds more.",
+    "code": "stage.title(\"Fixed perimeter, biggest area\")\nr1 = draw_rectangle(stage, 5, 1, where=\"left\", label=\"5 by 1: area 5\")\nr2 = draw_rectangle(stage, 4, 2, where=\"right\", color=GREEN, label=\"4 by 2: area 8\")\nstage.caption(\"Both have perimeter 12\")"
+   },
+   {
+    "intent": "The 3-by-3 square, still perimeter 12, holding area 9",
+    "narration": "Make it a square, three by three: still perimeter twelve, and now area nine.",
+    "code": "stage.clear()\nsq = draw_square(stage, 3, color=YELLOW, label=\"3 by 3: area 9\")"
+   },
+   {
+    "intent": "Area x(6 - x) plotted against the width x",
+    "narration": "With width x the height must be six minus x, so the area is x times six minus x.",
+    "code": "stage.clear()\nax = draw_axes(stage, x_range=(0, 6), y_range=(0, 10), labels=(\"x\", \"A\"))\nA = lambda x: x * (6 - x)\ng = plot_graph(stage, ax, A)\nstage.caption(\"Area A = x(6 - x)\")"
+   },
+   {
+    "intent": "A tangent sliding up to the peak, where its slope hits zero at x = 3",
+    "narration": "Slide a tangent up the curve. It goes flat at x equals three: the square wins.",
+    "code": "tan = slide_tangent(stage, ax, A, 1, 3)\nstage.equation(r\"A'(x) = 6 - 2x = 0\", r\"x = 3\", where=\"right\")"
+   }
+  ]
+ },
+ {
+  "request": "what is a radian, measured on the unit circle",
+  "beats": [
+   {
+    "intent": "A circle with one radius drawn",
+    "narration": "Draw a circle and one of its radii.",
+    "code": "stage.title(\"What is a radian?\")\nc = draw_circle(stage, radius=2, where=\"left\", color=WHITE, fill=0)\nO = c.get_center()\nr = draw_line(stage, O, O + 2 * RIGHT, color=YELLOW)\nstage.label(r, \"r\", direction=DOWN, color=YELLOW)"
+   },
+   {
+    "intent": "The radius bent onto the circle: an arc as long as the radius, and its angle",
+    "narration": "Bend the radius onto the circle. The angle that arc makes at the centre is one radian.",
+    "code": "arc = Arc(radius=2, start_angle=0, angle=1, arc_center=O, color=YELLOW, stroke_width=8)\nbend = r.copy()\nstage.play(Transform(bend, arc), run_time=1.5)\nr2 = draw_line(stage, O, O + 2 * np.array([np.cos(1), np.sin(1), 0]), color=YELLOW)\nwedge = Sector(radius=0.7, angle=1, arc_center=O, color=GREEN, fill_opacity=0.6)\nstage.play(FadeIn(wedge))\nstage.caption(\"Arc as long as the radius: 1 radian\")"
+   },
+   {
+    "intent": "Radius-length arcs laid end to end round the circle: six and a bit",
+    "narration": "Keep laying radius-long arcs round the circle. Six fit, with a little over: two pi in all.",
+    "code": "pieces = VGroup(*[Arc(radius=2, start_angle=k, angle=1, arc_center=O, color=[YELLOW, ORANGE][k % 2], stroke_width=8) for k in range(1, 6)])\nstage.play(LaggedStart(*[Create(a) for a in pieces], lag_ratio=0.6), run_time=3)\nrest = Arc(radius=2, start_angle=6, angle=TAU - 6, arc_center=O, color=RED, stroke_width=8)\nstage.play(Create(rest))\nstage.caption(\"About 6.28 radii fit around: 2π\")"
+   },
+   {
+    "intent": "A full turn in radians and in degrees",
+    "narration": "So a full turn is two pi radians, and one radian is about fifty-seven degrees.",
+    "code": "stage.equation(r\"2\\pi \\text{ rad} = 360^\\circ\", r\"1 \\text{ rad} \\approx 57.3^\\circ\", where=\"right\")"
+   }
+  ]
+ },
+ {
+  "request": "why do two notes with nearly the same pitch make a wobbling sound",
+  "beats": [
+   {
+    "intent": "Two waves, sin 3x and sin 4x, drawn on one axis",
+    "narration": "Two notes with almost the same pitch: their waves are nearly, but not quite, the same.",
+    "code": "stage.title(\"Beats\")\nax = draw_axes(stage, x_range=(0, 12), y_range=(-3, 3))\nw1 = plot_graph(stage, ax, lambda x: np.sin(3 * x), color=BLUE)\nw2 = plot_graph(stage, ax, lambda x: np.sin(4 * x), color=GREEN)\nstage.caption(\"Almost the same frequency\")"
+   },
+   {
+    "intent": "The two waves moving together, their white sum swelling and fading",
+    "narration": "Play them together. Where they are in step the sum is loud; where they are out of step it goes quiet.",
+    "code": "stage.clear(keep=[ax])\nsuperpose_waves(stage, ax, [(1, 3, 3), (1, 4, 4)])\nstage.caption(\"Loud, quiet, loud: beats\")"
+   },
+   {
+    "intent": "A red envelope hugging the sum",
+    "narration": "The loudness follows a slow outline, two cos of half the difference.",
+    "code": "top = plot_graph(stage, ax, lambda x: 2 * np.cos((x - 4) / 2), color=RED)\nbottom = plot_graph(stage, ax, lambda x: -2 * np.cos((x - 4) / 2), color=RED)\nstage.caption(\"A slow envelope around a fast wave\")"
+   },
+   {
+    "intent": "The sum-to-product identity behind the envelope",
+    "narration": "The identity says it all: a fast wave at the average frequency inside a slow one at half the difference.",
+    "code": "stage.equation(r\"\\sin a + \\sin b = 2\\sin\\frac{a+b}{2}\\cos\\frac{a-b}{2}\", where=\"right\")"
+   }
+  ]
+ },
+ {
+  "request": "why pushing a swing in rhythm makes it go higher and higher",
+  "beats": [
+   {
+    "intent": "A swing moving back and forth, its angle traced as a cosine",
+    "narration": "Left alone, a swing has its own rhythm, one back-and-forth every two seconds.",
+    "code": "stage.title(\"Resonance\")\nax0, trace0 = swing_pendulum(stage, amplitude=0.3, swings=2, period=2)\nstage.caption(\"Its natural rhythm\")"
+   },
+   {
+    "intent": "Pushes in rhythm: the swing's displacement grows with every cycle",
+    "narration": "Push at exactly that rhythm and every push adds to the motion. The swings grow and grow.",
+    "code": "stage.clear()\nax = draw_axes(stage, x_range=(0, 20), y_range=(-10, 10), where=\"left\", labels=(\"t\", \"x\"))\nf = lambda t: 0.5 * t * np.sin(t)\ntrace_graph(stage, ax, f, 0, 20, run_time=6)\nstage.caption(\"Pushed at its natural frequency\")"
+   },
+   {
+    "intent": "Pushes at the wrong rhythm: a red wobble that never builds",
+    "narration": "Push at the wrong rhythm and half the pushes fight the motion. It only wobbles.",
+    "code": "g = lambda t: (np.cos(1.6 * t) - np.cos(t)) / (1 - 1.6 ** 2)\ntrace_graph(stage, ax, g, 0, 20, color=RED, run_time=6)\nstage.caption(\"Off rhythm, the pushes cancel out\")"
+   },
+   {
+    "intent": "The driven equation and its growing solution",
+    "narration": "Drive the swing at its own frequency and the solution has a factor of t: the amplitude grows without limit.",
+    "code": "stage.equation(r\"\\ddot{x} + x = \\cos t\", r\"x(t) = \\tfrac{t}{2}\\sin t\", where=\"right\")"
+   }
+  ]
+ },
+ {
+  "request": "the modulus of a complex number is its distance from zero",
+  "beats": [
+   {
+    "intent": "The point 2 + 1.5i on the complex plane",
+    "narration": "Mark the number two plus one and a half i: two to the right, one and a half up.",
+    "code": "stage.title(\"Modulus\")\ncp = draw_complex_plane(stage)\nz = mark_point(stage, cp, (2, 1.5), label=\"2 + 1.5i\")"
+   },
+   {
+    "intent": "A right triangle under it with legs 2 and 1.5",
+    "narration": "The real part and the imaginary part are the two legs of a right triangle.",
+    "code": "leg1 = draw_line(stage, cp.n2p(0), cp.n2p(2), color=GREEN)\nleg2 = draw_line(stage, cp.n2p(2), cp.n2p(2 + 1.5j), color=RED)\nstage.label(leg1, \"2\", direction=DOWN, color=GREEN)\nstage.label(leg2, \"1.5\", direction=RIGHT, color=RED)"
+   },
+   {
+    "intent": "The hypotenuse from 0 to z, 2.5 long",
+    "narration": "The distance from zero is the hypotenuse, and Pythagoras gives two and a half.",
+    "code": "hyp = draw_arrow(stage, cp.n2p(0), cp.n2p(2 + 1.5j), color=YELLOW)\nstage.equation(r\"|z| = \\sqrt{2^2 + 1.5^2} = 2.5\", where=\"right\")"
+   },
+   {
+    "intent": "A circle of radius 2.5: every number on it has modulus 2.5",
+    "narration": "Every number on this circle is the same distance from zero, so they all share modulus two and a half.",
+    "code": "ring = Circle(radius=abs(cp.n2p(2.5)[0] - cp.n2p(0)[0]), color=YELLOW).move_to(cp.n2p(0))\nstage.play(Create(ring), run_time=1.5)\nstage.caption(\"Same distance from 0, same modulus\")"
+   }
+  ]
+ },
+ {
+  "request": "what happens geometrically when you multiply by 1 + i",
+  "beats": [
+   {
+    "intent": "The point 1 + i on the complex plane",
+    "narration": "The number one plus i sits at forty-five degrees, a distance root two from zero.",
+    "code": "stage.title(\"Multiplying by 1 + i\")\ncp = draw_complex_plane(stage)\nw = mark_point(stage, cp, (1, 1), label=\"1 + i\")\nstage.caption(\"Angle 45°, length √2\")"
+   },
+   {
+    "intent": "Arrows to 1 and i turning 45 degrees and stretching by root two",
+    "narration": "Multiply 1 and i by it: both arrows turn forty-five degrees and stretch by root two.",
+    "code": "multiply_complex(stage, cp, 1 + 1j)\nstage.caption(\"Turn 45°, stretch by √2\")"
+   },
+   {
+    "intent": "Repeated multiplication: 1, then 1 + i, then 2i, then -2 + 2i, spiralling out",
+    "narration": "Keep multiplying. One becomes one plus i, then two i, then minus two plus two i: a spiral.",
+    "code": "stage.clear(keep=[cp])\nmultiply_complex(stage, cp, 1 + 1j, points=[1])\nmultiply_complex(stage, cp, 1 + 1j, points=[1 + 1j])\nmultiply_complex(stage, cp, 1 + 1j, points=[2j])\nstage.caption(\"Each step: another 45° and another √2\")"
+   },
+   {
+    "intent": "1 + i in polar form",
+    "narration": "In polar form, one plus i is root two times e to the i pi over four: a scale and a turn.",
+    "code": "stage.equation(r\"1 + i = \\sqrt{2}\\,e^{i\\pi/4}\", where=\"right\")"
+   }
+  ]
+ },
+ {
+  "request": "what's the chance of rolling at least one six in four throws of a die",
+  "beats": [
+   {
+    "intent": "The 36 outcomes of two rolls, the 11 with a six lit up",
+    "narration": "Start small, with two rolls. Of the thirty-six outcomes, eleven contain a six.",
+    "code": "stage.title(\"At least one six\")\ncells = draw_dice_grid(stage)\nstage.play(*[cells[k].animate.set_fill(YELLOW, opacity=0.5) for k in range(36) if k // 6 == 5 or k % 6 == 5])\nstage.caption(\"Two rolls: 11 of 36 have a six\")"
+   },
+   {
+    "intent": "The other 25 outcomes, a 5-by-5 block with no six",
+    "narration": "Easier to count the opposite: no six on either roll is five times five, twenty-five outcomes.",
+    "code": "stage.play(*[cells[k].animate.set_fill(BLUE, opacity=0.5) for k in range(36) if k // 6 < 5 and k % 6 < 5])\nstage.caption(\"No six: 5 × 5 = 25 of 36\")"
+   },
+   {
+    "intent": "Bars for the chance of no six after one, two, three and four rolls",
+    "narration": "Each extra roll multiplies the chance of no six by five sixths, so the bars shrink.",
+    "code": "stage.clear()\nbars = draw_bars(stage, [5 / 6, 25 / 36, 125 / 216, 625 / 1296], labels=[1, 2, 3, 4])\nstage.caption(\"Each roll multiplies by 5/6\")"
+   },
+   {
+    "intent": "The fourth bar and the complement rule: just over one half",
+    "narration": "After four rolls, no six has chance about 0.48, so at least one six has chance about 0.52.",
+    "code": "stage.equation(r\"P(\\text{no six}) = \\left(\\tfrac{5}{6}\\right)^4 \\approx 0.48\", r\"P(\\text{at least one}) \\approx 0.52\", where=\"right\")\nhighlight(stage, bars[3])"
+   }
+  ]
+ },
+ {
+  "request": "animate a random walk with a drift on a number line",
+  "beats": [
+   {
+    "intent": "A walker standing at zero on a number line",
+    "narration": "A walker starts at zero. Each second it steps right with chance 0.7, left with chance 0.3.",
+    "code": "stage.title(\"A drifting random walk\")\nnl = draw_number_line(stage, x_range=(-4, 16))\nwalker = mark_point(stage, nl, 0, color=YELLOW)\nstage.caption(\"Right with chance 0.7, left with 0.3\")"
+   },
+   {
+    "intent": "The walker taking twenty random steps, mostly to the right",
+    "narration": "Watch twenty steps. It stumbles back sometimes, but it keeps drifting right.",
+    "code": "steps = np.random.default_rng(3).choice([1, -1], size=20, p=[0.7, 0.3])\nfor x in np.cumsum(steps):\n    stage.play(walker.animate.move_to(nl.n2p(x)), run_time=0.25)\nstage.caption(\"After 20 steps it is at 12\")"
+   },
+   {
+    "intent": "Five walks plotted against time, fanning out around a rising red line",
+    "narration": "Plot five walks against time. They wander, but all around the line x equals 0.4 t.",
+    "code": "stage.clear()\nax = draw_axes(stage, x_range=(0, 30), y_range=(-5, 25), where=\"left\", labels=(\"t\", \"x\"))\nfor s, col in zip(range(5), [BLUE, GREEN, TEAL, ORANGE, PURPLE]):\n    walk = np.concatenate([[0], np.cumsum(np.random.default_rng(s).choice([1, -1], 30, p=[0.7, 0.3]))])\n    path = VMobject(color=col).set_points_as_corners([ax.c2p(t, walk[t]) for t in range(31)])\n    stage.play(Create(path), run_time=0.8)\ndrift = plot_graph(stage, ax, lambda t: 0.4 * t, color=RED, label=\"0.4t\")"
+   },
+   {
+    "intent": "The average step, 0.7 minus 0.3, gives the drift",
+    "narration": "On average each step moves 0.7 minus 0.3, that is 0.4, so after n steps the expected position is 0.4 n.",
+    "code": "stage.equation(r\"E[\\text{step}] = 0.7 - 0.3 = 0.4\", r\"E[x_n] = 0.4\\,n\", where=\"right\")"
+   }
+  ]
+ },
+ {
+  "request": "why is the mean pulled away from the median in skewed data",
+  "beats": [
+   {
+    "intent": "A histogram with a long tail to the right, filling in",
+    "narration": "Incomes, house prices, waiting times: lots of data piles up on the left with a long tail to the right.",
+    "code": "stage.title(\"Mean versus median\")\nhist = grow_histogram(stage, lambda rng, k: rng.lognormal(0, 0.7, k), bins=np.linspace(0, 6, 25))\nstage.caption(\"Skewed: a long tail to the right\")"
+   },
+   {
+    "intent": "Five values on a number line, the median and the mean marked",
+    "narration": "Take five values: 10, 20, 30, 40 and 100. The middle one, 30, is the median; the mean is 40.",
+    "code": "stage.clear()\nnl = draw_number_line(stage, x_range=(0, 150))\nvals = [10, 20, 30, 40, 100]\ndots = [mark_point(stage, nl, v, color=BLUE) for v in vals]\nmed = draw_arrow(stage, nl.n2p(30) + 1.1 * UP, nl.n2p(30) + 0.2 * UP, color=GREEN)\nmed_lab = stage.label(med, \"median\", color=GREEN)\nmean = draw_arrow(stage, nl.n2p(40) + 2.0 * UP, nl.n2p(40) + 0.2 * UP, color=RED)\nmean_lab = stage.label(mean, \"mean\", color=RED)\nstage.caption(\"Median 30, mean 40\")"
+   },
+   {
+    "intent": "The biggest value sliding out to 150: the mean follows, the median stays",
+    "narration": "Drag the biggest value out to 150. The median does not move at all; the mean is dragged to 50.",
+    "code": "gap = nl.n2p(50) - nl.n2p(40)\nstage.play(dots[4].animate.move_to(nl.n2p(150)), mean.animate.shift(gap), mean_lab.animate.shift(gap), run_time=2)\nstage.caption(\"Median still 30, mean now 50\")"
+   },
+   {
+    "intent": "The mean's arithmetic, with the median dot pulsing",
+    "narration": "The mean adds up every value, so one extreme value pulls it; the median only cares about the middle.",
+    "code": "stage.equation(r\"\\bar{x} = \\frac{10+20+30+40+150}{5} = 50\", where=\"right\")\npulse(stage, dots[2])"
+   }
+  ]
+ },
+ {
+  "request": "why is every whole number either even or odd, shown with pairs",
+  "beats": [
+   {
+    "intent": "Eight dots in two rows of four: every dot has a partner",
+    "narration": "Arrange eight dots in pairs, two rows of four. Every dot has a partner.",
+    "code": "stage.title(\"Even and odd\")\nd8 = draw_dots(stage, 8, cols=4, where=\"left\")\nstage.label(d8, \"8: even\", direction=DOWN)"
+   },
+   {
+    "intent": "Seven dots: three pairs and one left over",
+    "narration": "Seven dots make three pairs, and one is left without a partner.",
+    "code": "d7 = draw_dots(stage, 7, cols=4, where=\"right\", color=RED)\nstage.label(d7, \"7: odd\", direction=DOWN, color=RED)\nhighlight(stage, d7[3])"
+   },
+   {
+    "intent": "Five and three: the two leftover dots pair up with each other",
+    "narration": "Add two odd numbers, five and three. Their leftover dots pair up with each other.",
+    "code": "stage.clear()\na = draw_dots(stage, 5, cols=3, where=\"left\", color=RED)\nb = draw_dots(stage, 3, cols=2, where=\"right\", color=RED)\nstage.play(b[1].animate.move_to(a[2].get_center() + 0.59 * DOWN), run_time=1.5)\nstage.play(a[2].animate.set_color(GREEN), b[1].animate.set_color(GREEN))\nstage.caption(\"Odd plus odd is even\")"
+   },
+   {
+    "intent": "The algebra of the leftovers",
+    "narration": "An odd number is twice something plus one; two of them give twice something plus two, which is even.",
+    "code": "stage.equation(r\"(2m+1) + (2n+1) = 2(m+n+1)\", where=\"right\")"
+   }
+  ]
+ },
+ {
+  "request": "find the gcd of 21 and 15 by subtracting the smaller from the larger",
+  "beats": [
+   {
+    "intent": "Two bars, 21 and 15 tall",
+    "narration": "Put 21 and 15 side by side as bars.",
+    "code": "stage.title(\"GCD by subtraction\")\nbars = draw_bars(stage, [21, 15], labels=[21, 15])\nstage.caption(\"Subtract the smaller from the larger\")"
+   },
+   {
+    "intent": "The bars shrinking step by step: 6 and 15, 6 and 9, 6 and 3, 3 and 3",
+    "narration": "Take the smaller from the larger, again and again, until the two bars are equal.",
+    "code": "stage.play(FadeOut(bars[2]))\nfor a, b in [(6, 15), (6, 9), (6, 3), (3, 3)]:\n    stage.play(bars[0].animate.stretch_to_fit_height(a / 21 * 4, about_edge=DOWN), bars[1].animate.stretch_to_fit_height(b / 21 * 4, about_edge=DOWN), run_time=0.8)\n    stage.caption(f\"{a} and {b}\")"
+   },
+   {
+    "intent": "A 21-by-15 rectangle cut into squares of side 15, 6, 6, 3 and 3",
+    "narration": "The same steps as a picture: cut the biggest square you can off a 21 by 15 rectangle, and repeat. The last square is 3 by 3.",
+    "code": "stage.clear()\nu = 0.24\nR = Rectangle(width=21 * u, height=15 * u, color=WHITE).move_to([-3.2, -0.1, 0])\nstage.play(Create(R))\ncorner = R.get_corner(DL)\ntiles = [(0, 0, 15, BLUE), (15, 0, 6, GREEN), (15, 6, 6, GREEN), (15, 12, 3, YELLOW), (18, 12, 3, YELLOW)]\nsquares = [Square(side_length=s * u, color=col, fill_opacity=0.5).move_to(corner + np.array([(x + s / 2) * u, (y + s / 2) * u, 0])) for x, y, s, col in tiles]\nfor sq in squares:\n    stage.play(FadeIn(sq), run_time=0.6)\nstage.caption(\"Smallest square: 3 by 3\")"
+   },
+   {
+    "intent": "The chain of gcds ending at 3",
+    "narration": "Subtracting never changes the greatest common divisor, so the gcd of 21 and 15 is 3.",
+    "code": "stage.equation(r\"\\gcd(21, 15) = \\gcd(6, 15)\", r\"= \\gcd(6, 9) = \\gcd(6, 3)\", r\"= \\gcd(3, 3) = 3\", where=\"right\")\nhighlight(stage, squares[-1])"
+   }
+  ]
+ },
+ {
+  "request": "why is the area of a parallelogram base times height",
+  "beats": [
+   {
+    "intent": "A parallelogram with base 4 and height 2",
+    "narration": "Here is a parallelogram with base four and height two, the height measured straight up.",
+    "code": "stage.title(\"Parallelogram area\")\npara = draw_polygon(stage, [(-2.5, -1.1), (1.5, -1.1), (2.5, 0.9), (-1.5, 0.9)])\nbase = draw_line(stage, (-2.5, -1.1), (1.5, -1.1), color=YELLOW)\nstage.label(base, \"base 4\", direction=DOWN, color=YELLOW)\nh = draw_line(stage, (-1.5, 0.9), (-1.5, -1.1), color=GREEN, dashed=True)\nstage.label(h, \"height 2\", direction=RIGHT, color=GREEN)"
+   },
+   {
+    "intent": "The left triangle cut off and slid to the right end",
+    "narration": "Cut off the triangle on the left and slide it four units to the right.",
+    "code": "tri = Polygon((-2.5, -1.1), (-1.5, -1.1), (-1.5, 0.9), color=ORANGE, fill_opacity=0.7)\nstage.play(FadeIn(tri))\nstage.play(tri.animate.shift(4 * RIGHT), run_time=1.5)"
+   },
+   {
+    "intent": "The pieces forming a 4-by-2 rectangle",
+    "narration": "It fits exactly into the gap: the parallelogram has become a rectangle four by two.",
+    "code": "rect = Polygon((-1.5, -1.1), (2.5, -1.1), (2.5, 0.9), (-1.5, 0.9), color=BLUE, fill_opacity=0.3)\nstage.play(Transform(para, rect), FadeOut(tri), base.animate.shift(RIGHT), run_time=1.2)\nstage.caption(\"Same area as a 4 by 2 rectangle\")"
+   },
+   {
+    "intent": "Base times height",
+    "narration": "So the area is base times height: four times two, eight.",
+    "code": "stage.equation(r\"A = b \\times h = 4 \\times 2 = 8\", where=\"right\")"
+   }
+  ]
+ },
+ {
+  "request": "show regular polygons with more and more sides turning into a circle",
+  "beats": [
+   {
+    "intent": "A triangle inscribed in a circle",
+    "narration": "Put a triangle inside a circle, its corners on the circle.",
+    "code": "stage.title(\"Polygons into a circle\")\nc = draw_circle(stage, radius=2, color=WHITE, fill=0)\npoly = RegularPolygon(3, radius=2, color=YELLOW).shift(c.get_center())\nstage.play(Create(poly))\nstage.caption(\"3 sides: perimeter / diameter = 2.598\")"
+   },
+   {
+    "intent": "The sides doubling, 6, 12, 24, 48: the polygon hugging the circle",
+    "narration": "Double the number of sides, again and again. The polygon hugs the circle ever more closely.",
+    "code": "for n in (6, 12, 24, 48):\n    stage.play(Transform(poly, RegularPolygon(n, radius=2, color=YELLOW).shift(c.get_center())), run_time=1)\n    stage.caption(f\"{n} sides: perimeter / diameter = {n * np.sin(PI / n):.3f}\")"
+   },
+   {
+    "intent": "Perimeter over diameter plotted against the number of sides, rising towards pi",
+    "narration": "Plot the ratio of perimeter to diameter against the number of sides. It climbs towards the red line at pi.",
+    "code": "stage.clear()\nax = draw_axes(stage, x_range=(0, 50), y_range=(2.5, 3.3), labels=(\"n\", \"ratio\"))\npi_line = plot_graph(stage, ax, lambda x: PI + 0 * x, color=RED, label=r\"\\pi\")\ncurve = plot_graph(stage, ax, lambda x: x * np.sin(PI / x), x_range=(3, 50), color=YELLOW)\npts = [mark_point(stage, ax, (n, n * np.sin(PI / n))) for n in (3, 4, 6, 8, 12, 24, 48)]"
+   },
+   {
+    "intent": "The limit written out",
+    "narration": "As the number of sides grows, n times sine of pi over n tends to pi.",
+    "code": "stage.equation(r\"n \\sin\\frac{\\pi}{n} \\to \\pi\", where=\"right\")"
+   }
+  ]
+ },
+ {
+  "request": "how long is the diagonal of a square with side 1",
+  "beats": [
+   {
+    "intent": "A unit square with its diagonal drawn",
+    "narration": "Take a square with sides of length one and draw the diagonal.",
+    "code": "stage.title(\"The diagonal of a unit square\")\nsq = draw_square(stage, 2.5, label=\"side 1\")\nd = draw_line(stage, sq.get_corner(DL), sq.get_corner(UR), color=YELLOW)\nstage.label(d.get_center(), \"d\", direction=UL, color=YELLOW)"
+   },
+   {
+    "intent": "The diagonal splitting the square into two right triangles with legs 1 and 1",
+    "narration": "The diagonal cuts the square into two right triangles, each with legs one and one.",
+    "code": "tri = Polygon(sq.get_corner(DL), sq.get_corner(DR), sq.get_corner(UR), color=GREEN, fill_opacity=0.5)\nstage.play(FadeIn(tri))\nstage.label(sq.get_right(), \"1\", direction=RIGHT, color=GREEN)\nstage.caption(\"Two right triangles, legs 1 and 1\")"
+   },
+   {
+    "intent": "Four unit squares with a tilted square drawn on their diagonals: area 2",
+    "narration": "Put four unit squares together and join their diagonals. The tilted square inside is four halves of a unit square, so its area is two.",
+    "code": "stage.clear()\ngrid = VGroup(*[Square(side_length=1.4, color=BLUE, fill_opacity=0.2).move_to([x, y, 0]) for x in (-3.9, -2.5) for y in (-0.8, 0.6)])\nstage.play(Create(grid))\ntilt = Polygon((-3.2, -1.5), (-1.8, -0.1), (-3.2, 1.3), (-4.6, -0.1), color=YELLOW, fill_opacity=0.5)\nstage.play(Create(tilt), run_time=1.5)\nstage.caption(\"Four half squares: the diagonal square has area 2\")"
+   },
+   {
+    "intent": "The diagonal's length from Pythagoras",
+    "narration": "So the diagonal squared is two, and the diagonal is root two, about 1.414.",
+    "code": "stage.equation(r\"d^2 = 1^2 + 1^2 = 2\", r\"d = \\sqrt{2} \\approx 1.414\", where=\"right\")\npulse(stage, tilt)"
+   }
+  ]
+ },
+ {
+  "request": "how does a parity bit detect a single bit error",
+  "beats": [
+   {
+    "intent": "A 4-by-4 grid of bits whose last cell is the parity bit",
+    "narration": "Send fifteen data bits plus one extra: the parity bit, chosen to make the number of ones even.",
+    "code": "stage.title(\"Parity bit\")\nbits = [1, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 1, 1, 1]\ncells = bit_grid(stage, bits)\nhighlight(stage, cells[15])\nstage.caption(\"The last bit makes the count of 1s even\")"
+   },
+   {
+    "intent": "Every 1 outlined: ten of them, an even count",
+    "narration": "The receiver counts the ones. Ten: even, so nothing looks wrong.",
+    "code": "stage.play(*[cells[k].animate.set_stroke(YELLOW, width=4) for k in range(16) if bits[k]])\neq = stage.equation(r\"\\text{ones} = 10\\ (\\text{even})\", where=\"right\")"
+   },
+   {
+    "intent": "One bit flipped by noise, turned red: the count is now odd",
+    "narration": "Noise flips one bit from one to zero. Now there are nine ones, an odd count, and the receiver knows something broke.",
+    "code": "stage.play(cells[6].animate.set_fill(RED, opacity=0.6, family=False).set_stroke(RED, width=4, family=False))\nstage.play(Transform(cells[6][0], MathTex(\"0\", font_size=36).move_to(cells[6])))\nstage.play(FadeOut(eq))\neq = stage.equation(r\"\\text{ones} = 9\\ (\\text{odd!})\", where=\"right\")\nstage.caption(\"Odd count: an error is caught\")"
+   },
+   {
+    "intent": "A second flip makes the count even again, and the error slips by",
+    "narration": "But flip a second bit and the count is even again. One parity bit catches any single flip, not two.",
+    "code": "stage.play(cells[9].animate.set_fill(RED, opacity=0.6, family=False).set_stroke(RED, width=4, family=False))\nstage.play(Transform(cells[9][0], MathTex(\"0\", font_size=36).move_to(cells[9])))\nstage.play(FadeOut(eq))\neq = stage.equation(r\"\\text{ones} = 8\\ (\\text{even})\", where=\"right\")\nstage.caption(\"Two flips cancel: this one goes unseen\")"
+   }
+  ]
+ },
+ {
+  "request": "find the shortest route through a small road network",
+  "beats": [
+   {
+    "intent": "Six towns joined by roads, each road labelled with its length",
+    "narration": "Six towns, A to F, and the roads between them, each marked with its length.",
+    "code": "stage.title(\"Shortest path\")\nnodes = {\"A\": (-0.9, 0), \"B\": (-0.3, 0.8), \"C\": (-0.3, -0.8), \"D\": (0.4, 0.8), \"E\": (0.4, -0.8), \"F\": (1.0, 0)}\nedges = [(\"A\", \"B\"), (\"A\", \"C\"), (\"C\", \"B\"), (\"B\", \"D\"), (\"C\", \"E\"), (\"D\", \"E\"), (\"D\", \"F\"), (\"E\", \"F\")]\ndots, lines = draw_network(stage, nodes, edges)\nfor ln, w, d in zip(lines, [4, 2, 1, 5, 10, 2, 4, 3], [UL, DL, RIGHT, UP, DOWN, RIGHT, UR, DR]):\n    stage.label(ln.get_center(), str(w), direction=d, color=YELLOW)"
+   },
+   {
+    "intent": "From A, the road to C lights up, then C to B: B is 3 away, not 4",
+    "narration": "Grow distances outward from A. C is two away, and going through C reaches B in three, beating the direct road of four.",
+    "code": "stage.play(dots[\"A\"].animate.set_color(GREEN))\nstage.play(lines[1].animate.set_stroke(YELLOW, width=6), dots[\"C\"].animate.set_color(YELLOW))\nstage.play(lines[2].animate.set_stroke(YELLOW, width=6), dots[\"B\"].animate.set_color(YELLOW))\nstage.caption(\"Via C, B is only 3 away\")"
+   },
+   {
+    "intent": "The route A, C, B, D, F lit up, a traveller walking it",
+    "narration": "Carry on the same way to the end. The best route is A, C, B, D, F, with total length twelve.",
+    "code": "stage.play(lines[3].animate.set_stroke(YELLOW, width=6), dots[\"D\"].animate.set_color(YELLOW))\nstage.play(lines[6].animate.set_stroke(YELLOW, width=6), dots[\"F\"].animate.set_color(GREEN))\nwalker = Dot(dots[\"A\"].get_center(), radius=0.16, color=WHITE)\nstage.play(FadeIn(walker))\nfor k in [\"C\", \"B\", \"D\", \"F\"]:\n    stage.play(walker.animate.move_to(dots[k].get_center()), run_time=0.6)\nstage.play(FadeOut(walker))\nstage.caption(\"Shortest route: A, C, B, D, F\")"
+   },
+   {
+    "intent": "The direct-looking road A to B turned red: that route costs 13",
+    "narration": "The route that starts with the road straight to B costs thirteen. The detour through C wins by one.",
+    "code": "stage.play(lines[0].animate.set_stroke(RED, width=6), dots[\"B\"].animate.set_color(RED))\nstage.caption(\"Straight to B first costs 13, not 12\")"
+   }
+  ]
+ }
+]

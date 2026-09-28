@@ -3,7 +3,7 @@
 Two sources, both written by Claude in the teacher's format: the worked
 scenes in forge/kit/exemplars.py (the first 31, for the six classic-picture
 blocks and the under-used motion blocks) and the subagent batches in
-data/kit/claude_scenes/batch_*.json (docs/TEACHER_GUIDE.md: broad topics,
+forge/kit/teacher/batch_*.json (docs/TEACHER_GUIDE.md: broad topics,
 never the held-out ones, render-checked and looked at by their writers).
 
 Each scene is rendered whole with a mark at every beat's end; only scenes
@@ -32,7 +32,7 @@ from forge.kit.exemplars import SCENES  # noqa: E402
 
 OUT = ROOT / "data" / "kit" / "claude_beats.jsonl"
 PLANS = ROOT / "data" / "kit" / "claude_plans.jsonl"
-BATCHES = ROOT / "data" / "kit" / "claude_scenes"
+BATCHES = ROOT / "forge" / "kit" / "teacher"   # tracked; data/ is not
 
 
 def scenes() -> list[tuple[str, str, list[tuple[str, str, str]]]]:
