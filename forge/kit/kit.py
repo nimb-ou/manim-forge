@@ -198,8 +198,12 @@ class Stage:
         # their parts in one by one never put their returned group on the
         # scene, so moving only the stage's own objects left bars, networks
         # and dots behind while their labels moved (the teacher batches).
+        # Not the timers: a ValueTracker animated with .animate sits on the
+        # scene at x = its value (400) and scaled the picture to nothing.
         tops = [m for m in self.scene.mobjects
-                if m is not self._title and m is not self._caption]
+                if m is not self._title and m is not self._caption
+                and not isinstance(m, ValueTracker)
+                and (m.width > 1e-6 or m.height > 1e-6 or m.submobjects)]
         if not tops:
             return
         # Sized by what is on the frame: a sheared plane's grid runs far
@@ -564,6 +568,10 @@ def apply_matrix(stage: Stage, plane_, matrix=((1, 1), (0, 1)), riders=(),
     about = plane_.c2p(0, 0)
     group = VGroup(plane_, *riders)
     stage.scene.play(ApplyMatrix(m, group, about_point=about), run_time=run_time)
+    # Unwrapped: left as one group wider than the frame, a later equation
+    # sized the picture by the leftover labels and put shapes off screen.
+    stage.scene.remove(group)
+    stage.scene.add(plane_, *riders)
     # A stretching matrix carried arrows off the frame and the grid across
     # the title (held-out "matrix multiplication"; three teacher batches).
     # If the riders now leave the picture area, zoom the whole view out
@@ -1949,6 +1957,21 @@ def _axes_n2p(self, x, *rest):
 
 if not hasattr(_Axes, "n2p"):
     _Axes.n2p = _axes_n2p
+
+# Curves sampled at the axis tick step: Manim's plot() takes the axis's step
+# when x_range has no third number, so sin(10x) on unit ticks came out as a
+# jagged zigzag (teacher batch 11). About 200 samples across the range.
+if not getattr(_Axes, "_forge_plot_ok", False):
+    _plot = _Axes.plot
+
+    def _fine_plot(self, function, x_range=None, *args, **kw):
+        xr = list(x_range) if x_range is not None else [self.x_range[0], self.x_range[1]]
+        if len(xr) < 3:
+            span = abs(xr[1] - xr[0]) or 1.0
+            xr = [xr[0], xr[1], span / 200]
+        return _plot(self, function, xr, *args, **kw)
+    _Axes.plot = _fine_plot
+    _Axes._forge_plot_ok = True
 
 # ax.c2p((x, y)) -- one point, not two numbers -- failed with "setting an
 # array element with a sequence" (three runtime drops in one run).
