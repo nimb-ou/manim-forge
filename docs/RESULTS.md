@@ -644,3 +644,7 @@ at: integration, same plan -- names only draws the curve, strips, the
 shaded area; with signatures, stray steps and empty axes. The app uses
 names only. Held-out (topics nothing was built for) stays ~20 points
 under the short prompts: that gap is what training has to close.
+
+Planner v4 vs v3, same coder (kit v6 + names hint), same seeds, one plan
+per prompt: short 46% vs 58%, held-out 42% vs 39%. Mixed and within one
+plan's sampling noise; planner v3 stays in the app.
