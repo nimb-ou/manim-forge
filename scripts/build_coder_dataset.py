@@ -99,6 +99,11 @@ def main() -> int:
             print(f"  synthetic capped: {len(kept)} of {len(synth)} windows")
             synth = kept
         rows += synth
+        # Claude-written arcs (scripts/claude_kit_scenes.py): whole short arcs
+        # whose intents name the picture ("A ball stepping down the
+        # parabola") -- what the planner's lecture-note intents ("Understanding
+        # the mean and standard deviation") lack. Weighted like narration.
+        rows += load(ROOT / "data" / "kit" / "claude_plans.jsonl")
         out = a.out or ROOT / "kaggle" / "manim-forge-planner"
         key = lambda r: r["meta"]["id"].rsplit(":w", 1)[0]     # noqa: E731
     if not rows:
@@ -121,7 +126,7 @@ def main() -> int:
         target = valid if scene in valid_scenes else train
         src0 = group[0]["meta"]["source"]
         reps = a.gold_weight if src0 == "gold" else \
-            (3 if src0 == "narration" else 1)
+            (3 if src0 in ("narration", "plan-claude") else 1)
         # Gold is weighted in training only. Repeating it in validation would
         # make the eval loss a measurement of how well 44 scenes were
         # memorised.

@@ -56,8 +56,8 @@ def main() -> int:
         scene = r["meta"]["scene"]
         held = int(hashlib.sha256(scene.encode()).hexdigest(), 16) % 20 == 0
         # Hand-written rows are the only ones using the newest blocks, and
-        # there are few of them: each counts four times in training.
-        copies = 4 if r["meta"].get("source") == "kit-claude" and not held else 1
+        # there are few of them: each counts twice in training.
+        copies = 2 if r["meta"].get("source") == "kit-claude" and not held else 1
         for _ in range(copies):
             (valid if held else train).append({"messages": msgs, "meta": meta})
     OUT.mkdir(parents=True, exist_ok=True)
