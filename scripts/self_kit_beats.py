@@ -42,6 +42,9 @@ def main() -> int:
     ap.add_argument("--coder", default=str(ROOT / "adapters" / "mlx-coder5-kit"))
     ap.add_argument("--beats", type=int, default=8)
     ap.add_argument("--limit", type=int, default=5000)
+    ap.add_argument("--claude-plans", action="store_true",
+                    help="arcs from data/kit/claude_plans.jsonl (Claude-written, intents "
+                         "that name pictures) instead of the teacher's plan files")
     a = ap.parse_args()
 
     import manim
@@ -53,7 +56,17 @@ def main() -> int:
     model, tok = load(a.coder)
     done = {json.loads(l)["arc"] for l in DONE.open() if l.strip()} \
         if DONE.exists() else set()
-    todo = [x for x in arcs(a.limit) if x[0] not in done]
+    if a.claude_plans:
+        from forge.app.twostage import parse_plan
+        src = []
+        for l in (ROOT / "data" / "kit" / "claude_plans.jsonl").read_text().splitlines():
+            r = json.loads(l)
+            bs, _ = parse_plan(r["messages"][2]["content"], limit=10)
+            if bs:
+                src.append((f"self-{r['meta']['id']}", r["meta"]["request"], bs[:8]))
+    else:
+        src = arcs(a.limit)
+    todo = [x for x in src if x[0] not in done]
     print(f"{len(done)} arcs done, {len(todo)} to go", flush=True)
     made = 0
     for rid, req, beats in todo:
