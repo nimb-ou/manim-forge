@@ -59,6 +59,19 @@ Blocks take `stage` first, draw *and animate*, and return what they made.
    `Line`, `Polygon`, `VGroup`, `.animate`) — keep it simple and on screen.
 7. Vary the style across scenes (different blocks, layouts, numbers).
 
+## Kit behaviour worth knowing (fixed 2026-09-28)
+
+- `stage.equation(..., where="right")` moves *everything* on screen (bars,
+  networks, raw shapes too) into the other half first; no need to draw on
+  the left in advance. `stage.clear(keep=[ax])` still keeps `ax` after it.
+- Vector labels (`draw_vector(label=...)`, `draw_basis`) ride the arrow tip
+  through `apply_matrix`; `draw_array`'s numbers follow `swap_bars`.
+- Axis labels belong to the axes; integer ticks show without ".0".
+- A new plane/axes, or a new self-contained picture (dice grid, bars,
+  network, Bayes square, ...), clears the previous picture automatically.
+- `draw_polygon(stage, pts, where=None)` keeps the points' own coordinates.
+- A plotted graph is callable: `g = plot_graph(...)`, then `g(1.5)`.
+
 ## Check your work
 
 ```bash
