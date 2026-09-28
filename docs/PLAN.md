@@ -156,7 +156,50 @@ about a model, check that the thing measuring it can express what the model
 did.** A parser that cannot represent a plan reports no plan. A scope list
 that cannot represent an attribute reports no scope.
 
-### Grounded plan — 2026-09-25 evening
+### Grounded plan — 2026-09-28 (rebased)
+
+**Where it is.** The product works end to end on the Mac: planner v3 →
+kit coder v6 (names-only subject hint) → the Forge kit (64 blocks,
+fuzz-tested) → render, in a local web app. Honest quality, identical
+plans, visual + new + on-subject beats: **58%** on the 20 short prompts the
+kit was shaped around, **39%** on 20 held-out prompts. By eye it is lower:
+of 20 scenes, 3 clearly good, 2 mostly, 8 partial, 7 poor. Raw Manim
+started at 24% / 25%.
+
+**What actually moved it** (so we stop re-deriving it): kit blocks that
+work on the calls a model makes (fuzz: 70 cases), statement-level runtime
+salvage, a subject hint naming the blocks, self-training rows. **What did
+not:** GRPO (gamed three different rewards), signatures in the hint,
+in-prompt exemplars, kit v7, planner v4 — each checked on identical plans.
+
+**Spiralling check.** The last two days risked optimising a lenient
+metric on the same 20 prompts; the fixes were measurement fixes (cached
+plans, held-out set, beat-end frames). The remaining gap — held-out 39% —
+is a training-data gap; inference tweaks are nearly spent.
+
+**Constraints.** Kaggle GPU quota spent until ~Oct 3 00:22Z. Mistral
+budget spent (402) until it resets. Gemini: the model the critic used is
+out of quota, but gemini-flash-latest and flash-lite-latest answer.
+
+**Next 12 hours.**
+1. *A vision judge for evals* (Gemini, beat-end frames vs beat intents),
+   calibrated against my own eye-scores; it becomes the headline number.
+2. Re-judge the ablation runs with it (do the conclusions hold?).
+3. *Teacher data via Gemini* while Mistral is out: kit beats on broad
+   topics (never the held-out ones), for the Oct 3 SFT.
+4. One inference experiment left: resample beats that draw nothing.
+5. Smoke-test the web app end to end; write the Oct 3 launch (rebuild the
+   dataset, push SFT, collect) so it fires at the reset.
+6. Watch Mistral; restart the kit shards when it answers.
+
+**Stopped.** Kit patches for single model guesses; unseeded or
+single-run comparisons; GRPO until an SFT beats kit v6 on held-out.
+
+**Watching.** 30-minute checks and the six-hour reassessment (cron, this
+session).
+
+### Grounded plan — 2026-09-25 evening (superseded)
+
 
 **What went wrong.** The kit coder's local training sat at iteration 1 for
 ~20 hours with the Mac thrashing (11% memory free, load 91), and nothing
