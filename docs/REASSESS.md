@@ -467,3 +467,25 @@ kit v8 + planner v5 (Oct 3, automated), judged on both sets.
 **Plan.** Until then: self-training continues; Mistral watched; no new
 inference experiments. If Claude usage is available again, one more wave
 of longer (5-6 beat) teacher scenes and planner-only arcs.
+
+## Log · 2026-09-28 14:15Z
+
+**Arrived.** Teacher data written by Claude subagents: 291 scenes (11
+batches, all rendering on the current kit, every sheet looked at by its
+writer) → 1,234 coder rows; 120 planner-only arcs with picture-naming
+intents → 411 planner arcs in all. Kit fixed from their reports (curve
+sampling, equation layout, timers, matrix zoom, labels). Self-training
+3,074 rows. Two further waves stopped on the Claude monthly spend limit
+before writing anything; not relaunched — that limit is the user's call.
+
+**Looked.** batch_11 "how does gradient descent train a model": data
+points, a bad line, residuals, the loss valley, the descent to w ≈ 1.15,
+the fitted line with the update rule — six beats, each a clear picture.
+This is the target the coder will be trained toward; today's shipped model
+gets there on ~3 of 20 prompts.
+
+**Critical path.** Oct 3 00:30Z: launch_week2.sh rebuilds the kit and
+planner datasets (teacher + self + Claude rows) and pushes kit v8 and
+planner v5; the supervisor collects them. Then: score on cached plans,
+judge both sets, look at sheets, ship if it beats kit v6 on held-out.
+Mistral watched hourly (still 402).

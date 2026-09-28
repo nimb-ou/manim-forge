@@ -192,6 +192,12 @@ out of quota, but gemini-flash-latest and flash-lite-latest answer.
    dataset, push SFT, collect) so it fires at the reset.
 6. Watch Mistral; restart the kit shards when it answers.
 
+**Done in the block (2026-09-28).** Vision judge (headline number);
+ablation re-judged (inference tuning closed — all within noise); web app
+fixed (coloured tracebacks) and verified end to end; 291 Claude-written
+scenes + 120 planner arcs (forge/kit/teacher/); kit fixes from their
+reports; Oct 3 launch automated; Mistral watcher running.
+
 **Stopped.** Kit patches for single model guesses; unseeded or
 single-run comparisons; GRPO until an SFT beats kit v6 on held-out.
 
