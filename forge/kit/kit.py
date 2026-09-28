@@ -731,7 +731,12 @@ def shade_area(stage: Stage, ax, g=None, a=None, b=None, color=BLUE_D, x_range=N
     """Shade the area under g between a and b."""
     _need(ax, "get_area", "the axes from draw_axes(stage)", "shade_area(stage, axes, graph, a, b)")
     g, a, b = _bounds(stage, ax, g, a, b, x_range)
-    r = ax.get_area(_graph(ax, g, a, b), x_range=[a, b], color=color, opacity=0.5)
+    # Clipped to the axes' height: v = 2t shaded to t = 4 on axes up to 3
+    # filled a block through the title (self-training scene).
+    ylo, yhi = ax.y_range[0], ax.y_range[1]
+    f = g.underlying_function if hasattr(g, "underlying_function") else g
+    clipped = ax.plot(lambda x: float(np.clip(f(x), ylo, yhi)), x_range=[a, b])
+    r = ax.get_area(clipped, x_range=[a, b], color=color, opacity=0.5)
     stage.scene.play(FadeIn(r), run_time=1.0)
     stage._objects.append(r)
     return r

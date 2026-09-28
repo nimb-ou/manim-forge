@@ -33,7 +33,11 @@ from forge.app.twostage import Beat, assemble, extract_code  # noqa: E402
 
 SRC = ROOT / "data" / "kit" / "kit_beats.jsonl"
 OUT = ROOT / "data" / "kit" / "critic.jsonl"
-MODEL = "gemini-3.7-flash"
+# gemini-3.7-flash ran out of quota and the critic sat on 429s for days;
+# these answer (2026-09-28). Tried in turn on 429s.
+MODEL = "gemini-flash-latest"
+MODELS = ["gemini-flash-latest", "gemini-flash-lite-latest"]
+SELF = ROOT / "data" / "kit" / "self_beats.jsonl"
 URL = "https://generativelanguage.googleapis.com/v1beta"
 
 ASK = """These are frames from an animated maths explanation: "{request}".
@@ -50,7 +54,9 @@ Answer one line per beat, exactly "k: YES" or "k: NO"."""
 def scenes() -> dict[str, dict]:
     """For each scene, its longest rendered prefix: bodies and intents."""
     best: dict[str, dict] = {}
-    for l in SRC.read_text().splitlines():
+    lines = SRC.read_text().splitlines() + \
+        (SELF.read_text().splitlines() if SELF.exists() else [])
+    for l in lines:
         if not l.strip():
             continue
         r = json.loads(l)
@@ -126,17 +132,24 @@ def main() -> int:
         body = json.dumps({"contents": [{"role": "user", "parts": parts}],
                            "generationConfig": {"temperature": 0,
                                                 "maxOutputTokens": 400}}).encode()
-        req = urllib.request.Request(f"{URL}/models/{MODEL}:generateContent",
-                                     data=body,
-                                     headers={"x-goog-api-key": key,
-                                              "Content-Type": "application/json"})
-        try:
-            data = json.load(urllib.request.urlopen(req, timeout=120))
-        except urllib.error.HTTPError as e:
-            print(f"  {scene}: HTTP {e.code}", flush=True)
-            if e.code == 429:
-                for _ in range(40):             # the daily quota; wait it out
-                    time.sleep(15)
+        data = None
+        for attempt in range(6):
+            model = MODELS[attempt % len(MODELS)]
+            req = urllib.request.Request(f"{URL}/models/{model}:generateContent",
+                                         data=body,
+                                         headers={"x-goog-api-key": key,
+                                                  "Content-Type": "application/json"})
+            try:
+                data = json.load(urllib.request.urlopen(req, timeout=120))
+                break
+            except urllib.error.HTTPError as e:
+                print(f"  {scene}: HTTP {e.code} ({model})", flush=True)
+                time.sleep(30 * (attempt + 1) if e.code == 429 else 10)
+            except (urllib.error.URLError, TimeoutError):
+                time.sleep(10)
+        if data is None:
+            for _ in range(20):                 # the daily quota; wait it out
+                time.sleep(60)
             continue
         reply = "".join(p.get("text", "") for p in
                         data["candidates"][0]["content"]["parts"])
