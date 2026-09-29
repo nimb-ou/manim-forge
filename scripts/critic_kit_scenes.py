@@ -40,11 +40,16 @@ MODELS = ["gemini-flash-latest", "gemini-flash-lite-latest"]
 SELF = ROOT / "data" / "kit" / "self_beats.jsonl"
 URL = "https://generativelanguage.googleapis.com/v1beta"
 
-ASK = """These are frames from an animated maths explanation: "{request}".
-Frame k was taken at the end of beat k. For each beat, say whether its frame
-shows the beat's idea as a PICTURE -- a diagram, graph, shape or motion that
-illustrates it. Text alone, an empty screen, or a picture of something
-unrelated is NO.
+ASK = """You are judging frames from a short animated maths explanation of:
+"{request}"
+
+Frame k is the last frame of beat k. For each beat, answer YES only if its
+frame shows a PICTURE that illustrates that beat's idea -- a diagram, graph,
+geometric figure, chart or arrangement that a viewer would learn the idea
+from. Answer NO for: only text or an equation; empty axes, a bare grid or a
+bare number line; a lone shape, dot or arrow that does not show the idea; a
+picture of something else (vectors standing in for a graph, a plane for a
+network); a cluttered or overlapping mess.
 
 {beats}
 

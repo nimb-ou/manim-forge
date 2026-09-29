@@ -73,6 +73,19 @@ def main() -> int:
     # (a shaded block through the title) passes every other filter.
     rows = [r for r in rows if r["meta"].get("source") != "kit-self"
             or r["meta"]["scene"] in judged]
+    # A scene the critic rejects in half its beats or more is dropped whole:
+    # its passed beats are suspect too (a planar-graph scene drawn as three
+    # vectors labelled V, E, F had four beats passed).
+    bad_share: dict = defaultdict(lambda: [0, 0])
+    for sc, _ in no:
+        bad_share[sc][0] += 1
+    if critic.exists():
+        for l in critic.read_text().splitlines():
+            if l.strip():
+                c = json.loads(l)
+                bad_share[c["scene"]][1] = len(c["verdicts"])
+    bad_scenes = {sc for sc, (n_no, n) in bad_share.items() if n and n_no >= n / 2}
+    rows = [r for r in rows if r["meta"]["scene"] not in bad_scenes]
     by_scene = defaultdict(list)
     for r in rows:
         by_scene[r["meta"]["scene"]].append(r)

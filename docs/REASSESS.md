@@ -512,3 +512,23 @@ from its coverage.
 
 **Spiralling?** No. This is the training-data quality gate the plan
 called for on day one, finally with a working model behind it.
+
+## Log · 2026-09-29 01:20Z
+
+**Arrived.** Self-training finished all arcs (5,052 rows). The critic has
+judged ~400 scenes (self first); self rows now enter training only once
+judged. Clean kit rows: 4,145.
+
+**Looked.** A self scene the critic judged 4 YES / 4 NO — Euler's formula
+V - E + F = 2: by eye all eight beats are bad (a planar graph drawn as
+three vectors labelled V, E, F; a dot on a grid; a lone square). The
+critic, on its old lenient prompt, passed half. Fixes: the critic uses the
+judge's stricter wording (vectors standing in for a graph is NO), and a
+scene rejected in half its beats or more is dropped whole. The ~400 scenes
+judged on the old prompt keep their verdicts; the scene rule catches the
+worst of them.
+
+**Spiralling?** No — this is quality control on the data the Oct 3 run
+learns from, the one lever left. The pattern worth noting: every automatic
+judge so far (keyword metric, critic, eval judge) has been more lenient
+than my eye. The final check on kit v8 must include reading its sheets.
