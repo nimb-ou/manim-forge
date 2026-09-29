@@ -39,7 +39,7 @@ from forge.app.pipeline import PLAN_SYSTEM  # noqa: E402
 from forge.kit.families import FAMILIES  # noqa: E402
 
 URL = "https://generativelanguage.googleapis.com/v1beta"
-MODELS = ["gemma-4-31b-it", "gemma-4-26b-a4b-it"]
+MODELS = ["gemma-4-26b-a4b-it", "gemma-4-31b-it"]   # 31b gave 500s on 2026-09-29
 TOPICS = ROOT / "data" / "kit" / "gemma_topics.jsonl"
 OUT = ROOT / "data" / "kit" / "gemma_plans.jsonl"
 TEACHER = ROOT / "forge" / "kit" / "teacher"
@@ -124,7 +124,7 @@ def gemini_key() -> str:
     return Teacher(provider="gemini", model="gemini-flash-latest")._key
 
 
-def ask(key: str, text: str, max_tokens: int = 2000) -> str | None:
+def ask(key: str, text: str, max_tokens: int = 8000) -> str | None:
     body = json.dumps({"contents": [{"role": "user", "parts": [{"text": text}]}],
                        "generationConfig": {"temperature": 0.8,
                                             "maxOutputTokens": max_tokens}}).encode()
