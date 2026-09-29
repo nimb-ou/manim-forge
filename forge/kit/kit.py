@@ -1848,10 +1848,10 @@ def draw_triangle(stage: Stage, points=None, where: str = "center", color=BLUE):
 
 #: Names models reach for that mean an existing block (counted across the
 #: scorecards' "which nothing builds" notes, 2026-09-29).
-draw_dice = draw_dice_grid
-draw_point = mark_point
-draw_scatter = plot_points
-scatter_points = plot_points
+#: Kept out of KIT_BLOCKS and the API (the model should learn the real
+#: names); bound after the tolerance wrapping below.
+_ALIASES = {"draw_dice": "draw_dice_grid", "draw_point": "mark_point",
+            "draw_scatter": "plot_points", "scatter_points": "plot_points"}
 
 KIT_API = """\
 stage = Stage(self) already exists. Every block plays its own animation and
@@ -1880,6 +1880,7 @@ nouns (p, ax, g, v) and animate those -- never a block's name.
   draw_number_line(stage, x_range=(a, b)) -> NumberLine
   mark_point(stage, nl, x, label=None) -> Dot
   plot_points(stage, ax, [(x, y), ...]) -> dots   -- data points on axes
+  draw_triangle(stage, [(x0, y0), (x1, y1), (x2, y2)]) -> Polygon
   draw_bars(stage, values, labels=None) -> bars
   show_partial_sums(stage, term, n=10) -> (bars, readout)  (term is a lambda k: ...)
   slice_circle(stage, n=12) -> sectors   unroll_slices(stage, sectors)
@@ -2152,4 +2153,6 @@ def _tolerant(f):
 
 for _n in sorted(KIT_BLOCKS | {"highlight", "pulse"}):
     globals()[_n] = _tolerant(globals()[_n])
+for _a, _n in _ALIASES.items():
+    globals()[_a] = globals()[_n]
 del _n
