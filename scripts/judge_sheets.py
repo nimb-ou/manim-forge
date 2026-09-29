@@ -30,7 +30,10 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 URL = "https://generativelanguage.googleapis.com/v1beta"
-MODELS = ["gemini-flash-latest", "gemini-flash-lite-latest"]
+# Each model has its own daily quota; rotated on 429s (2026-09-29: these
+# answered when flash-latest and flash-lite-latest were spent).
+MODELS = ["gemini-flash-latest", "gemini-3.6-flash", "gemini-3.5-flash",
+          "gemini-3-flash-preview", "gemini-flash-lite-latest", "gemini-3.1-flash-lite"]
 TILE = (480, 270)
 
 ASK = """You are judging frames from a short animated maths explanation of:

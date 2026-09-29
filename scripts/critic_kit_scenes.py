@@ -36,7 +36,10 @@ OUT = ROOT / "data" / "kit" / "critic.jsonl"
 # gemini-3.7-flash ran out of quota and the critic sat on 429s for days;
 # these answer (2026-09-28). Tried in turn on 429s.
 MODEL = "gemini-flash-latest"
-MODELS = ["gemini-flash-latest", "gemini-flash-lite-latest"]
+# Each model has its own daily quota; rotated on 429s (2026-09-29: these
+# answered when flash-latest and flash-lite-latest were spent).
+MODELS = ["gemini-flash-latest", "gemini-3.6-flash", "gemini-3.5-flash",
+          "gemini-3-flash-preview", "gemini-flash-lite-latest", "gemini-3.1-flash-lite"]
 SELF = ROOT / "data" / "kit" / "self_beats.jsonl"
 URL = "https://generativelanguage.googleapis.com/v1beta"
 
@@ -141,7 +144,7 @@ def main() -> int:
                            "generationConfig": {"temperature": 0,
                                                 "maxOutputTokens": 400}}).encode()
         data = None
-        for attempt in range(6):
+        for attempt in range(2 * len(MODELS)):
             model = MODELS[attempt % len(MODELS)]
             req = urllib.request.Request(f"{URL}/models/{model}:generateContent",
                                          data=body,
@@ -152,7 +155,7 @@ def main() -> int:
                 break
             except urllib.error.HTTPError as e:
                 print(f"  {scene}: HTTP {e.code} ({model})", flush=True)
-                time.sleep(30 * (attempt + 1) if e.code == 429 else 10)
+                time.sleep(5 if attempt < len(MODELS) else 60)
             except (urllib.error.URLError, TimeoutError):
                 time.sleep(10)
         if data is None:
