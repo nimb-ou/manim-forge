@@ -60,13 +60,19 @@ def main() -> int:
     # The visual critic's verdicts (critic_kit_scenes.py), where it has run:
     # a beat whose frame a vision model judged not to show its idea is out.
     critic = ROOT / "data" / "kit" / "critic.jsonl"
-    no = set()
+    no, judged = set(), set()
     if critic.exists():
         for l in critic.read_text().splitlines():
             if l.strip():
                 c = json.loads(l)
+                judged.add(c["scene"])
                 no |= {(c["scene"], int(k)) for k, v in c["verdicts"].items()
                        if v == "NO"}
+    # The model's own scenes count only once a vision model has looked at
+    # them: the critic rejects ~38% of beats, and an unjudged self scene
+    # (a shaded block through the title) passes every other filter.
+    rows = [r for r in rows if r["meta"].get("source") != "kit-self"
+            or r["meta"]["scene"] in judged]
     by_scene = defaultdict(list)
     for r in rows:
         by_scene[r["meta"]["scene"]].append(r)
