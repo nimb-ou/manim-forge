@@ -38,7 +38,7 @@ FAMILIES = {
         r"complex|imaginar|euler|e\^|rotat|\bi\b|unit circle|phase"),
     "chance": (
         {"draw_dice_grid", "flip_coins", "grow_histogram", "bayes_square",
-         "draw_bars"},
+         "draw_bars", "plot_points"},
         r"probab|chance|random|dice|coin|distribut|bayes|test|sample|average|"
         r"histogram|data|normal|gaussian|binomial|likel|belief|odds|expect|"
         r"frequen"),

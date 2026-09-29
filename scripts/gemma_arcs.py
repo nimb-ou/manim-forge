@@ -146,6 +146,21 @@ def ask(key: str, text: str, max_tokens: int = 8000) -> str | None:
     return None
 
 
+class GemmaTeacher:
+    """Teacher.ask's shape on Gemma's native API, its thinking dropped (the
+    OpenAI-compatible path returns the thinking as the answer)."""
+
+    def __init__(self):
+        self.key = gemini_key()
+
+    def ask(self, prompt: str, max_tokens: int = 8000, system: str = "") -> str:
+        got = ask(self.key, (system + "\n\n" if system else "") + prompt,
+                  max(max_tokens, 8000))
+        if got is None:
+            raise RuntimeError("gemma: no answer (429/500)")
+        return got
+
+
 def json_in(text: str):
     m = re.search(r"```(?:json)?\s*(.*?)```", text, re.S)
     s = m.group(1) if m else text

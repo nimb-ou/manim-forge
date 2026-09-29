@@ -158,6 +158,16 @@ CASES: dict[str, tuple[str, list[str]]] = {
                                "secant_to_tangent(stage, ax, np.sin, -1, h=-2)",
                                "secant_to_tangent(stage, ax, lambda x: -x**2 / 4, 2)"]),
     "swing_pendulum": ("", ["swing_pendulum(stage)", "swing_pendulum(stage, amplitude=1.0, swings=1)"]),
+    "plot_points": ("ax = draw_axes(stage, x_range=(0, 10), y_range=(0, 10))", [
+        "plot_points(stage, ax, [(1, 2), (3, 4), (5, 5), (7, 8)])",
+        "plot_points(ax, [(1, 2), (3, 4)])",
+        "plot_points(stage, ax, [[1, 2, 3, 4], [2, 3, 5, 7]])",
+        "d = plot_points(stage, ax, np.array([[1, 1], [2, 4], [3, 9]]))\nhighlight(stage, d)"]),
+    "mark_point_xy": ("ax = draw_axes(stage, x_range=(0, 5), y_range=(0, 64))", [
+        "mark_point(stage, ax, 1, 32, label='N = 32')", "mark_point(stage, ax, (2, 16))"]),
+    "aliases": ("", ["draw_triangle(stage)", "draw_triangle(stage, [(0, 0), (3, 0), (0, 2)])",
+                     "draw_dice(stage)", "p = draw_axes(stage)\ndraw_point(stage, p, 1, 1)",
+                     "ax = draw_axes(stage)\ndraw_scatter(stage, ax, [(1, 1), (2, 2)])"]),
     "sieve_primes": ("", ["sieve_primes(stage)", "sieve_primes(stage, 30)", "sieve_primes(stage, n=100)"]),
     "fixes": ("", [
         "ax = draw_axes(stage)\nd = Dot(ax.c2p((1, 2)))",

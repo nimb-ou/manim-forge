@@ -123,6 +123,9 @@ def main() -> int:
     ap.add_argument("--model", default="mistral-medium-latest")
     ap.add_argument("--limit", type=int, default=300)
     ap.add_argument("--pause", type=float, default=2.0)
+    ap.add_argument("--plans", default="",
+                    help="arcs from this plan-row file (e.g. data/kit/gemma_plans.jsonl) "
+                         "instead of the narration and synthetic arcs")
     ap.add_argument("--shard", default="0/1",
                     help="i/n: take every n-th arc starting at i, so several "
                          "processes share the arcs (and the renders) safely")
@@ -135,7 +138,13 @@ def main() -> int:
     from forge.app.pipeline import _kit_api
     from forge.harness import RenderHarness
     from forge.synth.teacher import Teacher
-    teacher = Teacher(provider=a.provider, model=a.model)
+    if a.provider == "gemma":
+        # Gemma 4 on the Gemini API (free quota far beyond Flash's); its rows
+        # count only once the critic has judged them (filter_kit_beats.py).
+        from gemma_arcs import GemmaTeacher
+        teacher = GemmaTeacher()
+    else:
+        teacher = Teacher(provider=a.provider, model=a.model)
     h = RenderHarness(python_bin=str(ROOT / ".venv" / "bin" / "python"),
                       cache_dir=str(ROOT / "data" / "frames"), timeout=240)
 
@@ -146,7 +155,17 @@ def main() -> int:
     OUT.parent.mkdir(parents=True, exist_ok=True)
     done = {json.loads(l)["arc"] for l in SCENES.open() if l.strip()} \
         if SCENES.exists() else set()
-    todo = [x for k, x in enumerate(arcs(a.limit))
+    if a.plans:
+        src = []
+        for l in Path(a.plans).read_text().splitlines():
+            r = json.loads(l)
+            bs, _ = parse_plan(r["messages"][2]["content"], limit=10)
+            if bs:
+                src.append((r["meta"]["id"], r["meta"]["request"], bs[:8]))
+        src = src[: a.limit]
+    else:
+        src = arcs(a.limit)
+    todo = [x for k, x in enumerate(src)
             if x[0] not in done and k % nshards == shard]
     print(f"{len(done)} arcs done, {len(todo)} to go", flush=True)
     api = _kit_api()
@@ -205,7 +224,8 @@ def main() -> int:
                             {"role": "assistant",
                              "content": f"```python\n{bodies[j]}\n```"}],
                         "meta": {"id": f"kit:{rid}:{j}", "scene": f"kit:{rid}",
-                                 "source": "kit-teacher", "task": "beat",
+                                 "source": "kit-gemma" if a.provider == "gemma"
+                                 else "kit-teacher", "task": "beat",
                                  "index": j,
                                  "teacher": f"{a.provider}:{a.model}"},
                         # What GRPO's reward needs to rebuild the scene up

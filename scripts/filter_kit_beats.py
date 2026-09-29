@@ -75,7 +75,7 @@ def main() -> int:
     # The model's own scenes count only once a vision model has looked at
     # them: the critic rejects ~38% of beats, and an unjudged self scene
     # (a shaded block through the title) passes every other filter.
-    rows = [r for r in rows if r["meta"].get("source") != "kit-self"
+    rows = [r for r in rows if r["meta"].get("source") not in ("kit-self", "kit-gemma")
             or r["meta"]["scene"] in judged]
     # A scene the critic rejects in half its beats or more is dropped whole:
     # its passed beats are suspect too (a planar-graph scene drawn as three

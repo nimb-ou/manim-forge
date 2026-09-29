@@ -790,6 +790,11 @@ def draw_number_line(stage: Stage, x_range=(0, 10), where: str = "center"):
 def mark_point(stage: Stage, nl, x: float, color=YELLOW, label: str | None = None,
                direction=UP):
     """A dot at x on a number line, optionally labelled."""
+    if isinstance(color, (int, float)) and not isinstance(color, bool) \
+            and hasattr(nl, "c2p"):
+        # mark_point(stage, ax, 1, 32): a point (x, y) on axes, the y
+        # passed where the colour goes (the oracle run, 2026-09-29)
+        x, color = (x, color), YELLOW
     if np.ndim(x) == 1 and hasattr(nl, "c2p"):          # a point on axes
         d = Dot(nl.c2p(*list(x)[:2]), color=color)
     else:
@@ -1814,6 +1819,40 @@ def sieve_primes(stage: Stage, n: int = 50, where: str = "center"):
     return cells
 
 
+
+def plot_points(stage: Stage, ax, points, color=YELLOW, labels=None):
+    """Data points on axes: [(x, y), ...] (or xs and ys as two lists), dots
+    appearing in turn. The scatter of any statistics picture."""
+    pts = list(points)
+    if len(pts) == 2 and all(np.ndim(q) == 1 and len(q) > 2 for q in pts):
+        pts = list(zip(*pts))                       # (xs, ys)
+    pts = [tuple(float(v) for v in np.ravel(q)[:2]) for q in pts
+           if np.size(q) >= 2]
+    dots = VGroup(*[Dot(ax.c2p(x, y), radius=0.08, color=color) for x, y in pts])
+    stage.scene.play(LaggedStart(*[GrowFromCenter(d) for d in dots],
+                                 lag_ratio=0.1), run_time=1.2)
+    stage._objects.append(dots)
+    if labels:
+        for d, l in zip(dots, labels):
+            stage.label(d, str(l), color=color)
+    return dots
+
+
+def draw_triangle(stage: Stage, points=None, where: str = "center", color=BLUE):
+    """A triangle through three (x, y) points (default a 3-4-5 shape)."""
+    pts = list(points) if points is not None else [(-2, -1), (1, -1), (1, 1)]
+    if len(pts) != 3 or any(np.size(q) < 2 for q in pts):
+        pts = [(-2, -1), (1, -1), (1, 1)]
+    return draw_polygon(stage, pts, where=where, color=color)
+
+
+#: Names models reach for that mean an existing block (counted across the
+#: scorecards' "which nothing builds" notes, 2026-09-29).
+draw_dice = draw_dice_grid
+draw_point = mark_point
+draw_scatter = plot_points
+scatter_points = plot_points
+
 KIT_API = """\
 stage = Stage(self) already exists. Every block plays its own animation and
 returns what it made; keep the return value to reuse it in later beats.
@@ -1840,6 +1879,7 @@ nouns (p, ax, g, v) and animate those -- never a block's name.
   trace_graph(stage, ax, f, x_start, x_end)   -- a dot runs along f
   draw_number_line(stage, x_range=(a, b)) -> NumberLine
   mark_point(stage, nl, x, label=None) -> Dot
+  plot_points(stage, ax, [(x, y), ...]) -> dots   -- data points on axes
   draw_bars(stage, values, labels=None) -> bars
   show_partial_sums(stage, term, n=10) -> (bars, readout)  (term is a lambda k: ...)
   slice_circle(stage, n=12) -> sectors   unroll_slices(stage, sectors)
