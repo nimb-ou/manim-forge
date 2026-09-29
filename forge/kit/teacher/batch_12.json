@@ -1,0 +1,342 @@
+[
+ {
+  "request": "do students who study longer score higher?",
+  "beats": [
+   {
+    "intent": "Axes of hours studied against test score with ten students as dots",
+    "narration": "Each dot is one student: hours of study across, test score up.",
+    "code": "stage.title(\"Study time and scores\")\nax = draw_axes(stage, x_range=(0, 10), y_range=(0, 100), labels=(\"hours\", \"score\"))\npts = plot_points(stage, ax, [(1, 42), (2, 50), (2.5, 47), (3, 58), (4, 61), (5, 66), (6, 70), (7, 79), (8, 83), (9, 88)])\nstage.caption(\"Ten students, one dot each\")"
+   },
+   {
+    "intent": "The dots on the right half highlighted, all higher than those on the left",
+    "narration": "The students who studied more than five hours all sit higher up the chart.",
+    "code": "right = VGroup(*pts[5:])\nhighlight(stage, right)\nstage.caption(\"More hours, higher scores\")"
+   },
+   {
+    "intent": "A dashed arrow rising through the cloud of dots from lower left to upper right",
+    "narration": "The cloud rises from left to right: the two quantities go up together. That is a positive correlation.",
+    "code": "trend = draw_arrow(stage, ax.c2p(0.5, 38), ax.c2p(9.5, 92))\nstage.caption(\"Rising together: a positive correlation\")"
+   }
+  ]
+ },
+ {
+  "request": "what does correlation look like?",
+  "beats": [
+   {
+    "intent": "Axes with dots rising from lower left to upper right",
+    "narration": "When one quantity grows as the other grows, the dots climb to the right.",
+    "code": "stage.title(\"Positive correlation\")\nax = draw_axes(stage, x_range=(0, 10), y_range=(0, 10), where=\"left\")\nup = plot_points(stage, ax, [(1, 1.5), (2, 2.2), (3, 3.4), (4, 3.9), (5, 5.3), (6, 5.8), (7, 7.1), (8, 7.6), (9, 9.0)])\nstage.caption(\"Both go up together\")"
+   },
+   {
+    "intent": "Fresh axes with dots falling from upper left to lower right",
+    "narration": "When one grows while the other shrinks, the dots fall to the right: a negative correlation.",
+    "code": "stage.clear()\nstage.title(\"Negative correlation\")\nax2 = draw_axes(stage, x_range=(0, 10), y_range=(0, 10))\ndown = plot_points(stage, ax2, [(1, 9.1), (2, 8.0), (3, 7.4), (4, 6.1), (5, 5.2), (6, 4.6), (7, 3.1), (8, 2.4), (9, 1.2)], color=RED)\nstage.caption(\"One up, the other down\")"
+   },
+   {
+    "intent": "Fresh axes with dots scattered with no trend at all",
+    "narration": "And when the dots show no direction at all, there is no correlation.",
+    "code": "stage.clear()\nstage.title(\"No correlation\")\nax3 = draw_axes(stage, x_range=(0, 10), y_range=(0, 10))\nnone = plot_points(stage, ax3, [(1, 6), (2, 2), (3, 8), (4, 4), (5, 7), (6, 1.5), (7, 5), (8, 8.5), (9, 3)], color=GREEN)\nstage.caption(\"No direction, no correlation\")"
+   }
+  ]
+ },
+ {
+  "request": "how does one outlier drag the average?",
+  "beats": [
+   {
+    "intent": "A number line from 0 to 20 with five data points and the mean marked",
+    "narration": "Five values: four, five, six, six and nine. Their mean is six.",
+    "code": "stage.title(\"Pulling the average\")\nnl = draw_number_line(stage, x_range=(0, 20))\nfor v in (4, 5, 6, 6, 9):\n    mark_point(stage, nl, v)\nm = mark_point(stage, nl, 6, color=RED)\nstage.caption(\"The mean is 6 (red)\")"
+   },
+   {
+    "intent": "A sixth point at 20 appears far to the right and the mean marker slides to 8.3",
+    "narration": "Add one extreme value, twenty. The mean slides right to about eight point three.",
+    "code": "out = mark_point(stage, nl, 20, color=ORANGE, label=\"outlier\")\nstage.play(m.animate.move_to(nl.n2p(8.33)), run_time=1.5)\nstage.caption(\"One outlier drags the mean to 8.33\")"
+   },
+   {
+    "intent": "The equation (4+5+6+6+9+20)/6 = 8.33 beside the number line",
+    "narration": "Every value counts equally in the mean, so one big value pulls hard.",
+    "code": "stage.equation(r\"\\frac{4+5+6+6+9}{5} = 6\", r\"\\frac{4+5+6+6+9+20}{6} \\approx 8.33\")"
+   }
+  ]
+ },
+ {
+  "request": "how fast does a population of bacteria grow if it doubles every hour?",
+  "beats": [
+   {
+    "intent": "Axes of hours against bacteria with dots at 1, 2, 4, 8, 16, 32",
+    "narration": "Start with one bacterium. Every hour each one splits in two: one, two, four, eight, sixteen, thirty two.",
+    "code": "stage.title(\"Doubling every hour\")\nax = draw_axes(stage, x_range=(0, 6), y_range=(0, 70), labels=(\"hours\", \"bacteria\"))\npts = plot_points(stage, ax, [(0, 1), (1, 2), (2, 4), (3, 8), (4, 16), (5, 32)])\nstage.caption(\"1, 2, 4, 8, 16, 32\")"
+   },
+   {
+    "intent": "The curve 2^t drawn through the dots and on to 64 at hour 6",
+    "narration": "A smooth curve, two to the t, passes through every dot and keeps getting steeper.",
+    "code": "g = plot_graph(stage, ax, lambda t: 2 ** t, color=YELLOW, label=\"2^t\")\ntop = mark_point(stage, ax, 6, 64, label=\"64\")\nstage.caption(\"Each hour adds more than all before\")"
+   },
+   {
+    "intent": "A straight line 10t on the same axes falling far below the doubling curve",
+    "narration": "Compare a steady ten per hour: after six hours it is only at sixty, and it will never catch up again.",
+    "code": "lin = plot_graph(stage, ax, lambda t: 10 * t, color=GREEN, label=\"10t\")\nstage.caption(\"Doubling soon beats any steady rate\")"
+   }
+  ]
+ },
+ {
+  "request": "why does growth slow down when resources run out?",
+  "beats": [
+   {
+    "intent": "Axes with an S-shaped logistic curve rising from 5 towards 100",
+    "narration": "A population in a pond grows fast at first, then levels off.",
+    "code": "stage.title(\"Growth with a limit\")\nax = draw_axes(stage, x_range=(0, 12), y_range=(0, 120), labels=(\"time\", \"fish\"))\ng = plot_graph(stage, ax, lambda t: 100 / (1 + 19 * np.exp(-0.7 * t)), color=BLUE)\nstage.caption(\"Fast at first, then it levels off\")"
+   },
+   {
+    "intent": "A dashed horizontal line at 100 labelled carrying capacity",
+    "narration": "The pond can only feed about a hundred fish. That ceiling is the carrying capacity.",
+    "code": "cap = draw_line(stage, ax.c2p(0, 100), ax.c2p(12, 100), color=RED, dashed=True)\nstage.label(cap, \"carrying capacity 100\", direction=UP, color=RED)"
+   },
+   {
+    "intent": "A tangent sliding along the curve, steepest in the middle, flat at the ends",
+    "narration": "The growth rate is the slope: small at the start, largest halfway up, and nearly zero near the ceiling.",
+    "code": "slide_tangent(stage, ax, lambda t: 100 / (1 + 19 * np.exp(-0.7 * t)), 1, 11)\nstage.caption(\"Fastest growth at half the limit\")"
+   }
+  ]
+ },
+ {
+  "request": "how do you read speed off a table of distances?",
+  "beats": [
+   {
+    "intent": "Axes of seconds against metres with five measured points in a straight row",
+    "narration": "A runner's distance is measured every two seconds: zero, ten, twenty, thirty, forty metres.",
+    "code": "stage.title(\"Speed from a table\")\nax = draw_axes(stage, x_range=(0, 10), y_range=(0, 50), labels=(\"s\", \"m\"))\npts = plot_points(stage, ax, [(0, 0), (2, 10), (4, 20), (6, 30), (8, 40)])\nstage.caption(\"Distance every two seconds\")"
+   },
+   {
+    "intent": "A line through the points and a right triangle showing 10 metres up for 2 seconds across",
+    "narration": "Join them up. Each step across of two seconds goes up ten metres.",
+    "code": "line = plot_graph(stage, ax, lambda t: 5 * t, color=YELLOW)\nrun = draw_line(stage, ax.c2p(2, 10), ax.c2p(4, 10), color=GREEN)\nrise = draw_line(stage, ax.c2p(4, 10), ax.c2p(4, 20), color=RED)\nstage.label(run, \"2 s\", direction=DOWN, color=GREEN)\nstage.label(rise, \"10 m\", direction=RIGHT, color=RED)"
+   },
+   {
+    "intent": "The equation speed = 10 m / 2 s = 5 m/s beside the graph",
+    "narration": "Rise over run is the speed: ten metres per two seconds, five metres per second.",
+    "code": "stage.equation(r\"\\text{speed} = \\frac{10\\,\\text{m}}{2\\,\\text{s}}\", r\"= 5\\ \\text{m/s}\")"
+   }
+  ]
+ },
+ {
+  "request": "how high does a ball go when you throw it straight up?",
+  "beats": [
+   {
+    "intent": "Axes of time against height with the ball's measured heights as dots",
+    "narration": "We measure the ball's height every half second after throwing it up at twenty metres per second.",
+    "code": "stage.title(\"A ball thrown upward\")\nax = draw_axes(stage, x_range=(0, 4), y_range=(0, 25), labels=(\"s\", \"m\"))\ndata = [(t, 20 * t - 5 * t * t) for t in (0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4)]\npts = plot_points(stage, ax, data)\nstage.caption(\"Height every half second\")"
+   },
+   {
+    "intent": "The parabola h = 20t - 5t^2 drawn through the dots",
+    "narration": "The dots lie on a parabola: height equals twenty t minus five t squared.",
+    "code": "h = plot_graph(stage, ax, lambda t: 20 * t - 5 * t * t, color=YELLOW, label=\"h = 20t - 5t^2\")"
+   },
+   {
+    "intent": "The top of the parabola marked at t = 2, height 20, with a flat tangent",
+    "narration": "The ball stops rising at two seconds, twenty metres up, where the curve is flat.",
+    "code": "top = mark_point(stage, ax, 2, 20, color=RED, label=\"20 m at 2 s\")\nflat = draw_line(stage, ax.c2p(1.2, 20), ax.c2p(2.8, 20), color=RED, dashed=True)\nstage.caption(\"Highest point: slope zero\")"
+   }
+  ]
+ },
+ {
+  "request": "how many handshakes happen when six people meet?",
+  "beats": [
+   {
+    "intent": "Six dots in a ring, one per person",
+    "narration": "Six people stand in a circle.",
+    "code": "stage.title(\"Six people, every pair shakes hands\")\nnames = \"ABCDEF\"\nnodes = {n: (0.9 * np.cos(TAU * k / 6), 0.9 * np.sin(TAU * k / 6)) for k, n in enumerate(names)}\ndots, lines = draw_network(stage, nodes, [])"
+   },
+   {
+    "intent": "Person A joined by lines to the five others",
+    "narration": "The first person shakes hands with the other five.",
+    "code": "dots2, first = draw_network(stage, nodes, [(\"A\", b) for b in \"BCDEF\"])\nstage.caption(\"A shakes 5 hands\")"
+   },
+   {
+    "intent": "All 15 lines between the six dots drawn",
+    "narration": "The next shakes four new hands, then three, two, one. Five plus four plus three plus two plus one is fifteen.",
+    "code": "dots3, all_lines = draw_network(stage, nodes, [(a, b) for i, a in enumerate(names) for b in names[i + 1:]])\nstage.equation(r\"5+4+3+2+1 = 15\", r\"\\frac{6 \\times 5}{2} = 15\")"
+   }
+  ]
+ },
+ {
+  "request": "show 3 times 4 as an array of dots",
+  "beats": [
+   {
+    "intent": "Twelve dots arranged in 3 rows of 4",
+    "narration": "Three rows of four dots.",
+    "code": "stage.title(\"3 × 4 as an array\")\ndots = draw_dots(stage, n=12, cols=4)\nstage.caption(\"3 rows of 4\")"
+   },
+   {
+    "intent": "The three rows highlighted one after another, each counting 4",
+    "narration": "Count by rows: four, eight, twelve.",
+    "code": "for r in range(3):\n    highlight(stage, VGroup(*dots[4 * r: 4 * r + 4]))\nstage.caption(\"4 + 4 + 4 = 12\")"
+   },
+   {
+    "intent": "The array turned a quarter turn into 4 rows of 3",
+    "narration": "Turn the array on its side: now it is four rows of three, and still twelve dots.",
+    "code": "stage.play(Rotate(dots, PI / 2), run_time=1.5)\nstage.caption(\"4 rows of 3: still 12\")\nstage.equation(r\"3 \\times 4 = 4 \\times 3 = 12\")"
+   }
+  ]
+ },
+ {
+  "request": "grains of rice on a chessboard doubling every square",
+  "beats": [
+   {
+    "intent": "Bars for the first 8 squares: 1, 2, 4, 8, 16, 32, 64, 128 grains",
+    "narration": "One grain on the first square, two on the next, four, eight, and so on.",
+    "code": "stage.title(\"Doubling on a chessboard\")\nbars = draw_bars(stage, [1, 2, 4, 8, 16, 32, 64, 128], labels=[1, 2, 4, 8, 16, 32, 64, 128])\nstage.caption(\"The first row of the board\")"
+   },
+   {
+    "intent": "The last bar highlighted, taller than all the others together",
+    "narration": "Square eight holds a hundred and twenty eight, more than the other seven put together.",
+    "code": "highlight(stage, bars[-1])\nstage.equation(r\"1+2+4+\\dots+64 = 127 < 128\")"
+   },
+   {
+    "intent": "The bars beside the equation 2^63 ≈ 9.2 × 10^18 for the 64th square",
+    "narration": "By the last square there are two to the sixty third grains, about nine quintillion.",
+    "code": "stage.caption(\"Square 64 would hold 2^63 grains\")\nstage.equation(r\"2^{63} \\approx 9.2 \\times 10^{18}\")"
+   }
+  ]
+ },
+ {
+  "request": "smoothing noisy measurements with a moving average",
+  "beats": [
+   {
+    "intent": "Axes with 20 jittery temperature readings as dots",
+    "narration": "Twenty temperature readings, bouncing up and down around a slow trend.",
+    "code": "stage.title(\"Noisy readings\")\nax = draw_axes(stage, x_range=(0, 20), y_range=(0, 30), labels=(\"day\", \"°C\"))\nnoise = [2.1, -1.8, 1.2, -2.4, 0.6, 2.7, -1.1, -2.0, 1.9, 0.3, -1.6, 2.2, -0.8, 1.4, -2.3, 0.9, 1.7, -1.3, 0.4, -0.6]\nraw = [(d, 10 + 0.6 * d + noise[d]) for d in range(20)]\npts = plot_points(stage, ax, raw)"
+   },
+   {
+    "intent": "A window of three neighbouring dots highlighted and their average marked",
+    "narration": "Take three neighbouring days and average them. The ups and downs partly cancel.",
+    "code": "highlight(stage, VGroup(*pts[4:7]))\navg = sum(y for _, y in raw[4:7]) / 3\nm = mark_point(stage, ax, 5, avg, color=RED, label=\"average\")"
+   },
+   {
+    "intent": "A smooth red curve of the 3-day averages drawn through the cloud",
+    "narration": "Slide that window along every day and join the averages: the trend appears.",
+    "code": "sm = [(d, sum(y for _, y in raw[d - 1:d + 2]) / 3) for d in range(1, 19)]\ncurve = VMobject(color=RED).set_points_smoothly([ax.c2p(x, y) for x, y in sm])\nstage.play(Create(curve), run_time=2)\nstage.caption(\"The moving average shows the trend\")"
+   }
+  ]
+ },
+ {
+  "request": "what is the range of a set of data?",
+  "beats": [
+   {
+    "intent": "Seven heights as dots on a number line from 150 to 190 cm",
+    "narration": "Seven people's heights in centimetres, placed on a number line.",
+    "code": "stage.title(\"The range\")\nnl = draw_number_line(stage, x_range=(150, 190))\nfor h in (158, 163, 165, 170, 171, 176, 184):\n    mark_point(stage, nl, h)"
+   },
+   {
+    "intent": "The smallest and largest dots marked in red with their values",
+    "narration": "The shortest is one fifty eight, the tallest one eighty four.",
+    "code": "lo = mark_point(stage, nl, 158, color=RED, label=\"158\", direction=DOWN)\nhi = mark_point(stage, nl, 184, color=RED, label=\"184\", direction=DOWN)"
+   },
+   {
+    "intent": "A brace spanning from 158 to 184 labelled range = 26",
+    "narration": "The range is the distance between them: twenty six centimetres.",
+    "code": "br = Brace(Line(nl.n2p(158), nl.n2p(184)), UP)\nstage.play(GrowFromCenter(br))\nstage.label(br, \"range = 184 - 158 = 26\", direction=UP, color=YELLOW)"
+   }
+  ]
+ },
+ {
+  "request": "which fits better, a line or a curve?",
+  "beats": [
+   {
+    "intent": "Axes with eight points that bend upward",
+    "narration": "Here are eight measurements that bend upwards as they go.",
+    "code": "stage.title(\"Line or curve?\")\nax = draw_axes(stage, x_range=(0, 8), y_range=(0, 70))\ndata = [(x, x * x + d) for x, d in zip(range(1, 9), (1, -1, 2, -2, 1, 3, -2, 1))]\npts = plot_points(stage, ax, data)"
+   },
+   {
+    "intent": "A straight line through the points missing the ends and the middle",
+    "narration": "A straight line misses badly: too high in the middle, too low at both ends.",
+    "code": "ln = plot_graph(stage, ax, lambda x: 9 * x - 13, color=GREEN, label=\"line\")\nstage.caption(\"The line misses a pattern\")"
+   },
+   {
+    "intent": "The parabola y = x^2 passing close to every point",
+    "narration": "A parabola, x squared, passes close to every point. The data were curved all along.",
+    "code": "par = plot_graph(stage, ax, lambda x: x * x, color=YELLOW, label=\"x^2\")\nstage.caption(\"The curve follows the data\")"
+   }
+  ]
+ },
+ {
+  "request": "what fraction of a class passed the test?",
+  "beats": [
+   {
+    "intent": "A grid of 30 dots, one per student",
+    "narration": "Thirty students, one dot each.",
+    "code": "stage.title(\"Passing the test\")\ndots = draw_dots(stage, n=30, cols=10)"
+   },
+   {
+    "intent": "21 dots turned green for passing, 9 left grey",
+    "narration": "Twenty one of them passed.",
+    "code": "stage.play(*[d.animate.set_color(GREEN) for d in dots[:21]], *[d.animate.set_color(GREY) for d in dots[21:]], run_time=1.2)\nstage.caption(\"21 passed, 9 did not\")"
+   },
+   {
+    "intent": "Bars comparing 21 passed and 9 failed with the fraction 21/30 = 70%",
+    "narration": "Twenty one out of thirty is seven tenths: seventy percent passed.",
+    "code": "stage.clear()\nbars = draw_bars(stage, [21, 9], labels=[\"passed\", \"failed\"], where=\"left\")\nstage.equation(r\"\\frac{21}{30} = \\frac{7}{10} = 70\\%\")"
+   }
+  ]
+ },
+ {
+  "request": "how does a stretched spring obey Hooke's law?",
+  "beats": [
+   {
+    "intent": "Axes of force against stretch with five measured points",
+    "narration": "Hang weights on a spring and measure how far it stretches: the points fall on a line.",
+    "code": "stage.title(\"Hooke's law\")\nax = draw_axes(stage, x_range=(0, 10), y_range=(0, 50), labels=(\"cm\", \"N\"))\npts = plot_points(stage, ax, [(2, 10), (4, 20), (6, 30), (8, 40)])"
+   },
+   {
+    "intent": "The line F = 5x through the origin and every point",
+    "narration": "The force is five newtons for every centimetre: F equals five x.",
+    "code": "g = plot_graph(stage, ax, lambda x: 5 * x, color=YELLOW, label=\"F = 5x\")\nstage.caption(\"Twice the stretch, twice the force\")"
+   },
+   {
+    "intent": "The triangle under the line to x = 8 shaded, its area the stored energy",
+    "narration": "The area under the line is the energy stored in the spring: a triangle, half of eight times forty.",
+    "code": "shade_area(stage, ax, g, 0, 8)\nstage.equation(r\"E = \\tfrac12 \\cdot 8 \\cdot 40 = 160 \\ \\text{N·cm}\")"
+   }
+  ]
+ },
+ {
+  "request": "how does a thermometer reading change as ice melts and water heats up?",
+  "beats": [
+   {
+    "intent": "Axes of minutes against temperature with readings that rise, stay flat at 0, then rise again",
+    "narration": "Heat a beaker of ice from minus twenty degrees and take the temperature each minute.",
+    "code": "stage.title(\"Heating ice\")\nax = draw_axes(stage, x_range=(0, 12), y_range=(-20, 40), labels=(\"min\", \"°C\"))\ndata = [(0, -20), (1, -12), (2, -4), (3, 0), (4, 0), (5, 0), (6, 0), (7, 0), (8, 8), (9, 16), (10, 24), (11, 32)]\npts = plot_points(stage, ax, data)"
+   },
+   {
+    "intent": "The flat run of dots at 0 degrees from minute 3 to 7 highlighted",
+    "narration": "For four minutes the temperature does not move: the heat is melting the ice instead.",
+    "code": "highlight(stage, VGroup(*pts[3:8]))\nflat = draw_line(stage, ax.c2p(3, 0), ax.c2p(7, 0), color=YELLOW)\nstage.label(flat, \"melting\", direction=DOWN, color=YELLOW)"
+   },
+   {
+    "intent": "The two rising stretches joined by lines, steeper for water than for ice",
+    "narration": "Before and after, the temperature climbs steadily, each stretch its own straight line.",
+    "code": "a = draw_line(stage, ax.c2p(0, -20), ax.c2p(3, 0), color=BLUE)\nb = draw_line(stage, ax.c2p(7, 0), ax.c2p(11, 32), color=RED)\nstage.caption(\"Warm, melt, warm again\")"
+   }
+  ]
+ },
+ {
+  "request": "mean of a data set as a balance point",
+  "beats": [
+   {
+    "intent": "Five dots on a number line from 0 to 10 at 1, 3, 4, 7 and 10",
+    "narration": "Five values sit on a number line like weights on a plank.",
+    "code": "stage.title(\"The balance point\")\nnl = draw_number_line(stage, x_range=(0, 10))\nws = [mark_point(stage, nl, v) for v in (1, 3, 4, 7, 10)]"
+   },
+   {
+    "intent": "A triangle under the line at 5, the mean, with distances to each dot shown",
+    "narration": "Put the pivot at the mean, five. The distances to the left add to seven, and to the right also seven.",
+    "code": "piv = Triangle(color=RED, fill_opacity=0.8).scale(0.2).next_to(nl.n2p(5), DOWN, buff=0.05)\nstage.play(FadeIn(piv))\nleft = draw_line(stage, nl.n2p(1) + UP * 0.5, nl.n2p(5) + UP * 0.5, color=BLUE)\nright = draw_line(stage, nl.n2p(5) + UP * 0.8, nl.n2p(10) + UP * 0.8, color=GREEN)\nstage.equation(r\"(5-1)+(5-3)+(5-4) = 7\", r\"(7-5)+(10-5) = 7\")"
+   },
+   {
+    "intent": "The equation mean = (1+3+4+7+10)/5 = 5 beside the balanced line",
+    "narration": "The mean is the point where the data balance.",
+    "code": "stage.equation(r\"\\bar{x} = \\frac{1+3+4+7+10}{5} = 5\")\nstage.caption(\"The mean balances the data\")"
+   }
+  ]
+ }
+]

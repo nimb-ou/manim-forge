@@ -80,8 +80,9 @@ def scenes() -> dict[str, dict]:
     return best
 
 
-def render_frames(h, tmp: Path, scene: str, r: dict):
-    """(live beat indices, their intents, frame paths) or None."""
+def instrument(r: dict):
+    """(assembled code that prints its beat ends, live beat indices, their
+    intents) or None -- the render input, also shipped to Kaggle."""
     bodies = list(r["prefix"]) + [extract_code(r["messages"][2]["content"])]
     intents = r["intents"]
     beats = [Beat(k + 1, None, t) for k, t in enumerate(intents)]
@@ -98,7 +99,16 @@ def render_frames(h, tmp: Path, scene: str, r: dict):
     asm = assemble(beats, held, kit=True)
     if not asm.ok:
         return None
-    res = h.render(asm.code, quality="low", frames=2, use_cache=False)
+    return asm.code, live, [intents[k] for k in live]
+
+
+def render_frames(h, tmp: Path, scene: str, r: dict):
+    """(live beat indices, their intents, frame paths) or None."""
+    got = instrument(r)
+    if got is None:
+        return None
+    code, live, intents = got
+    res = h.render(code, quality="low", frames=2, use_cache=False)
     if not res.ok or not res.video_path:
         return None
     m = re.search(r"BEAT_ENDS \[([^\]]*)\]", res.stdout or "")
@@ -116,7 +126,7 @@ def render_frames(h, tmp: Path, scene: str, r: dict):
         for f in paths:
             f.unlink(missing_ok=True)
         return None
-    return live, [intents[k] for k in live], paths
+    return live, intents, paths
 
 
 def main() -> int:
