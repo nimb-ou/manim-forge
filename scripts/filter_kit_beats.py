@@ -59,15 +59,19 @@ def main() -> int:
                      if l.strip()]
     # The visual critic's verdicts (critic_kit_scenes.py), where it has run:
     # a beat whose frame a vision model judged not to show its idea is out.
-    critic = ROOT / "data" / "kit" / "critic.jsonl"
-    no, judged = set(), set()
-    if critic.exists():
-        for l in critic.read_text().splitlines():
-            if l.strip():
-                c = json.loads(l)
-                judged.add(c["scene"])
-                no |= {(c["scene"], int(k)) for k, v in c["verdicts"].items()
-                       if v == "NO"}
+    # Gemini's verdicts first; the local critic (critic_kit_scenes.py
+    # --local, Qwen3.5-4B calibrated against Gemini) for scenes Gemini has
+    # not reached -- its free tier judges a few hundred scenes a day.
+    verdicts: dict[str, dict] = {}
+    for name in ("critic.jsonl", "critic_local.jsonl"):
+        f = ROOT / "data" / "kit" / name
+        if f.exists():
+            for l in f.read_text().splitlines():
+                if l.strip():
+                    c = json.loads(l)
+                    verdicts.setdefault(c["scene"], c["verdicts"])
+    judged = set(verdicts)
+    no = {(sc, int(k)) for sc, v in verdicts.items() for k, x in v.items() if x == "NO"}
     # The model's own scenes count only once a vision model has looked at
     # them: the critic rejects ~38% of beats, and an unjudged self scene
     # (a shaded block through the title) passes every other filter.
@@ -76,14 +80,8 @@ def main() -> int:
     # A scene the critic rejects in half its beats or more is dropped whole:
     # its passed beats are suspect too (a planar-graph scene drawn as three
     # vectors labelled V, E, F had four beats passed).
-    bad_share: dict = defaultdict(lambda: [0, 0])
-    for sc, _ in no:
-        bad_share[sc][0] += 1
-    if critic.exists():
-        for l in critic.read_text().splitlines():
-            if l.strip():
-                c = json.loads(l)
-                bad_share[c["scene"]][1] = len(c["verdicts"])
+    bad_share = {sc: (sum(x == "NO" for x in v.values()), len(v))
+                 for sc, v in verdicts.items()}
     bad_scenes = {sc for sc, (n_no, n) in bad_share.items() if n and n_no >= n / 2}
     rows = [r for r in rows if r["meta"]["scene"] not in bad_scenes]
     by_scene = defaultdict(list)

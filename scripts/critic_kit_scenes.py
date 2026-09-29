@@ -33,6 +33,7 @@ from forge.app.twostage import Beat, assemble, extract_code  # noqa: E402
 
 SRC = ROOT / "data" / "kit" / "kit_beats.jsonl"
 OUT = ROOT / "data" / "kit" / "critic.jsonl"
+LOCAL_OUT = ROOT / "data" / "kit" / "critic_local.jsonl"
 # gemini-3.7-flash ran out of quota and the critic sat on 429s for days;
 # these answer (2026-09-28). Tried in turn on 429s.
 MODEL = "gemini-flash-latest"
@@ -79,60 +80,101 @@ def scenes() -> dict[str, dict]:
     return best
 
 
+def render_frames(h, tmp: Path, scene: str, r: dict):
+    """(live beat indices, their intents, frame paths) or None."""
+    bodies = list(r["prefix"]) + [extract_code(r["messages"][2]["content"])]
+    intents = r["intents"]
+    beats = [Beat(k + 1, None, t) for k, t in enumerate(intents)]
+    # Exact beat ends: after each beat the scene records the renderer's
+    # clock and holds half a second; the times are printed at the end,
+    # and each frame is taken inside its beat's hold.
+    held = [(b + "\nself.wait(0.5)\n_beat_ends.append(self.renderer.time)")
+            if b.strip() else b for b in bodies]
+    live = [k for k, b in enumerate(bodies) if b.strip()]
+    if not live:
+        return None
+    held[live[0]] = "_beat_ends = []\n" + held[live[0]]
+    held[live[-1]] += "\nprint('BEAT_ENDS', _beat_ends)"
+    asm = assemble(beats, held, kit=True)
+    if not asm.ok:
+        return None
+    res = h.render(asm.code, quality="low", frames=2, use_cache=False)
+    if not res.ok or not res.video_path:
+        return None
+    m = re.search(r"BEAT_ENDS \[([^\]]*)\]", res.stdout or "")
+    ends = [float(x) for x in m.group(1).split(",")] if m and m.group(1) else []
+    if len(ends) != len(live):
+        return None
+    paths = []
+    for k, t in zip(live, ends):
+        f = tmp / f"{abs(hash(scene))}_{k}.jpg"
+        subprocess.run(["/opt/homebrew/bin/ffmpeg", "-loglevel", "error", "-y",
+                        "-ss", f"{max(t - 0.25, 0):.2f}", "-i", res.video_path,
+                        "-frames:v", "1", "-vf", "scale=640:-1", str(f)])
+        paths.append(f)
+    if not all(f.exists() for f in paths):
+        for f in paths:
+            f.unlink(missing_ok=True)
+        return None
+    return live, [intents[k] for k in live], paths
+
+
 def main() -> int:
     dry = "--dry" in sys.argv         # render and cut frames, skip the API
-    from forge.synth.teacher import Teacher
-    key = Teacher(provider="gemini", model=MODEL)._key
+    local = "--local" in sys.argv     # the local VLM instead of Gemini
+    threshold = float(next((a.split("=")[1] for a in sys.argv
+                            if a.startswith("--threshold=")), "0.5"))
     from forge.harness import RenderHarness
     h = RenderHarness(python_bin=str(ROOT / ".venv" / "bin" / "python"),
                       cache_dir=str(ROOT / "data" / "frames"), timeout=300,
                       store_video=True)
-    done = {json.loads(l)["scene"] for l in OUT.open() if l.strip()} \
-        if OUT.exists() else set()
+    done = set()
+    for f in (OUT, LOCAL_OUT):
+        if f.exists():
+            done |= {json.loads(l)["scene"] for l in f.open() if l.strip()}
     tmp = ROOT / "data" / "kit" / "critic_frames"
     tmp.mkdir(parents=True, exist_ok=True)
+    todo = [(s, r) for s, r in scenes().items() if s not in done]
+    print(f"{len(done)} judged, {len(todo)} to go", flush=True)
+    if local:
+        from concurrent.futures import ThreadPoolExecutor
+        from forge.evaluate.local_vision import LocalJudge
+        j = LocalJudge()
+        judged = 0
+        # Renders are subprocesses: three at a time keep the judge fed.
+        with ThreadPoolExecutor(3) as pool:
+            for (scene, r), got in zip(todo, pool.map(
+                    lambda sr: render_frames(h, tmp, *sr), todo)):
+                if got is None:
+                    continue
+                live, intents, paths = got
+                ps = [j.p_yes(r.get("request", ""), t, f) for t, f in zip(intents, paths)]
+                for f in paths:
+                    f.unlink(missing_ok=True)
+                verdicts = {k: ("YES" if p >= threshold else "NO") for k, p in zip(live, ps)}
+                with LOCAL_OUT.open("a") as f:
+                    f.write(json.dumps({"scene": scene, "verdicts": verdicts,
+                                        "p": {k: round(p, 4) for k, p in zip(live, ps)},
+                                        "threshold": threshold}) + "\n")
+                judged += 1
+                yes = sum(v == "YES" for v in verdicts.values())
+                print(f"  {scene}: {yes}/{len(verdicts)} beats pass (local)", flush=True)
+        print(f"judged {judged} scenes (local)")
+        return 0
+    from forge.synth.teacher import Teacher
+    key = Teacher(provider="gemini", model=MODEL)._key
     judged = 0
-    for scene, r in scenes().items():
-        if scene in done:
+    for scene, r in todo:
+        got = render_frames(h, tmp, scene, r)
+        if got is None:
             continue
-        bodies = list(r["prefix"]) + [extract_code(r["messages"][2]["content"])]
-        intents = r["intents"]
-        beats = [Beat(k + 1, None, t) for k, t in enumerate(intents)]
-        # Exact beat ends: after each beat the scene records the renderer's
-        # clock and holds half a second; the times are printed at the end,
-        # and each frame is taken inside its beat's hold.
-        held = [(b + "\nself.wait(0.5)\n_beat_ends.append(self.renderer.time)")
-                if b.strip() else b for b in bodies]
-        first = next(k for k, b in enumerate(held) if b.strip())
-        held[first] = "_beat_ends = []\n" + held[first]
-        last = max(k for k, b in enumerate(held) if b.strip())
-        held[last] += "\nprint('BEAT_ENDS', _beat_ends)"
-        asm = assemble(beats, held, kit=True)
-        if not asm.ok:
-            continue
-        res = h.render(asm.code, quality="low", frames=2, use_cache=False)
-        if not res.ok or not res.video_path:
-            continue
-        m = re.search(r"BEAT_ENDS \[([^\]]*)\]", res.stdout or "")
-        ends = [float(x) for x in m.group(1).split(",")] if m and m.group(1) else []
-        live = [k for k, b in enumerate(bodies) if b.strip()]
-        if len(ends) != len(live):
-            continue
-        images, n = [], len(live)
-        for k, t in zip(live, ends):
-            f = tmp / f"{abs(hash(scene))}_{k}.jpg"
-            subprocess.run(["/opt/homebrew/bin/ffmpeg", "-loglevel", "error", "-y",
-                            "-ss", f"{max(t - 0.25, 0):.2f}", "-i", res.video_path,
-                            "-frames:v", "1", "-vf", "scale=640:-1", str(f)])
-            if f.exists():
-                images.append(base64.b64encode(f.read_bytes()).decode())
-                f.unlink()
-        intents = [intents[k] for k in live]
-        if len(images) != n:
-            continue
+        live, intents, paths = got
+        images = [base64.b64encode(f.read_bytes()).decode() for f in paths]
+        for f in paths:
+            f.unlink(missing_ok=True)
+        n = len(live)
         if dry:
-            print(f"  {scene}: {n} beats, ends {[round(e, 1) for e in ends]}",
-                  flush=True)
+            print(f"  {scene}: {n} beats", flush=True)
             return 0
         text = ASK.format(request=r.get("request", "")[:300],
                           beats="\n".join(f"{k + 1}: {t}" for k, t in

@@ -156,6 +156,55 @@ about a model, check that the thing measuring it can express what the model
 did.** A parser that cannot represent a plan reports no plan. A scope list
 that cannot represent an attribute reports no scope.
 
+### Finish plan — 2026-09-29
+
+**Finish line (v1.0, target Oct 6).** A local app that turns a sentence
+into a short explainer where most beats show a real picture: held-out
+Gemini-judged share **≥ 50%** (kit v6 + planner v3: 37–40%), a gallery of
+ten real outputs, released adapters (CC BY-NC-SA), a README quickstart.
+Ship the best configuration measured on held-out, not the newest.
+
+**What the reassessment found.**
+- *The planner is a suspect, not just the coder.* Planner v3's held-out
+  plans are mostly beats no coder can draw ("Title screen", "Introduce the
+  concept of rational numbers", "Host explains the rules"). Measured next:
+  kit v6 on reference plans that name pictures (eval only, never trained).
+- *The critic was the data bottleneck.* Gemini's free tier judged 772 of
+  ~3,000 scenes in two days. A local VLM (Qwen3.5-4B, already on disk,
+  ~1 s a frame) is being calibrated against Gemini's verdicts.
+- *Disk was 97% full*, which would have broken the Oct 3 launch; smoke and
+  intermediate checkpoints removed (36 GB free).
+
+**Resources, and what each is for.**
+| resource | until Oct 3 | after |
+|---|---|---|
+| Mac (MLX, one model at a time) | local critic over every unjudged scene; oracle diagnostic; drawing new arcs (self_kit_beats) | evals, gallery |
+| Gemini Flash (free, daily) | headline judge only, once the local critic takes the bulk; arcs | judge |
+| Gemma 4 on the Gemini API | arc writing (high quota; 500s today — retried) | — |
+| Mistral | budget exhausted (402); watcher restarts the teacher when it answers | teacher |
+| Kaggle GPU (30 h/week) | spent until ~Oct 3 00:22Z | kit v8 + planner v5 (auto), then one more round (v9) |
+| Kaggle CPU | nothing it does better than the Mac — not used | — |
+| Claude (this session) | reference plans, planner arcs if the diagnostic says so, packaging | reading sheets, release |
+
+**Sequence.**
+1. *Today:* local critic calibrated (agreement, kappa, a P(YES) threshold
+   tuned for precision). If usable, it judges every unjudged scene and
+   `filter_kit_beats.py` reads its verdicts where Gemini's are missing.
+2. *Today:* oracle diagnostic — kit v6 on reference plans, held-out, judged.
+   A large jump means the planner is the lever: planner data first.
+3. *Sep 30 – Oct 2:* data aimed at what 2 shows. Picture-naming arcs (Gemma,
+   Gemini, Claude) → drawn by kit v6 → critic → arcs the coder could draw
+   become planner rows, their beats coder rows. Mistral teacher if it
+   returns.
+4. *In parallel:* packaging — README quickstart, HF release script,
+   gallery page — so the Oct 3 result is the last step.
+5. *Oct 3 00:30Z:* SFT kit v8 + planner v5 (automated) → cached-plan and
+   full-pipeline evals, short and held-out → Gemini judge → eye check.
+6. *Oct 4–5:* one more round if it helped: self-training with v8 → critic
+   → v9. *Oct 6:* release.
+
+**Stopped.** GRPO; inference tweaks; kit patches for single guesses.
+
 ### Grounded plan — 2026-09-28 (rebased)
 
 **Where it is.** The product works end to end on the Mac: planner v3 →
