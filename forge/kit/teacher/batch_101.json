@@ -1,0 +1,102 @@
+[
+ {
+  "request": "why does a compass needle point north?",
+  "beats": [
+   {
+    "intent": "The Earth drawn as a circle with a giant bar magnet inside it",
+    "narration": "The Earth behaves as if it had a giant bar magnet inside.",
+    "code": "stage.title(\"Why compasses point north\")\nearth = Circle(radius=2.2, color=BLUE, fill_opacity=0.25).move_to([-2.5, -0.3, 0])\nmagnet_s = Rectangle(width=0.5, height=1.2, color=BLUE, fill_opacity=0.9).move_to(earth.get_center() + 0.6 * UP)\nmagnet_n = Rectangle(width=0.5, height=1.2, color=RED, fill_opacity=0.9).move_to(earth.get_center() + 0.6 * DOWN)\nstage.play(FadeIn(earth), FadeIn(magnet_s), FadeIn(magnet_n))\nstage.add(earth, magnet_s, magnet_n)\nstage.label(earth, \"geographic North\", direction=UP)"
+   },
+   {
+    "intent": "Field lines looping from the southern end round to the northern end outside the Earth",
+    "narration": "Its field lines loop out of the south and back in at the north.",
+    "code": "c = earth.get_center()\nloops = VGroup(*[ArcBetweenPoints(c + 2.2 * DOWN, c + 2.2 * UP, angle=s * a, color=YELLOW, stroke_width=3) for s in (1, -1) for a in (PI * 0.6, PI * 0.9)])\nstage.play(LaggedStart(*[Create(l) for l in loops], lag_ratio=0.2))\nstage.add(loops)"
+   },
+   {
+    "intent": "A compass needle beside the Earth lining up along the field, its red north end pointing up",
+    "narration": "A compass needle is a tiny magnet, free to turn. It lines up along the field, and its north-seeking end points towards the Arctic.",
+    "code": "needle = VGroup(Triangle(color=RED, fill_opacity=1).scale(0.25).stretch(2.2, 1).shift(0.3 * UP),\n                Triangle(color=GREY_B, fill_opacity=1).scale(0.25).stretch(2.2, 1).rotate(PI).shift(0.3 * DOWN)).move_to([3.0, -0.3, 0]).rotate(-PI / 2)\ndial = Circle(radius=1.0, color=WHITE).move_to([3.0, -0.3, 0])\nstage.play(Create(dial), FadeIn(needle))\nstage.play(Rotate(needle, PI / 2, about_point=dial.get_center()))\nstage.add(dial, needle)\nstage.label(dial, \"N\", direction=UP, color=RED)"
+   },
+   {
+    "intent": "The Earth's buried magnet labelled S at the top and N at the bottom, the needle's N end pointing to the S",
+    "narration": "Opposite poles attract, so the magnet pole under the geographic North is really a south pole. That's why the needle's north end is pulled there.",
+    "code": "stage.add(Text(\"S\", font_size=30, color=WHITE).move_to(magnet_s))\nstage.play(FadeIn(Text(\"N\", font_size=30, color=WHITE).move_to(magnet_n)), Indicate(magnet_s))\nstage.caption(\"opposite poles attract: the needle's N seeks the Earth's S\")"
+   }
+  ]
+ },
+ {
+  "request": "why is a parallelogram's area base times height?",
+  "beats": [
+   {
+    "intent": "A leaning parallelogram with base 5 and height 3",
+    "narration": "Here is a parallelogram with base five and height three.",
+    "code": "stage.title(\"Parallelogram area\")\nP = [(-3, -1.5), (2, -1.5), (3.5, 1.5), (-1.5, 1.5)]\npara = draw_polygon(stage, P, color=BLUE, fill=0.4)\nstage.label((-0.5, -1.5), \"base 5\", direction=DOWN)\nh = draw_line(stage, (-1.5, 1.5), (-1.5, -1.5), color=YELLOW, dashed=True)\nstage.label(h, \"height 3\", direction=LEFT, color=YELLOW)"
+   },
+   {
+    "intent": "The triangle on the left cut off along the height line and shaded orange",
+    "narration": "Cut off the triangle on the left, along the height line.",
+    "code": "tri = Polygon([-3, -1.5, 0], [-1.5, -1.5, 0], [-1.5, 1.5, 0], color=ORANGE, fill_opacity=0.7)\nstage.play(FadeIn(tri))\nstage.add(tri)"
+   },
+   {
+    "intent": "The triangle sliding to the right end, making a 5 by 3 rectangle",
+    "narration": "Slide it across to the other end. It fits exactly, making a rectangle.",
+    "code": "stage.play(tri.animate.shift(5 * RIGHT), run_time=1.5)\nrect = Rectangle(width=5, height=3, color=GREEN).move_to([1.0, 0, 0])\nstage.play(Create(rect))\nstage.add(rect)"
+   },
+   {
+    "intent": "The rectangle beside A = base × height = 5 × 3 = 15",
+    "narration": "Same pieces, same area: base times height, fifteen.",
+    "code": "stage.equation(r\"A = 5 \\times 3 = 15\")"
+   }
+  ]
+ },
+ {
+  "request": "what's the chance of rolling a double with two dice?",
+  "beats": [
+   {
+    "intent": "The 6 by 6 grid of two-dice outcomes",
+    "narration": "Two dice give thirty six equally likely outcomes.",
+    "code": "stage.title(\"Rolling a double\")\ncells = draw_dice_grid(stage)"
+   },
+   {
+    "intent": "The six doubles on the diagonal lit: (1,1) to (6,6)",
+    "narration": "The doubles lie on the diagonal: one-one, two-two, up to six-six. Six of them.",
+    "code": "grid = cells[0] if isinstance(cells, (tuple, list)) else cells\nfor k in range(6):\n    stage.play(grid[k * 7].animate.set_fill(YELLOW, opacity=0.7), run_time=0.2)\nstage.caption(\"6 doubles\")"
+   },
+   {
+    "intent": "The grid beside P(double) = 6/36 = 1/6",
+    "narration": "Six out of thirty six is one in six.",
+    "code": "stage.equation(r\"P = \\frac{6}{36} = \\frac16\")"
+   },
+   {
+    "intent": "Another way: the first die can be anything, the second must match: 1 × 1/6",
+    "narration": "Or think of it this way: whatever the first die shows, the second has a one in six chance of matching it.",
+    "code": "stage.equation(r\"1 \\times \\frac16 = \\frac16\")\nstage.caption(\"the second die just has to match\")"
+   }
+  ]
+ },
+ {
+  "request": "how does drinking through a straw actually work?",
+  "beats": [
+   {
+    "intent": "A glass of juice with a straw, air pressure arrows pressing down on the surface",
+    "narration": "The air is always pressing down on the juice's surface.",
+    "code": "stage.title(\"How a straw works\")\nglass = Rectangle(width=2.6, height=3.4, color=WHITE).move_to([0, -1.0, 0])\njuice = Rectangle(width=2.6, height=2.4, stroke_width=0, fill_color=ORANGE, fill_opacity=0.5).align_to(glass, DOWN)\nstraw = Rectangle(width=0.3, height=4.4, color=GREY_B).move_to([0.4, -0.3, 0])\nstage.play(Create(glass), FadeIn(juice), Create(straw))\nstage.add(glass, juice, straw)\ntop = juice.get_top()[1]\npress = VGroup(*[Arrow([x, top + 1.2, 0], [x, top + 0.1, 0], buff=0, color=BLUE) for x in (-0.9, -0.3)])\nstage.play(*[GrowArrow(a) for a in press])\nstage.add(press)\nstage.label(press, \"air pushes down\", direction=LEFT, color=BLUE)"
+   },
+   {
+    "intent": "Air being sucked out of the top of the straw, fewer air dots inside it",
+    "narration": "When you suck, you remove air from the straw, so less air presses on the juice inside it.",
+    "code": "out = Arrow([0.4, 2.2, 0], [0.4, 3.0, 0], buff=0, color=GREY_B)\nstage.play(GrowArrow(out))\nstage.add(out)\nstage.label(out, \"suck: less air inside\", direction=RIGHT)"
+   },
+   {
+    "intent": "The juice rising up the straw, pushed by the outside air",
+    "narration": "The outside air, still pushing hard, shoves juice up the straw. You don't pull the juice: the air pushes it.",
+    "code": "col = Rectangle(width=0.26, height=0.1, stroke_width=0, fill_color=ORANGE, fill_opacity=0.8).move_to([0.4, top, 0], aligned_edge=DOWN)\nstage.add(col)\nstage.play(col.animate.stretch_to_fit_height(2.05, about_edge=DOWN), run_time=2)\nstage.caption(\"the air pushes the juice up\")"
+   },
+   {
+    "intent": "The picture beside: air pressure outside > pressure inside the straw",
+    "narration": "It all comes down to a pressure difference: higher outside, lower inside.",
+    "code": "stage.equation(r\"p_{\\text{outside}} > p_{\\text{inside}}\")"
+   }
+  ]
+ }
+]
