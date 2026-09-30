@@ -1,0 +1,82 @@
+[
+ {
+  "request": "how many squares can a knight reach from the middle of a chessboard?",
+  "beats": [
+   {
+    "intent": "An 8 by 8 chessboard with a knight marker on d4",
+    "narration": "Put a knight on d four, near the middle of the board.",
+    "code": "stage.title(\"Knight moves\")\nboard = VGroup(*[Square(0.6, stroke_width=0, fill_color=(GREY_D if (r + c) % 2 else GREY_B), fill_opacity=1)\n                 for r in range(8) for c in range(8)]).arrange_in_grid(rows=8, cols=8, buff=0).move_to([0, -0.3, 0])\nstage.play(FadeIn(board))\nstage.add(board)\ncell = lambda col, row: board[(7 - row) * 8 + col]\nknight = Circle(radius=0.22, color=YELLOW, fill_opacity=1).move_to(cell(3, 3))\nstage.play(GrowFromCenter(knight))\nstage.add(knight)\nstage.label(knight, \"N\", direction=UP, color=YELLOW)"
+   },
+   {
+    "intent": "The 8 squares an L-shaped move reaches, lit green",
+    "narration": "A knight moves two squares one way and one square the other: an L. From here that reaches eight squares.",
+    "code": "jumps = [(1, 2), (2, 1), (2, -1), (1, -2), (-1, -2), (-2, -1), (-2, 1), (-1, 2)]\ntargets = [cell(3 + dc, 3 + dr) for dc, dr in jumps]\nstage.play(*[t.animate.set_fill(GREEN, opacity=0.9) for t in targets])\nstage.caption(\"8 moves from d4\")"
+   },
+   {
+    "intent": "A knight in the corner a1 with only its 2 squares lit",
+    "narration": "In a corner it is trapped: only two moves. That is why knights belong in the middle.",
+    "code": "stage.play(*[t.animate.set_fill(GREY_D if (board.submobjects.index(t) // 8 + board.submobjects.index(t) % 8) % 2 else GREY_B, opacity=1) for t in targets])\nstage.play(knight.animate.move_to(cell(0, 0)))\ncorner = [cell(1, 2), cell(2, 1)]\nstage.play(*[t.animate.set_fill(RED, opacity=0.9) for t in corner])\nstage.caption(\"from a corner: only 2\")"
+   }
+  ]
+ },
+ {
+  "request": "what does 3 to 1 odds mean as a probability?",
+  "beats": [
+   {
+    "intent": "Four boxes: three marked lose, one marked win",
+    "narration": "Odds of three to one against mean three ways to lose for every one way to win.",
+    "code": "stage.title(\"Odds and probability\")\nboxes = VGroup(*[Square(1.2, color=WHITE, fill_opacity=0.5, fill_color=(GREEN if k == 3 else RED)) for k in range(4)]).arrange(RIGHT, buff=0.2).move_to([0, 0.3, 0])\nstage.play(LaggedStart(*[FadeIn(b) for b in boxes], lag_ratio=0.2))\nstage.add(boxes)\nfor k, b in enumerate(boxes):\n    t = Text(\"win\" if k == 3 else \"lose\", font_size=26).move_to(b)\n    stage.play(FadeIn(t), run_time=0.2)\n    stage.add(t)"
+   },
+   {
+    "intent": "The boxes beside P(win) = 1 / (3 + 1) = 1/4",
+    "narration": "That is four outcomes in all, one of them a win: a probability of one in four.",
+    "code": "stage.equation(r\"P(\\text{win}) = \\frac{1}{3 + 1} = \\frac14\")"
+   },
+   {
+    "intent": "Bars of probability for odds 1 to 1, 3 to 1 and 9 to 1: 50%, 25%, 10%",
+    "narration": "Even odds, one to one, is fifty percent. Nine to one is ten percent.",
+    "code": "stage.clear()\nb = draw_bars(stage, [50, 25, 10], labels=[\"1 to 1\", \"3 to 1\", \"9 to 1\"], color=GREEN)\nstage.caption(\"chance of winning, %\")"
+   }
+  ]
+ },
+ {
+  "request": "how long does it take to walk 5 km at 4 km an hour?",
+  "beats": [
+   {
+    "intent": "A number line from 0 to 5 km with a walker dot at 0",
+    "narration": "The walk is five kilometres. You cover four every hour.",
+    "code": "stage.title(\"Walking time\")\nnl = draw_number_line(stage, x_range=(0, 5))\nwalker = Dot(nl.n2p(0), color=YELLOW, radius=0.14)\nstage.play(GrowFromCenter(walker))\nstage.add(walker)"
+   },
+   {
+    "intent": "The walker reaching 4 km after one hour, then the last 1 km",
+    "narration": "After one hour you are at four kilometres. One kilometre is left: a quarter of an hour's walk.",
+    "code": "stage.play(walker.animate.move_to(nl.n2p(4)), run_time=2, rate_func=linear)\nhour = mark_point(stage, nl, 4, color=ORANGE, label=\"1 hour\")\nstage.play(walker.animate.move_to(nl.n2p(5)), run_time=0.5, rate_func=linear)\nstage.caption(\"the last km: 1/4 hour\")"
+   },
+   {
+    "intent": "The line beside 5 ÷ 4 = 1.25 h = 1 h 15 min",
+    "narration": "Distance over speed: five over four is one and a quarter hours, one hour and fifteen minutes.",
+    "code": "stage.equation(r\"\\frac{5}{4} = 1.25\\ \\text{h}\", r\"= 1\\ \\text{h}\\ 15\\ \\text{min}\")"
+   }
+  ]
+ },
+ {
+  "request": "what does the magnetic field around a bar magnet look like?",
+  "beats": [
+   {
+    "intent": "A bar magnet drawn as a red N half and a blue S half",
+    "narration": "A bar magnet has a north end and a south end.",
+    "code": "stage.title(\"A magnet's field\")\nn_half = Rectangle(width=1.2, height=0.6, color=RED, fill_opacity=0.9).move_to([0.6, 0, 0])\ns_half = Rectangle(width=1.2, height=0.6, color=BLUE, fill_opacity=0.9).move_to([-0.6, 0, 0])\nstage.play(FadeIn(n_half), FadeIn(s_half))\nstage.add(n_half, s_half)\nstage.label(n_half, \"N\", direction=RIGHT, color=RED)\nstage.label(s_half, \"S\", direction=LEFT, color=BLUE)"
+   },
+   {
+    "intent": "Arrows of the field all around, pointing out of N and curving round into S",
+    "narration": "Its field points out of the north end, loops around, and comes back into the south end.",
+    "code": "def_field = lambda x, y: (np.array([(x - 1.2), y]) / ((x - 1.2) ** 2 + y ** 2 + 0.3) ** 1.5\n                          - np.array([(x + 1.2), y]) / ((x + 1.2) ** 2 + y ** 2 + 0.3) ** 1.5)\ndraw_vector_field(stage, lambda x, y: tuple(def_field(x, y) / (np.linalg.norm(def_field(x, y)) + 1e-9) * 0.8))\nstage.caption(\"out of N, round, into S\")"
+   },
+   {
+    "intent": "Two field lines traced as loops from N to S above and below the magnet",
+    "narration": "Follow the arrows and you trace loops from north round to south, the lines iron filings line up along.",
+    "code": "top = ArcBetweenPoints([1.2, 0.2, 0], [-1.2, 0.2, 0], angle=-PI * 0.9, color=YELLOW, stroke_width=5)\nbot = ArcBetweenPoints([1.2, -0.2, 0], [-1.2, -0.2, 0], angle=PI * 0.9, color=YELLOW, stroke_width=5)\ntop2 = top.copy().stretch(2.2, 1, about_point=ORIGIN)\nbot2 = bot.copy().stretch(2.2, 1, about_point=ORIGIN)\nstage.play(Create(top), Create(bot), Create(top2), Create(bot2))\nstage.add(top, bot, top2, bot2)"
+   }
+  ]
+ }
+]
