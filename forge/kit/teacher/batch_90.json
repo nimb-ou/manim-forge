@@ -1,0 +1,102 @@
+[
+ {
+  "request": "how does a tower crane avoid tipping over?",
+  "beats": [
+   {
+    "intent": "A tower crane: a mast, a long jib to the right and a short arm to the left",
+    "narration": "A tower crane has a tall mast, a long arm to lift loads and a short arm behind.",
+    "code": "stage.title(\"A crane's counterweight\")\nmast = Rectangle(width=0.4, height=4.6, color=YELLOW, fill_opacity=0.3).move_to([0, -0.9, 0])\njib = Line([-2.0, 1.4, 0], [5.0, 1.4, 0], color=YELLOW, stroke_width=8)\nstage.play(FadeIn(mast), Create(jib))\nstage.add(mast, jib)"
+   },
+   {
+    "intent": "A 2 tonne load hanging 10 m out on the right",
+    "narration": "It lifts a two tonne load ten metres out. On its own, that would tip the crane over.",
+    "code": "hook = Line([4.5, 1.4, 0], [4.5, -0.6, 0], color=GREY_B)\nload = Square(0.7, color=ORANGE, fill_opacity=0.8).move_to([4.5, -0.95, 0])\nstage.play(Create(hook), FadeIn(load))\nstage.add(hook, load)\nstage.label(load, \"2 t at 10 m\", direction=DOWN, color=ORANGE)\ntip = CurvedArrow([1.2, 2.4, 0], [2.4, 1.8, 0], color=RED)\nstage.play(Create(tip))\nstage.add(tip)"
+   },
+   {
+    "intent": "A 5 tonne counterweight on the short arm 4 m out on the left, the red tipping arrow gone",
+    "narration": "So a heavy block sits on the short arm: five tonnes, four metres out on the other side.",
+    "code": "cw = Rectangle(width=0.9, height=0.9, color=GREY_B, fill_opacity=0.9).move_to([-1.6, 0.9, 0])\nstage.play(FadeIn(cw), FadeOut(tip))\nstage.add(cw)\nstage.label(cw, \"5 t at 4 m\", direction=DOWN)"
+   },
+   {
+    "intent": "The crane beside 2 × 10 = 5 × 4 = 20",
+    "narration": "The turning effects balance: two tonnes times ten metres equals five tonnes times four metres.",
+    "code": "stage.equation(r\"2 \\times 10 = 5 \\times 4\", r\"= 20\")"
+   }
+  ]
+ },
+ {
+  "request": "how long will a 3000 mAh battery last?",
+  "beats": [
+   {
+    "intent": "A battery drawn as a tall box, full, labelled 3000 mAh",
+    "narration": "A phone battery is marked three thousand milliamp hours: how much charge it holds.",
+    "code": "stage.title(\"Battery life\")\nbat = Rectangle(width=1.4, height=3.2, color=WHITE).move_to([-3.5, -0.4, 0])\ncap = Rectangle(width=0.5, height=0.25, color=WHITE, fill_opacity=1).next_to(bat, UP, buff=0)\ncharge = Rectangle(width=1.2, height=3.0, stroke_width=0, fill_color=GREEN, fill_opacity=0.8).move_to(bat)\nstage.play(Create(bat), FadeIn(cap), FadeIn(charge))\nstage.add(bat, cap, charge)\nstage.label(bat, \"3000 mAh\", direction=DOWN, color=GREEN)"
+   },
+   {
+    "intent": "An arrow of 300 mA flowing out to a phone",
+    "narration": "The phone draws three hundred milliamps.",
+    "code": "phone = RoundedRectangle(width=1.2, height=2.2, corner_radius=0.15, color=BLUE).move_to([1.5, -0.4, 0])\nflow = Arrow(bat.get_right(), phone.get_left(), buff=0.2, color=YELLOW)\nstage.play(Create(phone), GrowArrow(flow))\nstage.add(phone, flow)\nstage.label(flow, \"300 mA\", direction=UP, color=YELLOW)"
+   },
+   {
+    "intent": "The charge bar draining in ten steps, one per hour",
+    "narration": "Each hour uses three hundred milliamp hours: a tenth of the battery.",
+    "code": "for k in range(10):\n    stage.play(charge.animate.stretch_to_fit_height(max(3.0 * (9 - k) / 10, 0.01)).align_to(bat, DOWN).shift(0.1 * UP), run_time=0.25)\nstage.caption(\"10 hours to empty\")"
+   },
+   {
+    "intent": "The picture beside 3000 ÷ 300 = 10 hours",
+    "narration": "Capacity divided by the current it draws: three thousand over three hundred is ten hours.",
+    "code": "stage.equation(r\"\\frac{3000\\ \\text{mAh}}{300\\ \\text{mA}} = 10\\ \\text{h}\")"
+   }
+  ]
+ },
+ {
+  "request": "how do time zones work?",
+  "beats": [
+   {
+    "intent": "The Earth seen from above the North Pole, turning anticlockwise, with 24 wedges of 15°",
+    "narration": "Seen from above the North Pole, the Earth can be cut into twenty four slices, one for each hour.",
+    "code": "stage.title(\"Time zones\")\nc = np.array([-2.5, -0.4, 0])\nearth = Circle(radius=2.2, color=BLUE, fill_opacity=0.3).move_to(c)\nspokes = VGroup(*[Line(c, c + 2.2 * np.array([np.cos(k * TAU / 24), np.sin(k * TAU / 24), 0]), color=GREY_B, stroke_width=1) for k in range(24)])\nstage.play(FadeIn(earth), Create(spokes))\nstage.add(earth, spokes)"
+   },
+   {
+    "intent": "London's slice lit where it is noon, facing the Sun",
+    "narration": "Where the Sun is overhead it is noon. Say that is London.",
+    "code": "london = Sector(radius=2.2, start_angle=-PI / 24, angle=TAU / 24, color=YELLOW, fill_opacity=0.7).move_arc_center_to(c)\nstage.play(FadeIn(london))\nstage.add(london)\nsun = Circle(radius=0.5, color=YELLOW, fill_opacity=0.9).move_to(c + 5.6 * RIGHT)\nstage.play(FadeIn(sun))\nstage.add(sun)\nstage.label(london, \"London 12:00\", direction=RIGHT, color=YELLOW)"
+   },
+   {
+    "intent": "New York's slice 5 zones round, lit blue, labelled 7:00",
+    "narration": "New York is five slices round, seventy five degrees west. The Sun won't be overhead there for five more hours: it is seven in the morning.",
+    "code": "ny = Sector(radius=2.2, start_angle=-PI / 24 - 5 * TAU / 24, angle=TAU / 24, color=TEAL, fill_opacity=0.7).move_arc_center_to(c)\nstage.play(FadeIn(ny))\nstage.add(ny)\nstage.label(ny, \"New York 7:00\", direction=DOWN, color=TEAL)"
+   },
+   {
+    "intent": "The picture beside 5 × 15° = 75°, so 5 hours behind",
+    "narration": "Every fifteen degrees west is one hour earlier.",
+    "code": "stage.equation(r\"5 \\times 15^\\circ = 75^\\circ\", r\"\\Rightarrow 5\\ \\text{hours behind}\")"
+   }
+  ]
+ },
+ {
+  "request": "how can I find a building's height from 50 m away?",
+  "beats": [
+   {
+    "intent": "A building, the ground, and a person 50 m away",
+    "narration": "Stand fifty metres from a building.",
+    "code": "stage.title(\"Height from an angle\")\nground = Line([-6, -2.4, 0], [5, -2.4, 0], color=GREY_B)\nbld = Rectangle(width=1.6, height=2.9, color=GREY_B, fill_opacity=0.4).move_to([3.5, -0.95, 0])\nme = Dot([-3.5, -2.4, 0], color=YELLOW, radius=0.12)\nstage.play(Create(ground), FadeIn(bld), GrowFromCenter(me))\nstage.add(ground, bld, me)\nd = DoubleArrow([-3.5, -2.8, 0], [2.7, -2.8, 0], buff=0, color=GREEN)\nstage.play(GrowArrow(d))\nstage.add(d)\nstage.label(d, \"50 m\", direction=DOWN, color=GREEN)"
+   },
+   {
+    "intent": "A sight line from the person to the top of the building with the 30° angle marked",
+    "narration": "Look up at the top: the angle above the ground is thirty degrees.",
+    "code": "top = np.array([2.7, 0.5, 0])\nsight = DashedLine(me.get_center(), top, color=YELLOW)\nang = Angle(Line(me.get_center(), me.get_center() + RIGHT), Line(me.get_center(), top), radius=1.0, color=YELLOW)\nstage.play(Create(sight), Create(ang))\nstage.add(sight, ang)\nstage.label(ang, \"30°\", direction=RIGHT, color=YELLOW)"
+   },
+   {
+    "intent": "The right triangle outlined: adjacent 50 m, opposite h",
+    "narration": "That makes a right triangle: fifty metres along the ground, the height up the wall.",
+    "code": "h = Line([2.7, -2.4, 0], top, color=ORANGE, stroke_width=6)\nstage.play(Create(h))\nstage.add(h)\nstage.label(h, \"h\", direction=LEFT, color=ORANGE)"
+   },
+   {
+    "intent": "The triangle beside h = 50 × tan 30° ≈ 28.9 m",
+    "narration": "Opposite over adjacent is the tangent: h is fifty times tan thirty, about twenty nine metres.",
+    "code": "stage.equation(r\"\\tan 30^\\circ = \\frac{h}{50}\", r\"\\Rightarrow h = 50 \\tan 30^\\circ \\approx 28.9\\ \\text{m}\")"
+   }
+  ]
+ }
+]
