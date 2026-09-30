@@ -1,0 +1,82 @@
+[
+ {
+  "request": "how can throwing darts estimate pi?",
+  "beats": [
+   {
+    "intent": "A square with a quarter circle inside it",
+    "narration": "Draw a square with a quarter circle inside it, radius the side of the square.",
+    "code": "stage.title(\"Pi from darts\")\nside = 4.0\ncorner = np.array([-2.0, -2.3, 0])\nsq = Square(side, color=WHITE).move_to(corner + np.array([side / 2, side / 2, 0]))\narc = Sector(radius=side, start_angle=0, angle=PI / 2, color=BLUE, fill_opacity=0.15).move_arc_center_to(corner)\nstage.play(Create(sq), FadeIn(arc))\nstage.add(sq, arc)"
+   },
+   {
+    "intent": "400 random dots in the square, green inside the quarter circle, red outside",
+    "narration": "Throw four hundred darts at random. Three hundred and fourteen land inside the quarter circle.",
+    "code": "rng = np.random.default_rng(0)\npts = rng.random((400, 2))\ndarts = VGroup(*[Dot(corner + side * np.array([x, y, 0]), radius=0.035, color=GREEN if x * x + y * y <= 1 else RED) for x, y in pts])\nstage.play(LaggedStart(*[FadeIn(d) for d in darts], lag_ratio=0.005), run_time=2)\nstage.add(darts)\nstage.caption(\"314 of 400 inside\")"
+   },
+   {
+    "intent": "The darts beside π ≈ 4 × 314 / 400 = 3.14",
+    "narration": "The quarter circle covers pi over four of the square, so four times the share inside estimates pi: three point one four.",
+    "code": "stage.equation(r\"\\pi \\approx 4 \\times \\frac{314}{400} = 3.14\")"
+   }
+  ]
+ },
+ {
+  "request": "why are shadows longer in the evening?",
+  "beats": [
+   {
+    "intent": "A 1 m post with the sun high at 60° and a short 0.58 m shadow",
+    "narration": "At midday the Sun is high, sixty degrees up, and a one metre post casts a short shadow: fifty eight centimetres.",
+    "code": "stage.title(\"Shadow length\")\nground = Line([-6.5, -2, 0], [6.5, -2, 0], color=GREY_B)\nstage.play(Create(ground))\nstage.add(ground)\nh = 1.5\nsetups = []\nfor x0, ang, col, txt in ((-5.5, 60, YELLOW, \"60°: 0.58 m\"), (-2.3, 45, ORANGE, \"45°: 1 m\"), (1.4, 30, RED, \"30°: 1.73 m\")):\n    L = h / np.tan(ang * DEGREES)\n    post = Line([x0, -2, 0], [x0, -2 + h, 0], color=WHITE, stroke_width=8)\n    sh = Line([x0, -2, 0], [x0 + L, -2, 0], color=col, stroke_width=10)\n    ray = DashedLine([x0, -2 + h, 0], [x0 + L, -2, 0], color=col)\n    setups.append((VGroup(post, sh, ray), sh, txt, col))\ng, sh, txt, col = setups[0]\nstage.play(Create(g))\nstage.add(g)\nstage.label(sh, txt, direction=DOWN, color=col)"
+   },
+   {
+    "intent": "The same post with the sun at 45° and 30°: shadows 1 m and 1.73 m",
+    "narration": "As the Sun sinks to forty five degrees the shadow grows to a metre, and at thirty degrees to one point seven three.",
+    "code": "for g, sh, txt, col in setups[1:]:\n    stage.play(Create(g))\n    stage.add(g)\n    stage.label(sh, txt, direction=DOWN, color=col)"
+   },
+   {
+    "intent": "The shadows beside shadow = height ÷ tan(angle)",
+    "narration": "Shadow length is the height divided by the tangent of the Sun's angle. Near sunset the angle is tiny and the shadow runs off to the horizon.",
+    "code": "stage.equation(r\"\\text{shadow} = \\frac{h}{\\tan\\theta}\")"
+   }
+  ]
+ },
+ {
+  "request": "how can you tell if a number is divisible by 3?",
+  "beats": [
+   {
+    "intent": "The number 471 as three digit tiles",
+    "narration": "Take the number four hundred and seventy one.",
+    "code": "stage.title(\"Divisible by 3?\")\ntiles = VGroup(*[Square(1.1, color=BLUE, fill_opacity=0.3) for _ in range(3)]).arrange(RIGHT, buff=0.15).move_to([0, 0.8, 0])\ndigits = VGroup(*[Text(d, font_size=48).move_to(t) for d, t in zip(\"471\", tiles)])\nstage.play(FadeIn(tiles), FadeIn(digits))\nstage.add(tiles, digits)"
+   },
+   {
+    "intent": "The digits sliding down into a sum 4 + 7 + 1 = 12",
+    "narration": "Add its digits: four plus seven plus one is twelve.",
+    "code": "stage.equation(r\"4 + 7 + 1 = 12\")"
+   },
+   {
+    "intent": "The tiles lit green beside 12 ÷ 3 = 4, so 471 ÷ 3 = 157",
+    "narration": "Twelve divides by three, so four hundred and seventy one does too: it is three times one hundred and fifty seven. The digit sum keeps a number's remainder on division by three.",
+    "code": "stage.play(*[t.animate.set_fill(GREEN, opacity=0.6) for t in tiles])\nstage.equation(r\"12 = 3 \\times 4 \\Rightarrow 471 = 3 \\times 157\")"
+   }
+  ]
+ },
+ {
+  "request": "how does ranked-choice voting pick a winner?",
+  "beats": [
+   {
+    "intent": "Bars of first choices: Ada 40, Ben 35, Cai 25",
+    "narration": "A hundred voters rank three candidates. First choices: Ada forty, Ben thirty five, Cai twenty five. Nobody has a majority.",
+    "code": "stage.title(\"Ranked-choice voting\")\nb = draw_bars(stage, [40, 35, 25], labels=[\"Ada\", \"Ben\", \"Cai\"], color=BLUE)\nstage.caption(\"round 1: no one has more than 50\")"
+   },
+   {
+    "intent": "Cai's bar removed and split: 5 votes to Ada, 20 to Ben",
+    "narration": "Cai has the fewest, so Cai is out. Cai's voters' second choices are counted: five go to Ada, twenty to Ben.",
+    "code": "stage.clear()\nb2 = draw_bars(stage, [45, 55], labels=[\"Ada 40 + 5\", \"Ben 35 + 20\"], color=GREEN)\nstage.caption(\"round 2: Cai's votes move to second choices\")"
+   },
+   {
+    "intent": "Ben's bar lit as the winner with 55",
+    "narration": "Now Ben has fifty five out of a hundred, a majority. Ben wins, though Ada led on first choices.",
+    "code": "bars = b2[0] if len(b2) == 2 else b2\nhighlight(stage, bars[1], color=YELLOW)\nstage.equation(r\"55 > 50\")"
+   }
+  ]
+ }
+]
