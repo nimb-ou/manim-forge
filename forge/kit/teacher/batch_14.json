@@ -1,0 +1,282 @@
+[
+ {
+  "request": "what path does a thrown ball follow?",
+  "beats": [
+   {
+    "intent": "Axes of distance against height with the arc y = x - x^2/10 from 0 to 10",
+    "narration": "Throw a ball at forty five degrees: its path is an arc that rises and falls.",
+    "code": "stage.title(\"The path of a thrown ball\")\nax = draw_axes(stage, x_range=(0, 10), y_range=(0, 4), labels=(\"m\", \"height\"))\nf = lambda x: x - x ** 2 / 10\npath = plot_graph(stage, ax, f, color=YELLOW)"
+   },
+   {
+    "intent": "A dot flying along the arc from launch to landing",
+    "narration": "Follow the ball: up, slowing, over the top, and down again.",
+    "code": "trace_graph(stage, ax, f, 0, 10)"
+   },
+   {
+    "intent": "The top of the arc at (5, 2.5) marked and the landing point at 10",
+    "narration": "It peaks halfway, at five metres along and two and a half up, and lands ten metres away.",
+    "code": "top = mark_point(stage, ax, 5, 2.5, color=RED, label=\"top (5, 2.5)\")\nland = mark_point(stage, ax, 10, 0, color=GREEN, label=\"lands at 10 m\")"
+   }
+  ]
+ },
+ {
+  "request": "why is uniform circular motion accelerating?",
+  "beats": [
+   {
+    "intent": "A circle with a dot moving round it",
+    "narration": "A ball on a string moves round a circle at a steady speed.",
+    "code": "stage.title(\"Moving in a circle\")\nc = draw_circle(stage, radius=2)\nball = Dot(c.point_at_angle(0), color=YELLOW, radius=0.12)\nstage.play(FadeIn(ball))\nstage.play(MoveAlongPath(ball, c), run_time=3, rate_func=linear)"
+   },
+   {
+    "intent": "Velocity arrows tangent to the circle at four points, all the same length",
+    "narration": "Its velocity always points along the circle. The speed stays the same, but the direction keeps turning.",
+    "code": "ctr = c.get_center()\nvel = VGroup(*[Arrow(ctr + 2 * np.array([np.cos(a), np.sin(a), 0]), ctr + 2 * np.array([np.cos(a), np.sin(a), 0]) + 1.2 * np.array([-np.sin(a), np.cos(a), 0]), buff=0, color=GREEN) for a in (0, PI / 2, PI, 3 * PI / 2)])\nstage.play(LaggedStart(*[GrowArrow(v) for v in vel], lag_ratio=0.2))\nstage.add(vel)\nstage.caption(\"Same speed, turning direction\")"
+   },
+   {
+    "intent": "Red arrows at the same four points pointing to the centre",
+    "narration": "A change of direction needs a push, and it points to the centre: centripetal acceleration.",
+    "code": "acc = VGroup(*[Arrow(ctr + 2 * np.array([np.cos(a), np.sin(a), 0]), ctr + 1.1 * np.array([np.cos(a), np.sin(a), 0]), buff=0, color=RED) for a in (0, PI / 2, PI, 3 * PI / 2)])\nstage.play(LaggedStart(*[GrowArrow(v) for v in acc], lag_ratio=0.2))\nstage.add(acc)\nstage.equation(r\"a = \\frac{v^2}{r}\")"
+   }
+  ]
+ },
+ {
+  "request": "Ohm's law with a graph of voltage and current",
+  "beats": [
+   {
+    "intent": "Axes of current against voltage with five measured points on a line",
+    "narration": "Measure the current through a resistor at five voltages.",
+    "code": "stage.title(\"Ohm's law\")\nax = draw_axes(stage, x_range=(0, 12), y_range=(0, 3), labels=(\"V\", \"I\"))\npts = plot_points(stage, ax, [(2, 0.5), (4, 1.0), (6, 1.5), (8, 2.0), (10, 2.5)])"
+   },
+   {
+    "intent": "The line I = V/4 through the origin and all five points",
+    "narration": "They lie on a straight line through zero: double the voltage, double the current.",
+    "code": "g = plot_graph(stage, ax, lambda v: v / 4, color=YELLOW, label=\"I = V/4\")"
+   },
+   {
+    "intent": "The equation R = V/I = 8/2 = 4 Ω beside the graph",
+    "narration": "The ratio is the resistance: eight volts over two amps is four ohms.",
+    "code": "mark_point(stage, ax, 8, 2, color=RED, label=\"(8 V, 2 A)\")\nstage.equation(r\"R = \\frac{V}{I} = \\frac{8}{2} = 4\\,\\Omega\")"
+   }
+  ]
+ },
+ {
+  "request": "how does energy change as a ball falls?",
+  "beats": [
+   {
+    "intent": "Two bars, potential energy full and kinetic energy empty, at the top",
+    "narration": "At the top the ball has all its energy stored as height and none as motion.",
+    "code": "stage.title(\"Energy in a falling ball\")\nbars = draw_bars(stage, [100, 1], labels=[\"height\", \"motion\"])\nstage.caption(\"At the top: all potential\")"
+   },
+   {
+    "intent": "The bars halfway through the fall, 50 and 50",
+    "narration": "Halfway down, half the energy has turned into motion.",
+    "code": "stage.clear()\nbars2 = draw_bars(stage, [50, 50], labels=[\"height\", \"motion\"])\nstage.caption(\"Halfway: half and half\")"
+   },
+   {
+    "intent": "The bars at the bottom, potential empty and kinetic full, with the total 100 constant",
+    "narration": "At the bottom it is all motion. The total never changes: energy is conserved.",
+    "code": "stage.clear()\nbars3 = draw_bars(stage, [1, 100], labels=[\"height\", \"motion\"], where=\"left\")\nstage.equation(r\"E_p + E_k = 100 \\text{ J always}\")"
+   }
+  ]
+ },
+ {
+  "request": "how far does something fall in each second?",
+  "beats": [
+   {
+    "intent": "Axes of time against distance fallen with points at 5, 20, 45, 80 metres",
+    "narration": "Drop a stone. After one second it has fallen five metres, after two twenty, after three forty five.",
+    "code": "stage.title(\"Falling\")\nax = draw_axes(stage, x_range=(0, 4), y_range=(0, 90), labels=(\"s\", \"m\"))\npts = plot_points(stage, ax, [(1, 5), (2, 20), (3, 45), (4, 80)])"
+   },
+   {
+    "intent": "The curve d = 5t^2 through the points",
+    "narration": "The points lie on d equals five t squared.",
+    "code": "g = plot_graph(stage, ax, lambda t: 5 * t ** 2, color=YELLOW, label=\"d = 5t^2\")"
+   },
+   {
+    "intent": "Bars of the distance fallen in each second: 5, 15, 25, 35",
+    "narration": "Each second it falls ten metres more than the second before: five, fifteen, twenty five, thirty five.",
+    "code": "stage.clear()\nbars = draw_bars(stage, [5, 15, 25, 35], labels=[5, 15, 25, 35])\nstage.caption(\"Metres fallen in seconds 1, 2, 3, 4\")"
+   }
+  ]
+ },
+ {
+  "request": "how do n, n log n and n squared grow?",
+  "beats": [
+   {
+    "intent": "Axes with the line y = n from 1 to 20",
+    "narration": "Compare how much work three algorithms do as the input grows. A linear one does n steps.",
+    "code": "stage.title(\"Growth of running times\")\nax = draw_axes(stage, x_range=(1, 20), y_range=(0, 100), labels=(\"n\", \"steps\"))\nlin = plot_graph(stage, ax, lambda n: n, color=GREEN, label=\"n\")"
+   },
+   {
+    "intent": "The curve n log2 n added above the line",
+    "narration": "Sorting by splitting takes about n log n steps, a little more.",
+    "code": "nlog = plot_graph(stage, ax, lambda n: n * np.log2(n), color=YELLOW, label=\"n log n\")"
+   },
+   {
+    "intent": "The steep curve n^2 shooting off the top, far above the other two",
+    "narration": "Comparing every pair takes n squared steps, and it leaves the others far behind.",
+    "code": "sq = plot_graph(stage, ax, lambda n: n ** 2, x_range=(1, 10), color=RED, label=\"n^2\")\nstage.caption(\"n^2 soon dwarfs the others\")"
+   }
+  ]
+ },
+ {
+  "request": "how does breadth-first search explore a graph?",
+  "beats": [
+   {
+    "intent": "A graph of seven nodes with the start node S lit",
+    "narration": "Start at S in this network.",
+    "code": "stage.title(\"Breadth-first search\")\nnodes = {\"S\": (-0.9, 0), \"A\": (-0.3, 0.6), \"B\": (-0.3, -0.6), \"C\": (0.3, 0.8), \"D\": (0.3, 0.1), \"E\": (0.3, -0.7), \"F\": (0.9, 0)}\nedges = [(\"S\", \"A\"), (\"S\", \"B\"), (\"A\", \"C\"), (\"A\", \"D\"), (\"B\", \"E\"), (\"D\", \"F\"), (\"E\", \"F\")]\ndots, lines = draw_network(stage, nodes, edges)\nhighlight(stage, dots[\"S\"], color=RED)"
+   },
+   {
+    "intent": "S's neighbours A and B lit as the first layer",
+    "narration": "First visit everything one step away: A and B.",
+    "code": "highlight(stage, VGroup(dots[\"A\"], dots[\"B\"]), color=ORANGE)\nstage.caption(\"Layer 1: A and B\")"
+   },
+   {
+    "intent": "The second layer C, D, E lit, then F last",
+    "narration": "Then everything two steps away, C, D and E, and finally F at three steps.",
+    "code": "highlight(stage, VGroup(dots[\"C\"], dots[\"D\"], dots[\"E\"]), color=YELLOW)\nhighlight(stage, dots[\"F\"], color=GREEN)\nstage.caption(\"Layer by layer, nearest first\")"
+   }
+  ]
+ },
+ {
+  "request": "how does a queue work, first in first out?",
+  "beats": [
+   {
+    "intent": "Four bars in a row as items waiting in a queue",
+    "narration": "A queue: items join at the back and leave from the front.",
+    "code": "stage.title(\"A queue\")\nq = draw_array(stage, [3, 5, 2, 4])\nstage.caption(\"Front on the left, back on the right\")"
+   },
+   {
+    "intent": "The front bar leaving to the left and fading",
+    "narration": "The first item in is the first out.",
+    "code": "stage.play(q[0].animate.shift(LEFT * 2).set_opacity(0.2), run_time=1)\nstage.caption(\"First in, first out\")"
+   },
+   {
+    "intent": "A new bar joining at the back on the right",
+    "narration": "A new item joins at the back and waits its turn.",
+    "code": "new = Rectangle(width=0.6, height=1.8, fill_opacity=0.8, color=GREEN).next_to(q, RIGHT, buff=0.3).align_to(q[-1], DOWN)\nstage.play(FadeIn(new, shift=LEFT))\nstage.add(new)\nstage.caption(\"New items join at the back\")"
+   }
+  ]
+ },
+ {
+  "request": "solving two equations by seeing where two lines cross",
+  "beats": [
+   {
+    "intent": "Axes with the line y = 2x - 1",
+    "narration": "The first equation, y equals two x minus one, is a line.",
+    "code": "stage.title(\"Two lines, one solution\")\nax = draw_axes(stage, x_range=(-1, 5), y_range=(-1, 7))\nl1 = plot_graph(stage, ax, lambda x: 2 * x - 1, color=BLUE, label=\"y = 2x - 1\")"
+   },
+   {
+    "intent": "The line y = -x + 5 added, crossing the first",
+    "narration": "The second, y equals minus x plus five, is another line.",
+    "code": "l2 = plot_graph(stage, ax, lambda x: -x + 5, color=GREEN, label=\"y = -x + 5\")"
+   },
+   {
+    "intent": "The crossing point (2, 3) marked, with the solution x = 2, y = 3",
+    "narration": "Where they cross, both are true at once: x equals two, y equals three.",
+    "code": "p = mark_point(stage, ax, 2, 3, color=RED, label=\"(2, 3)\")\nstage.equation(r\"2x - 1 = -x + 5\", r\"x = 2,\\; y = 3\")"
+   }
+  ]
+ },
+ {
+  "request": "what do m and c mean in y = mx + c?",
+  "beats": [
+   {
+    "intent": "Axes with the line y = 2x + 1",
+    "narration": "Here is the line y equals two x plus one.",
+    "code": "stage.title(\"Slope and intercept\")\nax = draw_axes(stage, x_range=(-3, 3), y_range=(-3, 7))\ng = plot_graph(stage, ax, lambda x: 2 * x + 1, label=\"y = 2x + 1\")"
+   },
+   {
+    "intent": "The point (0, 1) where it crosses the y-axis marked as c = 1",
+    "narration": "It crosses the y axis at one. That is c, the intercept.",
+    "code": "c = mark_point(stage, ax, 0, 1, color=GREEN, label=\"c = 1\")"
+   },
+   {
+    "intent": "A step of 1 across and 2 up drawn on the line, labelled m = 2",
+    "narration": "Go one across and the line climbs two. That is m, the slope.",
+    "code": "run = draw_line(stage, ax.c2p(1, 3), ax.c2p(2, 3), color=YELLOW)\nrise = draw_line(stage, ax.c2p(2, 3), ax.c2p(2, 5), color=RED)\nstage.label(run, \"1\", direction=DOWN, color=YELLOW)\nstage.label(rise, \"2\", direction=RIGHT, color=RED)\nstage.caption(\"m = 2: two up for one across\")"
+   }
+  ]
+ },
+ {
+  "request": "reflecting a shape in the line y = x",
+  "beats": [
+   {
+    "intent": "A grid with a triangle at (1, 0), (3, 0), (3, 1) and the dashed line y = x",
+    "narration": "Here is a triangle and the mirror line y equals x.",
+    "code": "stage.title(\"Reflect in y = x\")\np = draw_plane(stage)\nmirror = DashedLine(p.c2p(-3, -3), p.c2p(3, 3), color=GREY_B)\nstage.play(Create(mirror))\ntri = Polygon(p.c2p(1, 0), p.c2p(3, 0), p.c2p(3, 1), color=BLUE, fill_opacity=0.5)\nstage.play(Create(tri))"
+   },
+   {
+    "intent": "A copy of the triangle flipping over the mirror to (0, 1), (0, 3), (1, 3)",
+    "narration": "Reflect it: every point swaps its x and y.",
+    "code": "img = Polygon(p.c2p(0, 1), p.c2p(0, 3), p.c2p(1, 3), color=YELLOW, fill_opacity=0.5)\nstage.play(TransformFromCopy(tri, img), run_time=1.5)\nstage.add(img)"
+   },
+   {
+    "intent": "Dashed lines joining each corner to its image, crossing the mirror at right angles",
+    "narration": "Each corner and its image sit the same distance from the mirror, joined at right angles to it.",
+    "code": "for a, b in (((1, 0), (0, 1)), ((3, 0), (0, 3)), ((3, 1), (1, 3))):\n    draw_line(stage, p.c2p(*a), p.c2p(*b), color=GREEN, dashed=True)\nstage.equation(r\"(x, y) \\mapsto (y, x)\")"
+   }
+  ]
+ },
+ {
+  "request": "a factor tree for 84",
+  "beats": [
+   {
+    "intent": "The number 84 at the top splitting into 2 and 42",
+    "narration": "Start with eighty four. It is two times forty two.",
+    "code": "stage.title(\"A factor tree\")\nnodes = {\"84\": (0, 0.8), \"2\": (-0.4, 0.3), \"42\": (0.4, 0.3)}\nt1, _ = draw_network(stage, nodes, [(\"84\", \"2\"), (\"84\", \"42\")])"
+   },
+   {
+    "intent": "42 splitting into 2 and 21, then 21 into 3 and 7",
+    "narration": "Forty two is two times twenty one, and twenty one is three times seven.",
+    "code": "nodes2 = dict(nodes, **{\"2 \": (0.05, -0.2), \"21\": (0.7, -0.2), \"3\": (0.4, -0.7), \"7\": (0.95, -0.7)})\nt2, _ = draw_network(stage, nodes2, [(\"84\", \"2\"), (\"84\", \"42\"), (\"42\", \"2 \"), (\"42\", \"21\"), (\"21\", \"3\"), (\"21\", \"7\")])"
+   },
+   {
+    "intent": "The prime leaves 2, 2, 3, 7 highlighted with 84 = 2^2 × 3 × 7",
+    "narration": "The leaves are all prime: eighty four is two squared times three times seven.",
+    "code": "highlight(stage, VGroup(t2[\"2\"], t2[\"2 \"], t2[\"3\"], t2[\"7\"]))\nstage.equation(r\"84 = 2^2 \\times 3 \\times 7\")"
+   }
+  ]
+ },
+ {
+  "request": "what is 30% of 80?",
+  "beats": [
+   {
+    "intent": "A bar of length 80 split into ten equal parts of 8",
+    "narration": "Split eighty into ten equal parts: each is eight.",
+    "code": "stage.title(\"30% of 80\")\nbars = draw_bars(stage, [8] * 10, labels=[\"8\"] * 10)\nstage.caption(\"Ten parts of 8 make 80\")"
+   },
+   {
+    "intent": "Three of the ten parts highlighted",
+    "narration": "Thirty percent is three of those ten parts.",
+    "code": "highlight(stage, VGroup(*bars[:3]))\nstage.caption(\"3 parts out of 10\")"
+   },
+   {
+    "intent": "The three parts beside the equation 3 × 8 = 24",
+    "narration": "Three eights are twenty four: thirty percent of eighty is twenty four.",
+    "code": "stage.equation(r\"30\\% \\text{ of } 80 = 3 \\times 8 = 24\")"
+   }
+  ]
+ },
+ {
+  "request": "rotating a shape a quarter turn about the origin",
+  "beats": [
+   {
+    "intent": "A grid with a flag-shaped polygon in the first quadrant",
+    "narration": "Here is a shape on the grid.",
+    "code": "stage.title(\"A quarter turn\")\np = draw_plane(stage)\nshape = Polygon(p.c2p(1, 0), p.c2p(3, 0), p.c2p(3, 1), p.c2p(2, 1), p.c2p(2, 2), p.c2p(1, 2), color=BLUE, fill_opacity=0.5)\nstage.play(Create(shape))\no = mark_point(stage, p, (0, 0), color=RED)"
+   },
+   {
+    "intent": "A copy turning 90 degrees anticlockwise about the origin",
+    "narration": "Turn it a quarter turn anticlockwise about the origin.",
+    "code": "turned = shape.copy().set_color(YELLOW)\nstage.play(Rotate(turned, PI / 2, about_point=p.c2p(0, 0)), run_time=2)\nstage.add(turned)"
+   },
+   {
+    "intent": "The corner (3, 0) and its image (0, 3) joined to the origin by arrows at right angles",
+    "narration": "The corner at three, zero lands at zero, three: every point turns ninety degrees about the centre.",
+    "code": "a = draw_vector(stage, p, (3, 0), color=GREEN)\nb = draw_vector(stage, p, (0, 3), color=GREEN)\nstage.equation(r\"(x, y) \\mapsto (-y, x)\")"
+   }
+  ]
+ }
+]

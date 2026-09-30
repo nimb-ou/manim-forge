@@ -1611,8 +1611,10 @@ def euler_circle(stage: Stage, cp, t_end: float = TAU, run_time: float = 4.0):
 # -- emphasis ------------------------------------------------------------------
 
 def highlight(stage: Stage, m, color=YELLOW):
-    """Draw the eye to one thing."""
-    stage.scene.play(Circumscribe(m, color=color), run_time=1.0)
+    """Draw the eye to one thing, and leave it lit in that colour (a flash
+    alone left beat-end frames showing nothing highlighted)."""
+    stage.scene.play(Circumscribe(m, color=color), m.animate.set_color(color),
+                     run_time=1.0)
     return m
 
 
