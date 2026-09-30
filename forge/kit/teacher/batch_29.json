@@ -1,0 +1,182 @@
+[
+ {
+  "request": "how many ways can you shuffle 4 cards?",
+  "beats": [
+   {
+    "intent": "Four cards as rectangles labelled A, B, C, D in a row",
+    "narration": "Four cards in a row: A, B, C, D.",
+    "code": "stage.title(\"Shuffling 4 cards\")\ncards = VGroup(*[VGroup(Rectangle(width=0.9, height=1.3, color=WHITE, fill_color=BLUE_E, fill_opacity=1), Text(t, font_size=32)) for t in \"ABCD\"]).arrange(RIGHT, buff=0.3)\nstage.play(FadeIn(cards))\nstage.add(cards)"
+   },
+   {
+    "intent": "The first and last cards swapping places, then the middle two",
+    "narration": "Swap cards and you get a new order: D, C, B, A is one of them.",
+    "code": "stage.play(Swap(cards[0], cards[3]), run_time=1)\nstage.play(Swap(cards[1], cards[2]), run_time=1)"
+   },
+   {
+    "intent": "The row beside 4 × 3 × 2 × 1 = 24 orders",
+    "narration": "Four choices for the first place, three for the second, two, then one: twenty four orders.",
+    "code": "stage.equation(r\"4 \\times 3 \\times 2 \\times 1 = 24\")"
+   }
+  ]
+ },
+ {
+  "request": "how many 4-digit PIN codes are there?",
+  "beats": [
+   {
+    "intent": "Four boxes in a row, each with the digits 0 to 9 stacked below it",
+    "narration": "A PIN has four places, and each can be any digit from zero to nine.",
+    "code": "stage.title(\"How many PINs?\")\nboxes = VGroup(*[Square(side_length=1, color=YELLOW) for _ in range(4)]).arrange(RIGHT, buff=0.4).shift(UP * 1.2)\nstage.play(Create(boxes))\nstage.add(boxes)\nfor b in boxes:\n    digits = VGroup(*[Text(str(d), font_size=16, color=GREY_B) for d in range(10)]).arrange(DOWN, buff=0.03).next_to(b, DOWN, buff=0.15)\n    stage.play(FadeIn(digits), run_time=0.3)\n    stage.add(digits)"
+   },
+   {
+    "intent": "One PIN, 4 0 7 2, written in the boxes",
+    "narration": "Pick one digit for each place: four, zero, seven, two.",
+    "code": "for b, d in zip(boxes, \"4072\"):\n    stage.play(FadeIn(Text(d, font_size=40).move_to(b)), run_time=0.3)"
+   },
+   {
+    "intent": "The boxes beside 10 × 10 × 10 × 10 = 10,000",
+    "narration": "Ten choices, four times over: ten thousand PINs.",
+    "code": "stage.equation(r\"10 \\times 10 \\times 10 \\times 10 = 10\\,000\")"
+   }
+  ]
+ },
+ {
+  "request": "what are the chances on a spinner with four colours of different sizes?",
+  "beats": [
+   {
+    "intent": "A spinner split into red 1/2, blue 1/4, green 1/8, yellow 1/8 with a pointer",
+    "narration": "A spinner: half red, a quarter blue, an eighth green and an eighth yellow.",
+    "code": "stage.title(\"A spinner\")\nfr = [(0.5, RED), (0.25, BLUE), (0.125, GREEN), (0.125, YELLOW)]\nstart, secs = 0, VGroup()\nfor f, c in fr:\n    secs.add(Sector(radius=2, angle=TAU * f, start_angle=start, color=c, fill_opacity=0.8))\n    start += TAU * f\narrow = Arrow(ORIGIN, UP * 1.8, buff=0, color=WHITE, stroke_width=8)\nstage.play(FadeIn(secs), GrowArrow(arrow))\nstage.add(secs, arrow)"
+   },
+   {
+    "intent": "The pointer spinning round and stopping in the red half",
+    "narration": "Spin it. Where it stops depends only on the size of each colour's slice.",
+    "code": "stage.play(Rotate(arrow, 3 * TAU + PI / 2, about_point=ORIGIN), run_time=2.5)"
+   },
+   {
+    "intent": "Bars of the four chances 0.5, 0.25, 0.125, 0.125",
+    "narration": "The chances are the slice sizes: a half, a quarter, an eighth and an eighth.",
+    "code": "stage.clear()\nbars = draw_bars(stage, [0.5, 0.25, 0.125, 0.125], labels=[\"red\", \"blue\", \"green\", \"yellow\"])"
+   }
+  ]
+ },
+ {
+  "request": "how long is each part of a traffic light cycle?",
+  "beats": [
+   {
+    "intent": "A traffic light: three circles in a dark box with the red one lit",
+    "narration": "A traffic light cycles through red, green and amber.",
+    "code": "stage.title(\"A traffic light\")\nbox = RoundedRectangle(width=1.2, height=3.2, corner_radius=0.2, color=GREY, fill_opacity=0.5).shift(LEFT * 4)\nlamps = VGroup(*[Circle(radius=0.4, color=c, fill_opacity=0.15) for c in (RED, YELLOW, GREEN)]).arrange(DOWN, buff=0.15).move_to(box)\nstage.play(FadeIn(box), FadeIn(lamps))\nstage.add(box, lamps)\nstage.play(lamps[0].animate.set_fill(RED, 1))"
+   },
+   {
+    "intent": "A timeline bar split into red 40 s, green 30 s, amber 5 s",
+    "narration": "Red lasts forty seconds, green thirty, amber five.",
+    "code": "parts = [(40, RED), (30, GREEN), (5, YELLOW)]\nbar, x = VGroup(), -2.5\nfor t, c in parts:\n    r = Rectangle(width=t * 0.09, height=0.6, color=c, fill_opacity=0.8).move_to(np.array([x + t * 0.045, 0, 0]))\n    bar.add(r)\n    x += t * 0.09\nstage.play(LaggedStart(*[FadeIn(r) for r in bar], lag_ratio=0.3))\nstage.add(bar)\nfor r, (t, _) in zip(bar, parts):\n    stage.label(r, f\"{t} s\", direction=DOWN)"
+   },
+   {
+    "intent": "The timeline beside the share of time on green: 30/75 = 40%",
+    "narration": "A full cycle is seventy five seconds, so the light is green forty percent of the time.",
+    "code": "stage.equation(r\"\\frac{30}{75} = 40\\%\")"
+   }
+  ]
+ },
+ {
+  "request": "who won the class vote?",
+  "beats": [
+   {
+    "intent": "Thirty dots, one per vote, sorted into three coloured groups",
+    "narration": "Thirty students vote for a class trip: the zoo, the museum or the beach.",
+    "code": "stage.title(\"Counting votes\")\nvotes = [RED] * 12 + [BLUE] * 8 + [GREEN] * 10\ndots = VGroup(*[Dot(radius=0.12, color=c) for c in votes]).arrange_in_grid(3, 10, buff=0.25)\nstage.play(FadeIn(dots))\nstage.add(dots)"
+   },
+   {
+    "intent": "Bars of the three totals: zoo 12, museum 8, beach 10",
+    "narration": "Count each colour: twelve for the zoo, eight for the museum, ten for the beach.",
+    "code": "stage.clear()\nbars = draw_bars(stage, [12, 8, 10], labels=[\"zoo\", \"museum\", \"beach\"])\nhighlight(stage, bars[0], color=RED)"
+   },
+   {
+    "intent": "The winning bar beside 12/30 = 40%",
+    "narration": "The zoo wins with twelve of thirty: forty percent, not a majority, but the most votes.",
+    "code": "stage.equation(r\"\\frac{12}{30} = 40\\%\")"
+   }
+  ]
+ },
+ {
+  "request": "who wins if one walker starts earlier and the other walks faster?",
+  "beats": [
+   {
+    "intent": "Axes of time against distance with Amy's line starting at 2 km and rising slowly",
+    "narration": "Amy starts two kilometres ahead and walks at four kilometres an hour.",
+    "code": "stage.title(\"Who wins the race?\")\nax = draw_axes(stage, x_range=(0, 2), y_range=(0, 12), labels=(\"h\", \"km\"))\namy = plot_graph(stage, ax, lambda t: 2 + 4 * t, color=BLUE, label=\"Amy\")"
+   },
+   {
+    "intent": "Ben's steeper line starting at 0 and crossing Amy's",
+    "narration": "Ben starts at zero but walks at six kilometres an hour, so his line is steeper.",
+    "code": "ben = plot_graph(stage, ax, lambda t: 6 * t, color=RED, label=\"Ben\")"
+   },
+   {
+    "intent": "The crossing at 1 hour, 6 km marked beside 2 + 4t = 6t",
+    "narration": "They meet where the lines cross: after one hour, six kilometres along. After that Ben is ahead.",
+    "code": "m = mark_point(stage, ax, 1, 6, color=YELLOW, label=\"1 h, 6 km\")\nstage.equation(r\"2 + 4t = 6t \\Rightarrow t = 1\")"
+   }
+  ]
+ },
+ {
+  "request": "how many ways can you make 50p with 10p and 20p coins?",
+  "beats": [
+   {
+    "intent": "Five 10p coins in a row adding to 50p",
+    "narration": "Five ten pence coins make fifty pence.",
+    "code": "stage.title(\"Making 50p\")\ncoin = lambda v, c: VGroup(Circle(radius=0.35, color=c, fill_opacity=0.7), Text(f\"{v}p\", font_size=20))\nrow1 = VGroup(*[coin(10, GREY_B) for _ in range(5)]).arrange(RIGHT, buff=0.1).shift(UP * 1.6)\nstage.play(FadeIn(row1))\nstage.add(row1)"
+   },
+   {
+    "intent": "A row of one 20p and three 10p, and a row of two 20p and one 10p",
+    "narration": "Swap two tens for a twenty: one twenty and three tens. Swap again: two twenties and a ten.",
+    "code": "row2 = VGroup(coin(20, YELLOW), *[coin(10, GREY_B) for _ in range(3)]).arrange(RIGHT, buff=0.1)\nrow3 = VGroup(coin(20, YELLOW), coin(20, YELLOW), coin(10, GREY_B)).arrange(RIGHT, buff=0.1).shift(DOWN * 1.6)\nstage.play(FadeIn(row2))\nstage.play(FadeIn(row3))\nstage.add(row2, row3)"
+   },
+   {
+    "intent": "The three rows numbered 1, 2, 3: three ways",
+    "narration": "There is no room for a third twenty, so there are exactly three ways.",
+    "code": "for k, row in enumerate((row1, row2, row3), 1):\n    stage.play(FadeIn(Text(str(k), font_size=30, color=YELLOW).next_to(row, LEFT, buff=0.4)), run_time=0.3)\nstage.caption(\"Three ways to make 50p\")"
+   }
+  ]
+ },
+ {
+  "request": "how tall is a plant that grows 3 cm every week?",
+  "beats": [
+   {
+    "intent": "Bars of the plant's height over 6 weeks starting at 2 cm: 2, 5, 8, 11, 14, 17",
+    "narration": "A seedling two centimetres tall grows three centimetres a week.",
+    "code": "stage.title(\"A growing plant\")\nh = [2 + 3 * w for w in range(6)]\nbars = draw_bars(stage, h, labels=[f\"wk {w}\" for w in range(6)], color=GREEN)"
+   },
+   {
+    "intent": "Fresh axes with the heights as points and the line h = 2 + 3w through them",
+    "narration": "Plot the heights against weeks and they line up: height is two plus three times the week.",
+    "code": "stage.clear()\nax = draw_axes(stage, x_range=(0, 8), y_range=(0, 26), labels=(\"week\", \"cm\"))\npts = plot_points(stage, ax, [(w, 2 + 3 * w) for w in range(6)], color=GREEN)\nline = plot_graph(stage, ax, lambda w: 2 + 3 * w, color=YELLOW, label=\"h = 2 + 3w\")"
+   },
+   {
+    "intent": "Week 8 marked on the extended line at 26 cm",
+    "narration": "Follow the line on: by week eight it will be twenty six centimetres.",
+    "code": "m = mark_point(stage, ax, 8, 26, color=RED, label=\"26 cm\")"
+   }
+  ]
+ },
+ {
+  "request": "how do temperatures below zero work on a thermometer?",
+  "beats": [
+   {
+    "intent": "A vertical thermometer bar from -10 to 20 degrees filled to 5",
+    "narration": "A thermometer reads five degrees.",
+    "code": "stage.title(\"Below zero\")\nax = draw_axes(stage, x_range=(0, 1), y_range=(-10, 20), labels=(\"\", \"°C\"), where=\"left\")\ntube = Rectangle(width=0.5, height=ax.c2p(0, 20)[1] - ax.c2p(0, -10)[1], color=WHITE).move_to(ax.c2p(0.5, 5))\nfill = Rectangle(width=0.4, height=ax.c2p(0, 5)[1] - ax.c2p(0, -10)[1], color=RED, fill_opacity=0.9).align_to(tube, DOWN).set_x(tube.get_x())\nstage.play(Create(tube), FadeIn(fill))\nstage.add(tube, fill)"
+   },
+   {
+    "intent": "The red column dropping to -7 degrees, past the zero line",
+    "narration": "Overnight it drops twelve degrees, past zero, to minus seven.",
+    "code": "zero = DashedLine(ax.c2p(0, 0), ax.c2p(1, 0), color=BLUE)\nstage.play(Create(zero))\nstage.add(zero)\nlow = Rectangle(width=0.4, height=ax.c2p(0, -7)[1] - ax.c2p(0, -10)[1], color=BLUE, fill_opacity=0.9).align_to(tube, DOWN).set_x(tube.get_x())\nstage.play(Transform(fill, low), run_time=1.5)"
+   },
+   {
+    "intent": "The thermometer beside 5 - 12 = -7",
+    "narration": "Five minus twelve is minus seven: seven degrees below freezing.",
+    "code": "stage.equation(r\"5 - 12 = -7\")"
+   }
+  ]
+ }
+]
