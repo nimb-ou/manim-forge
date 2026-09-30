@@ -106,6 +106,10 @@ Pitfalls seen in the batches:
   `GrowArrow` it.
 - Precompute simulations (which cells get infected) and write the lists in;
   keep `def` out of beat code.
+- `stage.label` returns the label: fade it out with its object
+  (`FadeOut(arrow), FadeOut(arrow_label)`), or it stays on screen alone.
+- A label on a moving object moves with it: a "3°" label rode down to -5.
+  Label a fixed point (`stage.label(point, ...)`) when the text belongs to a place.
 - A beat that draws only axes / a grid / a number line is a background,
   never a beat's picture: always put something on it.
 
