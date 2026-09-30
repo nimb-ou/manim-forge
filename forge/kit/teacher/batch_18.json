@@ -1,0 +1,187 @@
+[
+ {
+  "request": "what does multiplying by i twice do?",
+  "beats": [
+   {
+    "intent": "The complex plane with the point 2 + i marked",
+    "narration": "Take the complex number two plus i.",
+    "code": "stage.title(\"Multiplying by i, twice\")\ncp = draw_complex_plane(stage)\nz = mark_point(stage, cp, (2, 1), label=\"2 + i\")"
+   },
+   {
+    "intent": "The plane turned a quarter turn by multiplying by i, 2 + i landing at -1 + 2i",
+    "narration": "Multiplying by i turns the whole plane a quarter turn: two plus i lands at minus one plus two i.",
+    "code": "multiply_complex(stage, cp, 1j, points=(2 + 1j,))\nstage.caption(\"× i: a quarter turn\")"
+   },
+   {
+    "intent": "A second quarter turn taking it to -2 - i, beside i^2 = -1",
+    "narration": "Do it again and you have turned half way round: the number is flipped to minus two minus i. So i squared is minus one.",
+    "code": "multiply_complex(stage, cp, 1j, points=(-1 + 2j,))\nstage.equation(r\"i^2 = -1\")"
+   }
+  ]
+ },
+ {
+  "request": "why does a fair coin's share of heads settle down?",
+  "beats": [
+   {
+    "intent": "Thirty coins flipping with the running share of heads read out",
+    "narration": "Flip thirty coins and keep track of the fraction that land heads.",
+    "code": "stage.title(\"Settling down\")\nflip_coins(stage, n=30, p=0.5)"
+   },
+   {
+    "intent": "Axes of flips against share of heads with a jagged line settling near 0.5",
+    "narration": "Early on the share jumps around. After many flips it hugs one half.",
+    "code": "stage.clear()\nax = draw_axes(stage, x_range=(0, 200), y_range=(0, 1), labels=(\"flips\", \"share\"))\nrng = np.random.default_rng(3)\nshare = np.cumsum(rng.integers(0, 2, 200)) / np.arange(1, 201)\nline = VMobject(color=YELLOW).set_points_as_corners([ax.c2p(k + 1, s) for k, s in enumerate(share)])\nstage.play(Create(line), run_time=2.5)\nhalf = draw_line(stage, ax.c2p(0, 0.5), ax.c2p(200, 0.5), color=RED, dashed=True)"
+   },
+   {
+    "intent": "A narrowing band around 0.5 as the number of flips grows",
+    "narration": "The wobble shrinks roughly like one over the square root of the number of flips.",
+    "code": "band = plot_graph(stage, ax, lambda n: 0.5 + 0.5 / np.sqrt(max(n, 1)), x_range=(1, 200), color=GREEN)\nband2 = plot_graph(stage, ax, lambda n: 0.5 - 0.5 / np.sqrt(max(n, 1)), x_range=(1, 200), color=GREEN)\nstage.caption(\"The wobble shrinks as flips pile up\")"
+   }
+  ]
+ },
+ {
+  "request": "how likely is it you have the disease if the test says positive?",
+  "beats": [
+   {
+    "intent": "A unit square split by the 5% of people who have the disease",
+    "narration": "Picture everyone as a square. Five percent have the disease.",
+    "code": "stage.title(\"A positive test\")\nbayes_square(stage, prior=0.05, sensitivity=0.9, false_pos=0.1)"
+   },
+   {
+    "intent": "The square beside the equation P(sick | +) = 0.045 / (0.045 + 0.095) ≈ 32%",
+    "narration": "Of everyone who tests positive, only the sick part counts: four and a half out of fourteen, about a third.",
+    "code": "stage.equation(r\"P(\\text{sick} \\mid +) = \\frac{0.045}{0.045 + 0.095}\", r\"\\approx 32\\%\")"
+   }
+  ]
+ },
+ {
+  "request": "how does heat spread along a rod with a hot spot in the middle?",
+  "beats": [
+   {
+    "intent": "Axes of position against temperature with a tall spike in the middle",
+    "narration": "A metal rod is cold except for one hot spot in the middle.",
+    "code": "stage.title(\"Heat spreading\")\nax = draw_axes(stage, x_range=(-4, 4), y_range=(0, 1.2), labels=(\"x\", \"T\"))\nspike = lambda x: np.exp(-4 * x ** 2)\ndiffuse_heat(stage, ax, spike, t_end=1.5)"
+   },
+   {
+    "intent": "The flattened curve beside the rule: heat flows from hot to cold",
+    "narration": "Heat flows from hot to cold, so the spike sinks and spreads until the rod warms evenly.",
+    "code": "stage.caption(\"The spike sinks and spreads\")\nstage.equation(r\"\\frac{\\partial T}{\\partial t} = k \\frac{\\partial^2 T}{\\partial x^2}\")"
+   }
+  ]
+ },
+ {
+  "request": "what does a whirlpool look like as a vector field?",
+  "beats": [
+   {
+    "intent": "Arrows of the field (-y, x) circling the origin",
+    "narration": "At every point, draw an arrow for the water's velocity: here they circle the centre.",
+    "code": "stage.title(\"A whirlpool\")\ndraw_vector_field(stage, lambda x, y: (-y, x))"
+   },
+   {
+    "intent": "Particles carried round and round by the field",
+    "narration": "Drop particles in and they are carried round and round.",
+    "code": "stage.clear()\nflow_particles(stage, lambda x, y: (-y - 0.2 * x, x - 0.2 * y))\nstage.caption(\"With a drain, they spiral inward\")"
+   }
+  ]
+ },
+ {
+  "request": "how many moves does the Tower of Hanoi need with 4 disks?",
+  "beats": [
+   {
+    "intent": "Four disks on the left peg of three pegs, solved move by move",
+    "narration": "Move the tower to another peg, one disk at a time, never putting a big disk on a small one.",
+    "code": "stage.title(\"Tower of Hanoi, 4 disks\")\nhanoi_moves(stage, n=4)"
+   },
+   {
+    "intent": "Bars of the moves needed for 1 to 5 disks: 1, 3, 7, 15, 31",
+    "narration": "Each extra disk doubles the work and adds one: one, three, seven, fifteen, thirty one.",
+    "code": "stage.clear()\nbars = draw_bars(stage, [1, 3, 7, 15, 31], labels=[1, 3, 7, 15, 31])\nhighlight(stage, bars[3])\nstage.equation(r\"2^n - 1\", r\"2^4 - 1 = 15\")"
+   }
+  ]
+ },
+ {
+  "request": "how does a moving average smooth out a spike?",
+  "beats": [
+   {
+    "intent": "Bars of a signal with one tall spike, and a window of three equal weights sliding across",
+    "narration": "Slide a window of three equal weights along the signal, adding up what it covers.",
+    "code": "stage.title(\"Smoothing a spike\")\nconvolve_bars(stage, [0, 0, 1, 1, 6, 1, 1, 0, 0], [1 / 3, 1 / 3, 1 / 3])"
+   },
+   {
+    "intent": "The output bars lower and wider than the spike",
+    "narration": "The spike comes out lower and spread over three places: the average smooths it.",
+    "code": "stage.caption(\"Lower and wider: smoothed\")"
+   }
+  ]
+ },
+ {
+  "request": "how much of one vector points along another?",
+  "beats": [
+   {
+    "intent": "A plane with v = (2, 3) and w = (4, 0)",
+    "narration": "Two vectors: v, two up three, and w along the ground.",
+    "code": "stage.title(\"Projection\")\np = draw_plane(stage)\nv = draw_vector(stage, p, (2, 3), label=\"v\")\nw = draw_vector(stage, p, (4, 0), color=BLUE, label=\"w\")"
+   },
+   {
+    "intent": "The shadow of v dropped onto w's line, length 2",
+    "narration": "Shine a light straight down: v's shadow on w's line has length two.",
+    "code": "project_vector(stage, p, (2, 3), (4, 0))"
+   },
+   {
+    "intent": "The shadow beside v · w = 2 × 4 = 8",
+    "narration": "The dot product is that shadow times w's length: two times four is eight.",
+    "code": "stage.equation(r\"v \\cdot w = 2 \\cdot 4 + 3 \\cdot 0 = 8\")"
+   }
+  ]
+ },
+ {
+  "request": "how do you describe points in a tilted grid?",
+  "beats": [
+   {
+    "intent": "A plane with the tilted basis b1 = (1, 1) and b2 = (-1, 1) and its grid over the plane",
+    "narration": "Choose two new basis arrows, one, one and minus one, one. They make their own tilted grid.",
+    "code": "stage.title(\"Another basis\")\np = draw_plane(stage)\nbasis_grid(stage, p, (1, 1), (-1, 1))"
+   },
+   {
+    "intent": "The point (0, 2) reached by one step of b1 and one of b2",
+    "narration": "The point zero, two is one step of each: in the new grid its coordinates are one, one.",
+    "code": "b1 = draw_vector(stage, p, (1, 1), color=GREEN, label=\"b1\")\nstep = draw_arrow(stage, p.c2p(1, 1), p.c2p(0, 2))\npt = mark_point(stage, p, (0, 2), color=RED, label=\"(0, 2) = b1 + b2\")"
+   }
+  ]
+ },
+ {
+  "request": "why does a circle cut into slices become a rectangle?",
+  "beats": [
+   {
+    "intent": "A circle cut into 16 slices",
+    "narration": "Cut a circle into sixteen thin slices.",
+    "code": "stage.title(\"Slices into a rectangle\")\nsecs = slice_circle(stage, n=16)"
+   },
+   {
+    "intent": "The slices laid alternately up and down into a near-rectangle",
+    "narration": "Lay them tip up, tip down: they make a shape close to a rectangle.",
+    "code": "unroll_slices(stage, secs)"
+   },
+   {
+    "intent": "The near-rectangle beside Area = πr × r = πr^2",
+    "narration": "Its height is the radius and its width half the circumference, pi r. So the area is pi r squared.",
+    "code": "stage.equation(r\"\\text{Area} = \\pi r \\times r = \\pi r^2\")"
+   }
+  ]
+ },
+ {
+  "request": "what is e^{iπ} and why is it -1?",
+  "beats": [
+   {
+    "intent": "The complex plane with the unit circle and e^{it} walking from 1 halfway round",
+    "narration": "e to the i t walks round the unit circle as t grows.",
+    "code": "stage.title(\"Half a turn\")\ncp = draw_complex_plane(stage)\neuler_circle(stage, cp, t_end=PI)"
+   },
+   {
+    "intent": "The point -1 marked where the walk stops at t = π",
+    "narration": "At t equals pi it has gone half way round and stands at minus one.",
+    "code": "m = mark_point(stage, cp, (-1, 0), color=RED, label=\"-1\")\nstage.equation(r\"e^{i\\pi} = -1\")"
+   }
+  ]
+ }
+]
