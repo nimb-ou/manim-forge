@@ -1,0 +1,97 @@
+[
+ {
+  "request": "how can a polynomial pretend to be cos x?",
+  "beats": [
+   {
+    "intent": "Axes with cos x drawn",
+    "narration": "Here is cos x, rising and falling forever.",
+    "code": "stage.title(\"Pretending to be cos x\")\nax = draw_axes(stage, x_range=(-4, 4), y_range=(-2, 2))\ng = plot_graph(stage, ax, np.cos, color=BLUE, label=r\"\\cos x\")"
+   },
+   {
+    "intent": "Polynomials 1, 1 - x²/2, 1 - x²/2 + x⁴/24 hugging the curve near 0",
+    "narration": "Match its value at zero, then its curvature, then more: each polynomial hugs the curve a little further out.",
+    "code": "taylor_approximate(stage, ax, np.cos, a=0, terms=[1, 0, -1, 0, 1])"
+   },
+   {
+    "intent": "The polynomial beside cos x ≈ 1 - x²/2 + x⁴/24",
+    "narration": "Three terms already match cos x well out past one.",
+    "code": "stage.equation(r\"\\cos x \\approx 1 - \\frac{x^2}{2} + \\frac{x^4}{24}\")"
+   },
+   {
+    "intent": "A check at x = 1: 0.5417 against cos 1 = 0.5403",
+    "narration": "At x equals one, the polynomial gives 0.5417; the true value is 0.5403.",
+    "code": "stage.equation(r\"1 - \\tfrac12 + \\tfrac1{24} = 0.5417\", r\"\\approx \\cos 1 = 0.5403\")\nstage.caption(\"At x = 1\")"
+   }
+  ]
+ },
+ {
+  "request": "why is the area of a circle pi r squared?",
+  "beats": [
+   {
+    "intent": "A circle cut into 12 coloured slices",
+    "narration": "Cut a circle into twelve slices, like a pizza.",
+    "code": "stage.title(\"Why πr²\")\nsecs = slice_circle(stage, n=12)"
+   },
+   {
+    "intent": "The slices laid alternately up and down into a near-rectangle",
+    "narration": "Lay them out, alternately tip up and tip down. They make a bumpy rectangle.",
+    "code": "rect = unroll_slices(stage, secs)"
+   },
+   {
+    "intent": "The near-rectangle with height r and width πr labelled",
+    "narration": "Its height is the radius r. Its width is half the circumference: pi r.",
+    "code": "stage.label(rect, r\"\\pi r\", direction=DOWN, color=YELLOW)\nstage.label(rect, \"r\", direction=RIGHT, color=GREEN)"
+   },
+   {
+    "intent": "The rectangle beside area = πr · r = πr²",
+    "narration": "More slices make it a true rectangle, so the area is pi r times r: pi r squared.",
+    "code": "stage.equation(r\"A = \\pi r \\cdot r = \\pi r^2\")"
+   }
+  ]
+ },
+ {
+  "request": "show me the sieve of Eratosthenes up to 50",
+  "beats": [
+   {
+    "intent": "The numbers 2 to 50 set out in a grid",
+    "narration": "Write the numbers up to fifty. Two is the first prime.",
+    "code": "stage.title(\"The sieve of Eratosthenes\")\ngrid = sieve_primes(stage, n=50)"
+   },
+   {
+    "intent": "The sieved grid beside π(50) = 15, the count of primes up to 50",
+    "narration": "Crossing out the multiples of two, three, five and seven leaves fifteen primes.",
+    "code": "stage.equation(r\"\\pi(50) = 15\")\nstage.caption(\"Multiples of 2, 3, 5 and 7 crossed out\")"
+   },
+   {
+    "intent": "Bars of how many primes lie in each block of 10 up to 50",
+    "narration": "They thin out: four in the first ten, then four, two, two, three.",
+    "code": "stage.clear()\nb = draw_bars(stage, [4, 4, 2, 2, 3], labels=[\"1-10\", \"11-20\", \"21-30\", \"31-40\", \"41-50\"])"
+   }
+  ]
+ },
+ {
+  "request": "what does the derivative of x squared mean at x = 1?",
+  "beats": [
+   {
+    "intent": "The parabola y = x² on axes with the point (1, 1) marked",
+    "narration": "Take the parabola y equals x squared, and the point one, one.",
+    "code": "stage.title(\"The slope at x = 1\")\nax = draw_axes(stage, x_range=(-1, 3), y_range=(-1, 6))\nf = lambda x: x ** 2\ng = plot_graph(stage, ax, f)\np = mark_point(stage, ax, (1, 1), color=RED, label=\"(1, 1)\")"
+   },
+   {
+    "intent": "A secant from x = 1 to x = 3 shrinking into the tangent",
+    "narration": "Draw a line through it and a second point. Slide the second point in: the line becomes the tangent.",
+    "code": "secant_to_tangent(stage, ax, f, 1, h=2)"
+   },
+   {
+    "intent": "The tangent beside the limit of (1 + h)² - 1 over h equals 2",
+    "narration": "The secant's slope is two plus h. As h shrinks, it heads to two.",
+    "code": "stage.equation(r\"\\frac{(1+h)^2 - 1}{h} = 2 + h\", r\"\\to 2\")"
+   },
+   {
+    "intent": "The slope 2 read as a rise of 2 for each 1 across on the tangent",
+    "narration": "So at x equals one, the curve climbs two for every one step across.",
+    "code": "run = draw_line(stage, ax.c2p(1, 1), ax.c2p(2, 1), color=GREEN)\nrise = draw_line(stage, ax.c2p(2, 1), ax.c2p(2, 3), color=YELLOW)\nstage.label(rise, \"2\", direction=RIGHT, color=YELLOW)\nstage.caption(\"f'(1) = 2\")"
+   }
+  ]
+ }
+]

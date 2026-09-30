@@ -146,6 +146,11 @@ class Stage:
             return Tex(s, font_size=size)
         if any(c in s for c in "\\^_") and " " not in s.strip():
             return MathTex(s, font_size=size)
+        # Spaced maths with no words in it: "\pi r" came out as the letters
+        # backslash-p-i (2026-09-30).
+        if _re.search(r"\\[A-Za-z]+", s) and not _re.search(
+                r"[A-Za-z]{3,}", _re.sub(r"\\[A-Za-z]+", " ", s)):
+            return MathTex(s, font_size=size)
         return Text(s, font_size=size)
 
     def title(self, s: str, run_time: float = 1.0):

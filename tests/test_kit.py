@@ -40,3 +40,11 @@ def test_kit_embeds_into_an_assembled_scene():
     assert "stage = Stage(self)" in asm.code
     bad = assemble([Beat(1, None, "x")], ["draw_vector(stage, q, (1, 2))"], kit=True)
     assert any("q" in p for p in bad.problems)
+
+
+def test_spaced_maths_labels_are_latex_and_words_stay_text():
+    st = kit.Stage.__new__(kit.Stage)
+    for s in (r"\pi r", r"2\pi r", r"\theta = 30"):
+        assert type(st._text(s, 28)).__name__ == "MathTex", s
+    for s in ("day 0", r"the \pi slice", "Legs 3 and 4"):
+        assert type(st._text(s, 28)).__name__ == "Text", s
