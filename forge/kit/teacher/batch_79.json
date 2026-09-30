@@ -1,0 +1,82 @@
+[
+ {
+  "request": "show why a triangle's area is half base times height",
+  "beats": [
+   {
+    "intent": "A rectangle 6 wide and 3 tall",
+    "narration": "Start with a rectangle, six wide and three tall: eighteen square units.",
+    "code": "stage.title(\"Half base times height\")\nrect = draw_polygon(stage, [(-3, -1.5), (3, -1.5), (3, 1.5), (-3, 1.5)], color=GREY_B, fill=0.1)\nstage.label((0, -1.5), \"base 6\", direction=DOWN)\nstage.label((3, 0), \"height 3\", direction=RIGHT)"
+   },
+   {
+    "intent": "A triangle inside it with its apex on the top edge, the two leftover pieces shaded",
+    "narration": "Draw a triangle on the same base, with its tip on the top edge. The parts outside it are two smaller triangles.",
+    "code": "tri = draw_polygon(stage, [(-3, -1.5), (3, -1.5), (-1, 1.5)], color=BLUE, fill=0.5)\nleft = Polygon([-3, -1.5, 0], [-1, 1.5, 0], [-3, 1.5, 0], color=ORANGE, fill_opacity=0.4)\nright = Polygon([3, -1.5, 0], [3, 1.5, 0], [-1, 1.5, 0], color=ORANGE, fill_opacity=0.4)\nstage.play(FadeIn(left), FadeIn(right))\nstage.add(left, right)\nalt = draw_line(stage, (-1, 1.5), (-1, -1.5), color=YELLOW, dashed=True)"
+   },
+   {
+    "intent": "Each orange piece matched by an equal blue piece across the dashed height line",
+    "narration": "The height line splits the triangle into two parts, each exactly matching an orange piece. So the triangle is half the rectangle.",
+    "code": "stage.play(Indicate(left), Indicate(Polygon([-3, -1.5, 0], [-1, -1.5, 0], [-1, 1.5, 0])))\nstage.play(Indicate(right), Indicate(Polygon([-1, -1.5, 0], [3, -1.5, 0], [-1, 1.5, 0])))\nstage.equation(r\"A = \\tfrac12 \\times 6 \\times 3\", r\"= 9\")"
+   }
+  ]
+ },
+ {
+  "request": "prime factor tree of 60",
+  "beats": [
+   {
+    "intent": "60 at the top splitting into 6 and 10",
+    "narration": "Sixty splits into six times ten.",
+    "code": "stage.title(\"Factor tree of 60\")\nnodes = {\"60\": (0, 0.9), \"6\": (-0.5, 0.25), \"10\": (0.5, 0.25)}\ndots, links = draw_network(stage, nodes, [(\"60\", \"6\"), (\"60\", \"10\")])"
+   },
+   {
+    "intent": "6 splitting into 2 and 3, 10 into 2 and 5, the primes circled",
+    "narration": "Six is two times three; ten is two times five. Two, three and five are prime: they can't split further.",
+    "code": "nodes2 = {\"60\": (0, 0.9), \"6\": (-0.5, 0.25), \"10\": (0.5, 0.25), \"2\": (-0.8, -0.45), \"3\": (-0.2, -0.45), \"2 \": (0.2, -0.45), \"5\": (0.8, -0.45)}\nstage.clear()\ndots2, links2 = draw_network(stage, nodes2, [(\"60\", \"6\"), (\"60\", \"10\"), (\"6\", \"2\"), (\"6\", \"3\"), (\"10\", \"2 \"), (\"10\", \"5\")])\nfor k in (\"2\", \"3\", \"2 \", \"5\"):\n    ring = Circle(radius=0.25, color=GREEN).move_to(dots2[k])\n    stage.play(Create(ring), run_time=0.3)\n    stage.add(ring)"
+   },
+   {
+    "intent": "The tree beside 60 = 2² × 3 × 5",
+    "narration": "Collect the primes at the ends of the branches: sixty is two squared times three times five, and no other set of primes multiplies to sixty.",
+    "code": "stage.equation(r\"60 = 2 \\times 2 \\times 3 \\times 5\", r\"= 2^2 \\times 3 \\times 5\")"
+   }
+  ]
+ },
+ {
+  "request": "explain how a print queue works",
+  "beats": [
+   {
+    "intent": "A printer box on the left and three documents A, B, C lined up in the order they were sent",
+    "narration": "Three documents are sent to a printer: A first, then B, then C. They wait in a queue.",
+    "code": "stage.title(\"A print queue\")\nprinter = draw_rectangle(stage, width=1.6, height=1.2, color=GREY_B, fill=0.6)\nprinter.move_to([-4.5, 0, 0])\nstage.label(printer, \"printer\", direction=DOWN)\ndocs = VGroup(*[Rectangle(width=0.8, height=1.0, color=c, fill_opacity=0.6) for c in (BLUE, GREEN, ORANGE)]).arrange(RIGHT, buff=0.3).move_to([-1.5, 0, 0])\nstage.play(LaggedStart(*[FadeIn(d, shift=LEFT) for d in docs], lag_ratio=0.3))\nstage.add(docs)\nnames = [Text(n, font_size=30).move_to(d) for d, n in zip(docs, \"ABC\")]\nstage.play(*[FadeIn(t) for t in names])\nfor d, t in zip(docs, names):\n    d.add(t)"
+   },
+   {
+    "intent": "A document D joining the back of the queue while A goes into the printer",
+    "narration": "A new document D joins at the back. Meanwhile the one at the front, A, goes to the printer.",
+    "code": "new = Rectangle(width=0.8, height=1.0, color=RED, fill_opacity=0.6).move_to([3.5, 0, 0])\nnew.add(Text(\"D\", font_size=30).move_to(new))\nstage.play(FadeIn(new, shift=LEFT))\nstage.play(new.animate.next_to(docs[-1], RIGHT, buff=0.3), docs[0].animate.move_to(printer).scale(0.6))\nstage.add(new)\nstage.caption(\"join at the back, leave from the front\")"
+   },
+   {
+    "intent": "The queue moving up: B at the front, then C, then D",
+    "narration": "Everyone moves up one place. First in, first out: documents print in the order they arrived.",
+    "code": "stage.play(FadeOut(docs[0]), FadeOut(names[0]))\nstage.play(VGroup(docs[1], docs[2], new).animate.shift(1.1 * LEFT))\nstage.caption(\"first in, first out\")"
+   }
+  ]
+ },
+ {
+  "request": "what do the digits in 3406 mean?",
+  "beats": [
+   {
+    "intent": "The number 3406 with each digit in its own column: thousands, hundreds, tens, ones",
+    "narration": "Each digit's position gives it a value: thousands, hundreds, tens and ones.",
+    "code": "stage.title(\"Place value\")\ncols = VGroup(*[Rectangle(width=1.6, height=1.2, color=GREY_B) for _ in range(4)]).arrange(RIGHT, buff=0).move_to([0, 1.2, 0])\nstage.play(Create(cols))\nstage.add(cols)\nfor c, d, name in zip(cols, \"3406\", [\"thousands\", \"hundreds\", \"tens\", \"ones\"]):\n    t = Text(d, font_size=48).move_to(c)\n    stage.add(t)\n    stage.play(FadeIn(t), run_time=0.2)\n    stage.label(c, name, direction=UP)"
+   },
+   {
+    "intent": "Bars of each digit's value: 3000, 400, 0, 6",
+    "narration": "So the three is worth three thousand, the four four hundred, the zero holds the tens place empty, and the six is six.",
+    "code": "stage.clear()\nb = draw_bars(stage, [3000, 400, 0, 6], labels=[\"3 thousands\", \"4 hundreds\", \"0 tens\", \"6 ones\"], color=BLUE)"
+   },
+   {
+    "intent": "The digits beside 3406 = 3×1000 + 4×100 + 0×10 + 6",
+    "narration": "Add the values back up and you get the number.",
+    "code": "stage.equation(r\"3406 = 3 \\cdot 1000 + 4 \\cdot 100 + 0 \\cdot 10 + 6\")"
+   }
+  ]
+ }
+]
