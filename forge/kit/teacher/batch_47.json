@@ -1,0 +1,132 @@
+[
+ {
+  "request": "how do you balance the equation for making water?",
+  "beats": [
+   {
+    "intent": "Hydrogen molecules (pairs of white circles) and one oxygen molecule (pair of red circles)",
+    "narration": "Hydrogen comes as pairs of atoms, H two, and oxygen as pairs too, O two.",
+    "code": "stage.title(\"Balancing H₂ + O₂ → H₂O\")\natom = lambda c, r=0.25: Circle(radius=r, color=c, fill_opacity=0.9)\nh2 = VGroup(atom(WHITE, 0.18), atom(WHITE, 0.18)).arrange(RIGHT, buff=0)\no2 = VGroup(atom(RED), atom(RED)).arrange(RIGHT, buff=0)\nleft = VGroup(h2.copy(), h2.copy(), o2).arrange(RIGHT, buff=0.5).shift(LEFT * 3)\nstage.play(FadeIn(left))\nstage.add(left)"
+   },
+   {
+    "intent": "An arrow to two water molecules, each a red atom with two white atoms",
+    "narration": "They combine into water, H two O: one oxygen with two hydrogens.",
+    "code": "arrow = Arrow(LEFT * 0.6, RIGHT * 0.6, buff=0, color=YELLOW)\nwater = lambda: VGroup(atom(RED), atom(WHITE, 0.18).shift(np.array([-0.3, -0.25, 0])), atom(WHITE, 0.18).shift(np.array([0.3, -0.25, 0])))\nright = VGroup(water(), water()).arrange(RIGHT, buff=0.6).shift(RIGHT * 2.8)\nstage.play(GrowArrow(arrow), FadeIn(right))\nstage.add(arrow, right)"
+   },
+   {
+    "intent": "Both sides with 4 hydrogen and 2 oxygen atoms, beside 2H₂ + O₂ → 2H₂O",
+    "narration": "Count atoms: four hydrogens and two oxygens on each side. Balanced.",
+    "code": "stage.equation(r\"2\\mathrm{H_2} + \\mathrm{O_2} \\to 2\\mathrm{H_2O}\")"
+   }
+  ]
+ },
+ {
+  "request": "what's the difference between solids, liquids and gases?",
+  "beats": [
+   {
+    "intent": "Three boxes of particles: tightly packed grid, loose cluster, spread out",
+    "narration": "In a solid the particles are packed in a grid; in a liquid they touch but slide; in a gas they are far apart.",
+    "code": "stage.title(\"States of matter\")\nrng = np.random.default_rng(1)\nboxes = VGroup(*[Square(side_length=2.4, color=GREY_B) for _ in range(3)]).arrange(RIGHT, buff=0.6)\nsolid = VGroup(*[Dot(radius=0.12, color=BLUE) for _ in range(25)]).arrange_in_grid(5, 5, buff=0.2).move_to(boxes[0])\nliquid = VGroup(*[Dot(boxes[1].get_center() + np.array([rng.uniform(-1, 1), rng.uniform(-1.1, 0.1), 0]), radius=0.12, color=TEAL) for _ in range(25)])\ngas = VGroup(*[Dot(boxes[2].get_center() + np.array([rng.uniform(-1.1, 1.1), rng.uniform(-1.1, 1.1), 0]), radius=0.12, color=YELLOW) for _ in range(8)])\nstage.play(Create(boxes), FadeIn(solid), FadeIn(liquid), FadeIn(gas))\nstage.add(boxes, solid, liquid, gas)\nfor b, t in zip(boxes, (\"solid\", \"liquid\", \"gas\")):\n    stage.label(b, t, direction=DOWN)"
+   },
+   {
+    "intent": "The gas particles darting about while the solid ones only jiggle",
+    "narration": "Heat them up and they move faster: the solid only vibrates, the gas flies everywhere.",
+    "code": "stage.play(*[d.animate.shift(np.array([rng.uniform(-0.5, 0.5), rng.uniform(-0.5, 0.5), 0])) for d in gas],\n           *[d.animate.shift(np.array([rng.uniform(-0.03, 0.03), rng.uniform(-0.03, 0.03), 0])) for d in solid], run_time=1.5)\nstage.caption(\"More energy, more freedom to move\")"
+   }
+  ]
+ },
+ {
+  "request": "what does the electric field around a positive charge look like?",
+  "beats": [
+   {
+    "intent": "Arrows of the field pointing straight out from the origin, weaker further away",
+    "narration": "Around a positive charge, the field points straight outwards and gets weaker with distance.",
+    "code": "stage.title(\"The field of a charge\")\ndraw_vector_field(stage, lambda x, y: (x / (np.hypot(x, y) + 0.2), y / (np.hypot(x, y) + 0.2)))\nq = Dot(ORIGIN, radius=0.2, color=RED)\nstage.play(FadeIn(q))\nstage.add(q)\nstage.label(q, \"+\", direction=UP, color=RED)"
+   },
+   {
+    "intent": "A small positive test charge pushed away along a field arrow",
+    "narration": "A small positive test charge placed nearby is pushed away along the arrows.",
+    "code": "t = Dot(np.array([1, 0.5, 0]), radius=0.1, color=YELLOW)\nstage.play(FadeIn(t))\nstage.play(t.animate.move_to(np.array([3.4, 1.7, 0])), run_time=1.5)\nstage.add(t)\nstage.caption(\"Like charges repel\")"
+   }
+  ]
+ },
+ {
+  "request": "why do resistors in parallel have less total resistance?",
+  "beats": [
+   {
+    "intent": "A 12 V battery with two 6 Ω resistors side by side on separate branches",
+    "narration": "A twelve volt battery with two six ohm resistors on side-by-side branches.",
+    "code": "stage.title(\"Resistors in parallel\")\ntop = Line([-3, 1.5, 0], [3, 1.5, 0], color=GREY_B)\nbottom = Line([-3, -1.5, 0], [3, -1.5, 0], color=GREY_B)\nbat = Rectangle(width=0.4, height=1, color=YELLOW, fill_opacity=1).move_to([-3, 0, 0])\nb1 = Line([0, 1.5, 0], [0, -1.5, 0], color=GREY_B)\nb2 = Line([2, 1.5, 0], [2, -1.5, 0], color=GREY_B)\nr1 = Rectangle(width=0.4, height=1, color=BLUE, fill_opacity=0.8).move_to([0, 0, 0])\nr2 = Rectangle(width=0.4, height=1, color=BLUE, fill_opacity=0.8).move_to([2, 0, 0])\nstage.play(Create(VGroup(top, bottom, b1, b2)), FadeIn(bat), FadeIn(r1), FadeIn(r2))\nstage.add(top, bottom, b1, b2, bat, r1, r2)\nstage.label(bat, \"12 V\", direction=LEFT, color=YELLOW)\nstage.label(r1, \"6 Ω\", direction=RIGHT)\nstage.label(r2, \"6 Ω\", direction=RIGHT)"
+   },
+   {
+    "intent": "Arrows showing 2 A through each branch, 4 A in total",
+    "narration": "Each branch gets the full twelve volts, so two amps flows in each: four amps in all.",
+    "code": "for x in (0, 2):\n    a = Arrow([x - 0.5, 1.0, 0], [x - 0.5, -1.0, 0], buff=0, color=GREEN)\n    stage.play(GrowArrow(a), run_time=0.4)\n    stage.add(a)\nstage.caption(\"2 A + 2 A = 4 A\")"
+   },
+   {
+    "intent": "The circuit beside R = V/I = 12/4 = 3 Ω",
+    "narration": "Twelve volts pushing four amps means a total resistance of three ohms: less than either branch, because there are more paths.",
+    "code": "stage.equation(r\"R = \\frac{12}{4} = 3\\,\\Omega\", r\"\\frac{1}{R} = \\frac16 + \\frac16\")"
+   }
+  ]
+ },
+ {
+  "request": "how does a lens focus light?",
+  "beats": [
+   {
+    "intent": "A convex lens as a thin ellipse with three parallel rays coming from the left",
+    "narration": "Parallel rays of light arrive at a convex lens.",
+    "code": "stage.title(\"A convex lens\")\nlens = Ellipse(width=0.5, height=3.6, color=BLUE, fill_opacity=0.3)\naxis = DashedLine(LEFT * 6, RIGHT * 6, color=GREY)\nstage.play(Create(axis), FadeIn(lens))\nstage.add(axis, lens)\nfor y in (1.2, 0, -1.2):\n    draw_line(stage, (-5.5, y), (0, y), color=YELLOW)"
+   },
+   {
+    "intent": "The rays bending at the lens and meeting at the focal point 3 units to the right",
+    "narration": "The lens bends each ray so they all meet at one point: the focus.",
+    "code": "F = np.array([3, 0, 0])\nfor y in (1.2, 0, -1.2):\n    draw_line(stage, (0, y), (3, 0), color=YELLOW)\nf = Dot(F, color=RED)\nstage.play(FadeIn(f))\nstage.add(f)\nstage.label(f, \"focus\", direction=DOWN, color=RED)"
+   },
+   {
+    "intent": "A brace from the lens to the focus labelled focal length f = 3",
+    "narration": "The distance from the lens to the focus is the focal length.",
+    "code": "br = Brace(Line(ORIGIN, F), DOWN, buff=0.5)\nstage.play(GrowFromCenter(br))\nstage.add(br)\nstage.label(br, \"f\", direction=DOWN)"
+   }
+  ]
+ },
+ {
+  "request": "what does F = ma mean?",
+  "beats": [
+   {
+    "intent": "Axes of force against acceleration with a line for a 2 kg mass",
+    "narration": "Push a two kilogram mass with more and more force: its acceleration grows in proportion.",
+    "code": "stage.title(\"F = ma\")\nax = draw_axes(stage, x_range=(0, 20), y_range=(0, 10), labels=(\"N\", \"m/s²\"))\nm2 = plot_graph(stage, ax, lambda F: F / 2, color=GREEN, label=\"2 kg\")"
+   },
+   {
+    "intent": "A shallower line for a 4 kg mass",
+    "narration": "A four kilogram mass accelerates half as much for the same push.",
+    "code": "m4 = plot_graph(stage, ax, lambda F: F / 4, color=BLUE, label=\"4 kg\")"
+   },
+   {
+    "intent": "The point F = 12 N marked on both lines, 6 and 3 m/s², beside a = F / m",
+    "narration": "Twelve newtons gives the light mass six metres per second squared and the heavy one three: acceleration is force over mass.",
+    "code": "p1 = mark_point(stage, ax, 12, 6, color=GREEN, label=\"6\")\np2 = mark_point(stage, ax, 12, 3, color=BLUE, label=\"3\", direction=DOWN)\nstage.equation(r\"a = \\frac{F}{m}\")"
+   }
+  ]
+ },
+ {
+  "request": "why does gravity get weaker so fast with distance?",
+  "beats": [
+   {
+    "intent": "Axes of distance against strength with the curve 1/r^2",
+    "narration": "Gravity's pull falls off as one over the distance squared.",
+    "code": "stage.title(\"The inverse-square law\")\nax = draw_axes(stage, x_range=(0, 5), y_range=(0, 1.2), labels=(\"r\", \"pull\"))\ng = plot_graph(stage, ax, lambda r: 1 / r ** 2, x_range=(0.95, 5), color=YELLOW, label=\"1/r^2\")"
+   },
+   {
+    "intent": "Points at r = 1, 2, 3 marked with pulls 1, 1/4, 1/9",
+    "narration": "Twice as far, a quarter of the pull; three times as far, a ninth.",
+    "code": "for r, t in ((1, \"1\"), (2, \"1/4\"), (3, \"1/9\")):\n    mark_point(stage, ax, r, 1 / r ** 2, color=RED, label=t)"
+   },
+   {
+    "intent": "A square patch at distance 1 and a 2×2 patch at distance 2 in a spreading cone",
+    "narration": "The same pull spreads over an area that grows with the square of the distance.",
+    "code": "stage.clear()\nsrc = Dot(LEFT * 4, color=YELLOW)\nnear = Square(side_length=0.8, color=BLUE, fill_opacity=0.5).move_to(LEFT * 1.5)\nfar = Square(side_length=1.6, color=GREEN, fill_opacity=0.4).move_to(RIGHT * 1.5)\nrays = VGroup(*[Line(src.get_center(), far.get_corner(c), color=GREY) for c in (UL, UR, DL, DR)])\nstage.play(FadeIn(src), Create(rays), FadeIn(near), FadeIn(far))\nstage.add(src, rays, near, far)\nstage.caption(\"Twice as far: four times the area, a quarter of the pull each\")"
+   }
+  ]
+ }
+]
