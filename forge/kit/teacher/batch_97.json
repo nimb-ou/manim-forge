@@ -1,0 +1,102 @@
+[
+ {
+  "request": "how does a ship measure the depth of the sea with sound?",
+  "beats": [
+   {
+    "intent": "A ship on the surface with the sea floor far below",
+    "narration": "A ship sends a pulse of sound straight down.",
+    "code": "stage.title(\"Sonar\")\nsurface = Line([-6, 2.0, 0], [6, 2.0, 0], color=BLUE)\nfloor = Line([-6, -2.6, 0], [6, -2.6, 0], color=ORANGE, stroke_width=6)\nship = Polygon([-1, 2.0, 0], [1, 2.0, 0], [1.3, 2.5, 0], [-1.3, 2.5, 0], color=GREY_B, fill_opacity=0.8)\nstage.play(Create(surface), Create(floor), FadeIn(ship))\nstage.add(surface, floor, ship)"
+   },
+   {
+    "intent": "A pulse arrow travelling down to the floor and an echo arrow coming back up",
+    "narration": "The pulse travels down, bounces off the sea floor, and the echo comes back up.",
+    "code": "down = Arrow([-0.3, 1.9, 0], [-0.3, -2.5, 0], buff=0, color=YELLOW)\nup = Arrow([0.3, -2.5, 0], [0.3, 1.9, 0], buff=0, color=GREEN)\nstage.play(GrowArrow(down), run_time=1.2)\nstage.play(GrowArrow(up), run_time=1.2)\nstage.add(down, up)\nstage.label(down, \"pulse\", direction=LEFT, color=YELLOW)\nstage.label(up, \"echo\", direction=RIGHT, color=GREEN)"
+   },
+   {
+    "intent": "A stopwatch reading 4 seconds for the round trip",
+    "narration": "The echo arrives four seconds later.",
+    "code": "watch = Circle(radius=0.6, color=WHITE).move_to([4.0, 0, 0])\nhand = Line(watch.get_center(), watch.get_center() + 0.5 * UP, color=RED)\nstage.play(Create(watch), Create(hand))\nstage.play(Rotate(hand, -TAU * 4 / 12, about_point=watch.get_center()))\nstage.add(watch, hand)\nstage.label(watch, \"4 s\", direction=DOWN)"
+   },
+   {
+    "intent": "The picture beside depth = 1500 × 4 ÷ 2 = 3000 m",
+    "narration": "Sound travels about fifteen hundred metres a second in sea water. Four seconds is there and back, so halve it: three thousand metres deep.",
+    "code": "stage.equation(r\"\\frac{1500 \\times 4}{2} = 3000\\ \\text{m}\")"
+   }
+  ]
+ },
+ {
+  "request": "how does a cell divide into two?",
+  "beats": [
+   {
+    "intent": "A round cell with two chromosome strands inside",
+    "narration": "A cell carries its instructions on chromosomes, here just two to keep it simple.",
+    "code": "stage.title(\"Cell division\")\ncell = Circle(radius=2.0, color=GREEN, fill_opacity=0.15).move_to([0, -0.3, 0])\nchroms = VGroup(Line([-0.6, 0.3, 0], [-0.2, -0.7, 0], color=RED, stroke_width=10), Line([0.3, 0.2, 0], [0.7, -0.8, 0], color=BLUE, stroke_width=10))\nstage.play(Create(cell), Create(chroms))\nstage.add(cell, chroms)"
+   },
+   {
+    "intent": "Each chromosome copied, the pairs lined up across the middle",
+    "narration": "First it copies each chromosome, and the copies line up across the middle.",
+    "code": "pairs = VGroup()\nfor y, col in ((0.4, RED), (-0.8, BLUE)):\n    pairs.add(Line([-0.15, y + 0.4, 0], [-0.15, y - 0.4, 0], color=col, stroke_width=10), Line([0.15, y + 0.4, 0], [0.15, y - 0.4, 0], color=col, stroke_width=10))\nstage.play(Transform(chroms, pairs))\nstage.caption(\"copy, then line up\")"
+   },
+   {
+    "intent": "The copies pulled to opposite ends and the cell pinching in the middle",
+    "narration": "Fibres pull one copy of each to opposite ends, and the cell pinches in the middle.",
+    "code": "left = VGroup(pairs[0].copy(), pairs[2].copy())\nright = VGroup(pairs[1].copy(), pairs[3].copy())\nstage.play(FadeOut(chroms), FadeIn(left), FadeIn(right))\nstage.play(left.animate.shift(1.2 * LEFT), right.animate.shift(1.2 * RIGHT))\nwaist = Ellipse(width=4.6, height=2.6, color=GREEN, fill_opacity=0.15).move_to(cell)\nstage.play(Transform(cell, waist))\nstage.add(left, right)"
+   },
+   {
+    "intent": "Two new cells, each with one red and one blue chromosome",
+    "narration": "It splits into two cells, each with a full copy of the instructions.",
+    "code": "c1 = Circle(radius=1.3, color=GREEN, fill_opacity=0.15).move_to([-1.9, -0.3, 0])\nc2 = Circle(radius=1.3, color=GREEN, fill_opacity=0.15).move_to([1.9, -0.3, 0])\nstage.play(Transform(cell, VGroup(c1, c2)), left.animate.move_to(c1), right.animate.move_to(c2))\nstage.caption(\"two cells, same instructions\")"
+   }
+  ]
+ },
+ {
+  "request": "what's the area of a quarter of a circle with radius 4?",
+  "beats": [
+   {
+    "intent": "A circle of radius 4 with its radius drawn",
+    "narration": "A circle with radius four has area pi times sixteen, about fifty point three.",
+    "code": "stage.title(\"Area of a sector\")\nc = np.array([-2.5, -0.5, 0])\nk = 0.6\ncirc = Circle(radius=4 * k, color=BLUE, fill_opacity=0.15).move_to(c)\nr = Line(c, c + 4 * k * RIGHT, color=YELLOW)\nstage.play(Create(circ), Create(r))\nstage.add(circ, r)\nstage.label(r, \"4\", direction=DOWN, color=YELLOW)"
+   },
+   {
+    "intent": "A 90° slice shaded, a quarter of the circle",
+    "narration": "Cut out a ninety degree slice, a quarter of a full turn.",
+    "code": "sector = Sector(radius=4 * k, start_angle=0, angle=PI / 2, color=ORANGE, fill_opacity=0.7).move_arc_center_to(c)\nstage.play(FadeIn(sector))\nstage.add(sector)\nstage.label(sector, \"90°\", direction=UR, color=ORANGE)"
+   },
+   {
+    "intent": "Four such slices tiling the circle",
+    "narration": "Four of them fill the circle, so it has a quarter of the area.",
+    "code": "more = VGroup(*[Sector(radius=4 * k, start_angle=a, angle=PI / 2, color=col, fill_opacity=0.35).move_arc_center_to(c) for a, col in ((PI / 2, GREEN), (PI, RED), (3 * PI / 2, PURPLE))])\nstage.play(LaggedStart(*[FadeIn(m) for m in more], lag_ratio=0.3))\nstage.add(more)\nstage.caption(\"4 quarters make the circle\")"
+   },
+   {
+    "intent": "The slices beside A = 90/360 × π × 4² ≈ 12.6",
+    "narration": "Any slice is its angle over three sixty, times the whole area: here about twelve point six.",
+    "code": "stage.equation(r\"A = \\frac{90}{360} \\times \\pi \\times 4^2\", r\"\\approx 12.6\")"
+   }
+  ]
+ },
+ {
+  "request": "where is the balance point of a triangle?",
+  "beats": [
+   {
+    "intent": "A triangle cut from card",
+    "narration": "Cut a triangle out of card. Where could you balance it on a pin?",
+    "code": "stage.title(\"A triangle's balance point\")\nA, B, C = np.array([-3.5, -2.2, 0]), np.array([3.0, -1.8, 0]), np.array([-0.5, 2.2, 0])\ntri = Polygon(A, B, C, color=WHITE, fill_color=ORANGE, fill_opacity=0.35)\nstage.play(Create(tri))\nstage.add(tri)"
+   },
+   {
+    "intent": "A line from each corner to the midpoint of the opposite side",
+    "narration": "Draw a line from each corner to the middle of the opposite side: a median.",
+    "code": "meds = VGroup(*[DashedLine(P, (Q + R) / 2, color=YELLOW) for P, Q, R in ((A, B, C), (B, C, A), (C, A, B))])\nmids = VGroup(*[Dot((Q + R) / 2, color=YELLOW, radius=0.07) for _, Q, R in ((A, B, C), (B, C, A), (C, A, B))])\nstage.play(LaggedStart(*[Create(m) for m in meds], lag_ratio=0.3), FadeIn(mids))\nstage.add(meds, mids)"
+   },
+   {
+    "intent": "The three medians meeting at one point, marked G",
+    "narration": "All three meet at a single point.",
+    "code": "G = (A + B + C) / 3\ng = Dot(G, color=RED, radius=0.12)\nstage.play(GrowFromCenter(g))\nstage.add(g)\nstage.label(g, \"G\", direction=UR, color=RED)"
+   },
+   {
+    "intent": "A pin under G with the triangle balanced, beside G = average of the corners",
+    "narration": "That point, the centroid, is where the triangle balances. Its position is just the average of the three corners.",
+    "code": "pin = Line(G + 0.1 * DOWN, G + 2.6 * DOWN, color=GREY_A, stroke_width=6).set_z_index(1)\nstage.play(Create(pin))\nstage.add(pin)\nstage.equation(r\"G = \\frac{A + B + C}{3}\")"
+   }
+  ]
+ }
+]
