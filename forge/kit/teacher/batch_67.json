@@ -1,0 +1,82 @@
+[
+ {
+  "request": "why should a solar panel face the sun directly?",
+  "beats": [
+   {
+    "intent": "A solar panel square-on to eight parallel sunbeams, all eight hitting it",
+    "narration": "Face a panel straight at the Sun and it catches every beam across its width.",
+    "code": "stage.title(\"Tilting a solar panel\")\npanel = Line([1, -1.5, 0], [1, 1.5, 0], color=BLUE, stroke_width=10)\nstage.play(Create(panel))\nstage.add(panel)\nys = np.linspace(-1.3125, 1.3125, 8)\nbeams = [Arrow([-5, y, 0], [0.9, y, 0], buff=0, color=YELLOW) for y in ys]\nstage.play(*[GrowArrow(b) for b in beams])\nstage.add(*beams)\nstage.caption(\"square on: all 8 beams\")"
+   },
+   {
+    "intent": "The panel tilted 60°: only the middle 4 beams reach it, the outer 4 pass by dimmed",
+    "narration": "Tilt it sixty degrees and it presents a narrower target: now only four of the eight beams land on it.",
+    "code": "stage.play(Rotate(panel, 60 * DEGREES, about_point=[1, 0, 0]))\nhit = [abs(y) < 0.75 for y in ys]\nstage.play(*[b.animate.put_start_and_end_on([-5, y, 0], [1 - np.sqrt(3) * y - 0.05, y, 0]) if h else b.animate.set_opacity(0.2)\n             for b, y, h in zip(beams, ys, hit)])\nstage.caption(\"tilted 60°: 4 of 8 beams\")"
+   },
+   {
+    "intent": "The tilted panel beside power ∝ cos 60° = 0.5",
+    "narration": "The share of light it catches is the cosine of the tilt: cos sixty is a half.",
+    "code": "stage.equation(r\"\\text{power} \\propto \\cos 60^\\circ = 0.5\")"
+   }
+  ]
+ },
+ {
+  "request": "how do I work out a 15% tip on a £40 bill?",
+  "beats": [
+   {
+    "intent": "A bar of 40 split into ten parts of £4",
+    "narration": "Split the bill into ten equal parts: each is ten percent, four pounds.",
+    "code": "stage.title(\"A 15% tip\")\nbar = VGroup(*[Rectangle(width=1.0, height=0.8, color=WHITE, fill_color=BLUE, fill_opacity=0.3) for _ in range(10)]).arrange(RIGHT, buff=0).move_to([0, 0.4, 0])\nstage.play(Create(bar))\nstage.add(bar)\nstage.label(bar, \"£40\", direction=UP)\nstage.label(bar[0], \"£4\", direction=DOWN, color=YELLOW)"
+   },
+   {
+    "intent": "One part lit for 10% and half of the next for 5%",
+    "narration": "Ten percent is four pounds. Five percent is half of that: two pounds.",
+    "code": "stage.play(bar[0].animate.set_fill(YELLOW, opacity=0.8))\nhalf = Rectangle(width=0.5, height=0.8, stroke_width=0, fill_color=ORANGE, fill_opacity=0.8).move_to(bar[1].get_center() + 0.25 * LEFT)\nstage.play(FadeIn(half))\nstage.add(half)\nstage.caption(\"10% = £4, 5% = £2\")"
+   },
+   {
+    "intent": "The bar beside 15% = £4 + £2 = £6",
+    "narration": "Together, fifteen percent is six pounds.",
+    "code": "stage.equation(r\"15\\% = 4 + 2 = \\pounds 6\")"
+   }
+  ]
+ },
+ {
+  "request": "how does a binary search tree find a number?",
+  "beats": [
+   {
+    "intent": "A tree with 8 at the root, 3 and 10 below, then 1, 6 and 14",
+    "narration": "In a binary search tree, smaller numbers go left and bigger ones go right.",
+    "code": "stage.title(\"A binary search tree\")\nnodes = {\"8\": (0, 0.8), \"3\": (-0.5, 0.1), \"10\": (0.5, 0.1), \"1\": (-0.8, -0.6), \"6\": (-0.2, -0.6), \"14\": (0.8, -0.6)}\nedges = [(\"8\", \"3\"), (\"8\", \"10\"), (\"3\", \"1\"), (\"3\", \"6\"), (\"10\", \"14\")]\ndots, links = draw_network(stage, nodes, edges)"
+   },
+   {
+    "intent": "The path 8 → 3 → 6 lit as the search for 6",
+    "narration": "To find six: six is less than eight, go left. Six is more than three, go right. Found it.",
+    "code": "highlight(stage, dots[\"8\"], color=YELLOW)\nstage.play(links[0].animate.set_color(YELLOW).set_stroke(width=6))\nhighlight(stage, dots[\"3\"], color=YELLOW)\nstage.play(links[3].animate.set_color(YELLOW).set_stroke(width=6))\nhighlight(stage, dots[\"6\"], color=GREEN)\nstage.caption(\"6 < 8: left.  6 > 3: right.\")"
+   },
+   {
+    "intent": "The tree beside: 3 looks for 6 numbers, about log₂ n in a balanced tree",
+    "narration": "Each step throws away half the tree, so a balanced tree of a million numbers needs only about twenty steps.",
+    "code": "stage.equation(r\"\\text{steps} \\approx \\log_2 n\")"
+   }
+  ]
+ },
+ {
+  "request": "how far is a light year?",
+  "beats": [
+   {
+    "intent": "A beam of light travelling from a dot, one second marked as 300 000 km",
+    "narration": "Light travels three hundred thousand kilometres every second, seven and a half times round the Earth.",
+    "code": "stage.title(\"A light year\")\nsrc = Dot([-5.5, 0, 0], color=YELLOW, radius=0.14)\nstage.play(GrowFromCenter(src))\nstage.add(src)\nbeam = Arrow([-5.5, 0, 0], [-3.5, 0, 0], buff=0, color=YELLOW)\nstage.play(GrowArrow(beam))\nstage.add(beam)\nstage.label(beam, \"1 s: 300 000 km\", direction=UP, color=YELLOW)"
+   },
+   {
+    "intent": "A second, far longer beam below it, labelled 1 year",
+    "narration": "Keep it going for a whole year: about thirty one and a half million seconds.",
+    "code": "year = Arrow([-5.5, -1.0, 0], [5.5, -1.0, 0], buff=0, color=ORANGE)\nstage.play(GrowArrow(year), run_time=2)\nstage.add(year)\nstage.label(year, \"1 year of travel\", direction=DOWN, color=ORANGE)"
+   },
+   {
+    "intent": "The beam beside 300 000 × 31 557 600 ≈ 9.5 trillion km",
+    "narration": "Three hundred thousand times thirty one and a half million is about nine and a half trillion kilometres: one light year.",
+    "code": "stage.equation(r\"300\\,000 \\times 31\\,557\\,600\", r\"\\approx 9.5 \\times 10^{12}\\ \\text{km}\")"
+   }
+  ]
+ }
+]
