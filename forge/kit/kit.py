@@ -842,7 +842,7 @@ def _tag(label, font_size: int = 24):
     bare number, plain text otherwise -- MathTex drops spaces and symbols,
     so "3 for £2" came out as "3for2" and "day 0" as "day0"."""
     s = str(label)
-    if _re.search(r"[\\^_{}=]", s) or not _re.search(r"[A-Za-z£$%€ ]", s):
+    if _re.search(r"[\\^_{}=]", s) or (s.isascii() and not _re.search(r"[A-Za-z$% ]", s)):
         return MathTex(s, font_size=font_size)
     return Text(s, font_size=round(font_size * 0.8))
 

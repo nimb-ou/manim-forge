@@ -1,0 +1,142 @@
+[
+ {
+  "request": "how does simple interest grow a £1000 loan?",
+  "beats": [
+   {
+    "intent": "Bars of the amount owed each year with 5% simple interest: 1000, 1050, 1100, 1150, 1200",
+    "narration": "Borrow a thousand pounds at five percent simple interest: you add fifty pounds every year.",
+    "code": "stage.title(\"Simple interest\")\nbars = draw_bars(stage, [1000, 1050, 1100, 1150, 1200], labels=[\"year 0\", \"1\", \"2\", \"3\", \"4\"])"
+   },
+   {
+    "intent": "Fresh axes with the straight line A = 1000 + 50t",
+    "narration": "Plotted against time it is a straight line: the same fifty every year.",
+    "code": "stage.clear()\nax = draw_axes(stage, x_range=(0, 10), y_range=(900, 1600), labels=(\"years\", \"£\"))\nline = plot_graph(stage, ax, lambda t: 1000 + 50 * t, color=YELLOW, label=\"1000 + 50t\")"
+   },
+   {
+    "intent": "The point at 10 years, £1500, marked",
+    "narration": "After ten years you owe fifteen hundred pounds.",
+    "code": "m = mark_point(stage, ax, 10, 1500, color=RED, label=\"£1500\")\nstage.equation(r\"A = 1000(1 + 0.05t)\")"
+   }
+  ]
+ },
+ {
+  "request": "what does it mean to be in the 90th percentile?",
+  "beats": [
+   {
+    "intent": "100 dots in a row of scores sorted from lowest to highest",
+    "narration": "Line up a hundred test scores from lowest to highest.",
+    "code": "stage.title(\"Percentiles\")\ndots = draw_dots(stage, n=100, cols=20, color=GREY_B)"
+   },
+   {
+    "intent": "The first 90 dots coloured blue and one red dot just after them",
+    "narration": "If ninety people scored below you, you are in the ninetieth percentile.",
+    "code": "stage.play(*[dots[k].animate.set_color(BLUE) for k in range(90)])\nstage.play(dots[90].animate.set_color(RED).scale(1.6))"
+   },
+   {
+    "intent": "The row beside 90% below you",
+    "narration": "It does not mean you scored ninety percent: it means ninety percent of people scored lower.",
+    "code": "stage.caption(\"90% scored lower than you\")\nstage.equation(r\"\\frac{90}{100} \\text{ below}\")"
+   }
+  ]
+ },
+ {
+  "request": "which is bigger, 3/4 or 5/8?",
+  "beats": [
+   {
+    "intent": "A bar split into quarters with 3 shaded",
+    "narration": "Three quarters of a bar.",
+    "code": "stage.title(\"3/4 or 5/8?\")\nq = VGroup(*[Rectangle(width=1.5, height=0.7, color=BLUE, fill_opacity=0.7 if k < 3 else 0.1) for k in range(4)]).arrange(RIGHT, buff=0).shift(UP)\nstage.play(Create(q))\nstage.add(q)\nstage.label(q, \"3/4\", direction=LEFT, color=BLUE)"
+   },
+   {
+    "intent": "A bar of the same length split into eighths with 5 shaded",
+    "narration": "Five eighths of an equal bar.",
+    "code": "e = VGroup(*[Rectangle(width=0.75, height=0.7, color=GREEN, fill_opacity=0.7 if k < 5 else 0.1) for k in range(8)]).arrange(RIGHT, buff=0).shift(DOWN * 0.3)\nstage.play(Create(e))\nstage.add(e)\nstage.label(e, \"5/8\", direction=LEFT, color=GREEN)"
+   },
+   {
+    "intent": "A dashed line at the end of the 3/4 shading showing it reaches further, beside 3/4 = 6/8 > 5/8",
+    "narration": "Three quarters is six eighths, one eighth more than five eighths.",
+    "code": "mark = DashedLine(q[2].get_right() + UP * 0.6, q[2].get_right() + DOWN * 2, color=YELLOW)\nstage.play(Create(mark))\nstage.add(mark)\nstage.equation(r\"\\tfrac34 = \\tfrac68 > \\tfrac58\")"
+   }
+  ]
+ },
+ {
+  "request": "can rectangles with the same area have different perimeters?",
+  "beats": [
+   {
+    "intent": "Four rectangles each of area 24: 1×24, 2×12, 3×8, 4×6",
+    "narration": "Four rectangles, all with area twenty four: one by twenty four, two by twelve, three by eight, four by six.",
+    "code": "stage.title(\"Same area, different perimeter\")\ns = 0.22\nrects = VGroup(*[Rectangle(width=w * s, height=h * s, color=c, fill_opacity=0.5) for (w, h), c in zip(((24, 1), (12, 2), (8, 3), (6, 4)), (RED, ORANGE, YELLOW, GREEN))]).arrange(DOWN, buff=0.3, aligned_edge=LEFT)\nstage.play(LaggedStart(*[FadeIn(r) for r in rects], lag_ratio=0.3))\nstage.add(rects)"
+   },
+   {
+    "intent": "Bars of their perimeters: 50, 28, 22, 20",
+    "narration": "Their perimeters are fifty, twenty eight, twenty two and twenty.",
+    "code": "stage.clear()\nbars = draw_bars(stage, [50, 28, 22, 20], labels=[\"1×24\", \"2×12\", \"3×8\", \"4×6\"])"
+   },
+   {
+    "intent": "The shortest bar, the nearly square 4×6, lit",
+    "narration": "The closer to a square, the shorter the fence needed.",
+    "code": "highlight(stage, bars[3], color=GREEN)\nstage.caption(\"Closest to a square: least perimeter\")"
+   }
+  ]
+ },
+ {
+  "request": "why does a circle hold the most area for its perimeter?",
+  "beats": [
+   {
+    "intent": "A triangle, a square and a circle, each with perimeter 12",
+    "narration": "Three shapes with the same perimeter, twelve: a triangle, a square and a circle.",
+    "code": "stage.title(\"Most area for the fence\")\ntri = RegularPolygon(3, color=RED, fill_opacity=0.5).scale(1.15).shift(LEFT * 4)\nsq = Square(side_length=1.5 * 1.0, color=YELLOW, fill_opacity=0.5)\ncirc = Circle(radius=12 / TAU * 0.5, color=GREEN, fill_opacity=0.5).shift(RIGHT * 4)\nstage.play(FadeIn(tri), FadeIn(sq), FadeIn(circ))\nstage.add(tri, sq, circ)"
+   },
+   {
+    "intent": "Bars of their areas: triangle 6.9, square 9, circle 11.5",
+    "narration": "Their areas: about six point nine, nine, and eleven point five.",
+    "code": "stage.clear()\nbars = draw_bars(stage, [6.93, 9.0, 11.46], labels=[\"triangle\", \"square\", \"circle\"])\nhighlight(stage, bars[2], color=GREEN)"
+   },
+   {
+    "intent": "The bars beside A = P²/(4π) ≈ 11.5 for the circle",
+    "narration": "For a given perimeter the circle always wins: that is why bubbles are round.",
+    "code": "stage.equation(r\"A_{\\text{circle}} = \\frac{P^2}{4\\pi} = \\frac{144}{4\\pi} \\approx 11.5\")"
+   }
+  ]
+ },
+ {
+  "request": "how much paint do I need for a wall with a window?",
+  "beats": [
+   {
+    "intent": "A wall rectangle 5 m by 3 m",
+    "narration": "A wall five metres wide and three metres high.",
+    "code": "stage.title(\"Painting a wall\")\nwall = Rectangle(width=5, height=3, color=ORANGE, fill_opacity=0.5)\nstage.play(Create(wall))\nstage.add(wall)\nstage.label(wall, \"5 m\", direction=DOWN)\nstage.label(wall, \"3 m\", direction=LEFT)"
+   },
+   {
+    "intent": "A 2 m by 1.5 m window cut out of it",
+    "narration": "It has a window two metres by one and a half, which does not need paint.",
+    "code": "win = Rectangle(width=2, height=1.5, color=WHITE, fill_color=BLACK, fill_opacity=1).shift(RIGHT * 0.8 + UP * 0.2)\nstage.play(FadeIn(win))\nstage.add(win)\nstage.label(win, \"2 × 1.5\", direction=UP, color=WHITE)"
+   },
+   {
+    "intent": "The wall beside 15 - 3 = 12 m²",
+    "narration": "The wall is fifteen square metres, the window three: twelve square metres to paint.",
+    "code": "stage.equation(r\"5 \\times 3 - 2 \\times 1.5 = 12\\ \\text{m}^2\")"
+   }
+  ]
+ },
+ {
+  "request": "why is 1 square metre equal to 10,000 square centimetres?",
+  "beats": [
+   {
+    "intent": "A square labelled 1 m by 1 m",
+    "narration": "A square one metre on each side.",
+    "code": "stage.title(\"Square metres and centimetres\")\nsq = Square(side_length=4, color=BLUE)\nstage.play(Create(sq))\nstage.add(sq)\nstage.label(sq, \"1 m\", direction=DOWN)\nstage.label(sq, \"1 m\", direction=LEFT)"
+   },
+   {
+    "intent": "The square ruled into a 100 by 100 grid of centimetre squares",
+    "narration": "Each side is a hundred centimetres, so the square holds a hundred rows of a hundred small squares.",
+    "code": "grid = VGroup(*[Line(sq.get_corner(DL) + RIGHT * 0.04 * k, sq.get_corner(UL) + RIGHT * 0.04 * k, stroke_width=0.4, color=GREY) for k in range(1, 100)],\n              *[Line(sq.get_corner(DL) + UP * 0.04 * k, sq.get_corner(DR) + UP * 0.04 * k, stroke_width=0.4, color=GREY) for k in range(1, 100)])\nstage.play(Create(grid), run_time=2)\nstage.add(grid)"
+   },
+   {
+    "intent": "One tiny square lit beside 100 × 100 = 10,000 cm²",
+    "narration": "A hundred times a hundred: ten thousand square centimetres.",
+    "code": "tiny = Square(side_length=0.04, color=RED, fill_opacity=1).move_to(sq.get_corner(DL) + np.array([0.02, 0.02, 0]))\nstage.play(FadeIn(tiny))\nstage.add(tiny)\nstage.equation(r\"100 \\times 100 = 10\\,000\\ \\text{cm}^2\")"
+   }
+  ]
+ }
+]
