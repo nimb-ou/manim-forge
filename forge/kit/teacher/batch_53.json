@@ -1,0 +1,102 @@
+[
+ {
+  "request": "how does a lever let you lift a heavy rock?",
+  "beats": [
+   {
+    "intent": "A plank resting on a triangular pivot, a rock on the short end",
+    "narration": "Rest a plank on a pivot, with a heavy rock on the short end.",
+    "code": "stage.title(\"A lever\")\npivot = draw_polygon(stage, [(-3.0, -1.6), (-2.4, -0.6), (-1.8, -1.6)], color=GREY_B, fill=0.6)\nbeam = draw_line(stage, (-3.6, -0.6), (2.2, -0.6), color=ORANGE)\nrock = draw_circle(stage, radius=0.5, color=GREY_B, fill=0.7)\nrock.move_to([-3.1, -0.1, 0])\nstage.label(rock, \"600 N\", direction=UP)"
+   },
+   {
+    "intent": "Distances 0.5 m from the pivot to the rock and 3 m to the hand marked",
+    "narration": "The rock sits half a metre from the pivot. Your hand pushes three metres away.",
+    "code": "d1 = draw_arrow(stage, (-2.4, -2.3), (-3.1, -2.3), color=GREEN, label=\"0.5 m\")\nd2 = draw_arrow(stage, (-2.4, -2.9), (1.8, -2.9), color=BLUE, label=\"3 m\")"
+   },
+   {
+    "intent": "A small 100 N push arrow pressing down on the long end",
+    "narration": "So a push of just one hundred newtons balances the rock.",
+    "code": "push = draw_arrow(stage, (1.8, 1.0), (1.8, -0.5), color=RED, label=\"100 N\")"
+   },
+   {
+    "intent": "The lever beside 600 × 0.5 = 100 × 3 = 300",
+    "narration": "Force times distance is the same on both sides: three hundred.",
+    "code": "stage.equation(r\"600 \\times 0.5 = 100 \\times 3\", r\"= 300\")"
+   }
+  ]
+ },
+ {
+  "request": "how does GPS work out where I am?",
+  "beats": [
+   {
+    "intent": "One satellite dot with a circle around it at its measured distance",
+    "narration": "One satellite tells you how far away you are. You are somewhere on this circle.",
+    "code": "stage.title(\"Finding you from three distances\")\nk, down = 0.55, np.array([0, -0.5, 0])\nyou = np.array([0.4, -0.6, 0]) * k + down\nsats = [np.array(p) * k + down for p in ([-3.2, 0.6, 0], [2.8, 1.0, 0], [0.6, -3.0, 0])]\ncols = [BLUE, GREEN, ORANGE]\ns1 = Dot(sats[0], color=cols[0], radius=0.12)\nc1 = Circle(radius=np.linalg.norm(sats[0] - you), color=cols[0]).move_to(sats[0])\nstage.play(FadeIn(s1), Create(c1))\nstage.add(s1, c1)"
+   },
+   {
+    "intent": "A second satellite's circle crossing the first at two points",
+    "narration": "A second satellite gives a second circle. They cross in just two places.",
+    "code": "s2 = Dot(sats[1], color=cols[1], radius=0.12)\nc2 = Circle(radius=np.linalg.norm(sats[1] - you), color=cols[1]).move_to(sats[1])\nstage.play(FadeIn(s2), Create(c2))\nstage.add(s2, c2)"
+   },
+   {
+    "intent": "A third circle through only one of those points, marked 'you'",
+    "narration": "A third circle passes through only one of them. That point is you.",
+    "code": "s3 = Dot(sats[2], color=cols[2], radius=0.12)\nc3 = Circle(radius=np.linalg.norm(sats[2] - you), color=cols[2]).move_to(sats[2])\nstage.play(FadeIn(s3), Create(c3))\nstage.add(s3, c3)\nme = Dot(you, color=RED, radius=0.14)\nstage.play(GrowFromCenter(me))\nstage.add(me)\nstage.label(me, \"you\", direction=RIGHT, color=RED)"
+   },
+   {
+    "intent": "The three circles meeting at one point, caption about distance = speed × time",
+    "narration": "Each distance comes from timing a radio signal: distance is the speed of light times the delay.",
+    "code": "stage.caption(\"distance = speed of light × signal delay\")\nhighlight(stage, me, color=RED)"
+   }
+  ]
+ },
+ {
+  "request": "how much paint do I need for a 5 m by 3 m wall with a window?",
+  "beats": [
+   {
+    "intent": "A 5 by 3 rectangle for the wall with its sides labelled",
+    "narration": "The wall is five metres wide and three metres high.",
+    "code": "stage.title(\"Painting a wall\")\nwall = draw_rectangle(stage, width=5, height=3, color=BLUE, fill=0.35)\nstage.label(wall, \"5 m\", direction=DOWN)\nstage.label(wall, \"3 m\", direction=LEFT)"
+   },
+   {
+    "intent": "A 1.5 by 1 window cut out of the wall",
+    "narration": "Take out the window, one and a half metres by one.",
+    "code": "win = Rectangle(width=1.5, height=1, color=WHITE, fill_color=BLACK, fill_opacity=1).move_to(wall.get_center() + np.array([0.8, 0.3, 0]))\nstage.play(FadeIn(win))\nstage.add(win)\nstage.label(win, \"1.5 m × 1 m\", direction=UP)"
+   },
+   {
+    "intent": "The wall beside 15 - 1.5 = 13.5 m²",
+    "narration": "Fifteen square metres, less one and a half, leaves thirteen and a half to paint.",
+    "code": "stage.equation(r\"5 \\times 3 - 1.5 \\times 1\", r\"= 13.5\\ \\text{m}^2\")"
+   },
+   {
+    "intent": "Two coats at 10 m² per litre: 27 ÷ 10 = 2.7 litres",
+    "narration": "Two coats double it to twenty seven square metres. At ten per litre, that's 2.7 litres.",
+    "code": "stage.equation(r\"2 \\times 13.5 \\div 10 = 2.7\\ \\text{L}\")\nstage.caption(\"Buy a 3 litre tin\")"
+   }
+  ]
+ },
+ {
+  "request": "why is it hotter in summer than winter?",
+  "beats": [
+   {
+    "intent": "A yellow sun in the middle and the Earth at two sides of its orbit",
+    "narration": "The Earth circles the Sun once a year.",
+    "code": "stage.title(\"Why seasons happen\")\nsun = Circle(radius=0.7, color=YELLOW, fill_opacity=0.8).move_to([0, -0.4, 0])\norbit = Ellipse(width=9, height=3, color=GREY_B, stroke_opacity=0.5).move_to([0, -0.4, 0])\ne1 = Circle(radius=0.35, color=BLUE, fill_opacity=0.8).move_to([-4.5, -0.4, 0])\ne2 = Circle(radius=0.35, color=BLUE, fill_opacity=0.8).move_to([4.5, -0.4, 0])\nstage.play(FadeIn(sun), Create(orbit), FadeIn(e1), FadeIn(e2))\nstage.add(sun, orbit, e1, e2)\nstage.label(sun, \"Sun\", direction=DOWN, color=YELLOW)"
+   },
+   {
+    "intent": "Both Earths with an axis tilted the same way, 23.5°",
+    "narration": "Its axis is tilted by twenty three and a half degrees, and it always leans the same way.",
+    "code": "tilt = 23.5 * DEGREES\nd = np.array([np.sin(tilt), np.cos(tilt), 0]) * 0.7\na1 = Line(e1.get_center() - d, e1.get_center() + d, color=WHITE)\na2 = Line(e2.get_center() - d, e2.get_center() + d, color=WHITE)\nstage.play(Create(a1), Create(a2))\nstage.add(a1, a2)\nstage.label(e2, \"23.5°\", direction=DOWN)"
+   },
+   {
+    "intent": "The left Earth's north leaning toward the Sun labelled summer, the right one leaning away labelled winter",
+    "narration": "Here the north leans toward the Sun: northern summer. Half a year later, across the orbit, it leans away: winter.",
+    "code": "stage.label(e1, \"N summer\", direction=UP, color=ORANGE)\nstage.label(e2, \"N winter\", direction=UP, color=BLUE)"
+   },
+   {
+    "intent": "Bars of daylight hours in London: 16.5 in June, 8 in December",
+    "narration": "Leaning in means steeper sunlight and longer days: in London, sixteen and a half hours in June, eight in December.",
+    "code": "stage.clear()\nb = draw_bars(stage, [16.5, 8], labels=[\"June\", \"December\"])\nstage.caption(\"Hours of daylight in London\")"
+   }
+  ]
+ }
+]

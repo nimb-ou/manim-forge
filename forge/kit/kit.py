@@ -486,11 +486,19 @@ def draw_circle(stage: Stage, radius: float = 1.5, where: str = "center",
     return c
 
 
-def draw_polygon(stage: Stage, points, where: str = "center", color=BLUE,
+def draw_polygon(stage: Stage, points, where: str | None = None, color=BLUE,
                  fill: float = 0.3):
-    """A polygon through 2D points [(x, y), ...], drawn."""
+    """A polygon through 2D points [(x, y), ...], drawn at those points
+    (or moved to a region with where="left" etc.)."""
     poly = Polygon(*[_xy(q) for q in points], color=color,
                    fill_opacity=fill)
+    # Its own coordinates by default, when they fit: a lever's pivot drawn
+    # at x = -2.4 was moved to the middle, away from the plank and rock
+    # drawn at their own coordinates (2026-09-30).
+    fits = (np.abs(poly.get_left()[0]) < 7 and np.abs(poly.get_right()[0]) < 7
+            and poly.get_bottom()[1] > -3.9 and poly.get_top()[1] < 3.3)
+    if where is None and not fits:
+        where = "center"
     if where is None:                  # at its own coordinates
         stage._objects.append(poly)
     else:
