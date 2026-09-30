@@ -1,0 +1,142 @@
+[
+ {
+  "request": "what does 347 mean in place value?",
+  "beats": [
+   {
+    "intent": "Three 10 by 10 squares of hundreds, four columns of tens and seven single ones",
+    "narration": "Three hundred and forty seven is three hundreds, four tens and seven ones.",
+    "code": "hundred = lambda c=BLUE: VGroup(*[Square(side_length=0.12, color=c, fill_opacity=0.7, stroke_width=0.5) for _ in range(100)]).arrange_in_grid(10, 10, buff=0.01)\nten = lambda c=GREEN: VGroup(*[Square(side_length=0.12, color=c, fill_opacity=0.7, stroke_width=0.5) for _ in range(10)]).arrange(DOWN, buff=0.01)\none = lambda c=YELLOW: Square(side_length=0.12, color=c, fill_opacity=0.9, stroke_width=0.5)\n\nstage.title(\"Place value: 347\")\nblocks = VGroup(VGroup(*[hundred() for _ in range(3)]).arrange(RIGHT, buff=0.2),\n                VGroup(*[ten() for _ in range(4)]).arrange(RIGHT, buff=0.1),\n                VGroup(*[one() for _ in range(7)]).arrange_in_grid(4, 2, buff=0.05)).arrange(RIGHT, buff=0.6, aligned_edge=DOWN)\nstage.play(LaggedStart(*[FadeIn(b) for b in blocks], lag_ratio=0.4))\nstage.add(blocks)"
+   },
+   {
+    "intent": "Each group labelled 300, 40 and 7",
+    "narration": "The hundreds are worth three hundred, the tens forty, the ones seven.",
+    "code": "for g, t in zip(blocks, (\"300\", \"40\", \"7\")):\n    stage.label(g, t, direction=DOWN)"
+   },
+   {
+    "intent": "The blocks beside 347 = 300 + 40 + 7",
+    "narration": "The digits tell you how many of each.",
+    "code": "stage.equation(r\"347 = 300 + 40 + 7\")"
+   }
+  ]
+ },
+ {
+  "request": "why do you carry a 1 when adding 58 + 27?",
+  "beats": [
+   {
+    "intent": "Blocks for 58 (5 tens, 8 ones) and 27 (2 tens, 7 ones)",
+    "narration": "Fifty eight is five tens and eight ones; twenty seven is two tens and seven ones.",
+    "code": "hundred = lambda c=BLUE: VGroup(*[Square(side_length=0.12, color=c, fill_opacity=0.7, stroke_width=0.5) for _ in range(100)]).arrange_in_grid(10, 10, buff=0.01)\nten = lambda c=GREEN: VGroup(*[Square(side_length=0.12, color=c, fill_opacity=0.7, stroke_width=0.5) for _ in range(10)]).arrange(DOWN, buff=0.01)\none = lambda c=YELLOW: Square(side_length=0.12, color=c, fill_opacity=0.9, stroke_width=0.5)\n\nstage.title(\"Carrying in 58 + 27\")\ntens = VGroup(*[ten() for _ in range(7)]).arrange(RIGHT, buff=0.1).shift(LEFT * 2)\nones = VGroup(*[one() for _ in range(15)]).arrange_in_grid(3, 5, buff=0.05).shift(RIGHT * 2)\nstage.play(FadeIn(tens), FadeIn(ones))\nstage.add(tens, ones)\nstage.caption(\"7 tens and 15 ones\")"
+   },
+   {
+    "intent": "Ten of the ones moved together into a new ten column",
+    "narration": "Fifteen ones is too many for one digit. Ten of them join into a new ten.",
+    "code": "new_ten = ten(YELLOW).next_to(tens, RIGHT, buff=0.1)\nstage.play(ReplacementTransform(VGroup(*ones[:10]), new_ten), run_time=1.5)\nstage.add(new_ten)\nstage.caption(\"8 tens and 5 ones\")"
+   },
+   {
+    "intent": "8 tens and 5 ones beside 58 + 27 = 85",
+    "narration": "Now there are eight tens and five ones: eighty five. The carried one is that new ten.",
+    "code": "stage.equation(r\"58 + 27 = 85\")"
+   }
+  ]
+ },
+ {
+  "request": "what does 84 ÷ 4 mean as sharing?",
+  "beats": [
+   {
+    "intent": "84 dots in a grid",
+    "narration": "Eighty four sweets to share between four friends.",
+    "code": "stage.title(\"84 ÷ 4 as sharing\")\ndots = draw_dots(stage, n=84, cols=12)"
+   },
+   {
+    "intent": "The dots coloured into four equal groups of 21",
+    "narration": "Deal them out one by one: each friend gets twenty one.",
+    "code": "cols = [RED, GREEN, BLUE, YELLOW]\nstage.play(*[dots[k].animate.set_color(cols[k % 4]) for k in range(84)], run_time=1.5)"
+   },
+   {
+    "intent": "Four boxes with 21 dots each beside 84 ÷ 4 = 21",
+    "narration": "Four groups of twenty one: eighty four divided by four is twenty one.",
+    "code": "groups = VGroup(*[VGroup(*[dots[k] for k in range(g, 84, 4)]) for g in range(4)])\nstage.play(*[grp.animate.arrange_in_grid(3, 7, buff=0.12).move_to(np.array([-4.5 + 3 * i, -0.3, 0])) for i, grp in enumerate(groups)], run_time=1.5)\nstage.equation(r\"84 \\div 4 = 21\")"
+   }
+  ]
+ },
+ {
+  "request": "what is the lowest common multiple of 4 and 6?",
+  "beats": [
+   {
+    "intent": "A number line from 0 to 24 with the multiples of 4 marked",
+    "narration": "Mark the multiples of four: four, eight, twelve, sixteen, twenty, twenty four.",
+    "code": "stage.title(\"The LCM of 4 and 6\")\nnl = draw_number_line(stage, x_range=(0, 24))\nfor m in range(4, 25, 4):\n    mark_point(stage, nl, m, color=BLUE)"
+   },
+   {
+    "intent": "The multiples of 6 marked below in green",
+    "narration": "Now the multiples of six: six, twelve, eighteen, twenty four.",
+    "code": "for m in range(6, 25, 6):\n    mark_point(stage, nl, m, color=GREEN, label=str(m), direction=DOWN)"
+   },
+   {
+    "intent": "12 ringed as the first number marked twice",
+    "narration": "The first number on both lists is twelve: the lowest common multiple.",
+    "code": "ring = Circle(radius=0.25, color=YELLOW).move_to(nl.n2p(12))\nstage.play(Create(ring))\nstage.add(ring)\nstage.equation(r\"\\mathrm{lcm}(4, 6) = 12\")"
+   }
+  ]
+ },
+ {
+  "request": "what are the factors of 12?",
+  "beats": [
+   {
+    "intent": "A 1 by 12 row of squares",
+    "narration": "Twelve squares in one row: one times twelve.",
+    "code": "stage.title(\"Factors of 12\")\nrow = lambda r, c, col: VGroup(*[Square(side_length=0.35, color=col, fill_opacity=0.6) for _ in range(r * c)]).arrange_in_grid(r, c, buff=0.03)\na = row(1, 12, BLUE).shift(UP * 2)\nstage.play(FadeIn(a))\nstage.add(a)\nstage.label(a, \"1 × 12\", direction=LEFT)"
+   },
+   {
+    "intent": "A 2 by 6 and a 3 by 4 rectangle of the same 12 squares",
+    "narration": "Rearrange them: two rows of six, three rows of four.",
+    "code": "b = row(2, 6, GREEN).shift(LEFT * 2.5 + DOWN * 0.3)\nc = row(3, 4, YELLOW).shift(RIGHT * 2.5 + DOWN * 0.3)\nstage.play(FadeIn(b), FadeIn(c))\nstage.add(b, c)\nstage.label(b, \"2 × 6\", direction=DOWN)\nstage.label(c, \"3 × 4\", direction=DOWN)"
+   },
+   {
+    "intent": "The rectangles beside the factors 1, 2, 3, 4, 6, 12",
+    "narration": "Every rectangle's sides are factors: one, two, three, four, six and twelve.",
+    "code": "stage.equation(r\"12:\\ 1, 2, 3, 4, 6, 12\")"
+   }
+  ]
+ },
+ {
+  "request": "what does the square root of 10 mean?",
+  "beats": [
+   {
+    "intent": "A 3 by 3 square of area 9 labelled side 3",
+    "narration": "A square of area nine has side three: the square root of nine is three.",
+    "code": "stage.title(\"Square roots as sides\")\nnine = Square(side_length=3 * 0.8, color=BLUE, fill_opacity=0.4).shift(LEFT * 2.5)\nstage.play(Create(nine))\nstage.add(nine)\nstage.label(nine, \"area 9, side 3\", direction=DOWN)"
+   },
+   {
+    "intent": "A slightly bigger square of area 10 beside it",
+    "narration": "A square of area ten must be a little bigger.",
+    "code": "ten_sq = Square(side_length=np.sqrt(10) * 0.8, color=GREEN, fill_opacity=0.4).shift(RIGHT * 2.2)\nstage.play(Create(ten_sq))\nstage.add(ten_sq)\nstage.label(ten_sq, \"area 10\", direction=DOWN)"
+   },
+   {
+    "intent": "The bigger square beside √10 ≈ 3.16",
+    "narration": "Its side is the square root of ten, about three point one six, just over three.",
+    "code": "stage.equation(r\"\\sqrt{10} \\approx 3.16\")"
+   }
+  ]
+ },
+ {
+  "request": "why is 0.5 × 0.4 smaller than both numbers?",
+  "beats": [
+   {
+    "intent": "A unit square with its left 0.5 shaded blue",
+    "narration": "Take a one by one square and shade half its width.",
+    "code": "stage.title(\"0.5 × 0.4 as an area\")\nsq = Square(side_length=4, color=WHITE)\nhalf = Rectangle(width=2, height=4, color=BLUE, fill_opacity=0.35).align_to(sq, LEFT)\nstage.play(Create(sq), FadeIn(half))\nstage.add(sq, half)"
+   },
+   {
+    "intent": "The bottom 0.4 of the square shaded green, overlapping the blue",
+    "narration": "Now shade the bottom four tenths of its height.",
+    "code": "low = Rectangle(width=4, height=1.6, color=GREEN, fill_opacity=0.35).align_to(sq, DOWN)\nstage.play(FadeIn(low))\nstage.add(low)"
+   },
+   {
+    "intent": "The overlap 0.5 by 0.4 lit in yellow beside 0.5 × 0.4 = 0.2",
+    "narration": "The overlap is point five by point four: a fifth of the square. Multiplying by numbers less than one makes things smaller.",
+    "code": "both = Rectangle(width=2, height=1.6, color=YELLOW, fill_opacity=0.8).align_to(sq, DOWN + LEFT)\nstage.play(FadeIn(both))\nstage.add(both)\nstage.equation(r\"0.5 \\times 0.4 = 0.2\")"
+   }
+  ]
+ }
+]
