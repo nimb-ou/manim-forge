@@ -42,9 +42,14 @@ def test_kit_embeds_into_an_assembled_scene():
     assert any("q" in p for p in bad.problems)
 
 
-def test_spaced_maths_labels_are_latex_and_words_stay_text():
+def test_spaced_maths_labels_are_latex_and_words_stay_text(monkeypatch):
+    # Which constructor _text picks (CI has no LaTeX, so a real MathTex
+    # falls back to Text there).
+    monkeypatch.setattr(kit, "MathTex", lambda s, **k: ("MathTex", s))
+    monkeypatch.setattr(kit, "Tex", lambda s, **k: ("Tex", s))
+    monkeypatch.setattr(kit, "Text", lambda s, **k: ("Text", s))
     st = kit.Stage.__new__(kit.Stage)
     for s in (r"\pi r", r"2\pi r", r"\theta = 30"):
-        assert type(st._text(s, 28)).__name__ == "MathTex", s
+        assert st._text(s, 28)[0] == "MathTex", s
     for s in ("day 0", r"the \pi slice", "Legs 3 and 4"):
-        assert type(st._text(s, 28)).__name__ == "Text", s
+        assert st._text(s, 28)[0] == "Text", s
