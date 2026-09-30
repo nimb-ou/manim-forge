@@ -1,0 +1,77 @@
+[
+ {
+  "request": "why do you see your reflection upside down in a spoon?",
+  "beats": [
+   {
+    "intent": "A curved spoon bowl drawn as an arc, with a face on the left",
+    "narration": "The inside of a spoon is a curved mirror, bent inward.",
+    "code": "stage.title(\"The upside-down spoon\")\nspoon = Arc(radius=2.5, start_angle=-PI / 4, angle=PI / 2, color=GREY_B, stroke_width=8).move_arc_center_to([-0.5, 0, 0])\nface_top = Dot([-5, 1.0, 0], color=YELLOW, radius=0.12)\nface_bot = Dot([-5, -1.0, 0], color=BLUE, radius=0.12)\nface = Line(face_top.get_center(), face_bot.get_center(), color=WHITE)\nstage.play(Create(spoon), Create(face), FadeIn(face_top), FadeIn(face_bot))\nstage.add(spoon, face, face_top, face_bot)\nstage.label(face_top, \"top\", direction=LEFT, color=YELLOW)\nstage.label(face_bot, \"chin\", direction=LEFT, color=BLUE)"
+   },
+   {
+    "intent": "A ray from the top of the face hitting the lower part of the spoon and a ray from the chin hitting the upper part, crossing",
+    "narration": "Light from the top of your head hits the spoon and bounces downward; light from your chin bounces upward. The rays cross.",
+    "code": "hit1 = [-0.5 + 2.5 * np.cos(-0.25), 2.5 * np.sin(-0.25), 0]\nhit2 = [-0.5 + 2.5 * np.cos(0.25), 2.5 * np.sin(0.25), 0]\nr1 = VMobject(color=YELLOW).set_points_as_corners([face_top.get_center(), hit1, [-3.2, -1.3, 0]])\nr2 = VMobject(color=BLUE).set_points_as_corners([face_bot.get_center(), hit2, [-3.2, 1.3, 0]])\nstage.play(Create(r1), Create(r2))\nstage.add(r1, r2)"
+   },
+   {
+    "intent": "The image drawn where they arrive: top at the bottom, chin at the top",
+    "narration": "So where they reach your eye, the top of your head arrives from below and your chin from above: the image is flipped.",
+    "code": "img = VGroup(Dot([-3.2, -1.3, 0], color=YELLOW, radius=0.12), Dot([-3.2, 1.3, 0], color=BLUE, radius=0.12))\nstage.play(FadeIn(img))\nstage.add(img)\nstage.caption(\"image: upside down\")"
+   },
+   {
+    "intent": "The back of the spoon bulging outward with the face upright",
+    "narration": "Turn the spoon over: the back curves outward, the rays don't cross, and you see yourself the right way up, but small.",
+    "code": "back = Arc(radius=2.5, start_angle=PI - PI / 4, angle=PI / 2, color=GREY_B, stroke_width=8).move_arc_center_to([5.5, 0, 0])\nstage.play(Create(back))\nstage.add(back)\nsmall = VGroup(Dot([3.6, 0.4, 0], color=YELLOW, radius=0.08), Dot([3.6, -0.4, 0], color=BLUE, radius=0.08))\nstage.play(FadeIn(small))\nstage.add(small)\nstage.label(back, \"back: upright and small\", direction=DOWN)"
+   }
+  ]
+ },
+ {
+  "request": "how does a lift's counterweight save energy?",
+  "beats": [
+   {
+    "intent": "A lift car on one side of a pulley and a counterweight on the other",
+    "narration": "A lift car hangs on a cable over a wheel, with a heavy counterweight on the other side.",
+    "code": "stage.title(\"The lift's counterweight\")\nwheel = Circle(radius=0.6, color=GREY_B).move_to([0, 2.2, 0])\ncar = Rectangle(width=1.0, height=1.6, color=BLUE, fill_opacity=0.5).move_to([-0.6, -0.6, 0])\ncw = Rectangle(width=0.6, height=1.0, color=GREY_B, fill_opacity=0.9).move_to([0.6, 0.2, 0])\nc1 = Line([-0.6, 2.2, 0], car.get_top(), color=WHITE)\nc2 = Line([0.6, 2.2, 0], cw.get_top(), color=WHITE)\nstage.play(Create(wheel), FadeIn(car), FadeIn(cw), Create(c1), Create(c2))\nstage.add(wheel, car, cw, c1, c2)\nstage.label(car, \"car + people 1000 kg\", direction=LEFT, color=BLUE)\nstage.label(cw, \"900 kg\", direction=RIGHT)"
+   },
+   {
+    "intent": "The car rising while the counterweight falls",
+    "narration": "As the car goes up, the counterweight goes down, helping to lift it.",
+    "code": "stage.play(car.animate.shift(1.2 * UP), cw.animate.shift(1.2 * DOWN),\n           c1.animate.put_start_and_end_on([-0.6, 2.2, 0], car.get_top() + 1.2 * UP),\n           c2.animate.put_start_and_end_on([0.6, 2.2, 0], cw.get_top() + 1.2 * DOWN), run_time=2)\nstage.caption(\"the counterweight does most of the lifting\")"
+   },
+   {
+    "intent": "Bars of what the motor lifts: 1000 kg without a counterweight, 100 kg with",
+    "narration": "The motor only has to lift the difference: a hundred kilograms instead of a thousand.",
+    "code": "stage.clear()\nb = draw_bars(stage, [1000, 100], labels=[\"no counterweight\", \"with counterweight\"], color=ORANGE)\nstage.caption(\"kg the motor must lift\")"
+   },
+   {
+    "intent": "The bars beside 1000 - 900 = 100",
+    "narration": "That saves most of the energy, and the brakes have far less to hold.",
+    "code": "stage.equation(r\"1000 - 900 = 100\\ \\text{kg}\")"
+   }
+  ]
+ },
+ {
+  "request": "how does a map projection distort Greenland?",
+  "beats": [
+   {
+    "intent": "A globe drawn as a circle with latitude lines, Greenland and Africa as blobs",
+    "narration": "On a globe, Greenland is much smaller than Africa: about a fourteenth of its area.",
+    "code": "stage.title(\"Why Greenland looks huge\")\nglobe = Circle(radius=2.2, color=BLUE, fill_opacity=0.2).move_to([-3.2, -0.3, 0])\nlats = VGroup(*[Line(globe.get_center() + np.array([-2.2 * np.cos(a), 2.2 * np.sin(a), 0]), globe.get_center() + np.array([2.2 * np.cos(a), 2.2 * np.sin(a), 0]), color=GREY_B, stroke_width=1) for a in np.linspace(-1.2, 1.2, 7)])\ngreen = Ellipse(width=0.5, height=0.35, color=WHITE, fill_opacity=0.8).move_to(globe.get_center() + np.array([-0.4, 1.7, 0]))\nafrica = Ellipse(width=1.3, height=1.6, color=GREEN, fill_opacity=0.7).move_to(globe.get_center() + np.array([0.3, -0.3, 0]))\nstage.play(FadeIn(globe), Create(lats), FadeIn(green), FadeIn(africa))\nstage.add(globe, lats, green, africa)\nstage.label(green, \"Greenland\", direction=LEFT)\nstage.label(africa, \"Africa\", direction=RIGHT, color=GREEN)"
+   },
+   {
+    "intent": "A flat rectangular map beside it, the latitude lines spread apart near the top",
+    "narration": "Flatten the globe onto a rectangle and the lines near the poles have to be stretched apart.",
+    "code": "flat = Rectangle(width=4.4, height=4.4, color=BLUE, fill_opacity=0.2).move_to([3.0, -0.3, 0])\nys = [-2.1, -1.05, -0.45, 0, 0.45, 1.05, 2.1]\nflines = VGroup(*[Line([0.8, -0.3 + y, 0], [5.2, -0.3 + y, 0], color=GREY_B, stroke_width=1) for y in ys])\nstage.play(FadeIn(flat), Create(flines))\nstage.add(flat, flines)"
+   },
+   {
+    "intent": "Greenland stretched big on the flat map, as tall as Africa",
+    "narration": "Near the pole everything is stretched sideways and up, so Greenland swells to look almost as big as Africa.",
+    "code": "green2 = Ellipse(width=1.2, height=1.2, color=WHITE, fill_opacity=0.8).move_to([2.6, 1.2, 0])\nafrica2 = Ellipse(width=1.3, height=1.7, color=GREEN, fill_opacity=0.7).move_to([3.3, -0.8, 0])\nstage.play(TransformFromCopy(green, green2), TransformFromCopy(africa, africa2))\nstage.add(green2, africa2)"
+   },
+   {
+    "intent": "Bars of true area in million km²: Greenland 2.2, Africa 30",
+    "narration": "In truth Africa covers about thirty million square kilometres, Greenland just over two.",
+    "code": "stage.clear()\nb = draw_bars(stage, [2.2, 30.3], labels=[\"Greenland\", \"Africa\"], color=GREEN)\nstage.caption(\"true area, million km²\")"
+   }
+  ]
+ }
+]
