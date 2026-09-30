@@ -654,7 +654,11 @@ def draw_axes(stage: Stage, x_range=(-1, 5), y_range=(-1, 5), where: str = "cent
               x_axis_config={"decimal_number_config": {"num_decimal_places": places(xs)}},
               y_axis_config={"decimal_number_config": {"num_decimal_places": places(ys)}})
     stage.place(ax, where)
-    lab = ax.get_axis_labels(MathTex(labels[0]), MathTex(labels[1]))
+    # An axis label with a space or a symbol LaTeX drops ("£k income",
+    # "m/s²") as plain text; short maths labels (x, y, t, N) stay LaTeX.
+    axis_tag = lambda t: Text(str(t), font_size=26) if _re.search(r"[ £$%€°²³]", str(t)) \
+        else MathTex(str(t))
+    lab = ax.get_axis_labels(axis_tag(labels[0]), axis_tag(labels[1]))
     stage.scene.play(Create(ax), FadeIn(lab), run_time=1.5)
     # Part of the axes: moved with them, and kept by clear(keep=[ax]).
     stage.scene.remove(lab)

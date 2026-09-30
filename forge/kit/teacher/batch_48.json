@@ -1,0 +1,122 @@
+[
+ {
+  "request": "how does the derivative tell you where a function goes up or down?",
+  "beats": [
+   {
+    "intent": "Axes with y = x^3 - 3x and its slope curve 3x^2 - 3 below",
+    "narration": "Here is a cubic and, in yellow, its slope.",
+    "code": "stage.title(\"Rising and falling\")\nax = draw_axes(stage, x_range=(-2.5, 2.5), y_range=(-4, 6))\nf = plot_graph(stage, ax, lambda x: x ** 3 - 3 * x, x_range=(-2.2, 2.2), color=BLUE, label=\"f\")\nd = plot_graph(stage, ax, lambda x: 3 * x ** 2 - 3, x_range=(-1.9, 1.9), color=YELLOW, label=\"f'\")"
+   },
+   {
+    "intent": "The intervals x < -1 and x > 1 shaded green where the slope is positive",
+    "narration": "Where the slope curve is above zero, before minus one and after one, the cubic rises.",
+    "code": "for a, b in ((-2.5, -1), (1, 2.5)):\n    band = Rectangle(width=ax.c2p(b, 0)[0] - ax.c2p(a, 0)[0], height=0.25, color=GREEN, fill_opacity=0.6, stroke_width=0).move_to(ax.c2p((a + b) / 2, 0))\n    stage.play(FadeIn(band), run_time=0.4)\n    stage.add(band)"
+   },
+   {
+    "intent": "The interval -1 < x < 1 shaded red where the slope is negative",
+    "narration": "Between minus one and one the slope is negative, and the cubic falls.",
+    "code": "band = Rectangle(width=ax.c2p(1, 0)[0] - ax.c2p(-1, 0)[0], height=0.25, color=RED, fill_opacity=0.6, stroke_width=0).move_to(ax.c2p(0, 0))\nstage.play(FadeIn(band))\nstage.add(band)\nstage.caption(\"f' > 0: rising.   f' < 0: falling\")"
+   }
+  ]
+ },
+ {
+  "request": "does 1 - 1 + 1 - 1 + ... add up to anything?",
+  "beats": [
+   {
+    "intent": "Bars of the running totals 1, 0, 1, 0, 1, 0, 1, 0",
+    "narration": "Add one, take one away, add one, take one away. The running total jumps between one and zero.",
+    "code": "stage.title(\"1 - 1 + 1 - 1 + ...\")\nbars = draw_bars(stage, [1, 0.02, 1, 0.02, 1, 0.02, 1, 0.02], labels=[\"1\", \"0\", \"1\", \"0\", \"1\", \"0\", \"1\", \"0\"])"
+   },
+   {
+    "intent": "A number line with the totals bouncing between 0 and 1",
+    "narration": "On a number line the total never settles: it bounces back and forth forever.",
+    "code": "stage.clear()\nnl = draw_number_line(stage, x_range=(-1, 2))\ndot = Dot(nl.n2p(1), color=YELLOW, radius=0.12)\nstage.play(FadeIn(dot))\nfor _ in range(3):\n    stage.play(dot.animate.move_to(nl.n2p(0)), run_time=0.4)\n    stage.play(dot.animate.move_to(nl.n2p(1)), run_time=0.4)\nstage.add(dot)"
+   },
+   {
+    "intent": "The number line beside 'no limit: the series diverges'",
+    "narration": "The partial sums have no limit, so the series has no sum.",
+    "code": "stage.caption(\"No limit: the series diverges\")"
+   }
+  ]
+ },
+ {
+  "request": "what is the Sierpinski triangle?",
+  "beats": [
+   {
+    "intent": "A single filled triangle",
+    "narration": "Start with a filled triangle.",
+    "code": "stage.title(\"The Sierpinski triangle\")\nA, B, C = np.array([-3, -2, 0]), np.array([3, -2, 0]), np.array([0, 3.2, 0])\nt0 = Polygon(A, B, C, color=YELLOW, fill_opacity=0.8)\nstage.play(FadeIn(t0))\nstage.add(t0)"
+   },
+   {
+    "intent": "The middle triangle removed, leaving three",
+    "narration": "Cut out the middle triangle, joining the midpoints. Three triangles remain.",
+    "code": "mid = lambda p, q: (p + q) / 2\nhole = Polygon(mid(A, B), mid(B, C), mid(C, A), color=BLACK, fill_color=BLACK, fill_opacity=1, stroke_width=0)\nstage.play(FadeIn(hole))\nstage.add(hole)"
+   },
+   {
+    "intent": "The middle removed from each of the three, leaving nine, beside area × 3/4 each step",
+    "narration": "Do the same in each of those, and again, forever. Each step keeps three quarters of the area, so the area shrinks to nothing.",
+    "code": "holes = VGroup()\nfor P, Q, R in ((A, mid(A, B), mid(A, C)), (mid(A, B), B, mid(B, C)), (mid(A, C), mid(B, C), C)):\n    holes.add(Polygon(mid(P, Q), mid(Q, R), mid(R, P), color=BLACK, fill_color=BLACK, fill_opacity=1, stroke_width=0))\nstage.play(FadeIn(holes))\nstage.add(holes)\nstage.equation(r\"\\text{area} \\times \\left(\\tfrac34\\right)^n \\to 0\")"
+   }
+  ]
+ },
+ {
+  "request": "why does the Koch snowflake have an infinite perimeter?",
+  "beats": [
+   {
+    "intent": "A single line segment of length 1",
+    "narration": "Start with a straight segment.",
+    "code": "stage.title(\"The Koch curve\")\nkoch = lambda pts: [q for p0, p1 in zip(pts, pts[1:]) for q in (p0, p0 + (p1 - p0) / 3, p0 + (p1 - p0) / 2 + np.array([-(p1 - p0)[1], (p1 - p0)[0], 0]) * np.sqrt(3) / 6, p0 + 2 * (p1 - p0) / 3)] + [pts[-1]]\npts = [np.array([-4.5, -1.5, 0]), np.array([4.5, -1.5, 0])]\nc0 = VMobject(color=BLUE).set_points_as_corners(pts)\nstage.play(Create(c0))\nstage.add(c0)"
+   },
+   {
+    "intent": "The middle third replaced by a bump, making 4 pieces each 1/3 long",
+    "narration": "Replace the middle third with two sides of a triangle: four pieces, each a third long.",
+    "code": "p1 = koch(pts)\nc1 = VMobject(color=GREEN).set_points_as_corners(p1)\nstage.play(Transform(c0, c1))"
+   },
+   {
+    "intent": "The rule applied twice more, a jagged snowflake edge, beside length × 4/3 each step",
+    "narration": "Do it again to every piece. Each step multiplies the length by four thirds, so it grows without limit.",
+    "code": "p3 = koch(koch(p1))\nc3 = VMobject(color=YELLOW).set_points_as_corners(p3)\nstage.play(Transform(c0, c3))\nstage.equation(r\"L_n = \\left(\\tfrac43\\right)^n \\to \\infty\")"
+   }
+  ]
+ },
+ {
+  "request": "how do tax brackets work?",
+  "beats": [
+   {
+    "intent": "Axes of income against tax with a flat line at 0 up to £12,000",
+    "narration": "Up to twelve thousand pounds you pay no tax.",
+    "code": "stage.title(\"Tax brackets\")\nax = draw_axes(stage, x_range=(0, 60), y_range=(0, 16), labels=(\"income £k\", \"tax £k\"))\ns1 = draw_line(stage, ax.c2p(0, 0), ax.c2p(12, 0), color=GREEN)"
+   },
+   {
+    "intent": "The line rising with slope 0.2 from 12k to 50k",
+    "narration": "From twelve to fifty thousand, you pay twenty percent of each extra pound.",
+    "code": "s2 = draw_line(stage, ax.c2p(12, 0), ax.c2p(50, 7.6), color=YELLOW)"
+   },
+   {
+    "intent": "A steeper part with slope 0.4 above 50k, the kink marked",
+    "narration": "Above fifty thousand each extra pound is taxed at forty percent: the line gets steeper, but only for the income above the kink.",
+    "code": "s3 = draw_line(stage, ax.c2p(50, 7.6), ax.c2p(60, 11.6), color=RED)\nk = mark_point(stage, ax, 50, 7.6, color=WHITE, label=\"kink at £50k\")\nstage.caption(\"The higher rate applies only above the kink\")"
+   }
+  ]
+ },
+ {
+  "request": "why doesn't |x| have a derivative at 0?",
+  "beats": [
+   {
+    "intent": "Axes with the V-shaped graph of y = |x|",
+    "narration": "Here is the absolute value: a V with its corner at zero.",
+    "code": "stage.title(\"A corner has no slope\")\nax = draw_axes(stage, x_range=(-3, 3), y_range=(-1, 3))\ng = plot_graph(stage, ax, np.abs, color=BLUE)"
+   },
+   {
+    "intent": "Slope -1 on the left and slope +1 on the right shown with short tangent lines",
+    "narration": "To the left the slope is minus one; to the right, plus one.",
+    "code": "l = draw_line(stage, ax.c2p(-2.5, 2.5), ax.c2p(-1, 1), color=RED)\nr = draw_line(stage, ax.c2p(1, 1), ax.c2p(2.5, 2.5), color=GREEN)\nstage.label(l, \"slope -1\", direction=LEFT, color=RED)\nstage.label(r, \"slope +1\", direction=RIGHT, color=GREEN)"
+   },
+   {
+    "intent": "Several different lines through the corner, none fitting, beside 'no single tangent'",
+    "narration": "At the corner itself many lines touch it and none fits better: there is no single slope, so no derivative.",
+    "code": "for m, c in ((-0.5, YELLOW), (0, ORANGE), (0.5, PURPLE)):\n    plot_graph(stage, ax, lambda x, m=m: m * x, x_range=(-1.5, 1.5), color=c)\nstage.caption(\"No single tangent at the corner\")"
+   }
+  ]
+ }
+]
