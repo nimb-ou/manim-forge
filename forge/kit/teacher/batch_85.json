@@ -1,0 +1,82 @@
+[
+ {
+  "request": "explain recursion with factorial of 4",
+  "beats": [
+   {
+    "intent": "A stack of boxes: fact(4) calls fact(3), which calls fact(2), which calls fact(1)",
+    "narration": "To work out four factorial, a recursive function asks for three factorial first, which asks for two factorial, which asks for one.",
+    "code": "stage.title(\"Recursion\")\ncalls = [\"fact(4) = 4 × fact(3)\", \"fact(3) = 3 × fact(2)\", \"fact(2) = 2 × fact(1)\", \"fact(1) = 1\"]\nboxes = VGroup()\nfor k, t in enumerate(calls):\n    b = Rectangle(width=5.2, height=0.75, color=BLUE, fill_opacity=0.25)\n    b.add(Text(t, font_size=26).move_to(b))\n    b.move_to([0, 2.0 - 0.95 * k, 0])\n    boxes.add(b)\n    stage.play(FadeIn(b, shift=DOWN), run_time=0.5)\nstage.add(boxes)\nstage.caption(\"each call waits for the one below\")"
+   },
+   {
+    "intent": "The answers returning back up the stack: 1, 2, 6, 24",
+    "narration": "The smallest case answers straight away: one. Then each waiting call finishes in turn: two, six, twenty four.",
+    "code": "for k, v in ((3, \"1\"), (2, \"2\"), (1, \"6\"), (0, \"24\")):\n    t = Text(\"→ \" + v, font_size=30, color=YELLOW).next_to(boxes[k], RIGHT, buff=0.3)\n    stage.play(FadeIn(t), boxes[k].animate.set_fill(GREEN, opacity=0.35, family=False), run_time=0.5)\n    stage.add(t)\nstage.caption(\"answers come back up\")"
+   },
+   {
+    "intent": "The stack beside 4! = 4 × 3 × 2 × 1 = 24",
+    "narration": "Recursion solves a problem by handing a smaller copy of it down, until the copy is small enough to answer directly.",
+    "code": "stage.equation(r\"4! = 4 \\times 3!\", r\"= 24\")"
+   }
+  ]
+ },
+ {
+  "request": "how do the two strands of DNA pair up?",
+  "beats": [
+   {
+    "intent": "Two strands as vertical backbones with rungs between them",
+    "narration": "DNA is two strands joined by rungs, like a ladder.",
+    "code": "stage.title(\"DNA base pairs\")\nleft = Line([-1.8, 2.3, 0], [-1.8, -2.7, 0], color=GREY_B, stroke_width=8)\nright = Line([1.8, 2.3, 0], [1.8, -2.7, 0], color=GREY_B, stroke_width=8)\nstage.play(Create(left), Create(right))\nstage.add(left, right)"
+   },
+   {
+    "intent": "Rungs filled with base pairs: A with T, C with G, in colours",
+    "narration": "Each rung is a pair of bases. A always pairs with T, and C always pairs with G.",
+    "code": "seq = \"ACGTTAG\"\npartner = {\"A\": \"T\", \"T\": \"A\", \"C\": \"G\", \"G\": \"C\"}\ncol = {\"A\": RED, \"T\": YELLOW, \"C\": BLUE, \"G\": GREEN}\nfor k, b in enumerate(seq):\n    y = 1.8 - 0.7 * k\n    l = Rectangle(width=1.7, height=0.4, stroke_width=0, fill_color=col[b], fill_opacity=0.8).move_to([-0.95, y, 0])\n    r = Rectangle(width=1.7, height=0.4, stroke_width=0, fill_color=col[partner[b]], fill_opacity=0.8).move_to([0.95, y, 0])\n    stage.play(FadeIn(l), FadeIn(r), run_time=0.25)\n    stage.add(l, r, Text(b, font_size=24, color=BLACK).move_to(l), Text(partner[b], font_size=24, color=BLACK).move_to(r))"
+   },
+   {
+    "intent": "The ladder beside: one strand ACGTTAG gives the other TGCAATC",
+    "narration": "So one strand fixes the other: read one side and you know the other. That is how a cell copies its DNA.",
+    "code": "stage.equation(r\"\\text{ACGTTAG} \\leftrightarrow \\text{TGCAATC}\")"
+   }
+  ]
+ },
+ {
+  "request": "how does a message travel across the internet?",
+  "beats": [
+   {
+    "intent": "A message box on the left split into 4 numbered packets",
+    "narration": "A message is chopped into small numbered packets.",
+    "code": "stage.title(\"Packets\")\nmsg = draw_rectangle(stage, width=1.6, height=1.0, color=YELLOW, fill=0.4)\nmsg.move_to([-5.2, 0, 0])\npk = VGroup(*[Square(0.35, color=YELLOW, fill_opacity=0.8) for _ in range(4)]).arrange(DOWN, buff=0.15).move_to([-3.9, 0, 0])\nstage.play(FadeIn(pk))\nstage.add(pk)\nnums = VGroup(*[Text(n, font_size=20, color=BLACK).move_to(s) for s, n in zip(pk, \"1234\")])\nstage.play(FadeIn(nums))\nstage.add(nums)"
+   },
+   {
+    "intent": "A network of routers with the packets taking different paths",
+    "narration": "Each packet finds its own way through a web of routers. They may take different paths.",
+    "code": "nodes = {\"a\": (-0.45, 0.6), \"b\": (-0.45, -0.6), \"c\": (0.1, 0.1), \"d\": (0.55, 0.7), \"e\": (0.55, -0.5)}\nedges = [(\"a\", \"c\"), (\"b\", \"c\"), (\"a\", \"d\"), (\"c\", \"d\"), (\"c\", \"e\"), (\"b\", \"e\"), (\"d\", \"e\")]\ndots, links = draw_network(stage, nodes, edges)\npaths = [[\"a\", \"d\"], [\"b\", \"e\"], [\"a\", \"c\", \"e\"], [\"b\", \"c\", \"d\"]]\nfor route, col in zip(paths, (RED, GREEN, BLUE, ORANGE)):\n    pts = [dots[n].get_center() for n in route]\n    trail = VMobject(color=col, stroke_width=5).set_points_as_corners(pts)\n    stage.play(Create(trail), run_time=0.5)\n    stage.add(trail)"
+   },
+   {
+    "intent": "The packets arriving out of order and put back as 1, 2, 3, 4 to rebuild the message",
+    "narration": "They can arrive in any order. The numbers let the receiver put them back together into the original message.",
+    "code": "got = VGroup(*[Square(0.35, color=c, fill_opacity=0.8) for c in (BLUE, RED, ORANGE, GREEN)]).arrange(RIGHT, buff=0.15).move_to([5.0, 0.8, 0])\nstage.play(FadeIn(got))\nstage.add(got)\nfixed = VGroup(*[Square(0.35, color=YELLOW, fill_opacity=0.8) for _ in range(4)]).arrange(RIGHT, buff=0.15).move_to([5.0, -0.6, 0])\nstage.play(TransformFromCopy(got, fixed))\nstage.add(fixed)\nfor s, n in zip(fixed, \"1234\"):\n    stage.add(Text(n, font_size=20, color=BLACK).move_to(s))\nstage.caption(\"numbered packets are put back in order\")"
+   }
+  ]
+ },
+ {
+  "request": "what does an AND gate do?",
+  "beats": [
+   {
+    "intent": "A lamp wired through two switches A and B in a row",
+    "narration": "Wire a lamp through two switches one after the other.",
+    "code": "stage.title(\"An AND gate\")\nwire = VMobject(color=GREY_B).set_points_as_corners([[-5, 0, 0], [-3.2, 0, 0]])\nw2 = Line([-2.0, 0, 0], [-0.4, 0, 0], color=GREY_B)\nw3 = Line([0.8, 0, 0], [2.6, 0, 0], color=GREY_B)\nswA = Line([-3.2, 0, 0], [-2.1, 0.6, 0], color=WHITE, stroke_width=6)\nswB = Line([-0.4, 0, 0], [0.7, 0.6, 0], color=WHITE, stroke_width=6)\nlamp = Circle(radius=0.45, color=YELLOW).move_to([3.05, 0, 0])\nstage.play(Create(wire), Create(w2), Create(w3), Create(swA), Create(swB), Create(lamp))\nstage.add(wire, w2, w3, swA, swB, lamp)\nstage.label(swA, \"A\", direction=UP)\nstage.label(swB, \"B\", direction=UP)"
+   },
+   {
+    "intent": "Switch A closed alone: still dark. Both closed: the lamp lights",
+    "narration": "Close A alone and the lamp stays dark: the path is still broken at B. Close both and it lights.",
+    "code": "stage.play(Transform(swA, Line([-3.2, 0, 0], [-2.0, 0, 0], color=WHITE, stroke_width=6)))\nstage.caption(\"A on, B off: dark\")\nstage.play(Transform(swB, Line([-0.4, 0, 0], [0.8, 0, 0], color=WHITE, stroke_width=6)))\nstage.play(lamp.animate.set_fill(YELLOW, opacity=0.9))\nstage.caption(\"A on and B on: light\")"
+   },
+   {
+    "intent": "A truth table: 0 0 → 0, 0 1 → 0, 1 0 → 0, 1 1 → 1",
+    "narration": "Write it as a table: the output is one only when both inputs are one. That is the AND gate, a building block of every computer.",
+    "code": "stage.clear()\nrows = [(\"A\", \"B\", \"out\"), (\"0\", \"0\", \"0\"), (\"0\", \"1\", \"0\"), (\"1\", \"0\", \"0\"), (\"1\", \"1\", \"1\")]\ntable = VGroup()\nfor r, row in enumerate(rows):\n    for c, v in enumerate(row):\n        cell = Rectangle(width=1.2, height=0.6, color=GREY_B, fill_opacity=0.5 if (r == 4) else 0, fill_color=GREEN)\n        cell.move_to([(c - 1) * 1.2, 1.4 - r * 0.6, 0])\n        table.add(VGroup(cell, Text(v, font_size=26).move_to(cell)))\nstage.play(FadeIn(table))\nstage.add(table)"
+   }
+  ]
+ }
+]
