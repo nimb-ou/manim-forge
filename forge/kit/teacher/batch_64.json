@@ -1,0 +1,82 @@
+[
+ {
+  "request": "why do bees build hexagons?",
+  "beats": [
+   {
+    "intent": "A triangle, a square and a hexagon side by side, each with area 1",
+    "narration": "Only three regular shapes tile a flat surface with no gaps: triangles, squares and hexagons. Make them all the same area.",
+    "code": "stage.title(\"Why hexagons?\")\ntri = RegularPolygon(3, color=YELLOW, fill_opacity=0.4).scale(1.228).move_to([-4, 0, 0])\nsq = Square(1.4, color=GREEN, fill_opacity=0.4).move_to([0, 0, 0])\nhexa = RegularPolygon(6, color=ORANGE, fill_opacity=0.4).scale(0.869).move_to([4, 0, 0])\nstage.play(Create(tri), Create(sq), Create(hexa))\nstage.add(tri, sq, hexa)\nfor m, n in ((tri, \"triangle\"), (sq, \"square\"), (hexa, \"hexagon\")):\n    stage.label(m, n, direction=DOWN)"
+   },
+   {
+    "intent": "Bars of the wall length each needs: 4.56, 4.00, 3.72",
+    "narration": "Now compare the wall around each. For the same area, the hexagon needs the least wall: three point seven two.",
+    "code": "stage.clear()\nb = draw_bars(stage, [4.56, 4.00, 3.72], labels=[\"triangle\", \"square\", \"hexagon\"], color=ORANGE)\nstage.caption(\"perimeter for area 1\")"
+   },
+   {
+    "intent": "A honeycomb of hexagons tiling the space, walls shared",
+    "narration": "Packed together, the hexagons share every wall. Bees store the most honey for the least wax.",
+    "code": "stage.clear()\ncomb = VGroup()\nfor r in range(4):\n    for c in range(6):\n        h = RegularPolygon(6, color=YELLOW, fill_color=ORANGE, fill_opacity=0.35).scale(0.55).rotate(PI / 6)\n        h.move_to([(c - 2.5) * 0.95 + (0.475 if r % 2 else 0), (r - 1.5) * 0.83, 0])\n        comb.add(h)\nstage.play(LaggedStart(*[FadeIn(h) for h in comb], lag_ratio=0.03))\nstage.add(comb)\nstage.caption(\"most honey for the least wax\")"
+   }
+  ]
+ },
+ {
+  "request": "how does a camera's aperture change how bright the photo is?",
+  "beats": [
+   {
+    "intent": "Two circles for the lens opening: f/2 large, f/2.8 smaller",
+    "narration": "The aperture is the hole light comes through. At f two it is wide; at f two point eight it is narrower.",
+    "code": "stage.title(\"Aperture and light\")\nbig = draw_circle(stage, radius=1.6, color=YELLOW, fill=0.35)\nbig.move_to([-2.8, -0.2, 0])\nsmall = Circle(radius=1.6 / np.sqrt(2), color=YELLOW, fill_opacity=0.35).move_to([2.8, -0.2, 0])\nstage.play(Create(small))\nstage.add(small)\nstage.label(big, \"f/2\", direction=DOWN, color=YELLOW)\nstage.label(small, \"f/2.8\", direction=DOWN, color=YELLOW)"
+   },
+   {
+    "intent": "The smaller circle overlaid on the big one covering exactly half its area",
+    "narration": "The narrower hole's diameter is smaller by the square root of two, so its area, and the light it lets in, is exactly half.",
+    "code": "ghost = small.copy().set_fill(RED, opacity=0.5).set_stroke(RED)\nstage.play(ghost.animate.move_to(big.get_center()))\nstage.add(ghost)\nstage.equation(r\"\\left(\\frac{2}{2.8}\\right)^2 \\approx \\frac12\")"
+   },
+   {
+    "intent": "A row of f-numbers 2, 2.8, 4, 5.6, 8 with the light halving at each step",
+    "narration": "Each full stop along the scale halves the light: two, two point eight, four, five point six, eight.",
+    "code": "stage.clear()\nb = draw_bars(stage, [16, 8, 4, 2, 1], labels=[\"f/2\", \"f/2.8\", \"f/4\", \"f/5.6\", \"f/8\"], color=YELLOW)\nstage.caption(\"light let in: halves every stop\")"
+   }
+  ]
+ },
+ {
+  "request": "why do planets move faster when they are closer to the sun?",
+  "beats": [
+   {
+    "intent": "An elliptical orbit with the sun at one focus and the planet at the far end",
+    "narration": "A planet's orbit is an ellipse, with the Sun off to one side.",
+    "code": "stage.title(\"Orbits\")\norbit = Ellipse(width=9, height=5, color=GREY_B).move_to([0, -0.3, 0])\nfocus = np.array([-np.sqrt(4.5 ** 2 - 2.5 ** 2), -0.3, 0])\nsun = Dot(focus, radius=0.3, color=YELLOW)\nstage.play(Create(orbit), GrowFromCenter(sun))\nstage.add(orbit, sun)\nstage.label(sun, \"Sun\", direction=DOWN, color=YELLOW)\nfar = Dot(orbit.point_from_proportion(0.0), radius=0.14, color=BLUE)\nstage.play(GrowFromCenter(far))\nstage.add(far)"
+   },
+   {
+    "intent": "A short velocity arrow at the far point and a long one at the near point",
+    "narration": "Far from the Sun it moves slowly. Close in, the Sun's pull has sped it up, so it moves fast.",
+    "code": "v_far = Arrow(far.get_center(), far.get_center() + 0.8 * UP, buff=0, color=GREEN)\nnear_p = orbit.point_from_proportion(0.5)\nnear = Dot(near_p, radius=0.14, color=BLUE)\nv_near = Arrow(near_p, near_p + 2.2 * DOWN, buff=0, color=GREEN)\nstage.play(GrowFromCenter(near), GrowArrow(v_far), GrowArrow(v_near))\nstage.add(near, v_far, v_near)\nstage.label(v_far, \"slow\", direction=RIGHT, color=GREEN)\nstage.label(v_near, \"fast\", direction=LEFT, color=GREEN)"
+   },
+   {
+    "intent": "Two shaded wedges from the sun, a thin long one far away and a short wide one near, of equal area",
+    "narration": "In equal times, the line from the Sun sweeps equal areas: a long thin wedge far out, a short wide one close in.",
+    "code": "wedge = lambda a, b, col: Polygon(focus, *[orbit.point_from_proportion(t % 1) for t in np.linspace(a, b, 16)],\n                                  stroke_width=1, color=col, fill_opacity=0.45)\nw1 = wedge(-0.02, 0.02, ORANGE)\nw2 = wedge(0.3625, 0.6375, TEAL)\nstage.play(FadeIn(w1), FadeIn(w2))\nstage.add(w1, w2)\nstage.caption(\"equal areas in equal times\")"
+   }
+  ]
+ },
+ {
+  "request": "how do average speed cameras work out your speed?",
+  "beats": [
+   {
+    "intent": "A road with two cameras 1 km apart and a car passing the first",
+    "narration": "Two cameras stand one kilometre apart. The first records the time you pass.",
+    "code": "stage.title(\"Average speed cameras\")\nroad = draw_rectangle(stage, width=12, height=1.2, color=GREY_B, fill=0.2)\nroad.move_to([0, -1, 0])\ncam1 = draw_rectangle(stage, width=0.4, height=0.4, color=RED, fill=0.8)\ncam1.move_to([-4, 0.2, 0])\ncam2 = Square(0.4, color=RED, fill_opacity=0.8).move_to([4, 0.2, 0])\nstage.play(FadeIn(cam2))\nstage.add(cam2)\nstage.label(cam1, \"10:00:00\", direction=UP, color=RED)\ncar = Rectangle(width=0.9, height=0.45, color=BLUE, fill_opacity=0.9).move_to([-4, -1, 0])\nstage.play(FadeIn(car))\nstage.add(car)\ngap = draw_arrow(stage, (-4, -2.0), (4, -2.0), color=YELLOW, label=\"1 km\")"
+   },
+   {
+    "intent": "The car driving to the second camera, which reads 40 seconds later",
+    "narration": "The second camera sees you forty seconds later.",
+    "code": "stage.play(car.animate.move_to([4, -1, 0]), run_time=2.5, rate_func=linear)\nstage.label(cam2, \"10:00:40\", direction=UP, color=RED)"
+   },
+   {
+    "intent": "The cameras beside 1 km ÷ 40 s = 25 m/s = 90 km/h",
+    "narration": "One kilometre in forty seconds is twenty five metres a second: ninety kilometres an hour, however you drove in between.",
+    "code": "stage.equation(r\"\\frac{1000\\ \\text{m}}{40\\ \\text{s}} = 25\\ \\text{m/s}\", r\"= 90\\ \\text{km/h}\")"
+   }
+  ]
+ }
+]
