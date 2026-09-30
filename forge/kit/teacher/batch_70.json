@@ -1,0 +1,82 @@
+[
+ {
+  "request": "why does a wind turbine make so much more power in stronger wind?",
+  "beats": [
+   {
+    "intent": "A turbine drawn as a tall pole with three blades, spinning",
+    "narration": "A wind turbine turns the push of moving air into electricity.",
+    "code": "stage.title(\"Wind power\")\npole = Line([0, -2.6, 0], [0, 0.8, 0], color=GREY_B, stroke_width=8)\nhub = Dot([0, 0.8, 0], radius=0.12, color=WHITE)\nblades = VGroup(*[Line([0, 0.8, 0], [0, 0.8, 0] + 1.6 * np.array([np.cos(a), np.sin(a), 0]), color=WHITE, stroke_width=6)\n                  for a in (PI / 2, PI / 2 + TAU / 3, PI / 2 + 2 * TAU / 3)])\nstage.play(Create(pole), Create(blades), FadeIn(hub))\nstage.add(pole, blades, hub)\nstage.play(Rotate(blades, -TAU, about_point=[0, 0.8, 0]), run_time=2, rate_func=linear)"
+   },
+   {
+    "intent": "Bars of power for wind speeds 1, 2 and 3 units: 1, 8, 27",
+    "narration": "Double the wind speed and the power goes up eight times; triple it and it goes up twenty seven times.",
+    "code": "stage.clear()\nb = draw_bars(stage, [1, 8, 27], labels=[\"speed 1\", \"speed 2\", \"speed 3\"], color=TEAL)\nstage.caption(\"power\")"
+   },
+   {
+    "intent": "The bars beside P ∝ v³",
+    "narration": "Faster air carries more energy in each bit of air, and more air arrives each second: that makes the power go as the cube of the speed.",
+    "code": "stage.equation(r\"P \\propto v^3\", r\"\\Rightarrow 2^3 = 8\")"
+   }
+  ]
+ },
+ {
+  "request": "how do you convert Celsius to Fahrenheit?",
+  "beats": [
+   {
+    "intent": "Axes of °C and °F with the line F = 1.8C + 32",
+    "narration": "Fahrenheit is a straight-line function of Celsius.",
+    "code": "stage.title(\"Celsius to Fahrenheit\")\nax = draw_axes(stage, x_range=(-50, 110), y_range=(-60, 230), labels=(\"°C\", \"°F\"))\ng = plot_graph(stage, ax, lambda c: 1.8 * c + 32, color=ORANGE)"
+   },
+   {
+    "intent": "Freezing (0, 32) and boiling (100, 212) marked on the line",
+    "narration": "Water freezes at zero Celsius, thirty two Fahrenheit, and boils at a hundred Celsius, two hundred and twelve Fahrenheit.",
+    "code": "f = mark_point(stage, ax, (0, 32), color=BLUE, label=\"(0, 32)\")\nb = mark_point(stage, ax, (100, 212), color=RED, label=\"(100, 212)\")"
+   },
+   {
+    "intent": "The line beside F = 1.8C + 32 and the point (-40, -40) where the scales agree",
+    "narration": "A hundred Celsius degrees span a hundred and eighty Fahrenheit ones, so multiply by one point eight and add thirty two. At minus forty, the two scales agree.",
+    "code": "same = mark_point(stage, ax, (-40, -40), color=GREEN, label=\"(-40, -40)\")\nstage.equation(r\"F = 1.8\\,C + 32\")"
+   }
+  ]
+ },
+ {
+  "request": "how many diagonals does a polygon have?",
+  "beats": [
+   {
+    "intent": "A pentagon with its 5 diagonals drawn, forming a star",
+    "narration": "A pentagon has five diagonals, and together they draw a star.",
+    "code": "stage.title(\"Counting diagonals\")\npent = RegularPolygon(5, color=BLUE).scale(1.6).move_to([-3.2, -0.3, 0])\nstage.play(Create(pent))\nstage.add(pent)\nV = pent.get_vertices()\nd5 = [Line(V[i], V[j], color=YELLOW) for i in range(5) for j in range(i + 2, 5) if not (i == 0 and j == 4)]\nstage.play(*[Create(l) for l in d5])\nstage.add(*d5)\nstage.label(pent, \"5 diagonals\", direction=DOWN, color=YELLOW)"
+   },
+   {
+    "intent": "A hexagon with its 9 diagonals",
+    "narration": "A hexagon has nine.",
+    "code": "hexa = RegularPolygon(6, color=BLUE).scale(1.6).move_to([2.6, -0.3, 0])\nstage.play(Create(hexa))\nstage.add(hexa)\nW = hexa.get_vertices()\nd6 = [Line(W[i], W[j], color=GREEN) for i in range(6) for j in range(i + 2, 6) if not (i == 0 and j == 5)]\nstage.play(*[Create(l) for l in d6])\nstage.add(*d6)\nstage.label(hexa, \"9 diagonals\", direction=DOWN, color=GREEN)"
+   },
+   {
+    "intent": "The shapes beside n(n - 3) / 2",
+    "narration": "Each of the n corners joins to every corner except itself and its two neighbours: n minus three. Each diagonal is counted from both ends, so halve it.",
+    "code": "stage.equation(r\"\\frac{n(n-3)}{2}:\\ \\frac{5 \\cdot 2}{2} = 5,\\ \\frac{6 \\cdot 3}{2} = 9\")"
+   }
+  ]
+ },
+ {
+  "request": "how do contour lines on a map show a hill?",
+  "beats": [
+   {
+    "intent": "Nested loops around a hilltop, labelled 100, 200, 300 m",
+    "narration": "On a map, each contour line joins points at the same height: one hundred, two hundred, three hundred metres.",
+    "code": "stage.title(\"Contour lines\")\nloops = VGroup()\nfor k, (w, h, dx) in enumerate(((6.0, 3.4, 0.0), (4.2, 2.4, 0.5), (2.4, 1.4, 0.9))):\n    loops.add(Ellipse(width=w, height=h, color=[GREEN, YELLOW, ORANGE][k]).move_to([-1.5 + dx, 0.6, 0]))\nstage.play(LaggedStart(*[Create(l) for l in loops], lag_ratio=0.3))\nstage.add(loops)\nfor l, t in zip(loops, [\"100 m\", \"200 m\", \"300 m\"]):\n    stage.label(l, t, direction=UP, color=l.get_color())"
+   },
+   {
+    "intent": "The loops close together on the right side, far apart on the left",
+    "narration": "Where the lines bunch up, the ground climbs fast: a steep slope. Where they spread out, it is gentle.",
+    "code": "steep = Arrow([1.2, 0.6, 0], [2.3, 0.6, 0], buff=0, color=RED)\ngentle = Arrow([-2.2, 0.6, 0], [-4.5, 0.6, 0], buff=0, color=BLUE)\nstage.play(GrowArrow(steep), GrowArrow(gentle))\nstage.add(steep, gentle)\nstage.label(steep, \"steep\", direction=DOWN, color=RED)\nstage.label(gentle, \"gentle\", direction=DOWN, color=BLUE)"
+   },
+   {
+    "intent": "A side view of the hill below: a gentle slope on the left and a steep one on the right",
+    "narration": "Slice through the hill and you see it: a long gentle climb from the left, a steep drop on the right.",
+    "code": "profile = VMobject(color=WHITE).set_points_smoothly([[-4.5, -3.2, 0], [-2.2, -2.7, 0], [-0.6, -2.2, 0], [0.3, -1.7, 0], [1.2, -2.3, 0], [2.3, -3.2, 0]])\nground = Line([-5, -3.2, 0], [3, -3.2, 0], color=GREY_B)\nVGroup(ground, profile).shift(0.4 * UP)\nstage.play(Create(ground), Create(profile))\nstage.add(ground, profile)\nstage.caption(\"side view: close lines, steep ground\")"
+   }
+  ]
+ }
+]
