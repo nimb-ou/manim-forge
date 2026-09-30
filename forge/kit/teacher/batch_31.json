@@ -1,0 +1,182 @@
+[
+ {
+  "request": "how does the graph of a derivative match the original curve?",
+  "beats": [
+   {
+    "intent": "Axes with the cubic y = x^3 - 3x from -2.3 to 2.3",
+    "narration": "Here is the cubic x cubed minus three x.",
+    "code": "stage.title(\"A curve and its slope\")\nax = draw_axes(stage, x_range=(-2.5, 2.5), y_range=(-4, 4))\nf = lambda x: x ** 3 - 3 * x\ng = plot_graph(stage, ax, f, x_range=(-2.3, 2.3), color=BLUE, label=\"f\")"
+   },
+   {
+    "intent": "Its turning points (-1, 2) and (1, -2) marked",
+    "narration": "It turns at minus one, height two, and at one, height minus two.",
+    "code": "t1 = mark_point(stage, ax, -1, 2, color=RED, label=\"(-1, 2)\")\nt2 = mark_point(stage, ax, 1, -2, color=RED, label=\"(1, -2)\", direction=DOWN)"
+   },
+   {
+    "intent": "A tangent sliding along the cubic, flat at both turning points",
+    "narration": "Slide a tangent along it: the slope is zero exactly at the turning points.",
+    "code": "slide_tangent(stage, ax, f, -2, 2)"
+   },
+   {
+    "intent": "The slope curve 3x^2 - 3 drawn in yellow",
+    "narration": "Plot the slope everywhere: three x squared minus three, a parabola.",
+    "code": "d = plot_graph(stage, ax, lambda x: 3 * x ** 2 - 3, x_range=(-1.5, 1.5), color=YELLOW, label=\"f'\")"
+   },
+   {
+    "intent": "The parabola's zeros at x = -1 and 1 lined up under the turning points by dashed lines",
+    "narration": "Where the slope curve crosses zero, the cubic turns: the two graphs line up.",
+    "code": "for x0, y0 in ((-1, 2), (1, -2)):\n    draw_line(stage, ax.c2p(x0, y0), ax.c2p(x0, 0), color=GREY, dashed=True)\nz1 = mark_point(stage, ax, -1, 0, color=YELLOW)\nz2 = mark_point(stage, ax, 1, 0, color=YELLOW)\nstage.equation(r\"f'(x) = 3x^2 - 3 = 0 \\Rightarrow x = \\pm 1\")"
+   }
+  ]
+ },
+ {
+  "request": "what are the chances of getting 0, 1, 2 or 3 heads from three coins?",
+  "beats": [
+   {
+    "intent": "Three coins as circles marked H or T, showing H H T",
+    "narration": "Flip three coins. One way they can land is heads, heads, tails.",
+    "code": "stage.title(\"Three coins\")\ncoin = lambda s, c: VGroup(Circle(radius=0.4, color=c, fill_opacity=0.7), Text(s, font_size=28))\nrow = VGroup(coin(\"H\", YELLOW), coin(\"H\", YELLOW), coin(\"T\", GREY)).arrange(RIGHT, buff=0.3)\nstage.play(FadeIn(row))\nstage.add(row)"
+   },
+   {
+    "intent": "All 8 outcomes listed as rows of three coins",
+    "narration": "There are eight equally likely outcomes, two choices three times over.",
+    "code": "stage.play(FadeOut(row))\nouts = [\"HHH\", \"HHT\", \"HTH\", \"THH\", \"HTT\", \"THT\", \"TTH\", \"TTT\"]\ngrid = VGroup(*[VGroup(*[coin(ch, YELLOW if ch == \"H\" else GREY).scale(0.55) for ch in o]).arrange(RIGHT, buff=0.1) for o in outs]).arrange_in_grid(4, 2, buff=(0.8, 0.25))\nstage.play(FadeIn(grid))\nstage.add(grid)"
+   },
+   {
+    "intent": "The rows grouped by number of heads: 1, 3, 3, 1",
+    "narration": "Count heads in each: one way to get three, three ways to get two, three ways to get one, one way to get none.",
+    "code": "counts = [o.count(\"H\") for o in outs]\ncols = {3: GREEN, 2: BLUE, 1: ORANGE, 0: RED}\nboxes = VGroup(*[SurroundingRectangle(r, color=cols[c], buff=0.08) for r, c in zip(grid, counts)])\nstage.play(LaggedStart(*[Create(b) for b in boxes], lag_ratio=0.15))\nstage.add(boxes)"
+   },
+   {
+    "intent": "Bars of the probabilities 1/8, 3/8, 3/8, 1/8 for 0 to 3 heads",
+    "narration": "As chances: one eighth, three eighths, three eighths, one eighth.",
+    "code": "stage.clear()\nbars = draw_bars(stage, [1, 3, 3, 1], labels=[\"0 heads\", \"1 head\", \"2 heads\", \"3 heads\"])"
+   },
+   {
+    "intent": "The middle bars lit beside P(1 or 2 heads) = 6/8",
+    "narration": "So a mixed result, one or two heads, happens three times in four.",
+    "code": "highlight(stage, VGroup(bars[1], bars[2]), color=YELLOW)\nstage.equation(r\"P(1 \\text{ or } 2) = \\tfrac68 = \\tfrac34\")"
+   }
+  ]
+ },
+ {
+  "request": "what does the stretch matrix [[2, 0], [0, 1]] do?",
+  "beats": [
+   {
+    "intent": "A grid with the unit square and i-hat, j-hat",
+    "narration": "Start with the grid, the unit square and the basis arrows.",
+    "code": "stage.title(\"A horizontal stretch\")\np = draw_plane(stage)\nsq = draw_unit_square(stage, p)\ni_hat, j_hat = draw_basis(stage, p)"
+   },
+   {
+    "intent": "A circle of radius 1 drawn around the origin",
+    "narration": "Add a circle of radius one.",
+    "code": "circ = Circle(radius=np.linalg.norm(p.c2p(1, 0) - p.c2p(0, 0)), color=YELLOW).move_to(p.c2p(0, 0))\nstage.play(Create(circ))\nstage.add(circ)"
+   },
+   {
+    "intent": "The matrix applied: grid, square and circle stretched sideways by 2",
+    "narration": "Apply the matrix: everything doubles sideways, nothing changes up and down.",
+    "code": "apply_matrix(stage, p, [[2, 0], [0, 1]], riders=[sq, i_hat, j_hat, circ])"
+   },
+   {
+    "intent": "The square now 2 by 1 labelled area 2",
+    "narration": "The unit square becomes two by one: its area doubled, so the determinant is two.",
+    "code": "stage.label(sq, \"area 2\", direction=UP, color=GREEN)"
+   },
+   {
+    "intent": "The circle, now an ellipse, beside the matrix and det = 2",
+    "narration": "The circle becomes an ellipse twice as wide: every area in the plane doubles.",
+    "code": "stage.equation(r\"\\det\\begin{bmatrix} 2 & 0 \\\\ 0 & 1 \\end{bmatrix} = 2\")"
+   }
+  ]
+ },
+ {
+  "request": "what do the numbers in y = x^2 - 4x + 3 tell you about its graph?",
+  "beats": [
+   {
+    "intent": "Axes with the parabola y = x^2 - 4x + 3",
+    "narration": "Plot x squared minus four x plus three.",
+    "code": "stage.title(\"Reading a parabola\")\nax = draw_axes(stage, x_range=(-1, 5), y_range=(-2, 8))\nf = lambda x: x ** 2 - 4 * x + 3\ng = plot_graph(stage, ax, f)"
+   },
+   {
+    "intent": "The y-intercept (0, 3) marked",
+    "narration": "The constant, three, is where it crosses the y axis.",
+    "code": "yi = mark_point(stage, ax, 0, 3, color=GREEN, label=\"(0, 3)\")"
+   },
+   {
+    "intent": "The roots x = 1 and x = 3 marked on the x-axis",
+    "narration": "It factors as x minus one times x minus three, so it crosses the x axis at one and three.",
+    "code": "r1 = mark_point(stage, ax, 1, 0, color=RED, label=\"1\", direction=DOWN)\nr2 = mark_point(stage, ax, 3, 0, color=RED, label=\"3\", direction=DOWN)"
+   },
+   {
+    "intent": "The vertex (2, -1) marked halfway between the roots with a dashed axis of symmetry",
+    "narration": "The lowest point is halfway between the roots, at two, where the height is minus one.",
+    "code": "v = mark_point(stage, ax, 2, -1, color=YELLOW, label=\"(2, -1)\", direction=DOWN)\naxis = draw_line(stage, ax.c2p(2, -2), ax.c2p(2, 8), color=GREY, dashed=True)"
+   },
+   {
+    "intent": "The graph beside x^2 - 4x + 3 = (x - 1)(x - 3) = (x - 2)^2 - 1",
+    "narration": "Two forms of the same expression: the factors give the roots, the square gives the vertex.",
+    "code": "stage.equation(r\"x^2 - 4x + 3 = (x-1)(x-3) = (x-2)^2 - 1\")"
+   }
+  ]
+ },
+ {
+  "request": "how do you get the distance a car travels from its speed-time graph?",
+  "beats": [
+   {
+    "intent": "Axes of seconds against speed with a line rising from 0 to 20 m/s over 10 s",
+    "narration": "A car speeds up steadily from rest to twenty metres per second in ten seconds.",
+    "code": "stage.title(\"Distance from a speed graph\")\nax = draw_axes(stage, x_range=(0, 40), y_range=(0, 25), labels=(\"s\", \"m/s\"))\nup = draw_line(stage, ax.c2p(0, 0), ax.c2p(10, 20), color=YELLOW)"
+   },
+   {
+    "intent": "A flat line at 20 m/s from 10 s to 30 s",
+    "narration": "It cruises at twenty metres per second for twenty seconds.",
+    "code": "flat = draw_line(stage, ax.c2p(10, 20), ax.c2p(30, 20), color=YELLOW)"
+   },
+   {
+    "intent": "A line falling from 20 m/s to 0 between 30 s and 40 s",
+    "narration": "Then it brakes to a stop over ten seconds.",
+    "code": "down = draw_line(stage, ax.c2p(30, 20), ax.c2p(40, 0), color=YELLOW)"
+   },
+   {
+    "intent": "The area under the graph shaded as a triangle, a rectangle and a triangle",
+    "narration": "The distance is the area under the graph: a triangle, a rectangle and another triangle.",
+    "code": "t1 = Polygon(ax.c2p(0, 0), ax.c2p(10, 20), ax.c2p(10, 0), color=GREEN, fill_opacity=0.5)\nrc = Polygon(ax.c2p(10, 0), ax.c2p(10, 20), ax.c2p(30, 20), ax.c2p(30, 0), color=BLUE, fill_opacity=0.5)\nt2 = Polygon(ax.c2p(30, 0), ax.c2p(30, 20), ax.c2p(40, 0), color=GREEN, fill_opacity=0.5)\nstage.play(FadeIn(t1), FadeIn(rc), FadeIn(t2))\nstage.add(t1, rc, t2)"
+   },
+   {
+    "intent": "The shaded shapes beside 100 + 400 + 100 = 600 m",
+    "narration": "A hundred metres speeding up, four hundred cruising, a hundred braking: six hundred metres.",
+    "code": "stage.equation(r\"\\tfrac12 \\cdot 10 \\cdot 20 + 20 \\cdot 20 + \\tfrac12 \\cdot 10 \\cdot 20 = 600\\ \\text{m}\")"
+   }
+  ]
+ },
+ {
+  "request": "prove the angles of a triangle add to 180 using parallel lines",
+  "beats": [
+   {
+    "intent": "A triangle ABC with its three angles marked a, b, c",
+    "narration": "Take any triangle with angles a, b and c.",
+    "code": "stage.title(\"180 degrees, with parallel lines\")\nA, B, C = np.array([-2.5, -1.5, 0]), np.array([2.5, -1.5, 0]), np.array([0.5, 1.5, 0])\ntri = Polygon(A, B, C, color=BLUE)\nstage.play(Create(tri))\nstage.add(tri)\nangA = Angle(Line(A, B), Line(A, C), radius=0.5, color=RED)\nangB = Angle(Line(B, C), Line(B, A), radius=0.5, color=GREEN)\nangC = Angle(Line(C, A), Line(C, B), radius=0.5, color=YELLOW)\nstage.play(Create(angA), Create(angB), Create(angC))\nstage.add(angA, angB, angC)"
+   },
+   {
+    "intent": "A line through C parallel to AB",
+    "narration": "Draw a line through the top corner, parallel to the base.",
+    "code": "par = Line(C + LEFT * 3.5, C + RIGHT * 3.5, color=WHITE)\nstage.play(Create(par))\nstage.add(par)"
+   },
+   {
+    "intent": "The angle a copied at C on the left, between the parallel line and CA",
+    "narration": "Where CA crosses the two parallels, the alternate angles are equal: a appears again at the top left.",
+    "code": "aTop = Angle(Line(C, C + LEFT), Line(C, A), radius=0.5, color=RED)\nstage.play(Create(aTop))\nstage.add(aTop)"
+   },
+   {
+    "intent": "The angle b copied at C on the right, between the parallel line and CB",
+    "narration": "The same happens along CB: b appears at the top right.",
+    "code": "bTop = Angle(Line(C, B), Line(C, C + RIGHT), radius=0.5, color=GREEN)\nstage.play(Create(bTop))\nstage.add(bTop)"
+   },
+   {
+    "intent": "The three angles a, c, b side by side on the straight line beside a + b + c = 180°",
+    "narration": "At the top, a, c and b sit side by side along a straight line, so they add to a hundred and eighty degrees.",
+    "code": "stage.equation(r\"a + c + b = 180^\\circ\")"
+   }
+  ]
+ }
+]
