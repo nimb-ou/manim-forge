@@ -1,0 +1,162 @@
+[
+ {
+  "request": "why can't three vectors in the plane all be independent?",
+  "beats": [
+   {
+    "intent": "A grid with u = (2, 1) and v = (-1, 1)",
+    "narration": "Two vectors that point different ways, u and v.",
+    "code": "stage.title(\"Three vectors in a plane\")\np = draw_plane(stage)\nu = draw_vector(stage, p, (2, 1), color=YELLOW, label=\"u\")\nv = draw_vector(stage, p, (-1, 1), color=BLUE, label=\"v\")"
+   },
+   {
+    "intent": "A third vector w = (1, 2) drawn in green",
+    "narration": "Add a third, w, one across and two up.",
+    "code": "w = draw_vector(stage, p, (1, 2), color=GREEN, label=\"w\")"
+   },
+   {
+    "intent": "w rebuilt as u + v, tip to tail, landing exactly on w's tip",
+    "narration": "But w is just u plus v: the plane already had room for only two independent directions.",
+    "code": "step = draw_arrow(stage, p.c2p(2, 1), p.c2p(1, 2))\nstage.equation(r\"w = u + v\")"
+   }
+  ]
+ },
+ {
+  "request": "how can an infinitely long area be finite?",
+  "beats": [
+   {
+    "intent": "Axes with y = 1/x^2 from 1 to 10",
+    "narration": "The curve one over x squared goes on forever to the right.",
+    "code": "stage.title(\"A finite infinite area\")\nax = draw_axes(stage, x_range=(0, 10), y_range=(0, 1.2))\ng = plot_graph(stage, ax, lambda x: 1 / x ** 2, x_range=(1, 10), label=\"1/x^2\")"
+   },
+   {
+    "intent": "The area under it from 1 to 10 shaded",
+    "narration": "Shade the area under it from one out to ten.",
+    "code": "shade_area(stage, ax, g, 1, 10)"
+   },
+   {
+    "intent": "The shaded area beside ∫ from 1 to b of 1/x^2 = 1 - 1/b → 1",
+    "narration": "Up to b the area is one minus one over b. As b grows without end, the area only creeps up to one.",
+    "code": "stage.equation(r\"\\int_1^b \\frac{dx}{x^2} = 1 - \\frac1b \\to 1\")"
+   }
+  ]
+ },
+ {
+  "request": "how fast does the top of a sliding ladder fall?",
+  "beats": [
+   {
+    "intent": "A 5 m ladder leaning on a wall, its foot 3 m out and its top 4 m up",
+    "narration": "A five metre ladder leans on a wall: foot three metres out, top four up.",
+    "code": "stage.title(\"A sliding ladder\")\nwall = draw_line(stage, (-2, -2), (-2, 2.5))\nfloor = draw_line(stage, (-2, -2), (4, -2))\nx = ValueTracker(3)\ns = 0.8\nladder = always_redraw(lambda: Line(np.array([-2 + s * x.get_value(), -2, 0]), np.array([-2, -2 + s * np.sqrt(25 - x.get_value() ** 2), 0]), color=YELLOW, stroke_width=6))\nstage.play(Create(ladder))\nstage.add(ladder)"
+   },
+   {
+    "intent": "The foot sliding out from 3 m to 4.5 m and the top dropping faster and faster",
+    "narration": "Pull the foot out steadily. The top drops slowly at first, then faster and faster.",
+    "code": "stage.play(x.animate.set_value(4.5), run_time=3, rate_func=linear)"
+   },
+   {
+    "intent": "The ladder beside x dx/dt + y dy/dt = 0, dy/dt = -(3/4)·1 at the start",
+    "narration": "Since x squared plus y squared is always twenty five, x times its speed plus y times its speed is zero: at the start the top falls at three quarters of the foot's speed.",
+    "code": "stage.equation(r\"x\\frac{dx}{dt} + y\\frac{dy}{dt} = 0\", r\"\\frac{dy}{dt} = -\\frac34 \\frac{dx}{dt}\")"
+   }
+  ]
+ },
+ {
+  "request": "what's the biggest field you can fence along a river with 100 m of fence?",
+  "beats": [
+   {
+    "intent": "A rectangle against a river line, two sides x and one side 100 - 2x",
+    "narration": "Fence three sides of a field; the river is the fourth. Two sides are x, the long side is a hundred minus two x.",
+    "code": "stage.title(\"The biggest field\")\nriver = Rectangle(width=6, height=0.4, color=BLUE, fill_opacity=0.7).shift(UP * 1.8)\nfield = Rectangle(width=4, height=2, color=GREEN, fill_opacity=0.3).next_to(river, DOWN, buff=0)\nstage.play(FadeIn(river), Create(field))\nstage.add(river, field)\nstage.label(field, \"x\", direction=LEFT)\nstage.label(field, \"100 - 2x\", direction=DOWN)"
+   },
+   {
+    "intent": "Axes with the area A(x) = x(100 - 2x) for x from 0 to 50",
+    "narration": "The area is x times a hundred minus two x. Plot it.",
+    "code": "stage.clear()\nax = draw_axes(stage, x_range=(0, 50), y_range=(0, 1400), labels=(\"x\", \"A\"))\nA = lambda x: x * (100 - 2 * x)\ng = plot_graph(stage, ax, A, color=YELLOW)"
+   },
+   {
+    "intent": "The peak at x = 25, A = 1250 marked with a flat tangent",
+    "narration": "It peaks at x equals twenty five: a field twenty five by fifty, twelve hundred and fifty square metres.",
+    "code": "m = mark_point(stage, ax, 25, 1250, color=RED, label=\"x = 25, A = 1250\")\nflat = draw_line(stage, ax.c2p(18, 1250), ax.c2p(32, 1250), color=RED, dashed=True)"
+   }
+  ]
+ },
+ {
+  "request": "how can you estimate the square root of 4.1 without a calculator?",
+  "beats": [
+   {
+    "intent": "Axes with y = √x from 0 to 6",
+    "narration": "Here is the square root curve.",
+    "code": "stage.title(\"Estimating √4.1\")\nax = draw_axes(stage, x_range=(0, 6), y_range=(0, 3))\ng = plot_graph(stage, ax, np.sqrt, label=\"\\\\sqrt{x}\")"
+   },
+   {
+    "intent": "The tangent line at x = 4, y = 2 with slope 1/4",
+    "narration": "At four the curve is at two, and its slope is one over two root x: a quarter.",
+    "code": "p = mark_point(stage, ax, 4, 2, color=RED, label=\"(4, 2)\")\ntan = plot_graph(stage, ax, lambda x: 2 + (x - 4) / 4, x_range=(1, 6), color=YELLOW)"
+   },
+   {
+    "intent": "The tangent's value at 4.1 beside √4.1 ≈ 2 + 0.1/4 = 2.025",
+    "narration": "Near four the tangent hugs the curve, so the square root of four point one is about two plus a quarter of point one: two point oh two five.",
+    "code": "stage.equation(r\"\\sqrt{4.1} \\approx 2 + \\tfrac14(0.1) = 2.025\")"
+   }
+  ]
+ },
+ {
+  "request": "how do you measure the length of a curve?",
+  "beats": [
+   {
+    "intent": "Axes with the curve y = x^2/2 from 0 to 2",
+    "narration": "How long is this curve from zero to two?",
+    "code": "stage.title(\"Length of a curve\")\nax = draw_axes(stage, x_range=(0, 2.2), y_range=(0, 2.2))\nf = lambda x: x ** 2 / 2\ng = plot_graph(stage, ax, f)"
+   },
+   {
+    "intent": "Two straight segments joining points on the curve, then four, then eight",
+    "narration": "Join points on it with straight segments: two, then four, then eight. The chain gets closer to the curve.",
+    "code": "for n, col in ((2, RED), (4, ORANGE), (8, GREEN)):\n    xs = np.linspace(0, 2, n + 1)\n    chain = VMobject(color=col).set_points_as_corners([ax.c2p(x, f(x)) for x in xs])\n    stage.play(Create(chain), run_time=0.8)\n    stage.add(chain)"
+   },
+   {
+    "intent": "The chain beside the arc length integral ∫ √(1 + (dy/dx)^2) dx ≈ 2.96",
+    "narration": "In the limit the lengths add up to the integral of root one plus the slope squared: about two point nine six.",
+    "code": "stage.equation(r\"L = \\int_0^2 \\sqrt{1 + x^2}\\,dx \\approx 2.96\")"
+   }
+  ]
+ },
+ {
+  "request": "why is 1^3 + 2^3 + 3^3 a square number?",
+  "beats": [
+   {
+    "intent": "Bars of the cubes 1, 8 and 27",
+    "narration": "The cubes one, eight and twenty seven.",
+    "code": "stage.title(\"Sums of cubes\")\nbars = draw_bars(stage, [1, 8, 27], labels=[\"1^3\", \"2^3\", \"3^3\"])"
+   },
+   {
+    "intent": "A 6 by 6 square split into an L-shaped layer for each cube: 1, 8, 27",
+    "narration": "Lay them out as layers of a square: a one by one corner, an L of eight around it, an L of twenty seven around that.",
+    "code": "stage.clear()\ncols = [RED, GREEN, BLUE]\nlayers = VGroup()\ns = 0.55\nfor k, (inner, outer) in enumerate(((0, 1), (1, 3), (3, 6))):\n    for i in range(outer):\n        for j in range(outer):\n            if i >= inner or j >= inner:\n                layers.add(Square(side_length=s, color=cols[k], fill_opacity=0.6, stroke_width=1).move_to(np.array([(i - 2.5) * s, (j - 2.5) * s, 0])))\nstage.play(FadeIn(layers), run_time=1.5)\nstage.add(layers)"
+   },
+   {
+    "intent": "The square beside 1 + 8 + 27 = 36 = (1 + 2 + 3)^2",
+    "narration": "Together they fill a six by six square: thirty six, the square of one plus two plus three.",
+    "code": "stage.equation(r\"1^3 + 2^3 + 3^3 = 36 = (1 + 2 + 3)^2\")"
+   }
+  ]
+ },
+ {
+  "request": "why are 1/2, 0.5 and 50% the same?",
+  "beats": [
+   {
+    "intent": "A bar split in two halves with one half shaded",
+    "narration": "Shade half a bar.",
+    "code": "stage.title(\"One half, three ways\")\nbar = VGroup(*[Rectangle(width=2.5, height=0.8, color=BLUE, fill_opacity=0.7 if k == 0 else 0.1) for k in range(2)]).arrange(RIGHT, buff=0).shift(UP * 1.5)\nstage.play(Create(bar))\nstage.add(bar)\nstage.label(bar, \"1/2\", direction=RIGHT)"
+   },
+   {
+    "intent": "The same bar split into 10 tenths with 5 shaded",
+    "narration": "Cut the same bar into tenths: five of them are shaded, point five.",
+    "code": "tenths = VGroup(*[Rectangle(width=0.5, height=0.8, color=GREEN, fill_opacity=0.7 if k < 5 else 0.1) for k in range(10)]).arrange(RIGHT, buff=0)\nstage.play(FadeIn(tenths))\nstage.add(tenths)\nstage.label(tenths, \"0.5\", direction=RIGHT)"
+   },
+   {
+    "intent": "The same bar split into 100 hundredths with 50 shaded",
+    "narration": "Into hundredths: fifty of them, fifty percent. Three names for one amount.",
+    "code": "hund = VGroup(*[Rectangle(width=0.05, height=0.8, color=YELLOW, fill_opacity=0.7 if k < 50 else 0.1, stroke_width=0.5) for k in range(100)]).arrange(RIGHT, buff=0).shift(DOWN * 1.5)\nstage.play(FadeIn(hund))\nstage.add(hund)\nstage.label(hund, \"50%\", direction=RIGHT)"
+   }
+  ]
+ }
+]
