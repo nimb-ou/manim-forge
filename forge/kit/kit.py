@@ -171,8 +171,11 @@ class Stage:
         # whole narration sentences here, shrunk to fit the width until they
         # were unreadable; the first clause, at most ten words, is kept.
         words = str(s).replace("\n", " ").split()
-        if len(words) > 10:
-            s = " ".join(words[:10])
+        # Only tokens with a letter count as words: "A → B → D → E: 4 + 5 +
+        # 2 = 11 km" lost its total to arrows and plus signs (2026-09-30).
+        wordy = [k for k, w in enumerate(words) if any(c.isalpha() for c in w)]
+        if len(wordy) > 10:
+            s = " ".join(words[:wordy[10]])
             for stop in (". ", "; ", ", "):
                 if stop in s and len(s.split(stop)[0].split()) >= 3:
                     s = s.split(stop)[0]

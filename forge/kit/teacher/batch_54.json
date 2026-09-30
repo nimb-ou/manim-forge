@@ -1,0 +1,102 @@
+[
+ {
+  "request": "how does binary search find a number so fast?",
+  "beats": [
+   {
+    "intent": "A sorted array of 11 numbers as bars, 37 as the target",
+    "narration": "Here are eleven numbers in order. We want to find thirty seven.",
+    "code": "stage.title(\"Binary search for 37\")\narr = draw_array(stage, [3, 8, 12, 17, 23, 29, 37, 41, 50, 56, 63])\nbars = arr[0] if len(arr) == 2 else arr"
+   },
+   {
+    "intent": "The middle bar, 29, lit; the left half through it greyed out",
+    "narration": "Look in the middle: twenty nine. Too small, so thirty seven must be to its right. Half the list is gone.",
+    "code": "highlight(stage, bars[5], color=YELLOW)\nstage.play(*[bars[k].animate.set_opacity(0.15) for k in range(6)])\nstage.caption(\"29 < 37: keep the right half\")"
+   },
+   {
+    "intent": "The middle of what is left, 50, lit; it and everything right of it greyed",
+    "narration": "The middle of what is left is fifty. Too big: throw away it and everything after.",
+    "code": "highlight(stage, bars[8], color=YELLOW)\nstage.play(*[bars[k].animate.set_opacity(0.15) for k in range(8, 11)])\nstage.caption(\"50 > 37: keep the left part\")"
+   },
+   {
+    "intent": "The bar 37 lit green after three looks",
+    "narration": "Two numbers left. The first one is thirty seven: found in three looks, not seven.",
+    "code": "highlight(stage, bars[6], color=GREEN)\nstage.caption(\"Found in 3 looks\")"
+   },
+   {
+    "intent": "The array beside log₂ 1,000,000 ≈ 20",
+    "narration": "Each look halves the list, so even a million numbers take only about twenty looks.",
+    "code": "stage.equation(r\"\\log_2 1{,}000{,}000 \\approx 20\")"
+   }
+  ]
+ },
+ {
+  "request": "show bubble sort on 5, 2, 4, 1",
+  "beats": [
+   {
+    "intent": "Four bars 5, 2, 4, 1",
+    "narration": "Four numbers, out of order: five, two, four, one.",
+    "code": "stage.title(\"Bubble sort\")\narr = draw_array(stage, [5, 2, 4, 1])"
+   },
+   {
+    "intent": "First pass: 5 swaps past 2, 4 and 1 to the end",
+    "narration": "Compare neighbours and swap when the left is bigger. The five bubbles all the way to the end.",
+    "code": "swap_bars(stage, arr, 0, 1)\nswap_bars(stage, arr, 1, 2)\nswap_bars(stage, arr, 2, 3)\nstage.caption(\"Pass 1: 2, 4, 1, 5\")"
+   },
+   {
+    "intent": "Second pass: 4 swaps past 1",
+    "narration": "Second pass: two and four are fine, then four swaps past one.",
+    "code": "swap_bars(stage, arr, 1, 2)\nstage.caption(\"Pass 2: 2, 1, 4, 5\")"
+   },
+   {
+    "intent": "Third pass: 2 swaps with 1, the bars in order 1, 2, 4, 5",
+    "narration": "Third pass: two swaps with one. Now everything is in order.",
+    "code": "swap_bars(stage, arr, 0, 1)\nstage.caption(\"Sorted: 1, 2, 4, 5\")"
+   }
+  ]
+ },
+ {
+  "request": "how does a map app find the shortest route?",
+  "beats": [
+   {
+    "intent": "A road network of five towns A to E with distances on each road",
+    "narration": "Five towns and the roads between them, each with its length in kilometres.",
+    "code": "stage.title(\"The shortest route from A to E\")\nnodes = {\"A\": (-0.9, 0), \"B\": (-0.2, 0.75), \"C\": (-0.2, -0.75), \"D\": (0.5, 0.2), \"E\": (0.95, -0.4)}\nedges = [(\"A\", \"B\"), (\"A\", \"C\"), (\"B\", \"C\"), (\"B\", \"D\"), (\"C\", \"D\"), (\"C\", \"E\"), (\"D\", \"E\")]\ndots, roads = draw_network(stage, nodes, edges)\nfor road, km in zip(roads, [4, 2, 1, 5, 8, 10, 2]):\n    upright = abs(road.get_start()[0] - road.get_end()[0]) < 0.3\n    stage.label(road, str(km), direction=LEFT if upright else UP, color=GREY_A)"
+   },
+   {
+    "intent": "The route A-B-D-E lit in orange with its total 11",
+    "narration": "Going through B and D looks direct: four plus five plus two is eleven.",
+    "code": "stage.play(*[roads[k].animate.set_color(ORANGE).set_stroke(width=6) for k in (0, 3, 6)])\nstage.caption(\"A → B → D → E: 4 + 5 + 2 = 11 km\")"
+   },
+   {
+    "intent": "The route A-C-B-D-E lit in green with its total 10",
+    "narration": "But detour through C first: two plus one plus five plus two is only ten.",
+    "code": "stage.play(*[roads[k].animate.set_color(GREY_B).set_stroke(width=4) for k in (0, 3, 6)])\nstage.play(*[roads[k].animate.set_color(GREEN).set_stroke(width=6) for k in (1, 2, 3, 6)])\nstage.caption(\"A → C → B → D → E: 2 + 1 + 5 + 2 = 10 km\")"
+   },
+   {
+    "intent": "The network beside the rule: always extend the closest town found so far",
+    "narration": "The app's trick is to grow outward from A, always from the closest town found so far, so it never misses a shorter detour.",
+    "code": "stage.equation(r\"d(E) = \\min(11,\\ 10) = 10\")"
+   }
+  ]
+ },
+ {
+  "request": "how do you count to 13 in binary?",
+  "beats": [
+   {
+    "intent": "Four bit cells under 8 4 2 1 counting up from 0 to 13",
+    "narration": "With four switches worth eight, four, two and one, count up from zero.",
+    "code": "stage.title(\"Counting in binary\")\ncells = count_binary(stage, bits=4, upto=13)"
+   },
+   {
+    "intent": "The bits 1101 beside 13 = 8 + 4 + 1",
+    "narration": "Thirteen is one eight, one four, no two and one one: one one zero one.",
+    "code": "stage.equation(r\"13 = 8 + 4 + 0 + 1\", r\"= 1101_2\")"
+   },
+   {
+    "intent": "Bars of the 16 patterns 4 bits can make, 0 to 15",
+    "narration": "Four bits make sixteen patterns: zero up to fifteen. Each extra bit doubles that.",
+    "code": "stage.clear()\nb = draw_bars(stage, [2, 4, 8, 16], labels=[\"1 bit\", \"2 bits\", \"3 bits\", \"4 bits\"])\nstage.caption(\"Each bit doubles the count\")"
+   }
+  ]
+ }
+]
