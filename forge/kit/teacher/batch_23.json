@@ -1,0 +1,202 @@
+[
+ {
+  "request": "what does an arithmetic sequence look like on a graph?",
+  "beats": [
+   {
+    "intent": "Axes with the terms 3, 7, 11, 15, 19 plotted against their position 1 to 5",
+    "narration": "The sequence three, seven, eleven, fifteen, nineteen adds four each time.",
+    "code": "stage.title(\"An arithmetic sequence\")\nax = draw_axes(stage, x_range=(0, 6), y_range=(0, 24), labels=(\"n\", \"term\"))\npts = plot_points(stage, ax, [(n, 4 * n - 1) for n in range(1, 6)])"
+   },
+   {
+    "intent": "A step of 1 across and 4 up drawn between two neighbouring points",
+    "narration": "Every step along adds the same four.",
+    "code": "run = draw_line(stage, ax.c2p(2, 7), ax.c2p(3, 7), color=GREEN)\nrise = draw_line(stage, ax.c2p(3, 7), ax.c2p(3, 11), color=RED)\nstage.label(rise, \"+4\", direction=RIGHT, color=RED)"
+   },
+   {
+    "intent": "The line through all the points beside the formula a_n = 4n - 1",
+    "narration": "So the points lie on a straight line: the n-th term is four n minus one.",
+    "code": "ln = plot_graph(stage, ax, lambda n: 4 * n - 1, x_range=(0.5, 5.5), color=YELLOW)\nstage.equation(r\"a_n = 4n - 1\")"
+   }
+  ]
+ },
+ {
+  "request": "what does a geometric sequence look like?",
+  "beats": [
+   {
+    "intent": "Axes with the terms 3, 6, 12, 24, 48 plotted against position",
+    "narration": "Three, six, twelve, twenty four, forty eight: each term doubles the last.",
+    "code": "stage.title(\"A geometric sequence\")\nax = draw_axes(stage, x_range=(0, 6), y_range=(0, 50), labels=(\"n\", \"term\"))\npts = plot_points(stage, ax, [(n, 3 * 2 ** (n - 1)) for n in range(1, 6)])"
+   },
+   {
+    "intent": "Arrows between neighbouring points labelled ×2, getting longer",
+    "narration": "The jumps grow: plus three, plus six, plus twelve, because each is times two.",
+    "code": "for n in range(1, 5):\n    a = draw_arrow(stage, ax.c2p(n, 3 * 2 ** (n - 1)), ax.c2p(n + 1, 3 * 2 ** n))"
+   },
+   {
+    "intent": "The curve 3·2^(n-1) through the points beside the formula",
+    "narration": "The points curve upward: the n-th term is three times two to the n minus one.",
+    "code": "g = plot_graph(stage, ax, lambda n: 3 * 2 ** (n - 1), x_range=(0.5, 5.3), color=YELLOW)\nstage.equation(r\"a_n = 3 \\cdot 2^{n-1}\")"
+   }
+  ]
+ },
+ {
+  "request": "how do you solve 2x + 3 = 11 like a balance?",
+  "beats": [
+   {
+    "intent": "A balance with two x-boxes and 3 unit blocks on the left, 11 unit blocks on the right",
+    "narration": "Picture the equation as a balance: two boxes of x and three ones on the left, eleven ones on the right.",
+    "code": "stage.title(\"Solving with a balance\")\nbeam = Line(LEFT * 4, RIGHT * 4, color=GREY_B)\npiv = Triangle(color=GREY, fill_opacity=1).scale(0.3).next_to(beam, DOWN, buff=0)\nstage.play(Create(beam), FadeIn(piv))\nxs = VGroup(*[Square(0.7, color=YELLOW, fill_opacity=0.6) for _ in range(2)]).arrange(RIGHT, buff=0.1)\nones_l = VGroup(*[Square(0.3, color=BLUE, fill_opacity=0.8) for _ in range(3)]).arrange(RIGHT, buff=0.05)\nleft = VGroup(xs, ones_l).arrange(RIGHT, buff=0.2).next_to(beam.get_left() + RIGHT * 1.8, UP, buff=0)\nones_r = VGroup(*[Square(0.3, color=BLUE, fill_opacity=0.8) for _ in range(11)]).arrange_in_grid(2, 6, buff=0.05).next_to(beam.get_right() + LEFT * 1.8, UP, buff=0)\nstage.play(FadeIn(left), FadeIn(ones_r))\nstage.add(beam, left, ones_r)"
+   },
+   {
+    "intent": "Three unit blocks removed from each side, leaving two x-boxes against 8",
+    "narration": "Take three ones off both sides: it stays balanced, two x against eight.",
+    "code": "stage.play(FadeOut(ones_l), *[FadeOut(ones_r[k]) for k in range(3)])\nstage.caption(\"2x = 8\")"
+   },
+   {
+    "intent": "One x-box against 4 blocks beside x = 4",
+    "narration": "Halve both sides: one x balances four. x is four.",
+    "code": "stage.play(FadeOut(xs[1]), *[FadeOut(ones_r[k]) for k in range(3, 7)])\nstage.equation(r\"2x + 3 = 11\", r\"x = 4\")"
+   }
+  ]
+ },
+ {
+  "request": "how do you show x > 2 on a number line?",
+  "beats": [
+   {
+    "intent": "A number line from -2 to 6",
+    "narration": "Draw a number line.",
+    "code": "stage.title(\"x > 2\")\nnl = draw_number_line(stage, x_range=(-2, 6))"
+   },
+   {
+    "intent": "An open circle at 2",
+    "narration": "Put an open circle at two: two itself is not included.",
+    "code": "ring = Circle(radius=0.12, color=YELLOW).move_to(nl.n2p(2))\nstage.play(Create(ring))\nstage.add(ring)"
+   },
+   {
+    "intent": "A thick arrow from 2 running right past 6",
+    "narration": "Every number bigger than two is included, so shade to the right forever.",
+    "code": "arr = Arrow(nl.n2p(2.1), nl.n2p(6) + RIGHT * 0.5, buff=0, color=YELLOW, stroke_width=8)\nstage.play(GrowArrow(arr))\nstage.add(arr)\nstage.caption(\"Open circle: 2 is not included\")"
+   }
+  ]
+ },
+ {
+  "request": "what does the graph of y = |x| look like?",
+  "beats": [
+   {
+    "intent": "Axes with the line y = x for x ≥ 0",
+    "narration": "For positive x, the absolute value is just x.",
+    "code": "stage.title(\"y = |x|\")\nax = draw_axes(stage, x_range=(-4, 4), y_range=(0, 4))\nright = plot_graph(stage, ax, lambda x: x, x_range=(0, 4))"
+   },
+   {
+    "intent": "The line y = -x for x < 0 added, making a V",
+    "narration": "For negative x it flips the sign, so the left half rises too: a V shape.",
+    "code": "left = plot_graph(stage, ax, lambda x: -x, x_range=(-4, 0))"
+   },
+   {
+    "intent": "The points (-3, 3) and (3, 3) marked at the same height",
+    "narration": "Minus three and three are the same distance from zero, so they reach the same height.",
+    "code": "a = mark_point(stage, ax, -3, 3, color=RED, label=\"(-3, 3)\")\nb = mark_point(stage, ax, 3, 3, color=RED, label=\"(3, 3)\")"
+   }
+  ]
+ },
+ {
+  "request": "what's the difference between direct and inverse proportion?",
+  "beats": [
+   {
+    "intent": "Axes with the line y = 2x through the origin",
+    "narration": "Direct proportion: double x and y doubles too. A straight line through the origin.",
+    "code": "stage.title(\"Direct vs inverse\")\nax = draw_axes(stage, x_range=(0, 6), y_range=(0, 12))\nd = plot_graph(stage, ax, lambda x: 2 * x, color=GREEN, label=\"y = 2x\")"
+   },
+   {
+    "intent": "The curve y = 6/x added, falling as x grows",
+    "narration": "Inverse proportion: double x and y halves. A curve that falls.",
+    "code": "inv = plot_graph(stage, ax, lambda x: 6 / x, x_range=(0.5, 6), color=RED, label=\"y = 6/x\")"
+   },
+   {
+    "intent": "Points (1, 6), (2, 3), (3, 2) on the curve, each with x·y = 6",
+    "narration": "On the curve, x times y is always six: one and six, two and three, three and two.",
+    "code": "pts = plot_points(stage, ax, [(1, 6), (2, 3), (3, 2)], color=RED)\nstage.equation(r\"x \\cdot y = 6\")"
+   }
+  ]
+ },
+ {
+  "request": "which way does the gradient point on a hill?",
+  "beats": [
+   {
+    "intent": "Contour circles of a round hill, highest in the middle",
+    "narration": "A round hill seen from above: each circle is a height contour, highest in the middle.",
+    "code": "stage.title(\"The gradient points uphill\")\nrings = VGroup(*[Circle(radius=0.6 * k, color=interpolate_color(YELLOW, BLUE, k / 5)) for k in range(1, 6)])\nstage.play(LaggedStart(*[Create(r) for r in rings], lag_ratio=0.15))\nstage.add(rings)"
+   },
+   {
+    "intent": "Arrows of the gradient field all pointing towards the centre",
+    "narration": "At every point the gradient arrow points straight uphill, towards the top.",
+    "code": "draw_vector_field(stage, lambda x, y: (-x, -y))"
+   },
+   {
+    "intent": "One arrow highlighted crossing a contour at a right angle",
+    "narration": "It always crosses the contours at right angles: the steepest way up.",
+    "code": "a = Arrow(np.array([2.1, 1.2, 0]), np.array([1.2, 0.69, 0]), buff=0, color=RED, stroke_width=8)\nstage.play(GrowArrow(a))\nstage.add(a)\nstage.caption(\"Steepest ascent, across the contours\")"
+   }
+  ]
+ },
+ {
+  "request": "show a monthly budget as a pie chart",
+  "beats": [
+   {
+    "intent": "A circle split into sectors: rent 40%, food 25%, transport 15%, savings 20%",
+    "narration": "A budget: forty percent rent, twenty five food, fifteen transport, twenty saved.",
+    "code": "stage.title(\"Where the money goes\")\nparts = [(0.40, BLUE, \"rent 40%\"), (0.25, GREEN, \"food 25%\"), (0.15, YELLOW, \"transport 15%\"), (0.20, RED, \"savings 20%\")]\nstart, secs = 0, VGroup()\nfor frac, col, _ in parts:\n    secs.add(Sector(radius=2, angle=TAU * frac, start_angle=start, color=col, fill_opacity=0.8))\n    start += TAU * frac\nstage.play(LaggedStart(*[FadeIn(s) for s in secs], lag_ratio=0.3))\nstage.add(secs)"
+   },
+   {
+    "intent": "Each sector labelled with its category",
+    "narration": "Each slice's angle is its share of the full turn.",
+    "code": "start = 0\nfor (frac, col, name), s in zip(parts, secs):\n    mid = start + TAU * frac / 2\n    t = Text(name, font_size=22, color=col).move_to(2.8 * np.array([np.cos(mid), np.sin(mid), 0]))\n    stage.play(FadeIn(t), run_time=0.4)\n    stage.add(t)\n    start += TAU * frac"
+   },
+   {
+    "intent": "The rent sector pulled out beside 40% × 360° = 144°",
+    "narration": "Rent's slice is forty percent of three hundred and sixty degrees: a hundred and forty four.",
+    "code": "stage.play(secs[0].animate.shift(0.3 * np.array([np.cos(0.4 * PI), np.sin(0.4 * PI), 0])))\nstage.equation(r\"0.4 \\times 360^\\circ = 144^\\circ\")"
+   }
+  ]
+ },
+ {
+  "request": "why are triangles used in bridges?",
+  "beats": [
+   {
+    "intent": "A square frame and a triangle frame side by side",
+    "narration": "Two frames made of rigid bars with hinged corners: a square and a triangle.",
+    "code": "stage.title(\"Why triangles?\")\nsq = Square(side_length=2, color=BLUE).shift(LEFT * 3)\ntri = Triangle(color=GREEN).scale(1.3).shift(RIGHT * 3)\nstage.play(Create(sq), Create(tri))\nstage.add(sq, tri)"
+   },
+   {
+    "intent": "The square pushed sideways and collapsing into a flat parallelogram, the triangle unchanged",
+    "narration": "Push each one sideways. The square folds into a parallelogram; the triangle cannot change shape without changing a side.",
+    "code": "flat = Polygon(np.array([-4, -1, 0]), np.array([-2, -1, 0]), np.array([-0.8, 0.3, 0]), np.array([-2.8, 0.3, 0]), color=BLUE)\nstage.play(Transform(sq, flat), Wiggle(tri), run_time=2)"
+   },
+   {
+    "intent": "A diagonal brace added to the square splitting it into two rigid triangles",
+    "narration": "Add one diagonal to the square and it becomes two triangles: now it holds its shape.",
+    "code": "sq2 = Square(side_length=2, color=BLUE).shift(LEFT * 3)\nbrace = Line(sq2.get_corner(DL), sq2.get_corner(UR), color=YELLOW)\nstage.play(Transform(sq, sq2))\nstage.play(Create(brace))\nstage.add(brace)\nstage.caption(\"Triangles cannot fold\")"
+   }
+  ]
+ },
+ {
+  "request": "how many diagonals does an octagon have?",
+  "beats": [
+   {
+    "intent": "A regular octagon",
+    "narration": "A regular octagon has eight corners.",
+    "code": "stage.title(\"Diagonals of an octagon\")\npts = [2.2 * np.array([np.cos(TAU * k / 8 + PI / 8), np.sin(TAU * k / 8 + PI / 8), 0]) for k in range(8)]\nocta = Polygon(*pts, color=BLUE)\nstage.play(Create(octa))\nstage.add(octa)"
+   },
+   {
+    "intent": "The five diagonals from one corner drawn in yellow",
+    "narration": "From one corner you can draw a diagonal to every corner except itself and its two neighbours: five.",
+    "code": "first = VGroup(*[Line(pts[0], pts[k], color=YELLOW) for k in range(2, 7)])\nstage.play(LaggedStart(*[Create(l) for l in first], lag_ratio=0.2))\nstage.add(first)"
+   },
+   {
+    "intent": "All 20 diagonals drawn beside 8 × 5 ÷ 2 = 20",
+    "narration": "Eight corners times five, halved because each diagonal was counted from both ends: twenty.",
+    "code": "rest = VGroup(*[Line(pts[i], pts[j], color=GREY_B, stroke_width=2) for i in range(1, 8) for j in range(i + 2, 8) if not (i == 0 and j == 7)])\nstage.play(Create(rest), run_time=2)\nstage.add(rest)\nstage.equation(r\"\\frac{8 \\times 5}{2} = 20\")"
+   }
+  ]
+ }
+]
