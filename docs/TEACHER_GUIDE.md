@@ -91,6 +91,19 @@ Added 2026-09-30:
 - A step starting with `\Rightarrow`, `\implies` or `\iff` extends the line too.
 - One `stage.equation` line per idea: two steps that don't start with an
   operator show only the second.
+- A picture drawn in the middle while an equation is on screen goes to the
+  other side; a vector's label switches side when its tip flips.
+- Axis and number-line numbers under 10 000 have no separator (years read 2020).
+
+Pitfalls seen in the batches:
+- After an equation, `_make_room` shrinks and moves the picture: draw later
+  things relative to objects (`a.get_center()`), not at fixed coordinates.
+- `stage.add(x)` with no animation after it can miss the beat-end frame:
+  `stage.play(FadeIn(x))`.
+- An Arrow stretched from a tiny one loses its tip: build it full length and
+  `GrowArrow` it.
+- Precompute simulations (which cells get infected) and write the lists in;
+  keep `def` out of beat code.
 - A beat that draws only axes / a grid / a number line is a background,
   never a beat's picture: always put something on it.
 
