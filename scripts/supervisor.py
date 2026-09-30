@@ -210,7 +210,10 @@ def jobs() -> list[Job]:
               [str(PY), "-u", str(ROOT / "scripts" / "critic_kit_scenes.py")],
               log=ROOT / "data" / "logs" / "kit_critic.log",
               note="a vision model checks each teacher scene's frames",
-              stallable=False),
+              stallable=False,
+              # Paused while the headline judge needs Gemini's quota (the local
+              # critic covers the data): touch data/kit/pause_critic.
+              done_when=lambda: (ROOT / "data" / "kit" / "pause_critic").exists()),
         local("fix-arcs", "fix_arcs.py", d / "plan_synth_fixed.jsonl",
               [str(PY), "-u", str(ROOT / "scripts" / "fix_arcs.py")],
               done_when=lambda: (d / "fix_done").exists(),

@@ -144,7 +144,14 @@ def judge(tag: str, key: str) -> dict:
 def main() -> int:
     from forge.synth.teacher import Teacher
     key = Teacher(provider="gemini", model=MODELS[0])._key
-    for tag in sys.argv[1:]:
+    args = sys.argv[1:]
+    # --model M: judge every scene with one model, so runs compared with each
+    # other are judged alike (the rotation lands on whichever has quota).
+    if "--model" in args:
+        i = args.index("--model")
+        MODELS[:] = [args[i + 1]]
+        del args[i: i + 2]
+    for tag in args:
         s = judge(tag, key)
         print(f"{tag:24s} judge share {s['share']:.0%}  ({s['yes']}/{s['planned']} planned beats; "
               f"{s['scenes_judged']}/{s['of']} scenes judged)", flush=True)
