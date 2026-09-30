@@ -1,0 +1,82 @@
+[
+ {
+  "request": "how many seconds are in a day?",
+  "beats": [
+   {
+    "intent": "A day bar split into 24 hour blocks",
+    "narration": "A day has twenty four hours.",
+    "code": "stage.title(\"Seconds in a day\")\nhours = VGroup(*[Rectangle(width=0.45, height=0.8, color=BLUE, fill_opacity=0.4) for _ in range(24)]).arrange(RIGHT, buff=0.02).move_to([0, 1.6, 0])\nstage.play(LaggedStart(*[FadeIn(h) for h in hours], lag_ratio=0.03))\nstage.add(hours)\nstage.label(hours, \"24 hours\", direction=UP, color=BLUE)"
+   },
+   {
+    "intent": "One hour block zoomed into 60 minute strips, one minute into 60 second ticks",
+    "narration": "Each hour has sixty minutes, and each minute sixty seconds.",
+    "code": "mins = VGroup(*[Rectangle(width=0.11, height=0.6, color=GREEN, fill_opacity=0.5, stroke_width=1) for _ in range(60)]).arrange(RIGHT, buff=0.02).move_to([0, 0.0, 0])\nsecs = VGroup(*[Line(UP * 0.2, DOWN * 0.2, color=ORANGE) for _ in range(60)]).arrange(RIGHT, buff=0.11).move_to([0, -1.4, 0])\nlink1 = DashedLine(hours[0].get_bottom(), mins.get_corner(UL), color=GREY_B)\nlink2 = DashedLine(mins[0].get_bottom(), secs.get_corner(UL), color=GREY_B)\nstage.play(Create(link1), FadeIn(mins))\nstage.play(Create(link2), FadeIn(secs))\nstage.add(link1, link2, mins, secs)\nstage.label(mins, \"60 minutes\", direction=RIGHT, color=GREEN)\nstage.label(secs, \"60 seconds\", direction=RIGHT, color=ORANGE)"
+   },
+   {
+    "intent": "The picture beside 24 × 60 × 60 = 86 400",
+    "narration": "Multiply: twenty four times sixty times sixty is eighty six thousand four hundred seconds.",
+    "code": "stage.equation(r\"24 \\times 60 \\times 60\", r\"= 86\\,400\")"
+   }
+  ]
+ },
+ {
+  "request": "how do I draw my 4 m by 3 m room at a scale of 1:50?",
+  "beats": [
+   {
+    "intent": "A 4 m by 3 m room outline with a door gap",
+    "narration": "The room is four metres by three.",
+    "code": "stage.title(\"A scale drawing\")\nroom = VMobject(color=WHITE, stroke_width=5).set_points_as_corners([[-1.6, -2.0, 0], [-3.6, -2.0, 0], [-3.6, 1.0, 0], [0.4, 1.0, 0], [0.4, -2.0, 0], [-0.8, -2.0, 0]])\nstage.play(Create(room))\nstage.add(room)\nstage.label(Line([-3.6, 1.0, 0], [0.4, 1.0, 0]), \"4 m\", direction=UP)\nstage.label(Line([0.4, 1.0, 0], [0.4, -2.0, 0]), \"3 m\", direction=RIGHT)"
+   },
+   {
+    "intent": "A small rectangle 8 cm by 6 cm drawn beside it at 1:50",
+    "narration": "At one to fifty, every metre becomes two centimetres on paper: four hundred centimetres over fifty is eight.",
+    "code": "paper = Rectangle(width=1.6, height=1.2, color=YELLOW).move_to([3.6, -0.5, 0])\nstage.play(Create(paper))\nstage.add(paper)\nstage.label(paper, \"8 cm\", direction=UP, color=YELLOW)\nstage.label(paper, \"6 cm\", direction=RIGHT, color=YELLOW)\nstage.caption(\"scale 1 : 50\")"
+   },
+   {
+    "intent": "The drawings beside 400 cm ÷ 50 = 8 cm and 300 cm ÷ 50 = 6 cm",
+    "narration": "Three hundred over fifty is six. The drawing is eight centimetres by six.",
+    "code": "stage.equation(r\"400 \\div 50 = 8\", r\"300 \\div 50 = 6\")"
+   }
+  ]
+ },
+ {
+  "request": "how fast is something going 3 seconds after I drop it?",
+  "beats": [
+   {
+    "intent": "Axes of time and speed with the line v = 10t",
+    "narration": "A dropped stone speeds up by about ten metres a second, every second.",
+    "code": "stage.title(\"Falling speed\")\nax = draw_axes(stage, x_range=(0, 4), y_range=(0, 40), labels=(\"seconds\", \"m/s\"))\ng = plot_graph(stage, ax, lambda t: 10 * t, color=ORANGE)"
+   },
+   {
+    "intent": "The point (3, 30) marked",
+    "narration": "After three seconds it is falling at thirty metres a second, over a hundred kilometres an hour.",
+    "code": "p = mark_point(stage, ax, (3, 30), color=YELLOW, label=\"(3, 30)\")"
+   },
+   {
+    "intent": "The triangle under the line up to t = 3 shaded, beside distance = ½ × 3 × 30 = 45 m",
+    "narration": "The distance fallen is the area under the line: a triangle, half of three times thirty, forty five metres.",
+    "code": "tri = Polygon(ax.c2p(0, 0), ax.c2p(3, 0), ax.c2p(3, 30), stroke_width=0, fill_color=ORANGE, fill_opacity=0.35)\nstage.play(FadeIn(tri))\nstage.add(tri)\nstage.equation(r\"\\tfrac12 \\times 3 \\times 30 = 45\\ \\text{m}\")"
+   }
+  ]
+ },
+ {
+  "request": "does a heavy ball fall faster than a light one?",
+  "beats": [
+   {
+    "intent": "A tower with a big ball and a small ball at the top, side by side",
+    "narration": "Drop a heavy ball and a light ball from a tower at the same moment.",
+    "code": "stage.title(\"Heavy and light\")\ntower = Rectangle(width=1.2, height=5.2, color=GREY_B, fill_opacity=0.3).move_to([-3, -0.6, 0])\nground = Line([-5, -3.2, 0], [5, -3.2, 0], color=GREY_B)\nheavy = Circle(radius=0.35, color=ORANGE, fill_opacity=0.9).move_to([-1.4, 1.7, 0])\nlight = Circle(radius=0.15, color=BLUE, fill_opacity=0.9).move_to([0.2, 1.7, 0])\nstage.play(FadeIn(tower), Create(ground), FadeIn(heavy), FadeIn(light))\nstage.add(tower, ground, heavy, light)\nstage.label(heavy, \"10 kg\", direction=UP, color=ORANGE)\nstage.label(light, \"1 kg\", direction=UP, color=BLUE)"
+   },
+   {
+    "intent": "Both balls falling together and landing at the same moment",
+    "narration": "Without air resistance they fall side by side and land together.",
+    "code": "stage.play(heavy.animate.move_to([-1.4, -2.85, 0]), light.animate.move_to([0.2, -3.05, 0]), run_time=1.5, rate_func=rate_functions.ease_in_quad)\nstage.caption(\"they land together\")"
+   },
+   {
+    "intent": "The picture beside: 10× the weight, but 10× harder to speed up, so a = g for both",
+    "narration": "The heavy ball is pulled ten times harder, but it is also ten times harder to speed up. The two cancel, so both speed up at the same rate.",
+    "code": "stage.equation(r\"a = \\frac{F}{m} = \\frac{10\\,m g}{10\\,m} = g\")"
+   }
+  ]
+ }
+]
