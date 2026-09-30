@@ -81,6 +81,7 @@ Added 2026-09-30:
   with =, <, \\approx, \\to ... extends the line; any other step replaces it.
 - Bar and node labels that are words render as plain text ("3 for £2");
   bars are spaced to fit their labels.
+- `stage.label(obj, ...)` follows `obj` when it moves.
 - A beat that draws only axes / a grid / a number line is a background,
   never a beat's picture: always put something on it.
 
