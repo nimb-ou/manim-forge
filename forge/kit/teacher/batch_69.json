@@ -1,0 +1,82 @@
+[
+ {
+  "request": "where does the trapezium area formula come from?",
+  "beats": [
+   {
+    "intent": "A trapezium with parallel sides 2 and 5 and height 2",
+    "narration": "Here is a trapezium: parallel sides of two and five, two apart.",
+    "code": "stage.title(\"Area of a trapezium\")\ntrap = draw_polygon(stage, [(-3.5, -1.5), (1.5, -1.5), (0.5, 0.5), (-1.5, 0.5)], color=BLUE)\nstage.label((-1.0, -1.5), \"5\", direction=DOWN, color=BLUE)\nstage.label((-0.5, 0.5), \"2\", direction=UP, color=BLUE)\nh = draw_line(stage, (-1.5, 0.5), (-1.5, -1.5), color=YELLOW, dashed=True)\nstage.label(h, \"h = 2\", direction=LEFT, color=YELLOW)"
+   },
+   {
+    "intent": "A second copy turned upside down and placed alongside, making a parallelogram of base 7",
+    "narration": "Take a second copy, flip it over and fit it alongside. Together they make a parallelogram with base five plus two, seven.",
+    "code": "copy = Polygon([1.5, -1.5, 0], [3.5, -1.5, 0], [5.5, 0.5, 0], [0.5, 0.5, 0], color=GREEN, fill_opacity=0.3)\nstage.play(FadeIn(copy, shift=LEFT))\nstage.add(copy)\nstage.label((2.5, -1.5), \"2\", direction=DOWN, color=GREEN)\nstage.label((3.0, 0.5), \"5\", direction=UP, color=GREEN)\nstage.caption(\"two trapeziums: a parallelogram, base 7, height 2\")"
+   },
+   {
+    "intent": "The shapes beside A = ½ (2 + 5) × 2 = 7",
+    "narration": "The parallelogram's area is seven times two, fourteen. One trapezium is half of that: seven.",
+    "code": "stage.equation(r\"A = \\tfrac12 (a + b) h = \\tfrac12 (2 + 5) \\times 2\", r\"= 7\")"
+   }
+  ]
+ },
+ {
+  "request": "how do you find the volume of a can?",
+  "beats": [
+   {
+    "intent": "A cylinder drawn as an ellipse top, straight sides and a curved bottom, radius 2 and height 5 labelled",
+    "narration": "A can is a cylinder: radius two centimetres, height five.",
+    "code": "stage.title(\"Volume of a cylinder\")\ntop = Ellipse(width=3.2, height=0.9, color=BLUE, fill_opacity=0.4).move_to([0, 1.4, 0])\nbottom = Ellipse(width=3.2, height=0.9, color=BLUE).move_to([0, -1.9, 0])\nleft = Line([-1.6, 1.4, 0], [-1.6, -1.9, 0], color=BLUE)\nright = Line([1.6, 1.4, 0], [1.6, -1.9, 0], color=BLUE)\nstage.play(Create(top), Create(bottom), Create(left), Create(right))\nstage.add(top, bottom, left, right)\nr = Line([0, 1.4, 0], [1.6, 1.4, 0], color=YELLOW)\nstage.play(Create(r))\nstage.add(r)\nstage.label(r, \"r = 2\", direction=UP, color=YELLOW)\nstage.label(right, \"h = 5\", direction=RIGHT, color=GREEN)"
+   },
+   {
+    "intent": "The circular top lit as the base area π × 2² ≈ 12.6",
+    "narration": "The base is a circle of area pi r squared: about twelve point six square centimetres.",
+    "code": "highlight(stage, top, color=YELLOW)\nstage.caption(\"base area = π × 2² ≈ 12.6 cm²\")"
+   },
+   {
+    "intent": "The can beside V = πr²h = π × 4 × 5 ≈ 62.8 cm³",
+    "narration": "Stack five centimetres of those circles: the volume is about sixty two point eight cubic centimetres.",
+    "code": "stage.equation(r\"V = \\pi r^2 h = \\pi \\times 4 \\times 5\", r\"\\approx 62.8\\ \\text{cm}^3\")"
+   }
+  ]
+ },
+ {
+  "request": "how do you read a box plot?",
+  "beats": [
+   {
+    "intent": "Eleven test scores as dots on a number line from 40 to 100",
+    "narration": "Here are eleven test scores, marked on a line.",
+    "code": "stage.title(\"Reading a box plot\")\nscores = [45, 52, 58, 60, 63, 67, 70, 74, 79, 85, 96]\nnl = draw_number_line(stage, x_range=(40, 100))\nfor v in scores:\n    mark_point(stage, nl, v, color=YELLOW)"
+   },
+   {
+    "intent": "The median 67 and the quartiles 58 and 79 marked",
+    "narration": "The middle score, the median, is sixty seven. The middles of each half, the quartiles, are fifty eight and seventy nine.",
+    "code": "for v, name, col, top in ((58, \"Q1 58\", GREEN, 0.9), (67, \"median 67\", RED, 1.6), (79, \"Q3 79\", GREEN, 0.9)):\n    t = Line(nl.n2p(v) + top * UP, nl.n2p(v) + 0.3 * UP, color=col, stroke_width=5)\n    stage.play(Create(t), run_time=0.4)\n    stage.add(t)\n    stage.label(t, name, direction=UP, color=col)"
+   },
+   {
+    "intent": "A box from 58 to 79 with a line at 67 and whiskers out to 45 and 96",
+    "narration": "Draw a box between the quartiles, a line at the median, and whiskers out to the lowest and highest scores. The middle half of the class sits inside the box.",
+    "code": "box = Rectangle(width=(nl.n2p(79) - nl.n2p(58))[0], height=0.8, color=BLUE, fill_opacity=0.3).move_to((nl.n2p(58) + nl.n2p(79)) / 2 + 1.6 * DOWN)\nmed = Line(nl.n2p(67) + 1.2 * DOWN, nl.n2p(67) + 2.0 * DOWN, color=RED, stroke_width=5)\nw1 = Line(nl.n2p(45) + 1.6 * DOWN, box.get_left(), color=BLUE)\nw2 = Line(box.get_right(), nl.n2p(96) + 1.6 * DOWN, color=BLUE)\nstage.play(Create(box), Create(med), Create(w1), Create(w2))\nstage.add(box, med, w1, w2)\nstage.caption(\"the box holds the middle half of the scores\")"
+   }
+  ]
+ },
+ {
+  "request": "how does Morse code spell SOS?",
+  "beats": [
+   {
+    "intent": "The letters S and O with their Morse patterns: three dots, three dashes",
+    "narration": "In Morse code S is three short dots, and O is three long dashes.",
+    "code": "stage.title(\"Morse code\")\ndot = lambda: Circle(radius=0.15, color=YELLOW, fill_opacity=1)\ndash = lambda: RoundedRectangle(width=0.8, height=0.3, corner_radius=0.15, color=YELLOW, fill_opacity=1)\ns_row = VGroup(*[dot() for _ in range(3)]).arrange(RIGHT, buff=0.3).move_to([0.5, 1.0, 0])\no_row = VGroup(*[dash() for _ in range(3)]).arrange(RIGHT, buff=0.3).move_to([0.5, -0.5, 0])\ns_lab = Text(\"S\", font_size=44).next_to(s_row, LEFT, buff=1.0)\no_lab = Text(\"O\", font_size=44).next_to(o_row, LEFT, buff=1.0)\nstage.play(FadeIn(s_lab), LaggedStart(*[GrowFromCenter(d) for d in s_row], lag_ratio=0.3))\nstage.play(FadeIn(o_lab), LaggedStart(*[GrowFromCenter(d) for d in o_row], lag_ratio=0.3))\nstage.add(s_row, o_row, s_lab, o_lab)"
+   },
+   {
+    "intent": "SOS as one row: dot dot dot, dash dash dash, dot dot dot",
+    "narration": "Put them together: dot dot dot, dash dash dash, dot dot dot. Easy to send and hard to mistake.",
+    "code": "stage.clear()\nrow = VGroup(*[dot() for _ in range(3)], *[dash() for _ in range(3)], *[dot() for _ in range(3)]).arrange(RIGHT, buff=0.25)\nrow[3].shift(0.3 * RIGHT); row[4].shift(0.3 * RIGHT); row[5].shift(0.3 * RIGHT)\nrow[6].shift(0.6 * RIGHT); row[7].shift(0.6 * RIGHT); row[8].shift(0.6 * RIGHT)\nrow.move_to([0, 0.2, 0])\nstage.play(LaggedStart(*[GrowFromCenter(d) for d in row], lag_ratio=0.15))\nstage.add(row)\nstage.caption(\"S O S\")"
+   },
+   {
+    "intent": "Bars of the length of each signal in time units: dot 1, dash 3",
+    "narration": "A dash lasts three times as long as a dot, which is how a listener tells them apart.",
+    "code": "stage.clear()\nb = draw_bars(stage, [1, 3], labels=[\"dot\", \"dash\"], color=YELLOW)\nstage.caption(\"length in time units\")"
+   }
+  ]
+ }
+]
