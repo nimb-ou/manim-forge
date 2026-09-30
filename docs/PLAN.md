@@ -200,8 +200,19 @@ Ship the best configuration measured on held-out, not the newest.
    gallery page — so the Oct 3 result is the last step.
 5. *Oct 3 00:30Z:* SFT kit v8 + planner v5 (automated) → cached-plan and
    full-pipeline evals, short and held-out → Gemini judge → eye check.
-6. *Oct 4–5:* one more round if it helped: self-training with v8 → critic
-   → v9. *Oct 6:* release.
+6. *Oct 3–5:* round 2, unattended (`scripts/round2.sh`): kit v8 scored on
+   cached plans with the local judge; if held-out holds up, a Kaggle GPU
+   session writes ~1,300 arcs with v8 in batches and renders them on its
+   CPUs (`kaggle/selfgen`, `forge/app/selfgen.py`); the Mac's local critic
+   judges the frames (`collect_selfgen.py`); then the v9 SFT, after a look.
+   *Oct 6:* release.
+
+**Update 2026-09-30.** The diagnostic answered "coder": oracle plans did
+not raise kit v6's held-out score. So the data effort went to coder rows:
+Claude batches 12–21 (~115 scenes aimed at the observed failures, every
+sheet looked at), kit fixes (plot_points, mark_point(ax, x, y), persistent
+highlight, smooth trace_graph), and resampling beats that draw only a
+scaffold (+6 points held-out on identical plans, local judge).
 
 **Stopped.** GRPO; inference tweaks; kit patches for single guesses.
 

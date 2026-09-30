@@ -35,3 +35,6 @@ kaggle/manim-forge-grpo/coder/
 # dataset staging bundles (built by the push scripts)
 kaggle/manim-forge-kit/
 kaggle/manim-forge-grpo/forge/
+kaggle/manim-forge-selfgen/
+kaggle/manim-forge-critic/
+kaggle/critic_render_*/
