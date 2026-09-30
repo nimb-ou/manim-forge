@@ -1,0 +1,82 @@
+[
+ {
+  "request": "how do bike gears make you go faster?",
+  "beats": [
+   {
+    "intent": "A big front chainring with 44 teeth and a small rear cog with 11, joined by a chain",
+    "narration": "The pedals turn a big front gear with forty four teeth. A chain links it to a small rear gear with eleven.",
+    "code": "stage.title(\"Bike gears\")\nfront = Circle(radius=1.6, color=ORANGE, fill_opacity=0.2).move_to([-2.5, -0.5, 0])\nrear = Circle(radius=0.4, color=BLUE, fill_opacity=0.3).move_to([2.5, -0.5, 0])\nchain_top = Line(front.get_top(), rear.get_top(), color=GREY_B)\nchain_bot = Line(front.get_bottom(), rear.get_bottom(), color=GREY_B)\nstage.play(Create(front), Create(rear), Create(chain_top), Create(chain_bot))\nstage.add(front, rear, chain_top, chain_bot)\nstage.label(front, \"44 teeth\", direction=DOWN, color=ORANGE)\nstage.label(rear, \"11 teeth\", direction=DOWN, color=BLUE)"
+   },
+   {
+    "intent": "The front gear turning once while the rear gear turns four times, marks on each",
+    "narration": "One turn of the pedals pulls forty four links of chain, and that spins the small gear four times round.",
+    "code": "m1 = Line(front.get_center(), front.get_top(), color=ORANGE, stroke_width=5)\nm2 = Line(rear.get_center(), rear.get_top(), color=BLUE, stroke_width=5)\nstage.add(m1, m2)\nstage.play(Rotate(m1, -TAU, about_point=front.get_center()),\n           Rotate(m2, -4 * TAU, about_point=rear.get_center()), run_time=3, rate_func=linear)\nstage.caption(\"1 pedal turn = 4 wheel turns\")"
+   },
+   {
+    "intent": "The gears beside 44 ÷ 11 = 4 and 4 × 2.1 m = 8.4 m per pedal turn",
+    "narration": "The wheel is two point one metres round, so each turn of the pedals carries you eight point four metres.",
+    "code": "stage.equation(r\"\\frac{44}{11} = 4\", r\"\\Rightarrow 4 \\times 2.1\\ \\text{m} = 8.4\\ \\text{m}\")"
+   }
+  ]
+ },
+ {
+  "request": "how much water does a dripping tap waste?",
+  "beats": [
+   {
+    "intent": "A tap drawn from rectangles with drops falling into a bucket",
+    "narration": "A tap drips once a second. Each drop is about a twentieth of a millilitre.",
+    "code": "stage.title(\"A dripping tap\")\npipe = draw_rectangle(stage, width=2.4, height=0.35, color=GREY_B, fill=0.8)\npipe.move_to([-1.2, 2.0, 0])\nspout = Rectangle(width=0.35, height=0.6, color=GREY_B, fill_opacity=0.8).move_to([0, 1.6, 0])\nbucket = Polygon([-0.9, -2.4, 0], [0.9, -2.4, 0], [1.2, -0.6, 0], [-1.2, -0.6, 0], color=WHITE)\nstage.play(FadeIn(spout), Create(bucket))\nstage.add(spout, bucket)\ndrops = [Dot([0, 1.2, 0], color=BLUE, radius=0.09) for _ in range(3)]\nfor d in drops:\n    stage.play(d.animate.move_to([0, -2.2, 0]), run_time=0.6, rate_func=rate_functions.ease_in_quad)\n    stage.remove(d)\nlevel = Rectangle(width=1.7, height=0.3, color=BLUE, fill_opacity=0.6, stroke_width=0).move_to([0, -2.25, 0])\nstage.play(FadeIn(level))\nstage.add(level)\nstage.caption(\"1 drop a second, 0.05 mL each\")"
+   },
+   {
+    "intent": "The bucket beside 86 400 s × 0.05 mL ≈ 4.3 L a day",
+    "narration": "A day has eighty six thousand four hundred seconds. That adds up to more than four litres a day.",
+    "code": "stage.equation(r\"86\\,400 \\times 0.05\\ \\text{mL}\", r\"\\approx 4.3\\ \\text{L a day}\")"
+   },
+   {
+    "intent": "Bars of water wasted: 4.3 L a day, 30 L a week, 1580 L a year",
+    "narration": "Thirty litres a week, and about one thousand five hundred and eighty litres a year: several bathtubs.",
+    "code": "stage.clear()\nb = draw_bars(stage, [4.3, 30, 1580], labels=[\"day\", \"week\", \"year\"], color=BLUE)\nstage.caption(\"litres wasted\")"
+   }
+  ]
+ },
+ {
+  "request": "why does the moon have phases?",
+  "beats": [
+   {
+    "intent": "The Sun's light from the left, the Earth in the middle and the Moon at four points around it, each lit on its left half",
+    "narration": "Sunlight comes from the left, so the Moon is always half lit: the half facing the Sun.",
+    "code": "stage.title(\"Phases of the Moon\")\nearth = Circle(radius=0.45, color=BLUE, fill_opacity=0.8).move_to([0.5, -0.3, 0])\nstage.play(GrowFromCenter(earth))\nstage.add(earth)\nstage.label(earth, \"Earth\", direction=DOWN, color=BLUE)\nrays = [Arrow([-6.5, y, 0], [-5.2, y, 0], buff=0, color=YELLOW) for y in (-1.5, -0.3, 0.9)]\nstage.play(*[GrowArrow(r) for r in rays])\nstage.add(*rays)\nc = earth.get_center()\nspots = [c + 2.2 * np.array([np.cos(a), np.sin(a), 0]) for a in (PI, PI / 2, 0, -PI / 2)]\nmoons = []\nfor p in spots:\n    dark = Circle(radius=0.35, color=GREY_B, fill_color=GREY_E, fill_opacity=1).move_to(p)\n    lit = Sector(radius=0.35, start_angle=PI / 2, angle=PI, color=WHITE, fill_opacity=1).move_arc_center_to(p)\n    moons.append(VGroup(dark, lit))\nstage.play(*[FadeIn(m) for m in moons])\nstage.add(*moons)"
+   },
+   {
+    "intent": "Each Moon labelled with what we see from Earth: new on the Sun side, full on the far side, half between",
+    "narration": "From Earth we see a different share of the lit half: all of it when the Moon is behind us, none when it sits between us and the Sun.",
+    "code": "for m, name, d in zip(moons, [\"new\", \"half\", \"full\", \"half\"], [LEFT, UP, RIGHT, DOWN]):\n    stage.label(m, name, direction=d, color=YELLOW)"
+   },
+   {
+    "intent": "A row of the phases as seen from Earth: new, crescent, half, gibbous, full",
+    "narration": "Over a month, as it goes round, the Moon grows from new to full and back again.",
+    "code": "stage.clear()\nrow = VGroup()\nfor k, frac in enumerate([0, 0.25, 0.5, 0.75, 1.0]):\n    base = Circle(radius=0.5, color=GREY_B, fill_color=GREY_E, fill_opacity=1)\n    lit = Sector(radius=0.5, start_angle=-PI / 2, angle=PI, color=WHITE, fill_opacity=1)\n    cover = Ellipse(width=max(abs(1 - 2 * frac), 0.01), height=1.0, stroke_width=0,\n                    fill_color=GREY_E if frac < 0.5 else WHITE, fill_opacity=1)\n    row.add(VGroup(base, lit, cover) if frac < 1 else VGroup(Circle(radius=0.5, color=WHITE, fill_opacity=1)))\nrow.arrange(RIGHT, buff=0.6).move_to([0, 0, 0])\nrow[0] = VGroup(Circle(radius=0.5, color=GREY_B, fill_color=GREY_E, fill_opacity=1)).move_to(row[0])\nstage.play(LaggedStart(*[FadeIn(m) for m in row], lag_ratio=0.3))\nstage.add(row)\nfor m, n in zip(row, [\"new\", \"crescent\", \"half\", \"gibbous\", \"full\"]):\n    stage.label(m, n, direction=DOWN)"
+   }
+  ]
+ },
+ {
+  "request": "how do you turn survey results into a pie chart?",
+  "beats": [
+   {
+    "intent": "Bars of a survey: walk 40, bus 30, car 20, bike 10",
+    "narration": "A hundred pupils say how they get to school: forty walk, thirty take the bus, twenty come by car, ten cycle.",
+    "code": "stage.title(\"Making a pie chart\")\nb = draw_bars(stage, [40, 30, 20, 10], labels=[\"walk\", \"bus\", \"car\", \"bike\"])"
+   },
+   {
+    "intent": "The bars beside each share times 360°: 144°, 108°, 72°, 36°",
+    "narration": "A full circle is three hundred and sixty degrees, so each pupil is worth three point six degrees.",
+    "code": "stage.equation(r\"40\\% \\times 360^\\circ = 144^\\circ\")\nstage.caption(\"bus 108°, car 72°, bike 36°\")"
+   },
+   {
+    "intent": "A pie chart of four slices of 144°, 108°, 72° and 36°",
+    "narration": "Cut the circle into slices of those angles: the pie chart shows each share at a glance.",
+    "code": "stage.clear()\nangs = [144, 108, 72, 36]\ncols = [GREEN, BLUE, ORANGE, YELLOW]\nstart = PI / 2\npie = VGroup()\nfor a, c in zip(angs, cols):\n    s = Sector(radius=2.0, start_angle=start, angle=-a * DEGREES, color=c, fill_opacity=0.8, stroke_color=BLACK, stroke_width=2)\n    pie.add(s)\n    start -= a * DEGREES\npie.move_to([0, -0.3, 0])\nstage.play(LaggedStart(*[FadeIn(s) for s in pie], lag_ratio=0.3))\nstage.add(pie)\nfor s, n in zip(pie, [\"walk 40%\", \"bus 30%\", \"car 20%\", \"bike 10%\"]):\n    mid = s.get_center()\n    d = mid - pie.get_center()\n    stage.label(s, n, direction=d / (np.linalg.norm(d) or 1))"
+   }
+  ]
+ }
+]
