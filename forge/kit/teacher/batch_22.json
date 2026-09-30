@@ -1,0 +1,202 @@
+[
+ {
+  "request": "why does a siren sound higher as it comes towards you?",
+  "beats": [
+   {
+    "intent": "Concentric wave circles around a still source, evenly spaced",
+    "narration": "A still source sends out sound waves as evenly spaced circles.",
+    "code": "stage.title(\"The Doppler effect\")\nstill = VGroup(*[Circle(radius=0.5 * k, color=BLUE).move_to(LEFT * 3) for k in range(1, 5)])\nstage.play(LaggedStart(*[Create(c) for c in still], lag_ratio=0.2))\nstage.add(still)\nstage.caption(\"Still source: even spacing\")"
+   },
+   {
+    "intent": "Circles from a source moving right, bunched up ahead and stretched behind",
+    "narration": "When the source moves right, each new circle starts further right: ahead they bunch up, behind they spread out.",
+    "code": "moving = VGroup(*[Circle(radius=0.5 * k, color=YELLOW).move_to(RIGHT * (2.6 - 0.3 * k)) for k in range(1, 5)])\nsrc = Dot(RIGHT * 2.6, color=RED)\nstage.play(LaggedStart(*[Create(c) for c in moving], lag_ratio=0.2), FadeIn(src))\nstage.add(moving, src)\nstage.caption(\"Moving source: bunched ahead, spread behind\")"
+   },
+   {
+    "intent": "Arrows marking short wavelength ahead and long wavelength behind",
+    "narration": "Short waves ahead sound higher; long waves behind sound lower.",
+    "code": "ahead = draw_arrow(stage, (4.5, -2.4), (5.5, -2.4))\nbehind = draw_arrow(stage, (0.5, -2.4), (-0.5, -2.4))\nstage.label(ahead, \"higher\", direction=DOWN, color=YELLOW)\nstage.label(behind, \"lower\", direction=DOWN, color=YELLOW)"
+   }
+  ]
+ },
+ {
+  "request": "why does a straw look bent in water?",
+  "beats": [
+   {
+    "intent": "A horizontal line as the water surface with a light ray coming down into it",
+    "narration": "Light travels from air into water, crossing the surface.",
+    "code": "stage.title(\"Refraction\")\nwater = Rectangle(width=8, height=2.5, color=BLUE, fill_opacity=0.3, stroke_width=0).shift(DOWN * 1.25)\nsurface = Line(LEFT * 4, RIGHT * 4, color=BLUE)\nstage.play(FadeIn(water), Create(surface))\nstage.add(water, surface)\nray1 = draw_arrow(stage, (-2.5, 2.2), (0, 0))"
+   },
+   {
+    "intent": "The ray bending towards the dashed normal as it enters the water",
+    "narration": "In water light slows down, so the ray bends towards the normal, the line straight through the surface.",
+    "code": "normal = DashedLine(UP * 2.3, DOWN * 2.3, color=GREY)\nstage.play(Create(normal))\nstage.add(normal)\nray2 = draw_arrow(stage, (0, 0), (1.3, -2.3))"
+   },
+   {
+    "intent": "The angles 49 degrees above and 30 degrees below marked, beside n1 sin θ1 = n2 sin θ2",
+    "narration": "The angle shrinks from about forty nine degrees to thirty: Snell's law.",
+    "code": "a1 = Angle(Line(ORIGIN, UP), Line(ORIGIN, np.array([-2.5, 2.2, 0])), radius=0.8, color=YELLOW)\na2 = Angle(Line(ORIGIN, DOWN), Line(ORIGIN, np.array([1.3, -2.3, 0])), radius=0.8, color=GREEN)\nstage.play(Create(a1), Create(a2))\nstage.add(a1, a2)\nstage.equation(r\"1.00 \\sin 49^\\circ = 1.33 \\sin 30^\\circ\")"
+   }
+  ]
+ },
+ {
+  "request": "why does light bounce off a mirror at the same angle?",
+  "beats": [
+   {
+    "intent": "A flat mirror with a light ray coming in at an angle",
+    "narration": "A ray of light hits a flat mirror.",
+    "code": "stage.title(\"Reflection\")\nmirror = Line(LEFT * 3.5, RIGHT * 3.5, color=GREY_B, stroke_width=6).shift(DOWN * 1.5)\nstage.play(Create(mirror))\nstage.add(mirror)\ninc = draw_arrow(stage, (-2.5, 1.5), (0, -1.5))"
+   },
+   {
+    "intent": "The reflected ray leaving at the mirror image of the incoming angle",
+    "narration": "It leaves on the other side at exactly the same slant.",
+    "code": "out = draw_arrow(stage, (0, -1.5), (2.5, 1.5))\nnormal = DashedLine(np.array([0, -1.5, 0]), np.array([0, 1.8, 0]), color=GREY)\nstage.play(Create(normal))\nstage.add(normal)"
+   },
+   {
+    "intent": "Equal angles of 40 degrees marked on both sides of the dashed normal",
+    "narration": "Measured from the normal, the angle in equals the angle out.",
+    "code": "O = np.array([0, -1.5, 0])\nai = Angle(Line(O, O + UP), Line(O, np.array([-2.5, 1.5, 0])), radius=0.7, color=YELLOW)\nao = Angle(Line(O, np.array([2.5, 1.5, 0])), Line(O, O + UP), radius=0.7, color=GREEN)\nstage.play(Create(ai), Create(ao))\nstage.add(ai, ao)\nstage.caption(\"Angle in = angle out\")"
+   }
+  ]
+ },
+ {
+  "request": "why do planets speed up near the sun?",
+  "beats": [
+   {
+    "intent": "An ellipse orbit with the sun at one focus",
+    "narration": "A planet's orbit is an ellipse, with the sun at one focus, not the centre.",
+    "code": "stage.title(\"An elliptical orbit\")\norbit = Ellipse(width=6, height=3.6, color=BLUE)\nsun = Dot(RIGHT * 1.8, color=YELLOW, radius=0.2)\nstage.play(Create(orbit), FadeIn(sun))\nstage.add(orbit, sun)"
+   },
+   {
+    "intent": "A planet dot moving round the ellipse, fastest near the sun",
+    "narration": "Near the sun the planet moves fastest; far away it crawls.",
+    "code": "t = ValueTracker(0)\npos = lambda a: np.array([3 * np.cos(a), 1.8 * np.sin(a), 0])\nplanet = always_redraw(lambda: Dot(pos(t.get_value()), color=GREEN, radius=0.12))\nstage.add(planet)\n# more angle per second near perihelion (a = 0, beside the sun)\nstage.play(t.animate.set_value(TAU), run_time=5, rate_func=lambda x: x - 0.12 * np.sin(TAU * x))"
+   },
+   {
+    "intent": "Two shaded wedges from the sun of equal area, one short and wide near the sun, one long and thin",
+    "narration": "In equal times the line to the sun sweeps equal areas: short and wide near the sun, long and thin far away.",
+    "code": "near = Polygon(sun.get_center(), pos(-0.5), pos(0), pos(0.5), color=RED, fill_opacity=0.5)\nfar = Polygon(sun.get_center(), pos(PI - 0.18), pos(PI), pos(PI + 0.18), color=RED, fill_opacity=0.5)\nstage.play(FadeIn(near), FadeIn(far))\nstage.add(near, far)\nstage.caption(\"Equal areas in equal times\")"
+   }
+  ]
+ },
+ {
+  "request": "why does doubling your speed quadruple your kinetic energy?",
+  "beats": [
+   {
+    "intent": "Axes of speed against energy with the parabola E = ½ m v^2 for m = 2",
+    "narration": "Kinetic energy is a half m v squared. For a two kilogram ball it is v squared.",
+    "code": "stage.title(\"Energy and speed\")\nax = draw_axes(stage, x_range=(0, 6), y_range=(0, 40), labels=(\"v\", \"E\"))\ng = plot_graph(stage, ax, lambda v: v ** 2, color=YELLOW, label=\"E = v^2\")"
+   },
+   {
+    "intent": "Points at v = 2 (E = 4) and v = 4 (E = 16) marked",
+    "narration": "At two metres per second it has four joules; at four metres per second, sixteen.",
+    "code": "a = mark_point(stage, ax, 2, 4, color=GREEN, label=\"4 J\")\nb = mark_point(stage, ax, 4, 16, color=RED, label=\"16 J\")"
+   },
+   {
+    "intent": "Bars comparing 4 J and 16 J beside the note: twice the speed, four times the energy",
+    "narration": "Twice the speed, four times the energy: that is why stopping distances grow so fast.",
+    "code": "stage.clear()\nbars = draw_bars(stage, [4, 16], labels=[\"2 m/s\", \"4 m/s\"])\nstage.caption(\"Twice the speed, four times the energy\")"
+   }
+  ]
+ },
+ {
+  "request": "why does a falling skydiver stop speeding up?",
+  "beats": [
+   {
+    "intent": "A skydiver dot with a long weight arrow down and a short drag arrow up",
+    "narration": "At first gravity pulls hard and air resistance is small.",
+    "code": "stage.title(\"Terminal velocity\")\ndiver = Dot(LEFT * 4 + UP * 0.5, color=YELLOW, radius=0.15)\nstage.play(FadeIn(diver))\nw = Arrow(diver.get_center(), diver.get_center() + DOWN * 2, buff=0, color=RED)\nd = Arrow(diver.get_center(), diver.get_center() + UP * 0.5, buff=0, color=BLUE)\nstage.play(GrowArrow(w), GrowArrow(d))\nstage.add(diver, w, d)"
+   },
+   {
+    "intent": "Axes of time against speed with the curve v = 55(1 - e^{-t/6}) levelling off",
+    "narration": "As speed builds, drag grows until it balances weight, and the speed levels off.",
+    "code": "ax = draw_axes(stage, x_range=(0, 30), y_range=(0, 60), labels=(\"s\", \"m/s\"), where=\"right\")\ng = plot_graph(stage, ax, lambda t: 55 * (1 - np.exp(-t / 6)), color=YELLOW)"
+   },
+   {
+    "intent": "A dashed line at 55 m/s labelled terminal velocity, with equal up and down arrows on the diver",
+    "narration": "At about fifty five metres per second the forces cancel: terminal velocity.",
+    "code": "top = draw_line(stage, ax.c2p(0, 55), ax.c2p(30, 55), color=RED, dashed=True)\nstage.label(top, \"terminal velocity\", direction=UP, color=RED)\nstage.play(d.animate.put_start_and_end_on(diver.get_center(), diver.get_center() + UP * 2))"
+   }
+  ]
+ },
+ {
+  "request": "how do you read a box plot?",
+  "beats": [
+   {
+    "intent": "A number line from 0 to 20 with eleven data points",
+    "narration": "Eleven test scores on a number line.",
+    "code": "stage.title(\"A box plot\")\nnl = draw_number_line(stage, x_range=(0, 20))\ndata = [3, 5, 6, 8, 9, 10, 11, 13, 14, 16, 19]\nfor v in data:\n    mark_point(stage, nl, v)"
+   },
+   {
+    "intent": "A box from the lower quartile 6 to the upper quartile 14, with the median 10 inside",
+    "narration": "The box runs from the lower quarter mark, six, to the upper, fourteen. The line inside is the median, ten.",
+    "code": "box = Rectangle(width=nl.n2p(14)[0] - nl.n2p(6)[0], height=0.8, color=YELLOW).move_to((nl.n2p(6) + nl.n2p(14)) / 2 + UP * 1)\nmed = Line(nl.n2p(10) + UP * 0.6, nl.n2p(10) + UP * 1.4, color=RED)\nstage.play(Create(box), Create(med))\nstage.add(box, med)"
+   },
+   {
+    "intent": "Whiskers from 3 to the box and from the box to 19",
+    "narration": "Whiskers reach out to the smallest and largest values, three and nineteen.",
+    "code": "w1 = Line(nl.n2p(3) + UP, nl.n2p(6) + UP, color=YELLOW)\nw2 = Line(nl.n2p(14) + UP, nl.n2p(19) + UP, color=YELLOW)\nstage.play(Create(w1), Create(w2))\nstage.add(w1, w2)\nstage.caption(\"Half the scores sit inside the box\")"
+   }
+  ]
+ },
+ {
+  "request": "why is 3 divided by 1/2 equal to 6?",
+  "beats": [
+   {
+    "intent": "Three bars each of length 1",
+    "narration": "Three whole bars.",
+    "code": "stage.title(\"3 ÷ 1/2\")\nbars = VGroup(*[Rectangle(width=2, height=0.7, color=BLUE, fill_opacity=0.5) for _ in range(3)]).arrange(RIGHT, buff=0.15)\nstage.play(Create(bars))\nstage.add(bars)"
+   },
+   {
+    "intent": "Each bar cut into two halves, six halves in all",
+    "narration": "Dividing by a half asks how many halves fit. Cut each bar in two.",
+    "code": "cuts = VGroup(*[DashedLine(b.get_top(), b.get_bottom(), color=WHITE) for b in bars])\nstage.play(Create(cuts))\nstage.add(cuts)"
+   },
+   {
+    "intent": "The six halves numbered 1 to 6 beside 3 ÷ ½ = 6",
+    "narration": "There are six halves, so three divided by a half is six.",
+    "code": "nums = VGroup(*[Text(str(k + 1), font_size=26).move_to(bars[k // 2].get_center() + (LEFT if k % 2 == 0 else RIGHT) * 0.5) for k in range(6)])\nstage.play(LaggedStart(*[FadeIn(n) for n in nums], lag_ratio=0.2))\nstage.add(nums)\nstage.equation(r\"3 \\div \\tfrac12 = 3 \\times 2 = 6\")"
+   }
+  ]
+ },
+ {
+  "request": "why is a half of a third equal to a sixth?",
+  "beats": [
+   {
+    "intent": "A unit square with one third shaded in vertical strips",
+    "narration": "Shade one third of a square.",
+    "code": "stage.title(\"½ × ⅓\")\nsq = Square(side_length=3, color=WHITE)\nthird = Rectangle(width=1, height=3, color=BLUE, fill_opacity=0.5).align_to(sq, LEFT)\nstage.play(Create(sq), FadeIn(third))\nstage.add(sq, third)"
+   },
+   {
+    "intent": "Half of that strip shaded again horizontally",
+    "narration": "Now take half of that third.",
+    "code": "half = Rectangle(width=1, height=1.5, color=YELLOW, fill_opacity=0.7).align_to(sq, LEFT).align_to(sq, UP)\nstage.play(FadeIn(half))\nstage.add(half)"
+   },
+   {
+    "intent": "Grid lines showing the square cut into 6 equal pieces, one of them doubly shaded",
+    "narration": "Draw the grid: the square is six equal pieces, and one of them is shaded twice. A half of a third is a sixth.",
+    "code": "lines = VGroup(*[Line(sq.get_top() + RIGHT * (x - 1.5), sq.get_bottom() + RIGHT * (x - 1.5), color=GREY) for x in (1, 2)], Line(sq.get_left(), sq.get_right(), color=GREY))\nstage.play(Create(lines))\nstage.add(lines)\nstage.equation(r\"\\tfrac12 \\times \\tfrac13 = \\tfrac16\")"
+   }
+  ]
+ },
+ {
+  "request": "why doesn't a 10% rise followed by a 10% fall get you back where you started?",
+  "beats": [
+   {
+    "intent": "A bar of height 100",
+    "narration": "Start with a hundred pounds.",
+    "code": "stage.title(\"Up 10%, down 10%\")\nbars = draw_bars(stage, [100], labels=[\"start\"])"
+   },
+   {
+    "intent": "A second bar of 110 after the rise",
+    "narration": "A ten percent rise takes it to a hundred and ten.",
+    "code": "stage.clear()\nbars2 = draw_bars(stage, [100, 110], labels=[\"start\", \"+10%\"])"
+   },
+   {
+    "intent": "A third bar of 99 after the fall, lower than the first",
+    "narration": "A ten percent fall is ten percent of a hundred and ten, eleven: you end on ninety nine.",
+    "code": "stage.clear()\nbars3 = draw_bars(stage, [100, 110, 99], labels=[\"start\", \"+10%\", \"-10%\"])\nhighlight(stage, bars3[2], color=RED)\nstage.equation(r\"100 \\times 1.1 \\times 0.9 = 99\")"
+   }
+  ]
+ }
+]
