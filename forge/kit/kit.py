@@ -1388,6 +1388,10 @@ def gradient_descent(stage: Stage, ax, f, x0: float, lr: float = 0.2,
                      steps: int = 10, color=YELLOW):
     """A ball stepping downhill on f by the slope, step by step."""
     _need(ax, "c2p", "the axes from draw_axes(stage)", "gradient_descent(stage, ax, f, x0)")
+    # The valley itself: a ball stepping on bare axes ("the loss curve with a
+    # ball stepping downhill") showed a dot and no curve.
+    if not any(isinstance(o, ParametricFunction) for o in stage._objects):
+        plot_graph(stage, ax, f)
     h = 1e-4
     x = x0
     ball = Dot(ax.c2p(x, f(x)), color=color, radius=0.12)

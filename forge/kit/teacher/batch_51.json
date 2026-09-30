@@ -1,0 +1,122 @@
+[
+ {
+  "request": "tell the whole story of the Pythagorean theorem",
+  "beats": [
+   {
+    "intent": "A right triangle with legs 3 and 4",
+    "narration": "Take a right triangle with legs three and four.",
+    "code": "stage.title(\"The Pythagorean theorem\")\ntri = draw_right_triangle(stage, a=1.5, b=2)\nstage.caption(\"Legs 3 and 4\")"
+   },
+   {
+    "intent": "Squares built on all three sides",
+    "narration": "Build a square on each side.",
+    "code": "stage.clear()\nsq = squares_on_sides(stage, a=3, b=4)"
+   },
+   {
+    "intent": "The areas 9, 16 and 25 beside 9 + 16 = 25",
+    "narration": "The small squares have areas nine and sixteen; together they make twenty five, the big square.",
+    "code": "stage.equation(r\"3^2 + 4^2 = 9 + 16 = 25 = 5^2\")"
+   },
+   {
+    "intent": "A grid with points (1, 1) and (4, 5) joined by the hypotenuse of a 3-4 triangle",
+    "narration": "The same idea measures distance: from one, one to four, five is three across and four up.",
+    "code": "p = draw_plane(stage, x_extent=5, y_extent=5)\na = mark_point(stage, p, (1, 1), color=RED)\nb = mark_point(stage, p, (4, 5), color=RED)\nrun = draw_line(stage, p.c2p(1, 1), p.c2p(4, 1), color=GREEN)\nrise = draw_line(stage, p.c2p(4, 1), p.c2p(4, 5), color=BLUE)\nhyp = draw_line(stage, p.c2p(1, 1), p.c2p(4, 5), color=YELLOW)"
+   },
+   {
+    "intent": "The distance beside d = √(3² + 4²) = 5",
+    "narration": "So the distance is the square root of nine plus sixteen: five.",
+    "code": "stage.equation(r\"d = \\sqrt{3^2 + 4^2} = 5\")"
+   }
+  ]
+ },
+ {
+  "request": "what's the chance of rolling a total of 8 with two dice, step by step?",
+  "beats": [
+   {
+    "intent": "The 6 by 6 grid of all outcomes",
+    "narration": "Two dice give thirty six equally likely outcomes.",
+    "code": "stage.title(\"A total of 8\")\ncells = draw_dice_grid(stage)"
+   },
+   {
+    "intent": "The five cells that add to 8 lit: (2,6), (3,5), (4,4), (5,3), (6,2)",
+    "narration": "Five of them add to eight: two six, three five, four four, five three, six two.",
+    "code": "cells8 = draw_dice_grid(stage, highlight_sum=8)"
+   },
+   {
+    "intent": "Bars of the number of ways for each total 2 to 12, the 8 bar lit",
+    "narration": "Count every total: eight has five ways, one fewer than seven.",
+    "code": "stage.clear()\nbars = draw_bars(stage, [1, 2, 3, 4, 5, 6, 5, 4, 3, 2, 1], labels=list(range(2, 13)))\nhighlight(stage, bars[6], color=YELLOW)"
+   },
+   {
+    "intent": "The bar for 8 beside P(8) = 5/36",
+    "narration": "So the chance of eight is five out of thirty six.",
+    "code": "stage.equation(r\"P(8) = \\frac{5}{36} \\approx 0.14\")"
+   },
+   {
+    "intent": "A bar comparing 5/36 for 8 with 6/36 for 7",
+    "narration": "A little less likely than seven, the most common total.",
+    "code": "stage.clear()\ncmp = draw_bars(stage, [5, 6], labels=[\"8\", \"7\"])\nstage.caption(\"Total 8: 5 ways. Total 7: 6 ways\")"
+   }
+  ]
+ },
+ {
+  "request": "how does a neural network learn?",
+  "beats": [
+   {
+    "intent": "A small network with 2 inputs, 3 hidden neurons and 1 output",
+    "narration": "A small network: two inputs, three hidden neurons, one output. Its weights start random.",
+    "code": "stage.title(\"How a network learns\")\nnet = draw_neural_net(stage, layers=(2, 3, 1))"
+   },
+   {
+    "intent": "Axes with scattered data points and a poor straight guess",
+    "narration": "It is asked to fit these points, and its first guess is poor.",
+    "code": "ax = draw_axes(stage, x_range=(0, 6), y_range=(0, 6))\npts = plot_points(stage, ax, [(1, 1.2), (2, 2.1), (3, 2.9), (4, 4.2), (5, 4.8)])\nguess = plot_graph(stage, ax, lambda x: 3 + 0.1 * x, color=RED, label=\"guess\")"
+   },
+   {
+    "intent": "A loss curve as a valley with a ball stepping downhill",
+    "narration": "Its error, the loss, depends on the weights. Gradient descent steps the weights downhill.",
+    "code": "ax2 = draw_axes(stage, x_range=(-1, 3), y_range=(0, 5), labels=(\"weight\", \"loss\"))\nloss = lambda w: (w - 1) ** 2 + 0.3\ngradient_descent(stage, ax2, loss, -0.8, lr=0.25, steps=8)"
+   },
+   {
+    "intent": "The data again with the fitted line y = x close to every point",
+    "narration": "At the bottom of the valley, the line fits the points closely.",
+    "code": "ax3 = draw_axes(stage, x_range=(0, 6), y_range=(0, 6))\npts3 = plot_points(stage, ax3, [(1, 1.2), (2, 2.1), (3, 2.9), (4, 4.2), (5, 4.8)])\nfit = plot_graph(stage, ax3, lambda x: 0.97 * x + 0.1, color=GREEN, label=\"learned\")"
+   },
+   {
+    "intent": "The fit beside the update rule w ← w - η ∂L/∂w",
+    "narration": "Every step nudges each weight against its slope: that is learning.",
+    "code": "stage.equation(r\"w \\leftarrow w - \\eta \\frac{\\partial L}{\\partial w}\")"
+   }
+  ]
+ },
+ {
+  "request": "show me the complex number 3 + 4i five ways",
+  "beats": [
+   {
+    "intent": "The complex plane with the point 3 + 4i",
+    "narration": "Here is three plus four i: three right, four up.",
+    "code": "stage.title(\"3 + 4i\")\ncp = draw_plane(stage, x_extent=5, y_extent=5)\nz = mark_point(stage, cp, (3, 4), color=YELLOW, label=\"3 + 4i\")\nstage.caption(\"Real part across, imaginary part up\")"
+   },
+   {
+    "intent": "An arrow from 0 to it with length 5 labelled",
+    "narration": "Its distance from zero, the modulus, is five: a three-four-five triangle.",
+    "code": "arr = draw_arrow(stage, cp.c2p(0, 0), cp.c2p(3, 4))\nstage.label(arr, \"|z| = 5\", direction=LEFT, color=YELLOW)"
+   },
+   {
+    "intent": "The angle 53° it makes with the real axis marked",
+    "narration": "It points at about fifty three degrees above the real axis.",
+    "code": "ang = Angle(Line(cp.c2p(0, 0), cp.c2p(1, 0)), Line(cp.c2p(0, 0), cp.c2p(3, 4)), radius=0.8, color=GREEN)\nstage.play(Create(ang))\nstage.add(ang)\nstage.label(ang, \"53°\", direction=RIGHT, color=GREEN)"
+   },
+   {
+    "intent": "Its conjugate 3 - 4i marked as a mirror image below the axis",
+    "narration": "Its conjugate, three minus four i, is its mirror image in the real axis.",
+    "code": "zc = mark_point(stage, cp, (3, -4), color=RED, label=\"3 - 4i\")"
+   },
+   {
+    "intent": "The points beside z · z̄ = 25 = |z|²",
+    "narration": "Multiplying a number by its conjugate gives the modulus squared: twenty five.",
+    "code": "stage.equation(r\"(3 + 4i)(3 - 4i) = 9 + 16 = 25\")"
+   }
+  ]
+ }
+]

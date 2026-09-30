@@ -87,6 +87,9 @@ def main() -> int:
                 "prefix": bodies[:j],
                 "intents": [b.intent for b in beats[: j + 1]],
                 "request": req})
+        if len(beats) < 2:      # a one-beat arc teaches the planner to stop at once
+            print(f"  ok   {sid}: {req[:60]} (1 beat, coder rows only)", flush=True)
+            continue
         arc = "\n".join(f"{k + 1}. [{s or 10}s] {i} -- {n}".rstrip(" -")
                         for k, ((i, n, _), s) in enumerate(zip(spec, secs)))
         plans.append({"messages": [
