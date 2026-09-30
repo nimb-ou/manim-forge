@@ -1,0 +1,82 @@
+[
+ {
+  "request": "why does stopping distance grow so fast with speed?",
+  "beats": [
+   {
+    "intent": "A road with a car and two stretches: thinking distance 9 m then braking distance 14 m at 30 mph",
+    "narration": "At thirty miles an hour, you travel nine metres while you react, then fourteen more while braking: twenty three metres.",
+    "code": "stage.title(\"Stopping distances\")\nroad = Line([-6, -0.8, 0], [6, -0.8, 0], color=GREY_B)\nstage.play(Create(road))\nstage.add(road)\nk = 0.11\nthink = Rectangle(width=9 * k, height=0.35, stroke_width=0, fill_color=YELLOW, fill_opacity=0.8).move_to([-6 + 9 * k / 2, -0.55, 0])\nbrake = Rectangle(width=14 * k, height=0.35, stroke_width=0, fill_color=RED, fill_opacity=0.8).next_to(think, RIGHT, buff=0)\nstage.play(GrowFromEdge(think, LEFT))\nstage.play(GrowFromEdge(brake, LEFT))\nstage.add(think, brake)\nstage.label(brake, \"30 mph: 23 m\", direction=UP, color=WHITE)"
+   },
+   {
+    "intent": "Rows for 50 mph (15 + 38 = 53 m) and 70 mph (21 + 75 = 96 m) below",
+    "narration": "At fifty it is fifteen plus thirty eight: fifty three metres. At seventy, twenty one plus seventy five: ninety six.",
+    "code": "rows = []\nfor y, t, b_, txt in ((-1.8, 15, 38, \"50 mph: 53 m\"), (-2.8, 21, 75, \"70 mph: 96 m\")):\n    th = Rectangle(width=t * k, height=0.35, stroke_width=0, fill_color=YELLOW, fill_opacity=0.8).move_to([-6 + t * k / 2, y, 0])\n    br = Rectangle(width=b_ * k, height=0.35, stroke_width=0, fill_color=RED, fill_opacity=0.8).next_to(th, RIGHT, buff=0)\n    stage.play(GrowFromEdge(th, LEFT), run_time=0.5)\n    stage.play(GrowFromEdge(br, LEFT), run_time=0.8)\n    stage.add(th, br)\n    stage.label(br, txt, direction=UP)\nstage.caption(\"yellow: thinking, red: braking\")"
+   },
+   {
+    "intent": "The rows beside braking ∝ speed²",
+    "narration": "Thinking distance grows in step with speed, but braking distance grows with speed squared: more than doubling the speed more than quintuples the braking.",
+    "code": "stage.equation(r\"\\text{braking} \\propto v^2:\\ \\left(\\tfrac{70}{30}\\right)^2 \\approx 5.4\")"
+   }
+  ]
+ },
+ {
+  "request": "what is the Sierpinski triangle?",
+  "beats": [
+   {
+    "intent": "One large white triangle",
+    "narration": "Start with a triangle.",
+    "code": "stage.title(\"The Sierpinski triangle\")\nA, B, C = np.array([-3.2, -2.6, 0]), np.array([3.2, -2.6, 0]), np.array([0, 2.9, 0])\nlevel = [(A, B, C)]\nshapes = VGroup(*[Polygon(*t, stroke_width=1, color=YELLOW, fill_opacity=0.8) for t in level])\nstage.play(FadeIn(shapes))\nstage.add(shapes)"
+   },
+   {
+    "intent": "Its middle cut out, leaving 3 triangles, then each of those cut again, leaving 9",
+    "narration": "Cut out the middle triangle, leaving three. Do the same to each of those: nine.",
+    "code": "for step in range(2):\n    level = [t for a, b, c in level for t in ((a, (a + b) / 2, (a + c) / 2), ((a + b) / 2, b, (b + c) / 2), ((a + c) / 2, (b + c) / 2, c))]\n    new = VGroup(*[Polygon(*t, stroke_width=1, color=YELLOW, fill_opacity=0.8) for t in level])\n    stage.play(Transform(shapes, new))\nstage.caption(\"3, then 9 triangles\")"
+   },
+   {
+    "intent": "After more steps, 243 tiny triangles, beside area × 3/4 each step",
+    "narration": "Keep going forever. Each step keeps three quarters of the area, so the area shrinks towards nothing, yet the pattern never ends.",
+    "code": "for step in range(3):\n    level = [t for a, b, c in level for t in ((a, (a + b) / 2, (a + c) / 2), ((a + b) / 2, b, (b + c) / 2), ((a + c) / 2, (b + c) / 2, c))]\nnew = VGroup(*[Polygon(*t, stroke_width=0.5, color=YELLOW, fill_opacity=0.8) for t in level])\nstage.play(Transform(shapes, new))\nstage.equation(r\"\\text{area} \\times \\left(\\tfrac34\\right)^n \\to 0\")\nstage.caption(\"243 triangles after 5 steps\")"
+   }
+  ]
+ },
+ {
+  "request": "how does a rocket move in space with nothing to push against?",
+  "beats": [
+   {
+    "intent": "A rocket drawn as a tall rectangle with a pointed nose and fins",
+    "narration": "A rocket in space has no ground or air to push on.",
+    "code": "stage.title(\"How a rocket moves\")\nbody = Rectangle(width=0.8, height=2.4, color=WHITE, fill_opacity=0.3).move_to([0, 0.2, 0])\nnose = Triangle(color=WHITE, fill_opacity=0.3).scale(0.46).next_to(body, UP, buff=0)\nfins = VGroup(Polygon([-0.4, -1.0, 0], [-0.8, -1.4, 0], [-0.4, -0.5, 0], color=RED, fill_opacity=0.6),\n              Polygon([0.4, -1.0, 0], [0.8, -1.4, 0], [0.4, -0.5, 0], color=RED, fill_opacity=0.6))\nrocket = VGroup(body, nose, fins)\nstage.play(FadeIn(rocket))\nstage.add(rocket)"
+   },
+   {
+    "intent": "Hot gas shooting down out of the bottom, with a big down arrow",
+    "narration": "It throws hot gas out of the back, very fast. It pushes the gas down...",
+    "code": "gas = VGroup(*[Dot([x, -1.2, 0], radius=0.07, color=ORANGE) for x in np.linspace(-0.3, 0.3, 5)])\nstage.add(gas)\nstage.play(gas.animate.shift(2.0 * DOWN).set_opacity(0.3), run_time=1.2)\ndown = Arrow([1.4, -1.0, 0], [1.4, -2.8, 0], buff=0, color=ORANGE)\nstage.play(GrowArrow(down))\nstage.add(down)\nstage.label(down, \"push on gas\", direction=RIGHT, color=ORANGE)"
+   },
+   {
+    "intent": "An equal up arrow on the rocket and the rocket rising",
+    "narration": "...and the gas pushes the rocket up just as hard. Every push has an equal push back.",
+    "code": "up = Arrow([-1.4, -1.0, 0], [-1.4, 0.8, 0], buff=0, color=GREEN)\nstage.play(GrowArrow(up))\nstage.add(up)\nstage.label(up, \"push on rocket\", direction=LEFT, color=GREEN)\nstage.play(rocket.animate.shift(0.8 * UP), run_time=1.2)\nstage.caption(\"equal and opposite pushes\")"
+   }
+  ]
+ },
+ {
+  "request": "how much does it cost to run a 2 kW heater for 3 hours?",
+  "beats": [
+   {
+    "intent": "A heater box labelled 2 kW with a clock showing 3 hours",
+    "narration": "A two kilowatt heater runs for three hours.",
+    "code": "stage.title(\"Running cost\")\nheater = draw_rectangle(stage, width=2.4, height=1.4, color=ORANGE, fill=0.4)\nheater.move_to([-3, 0, 0])\nstage.label(heater, \"2 kW\", direction=UP, color=ORANGE)\nclock = Circle(radius=0.8, color=WHITE).move_to([2.5, 0, 0])\nhand = Line(clock.get_center(), clock.get_center() + 0.6 * RIGHT, color=YELLOW, stroke_width=5)\nstage.play(Create(clock), Create(hand))\nstage.add(clock, hand)\nstage.label(clock, \"3 hours\", direction=UP)"
+   },
+   {
+    "intent": "The picture beside 2 kW × 3 h = 6 kWh",
+    "narration": "Energy is power times time: two kilowatts for three hours is six kilowatt hours, the units on your bill.",
+    "code": "stage.equation(r\"2\\ \\text{kW} \\times 3\\ \\text{h} = 6\\ \\text{kWh}\")"
+   },
+   {
+    "intent": "Bars of cost: £1.80 at 30p a kWh against £0.60 for a 0.5 kW fan in the same time",
+    "narration": "At thirty pence a unit, that is one pound eighty. A half-kilowatt fan for the same three hours costs sixty pence.",
+    "code": "stage.clear()\nb = draw_bars(stage, [1.80, 0.60], labels=[\"2 kW heater\", \"0.5 kW fan\"], color=ORANGE)\nstage.caption(\"£ for 3 hours at 30p per kWh\")"
+   }
+  ]
+ }
+]
