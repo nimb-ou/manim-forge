@@ -1,0 +1,102 @@
+[
+ {
+  "request": "what's the difference between mass and weight?",
+  "beats": [
+   {
+    "intent": "An astronaut figure on the Earth labelled mass 60 kg",
+    "narration": "An astronaut has a mass of sixty kilograms: that's how much stuff they are made of.",
+    "code": "stage.title(\"Mass and weight\")\nbody = VGroup(Circle(radius=0.3, color=WHITE, fill_opacity=0.8).move_to([-3.5, 0.9, 0]),\n              RoundedRectangle(width=0.9, height=1.2, corner_radius=0.2, color=WHITE, fill_opacity=0.6).move_to([-3.5, 0.0, 0]))\nearth = Arc(radius=6, start_angle=PI / 2 - 0.35, angle=0.7, color=BLUE, stroke_width=8).move_to([-3.5, -0.8, 0])\nstage.play(FadeIn(body), Create(earth))\nstage.add(body, earth)\nstage.label(body, \"mass 60 kg\", direction=UP)"
+   },
+   {
+    "intent": "A down arrow for the Earth's pull, 588 N",
+    "narration": "Weight is the pull of gravity on that mass. On Earth, sixty times nine point eight: five hundred and eighty eight newtons.",
+    "code": "pull = Arrow([-2.6, 0.2, 0], [-2.6, -1.8, 0], buff=0, color=RED)\nstage.play(GrowArrow(pull))\nstage.add(pull)\nstage.label(pull, \"588 N\", direction=UR, color=RED)"
+   },
+   {
+    "intent": "The same astronaut on the Moon with a much shorter arrow, 98 N",
+    "narration": "On the Moon, gravity is about a sixth as strong. Same mass, sixty kilograms, but a weight of only ninety eight newtons.",
+    "code": "body2 = body.copy().move_to([3.0, 0.45, 0])\nmoon = Arc(radius=6, start_angle=PI / 2 - 0.35, angle=0.7, color=GREY_B, stroke_width=8).move_to([3.0, -0.8, 0])\npull2 = Arrow([3.9, 0.2, 0], [3.9, -0.13, 0], buff=0, color=RED, max_tip_length_to_length_ratio=0.5)\nstage.play(FadeIn(body2), Create(moon), GrowArrow(pull2))\nstage.add(body2, moon, pull2)\nstage.label(body2, \"mass 60 kg\", direction=UP)\nstage.label(pull2, \"98 N\", direction=RIGHT, color=RED)"
+   },
+   {
+    "intent": "The two pictures beside W = mg: 60 × 9.8 = 588 and 60 × 1.6 = 98",
+    "narration": "Mass stays the same everywhere; weight depends on where you are.",
+    "code": "stage.equation(r\"W = m g\", r\"60 \\times 9.8 = 588,\\ 60 \\times 1.6 \\approx 98\")"
+   }
+  ]
+ },
+ {
+  "request": "20% off £50, then 20% VAT added: do I pay £50?",
+  "beats": [
+   {
+    "intent": "A bar for the £50 price",
+    "narration": "A jacket costs fifty pounds.",
+    "code": "stage.title(\"Discount, then VAT\")\nb = draw_bars(stage, [50], labels=[\"price\"], color=BLUE)"
+   },
+   {
+    "intent": "A second bar of £40 after 20% off",
+    "narration": "Twenty percent off takes ten pounds away: forty pounds.",
+    "code": "b2 = draw_bars(stage, [50, 40], labels=[\"price\", \"20% off\"], color=BLUE)"
+   },
+   {
+    "intent": "A third bar of £48 after 20% VAT, shorter than the first",
+    "narration": "Now add twenty percent tax, but twenty percent of forty is only eight: forty eight pounds.",
+    "code": "b3 = draw_bars(stage, [50, 40, 48], labels=[\"price\", \"20% off\", \"+20% VAT\"], color=BLUE)\nbars = b3[0] if len(b3) == 2 else b3\nhighlight(stage, bars[2], color=GREEN)"
+   },
+   {
+    "intent": "The bars beside 50 × 0.8 × 1.2 = 48",
+    "narration": "The two changes multiply: nought point eight times one point two is nought point nine six.",
+    "code": "stage.equation(r\"50 \\times 0.8 \\times 1.2 = 48\")\nstage.caption(\"£2 less than the original price\")"
+   }
+  ]
+ },
+ {
+  "request": "how does a bicycle pump push air into a tyre?",
+  "beats": [
+   {
+    "intent": "A pump cylinder with a handle and air particles spread out inside",
+    "narration": "A pump is a tube of air with a piston you push down.",
+    "code": "stage.title(\"A bicycle pump\")\ntube = Rectangle(width=1.8, height=4.0, color=WHITE).move_to([-2, -0.4, 0])\npiston = Rectangle(width=1.7, height=0.2, color=GREY_B, fill_opacity=1).move_to([-2, 1.4, 0])\nrod = Line([-2, 1.5, 0], [-2, 2.6, 0], color=GREY_B, stroke_width=8)\nstage.play(Create(tube), FadeIn(piston), Create(rod))\nstage.add(tube, piston, rod)\nrng = np.random.default_rng(5)\nair = VGroup(*[Dot([-2 + x, y, 0], radius=0.06, color=BLUE) for x, y in rng.uniform([-0.75, -2.3], [0.75, 1.2], (30, 2))])\nstage.play(FadeIn(air))\nstage.add(air)"
+   },
+   {
+    "intent": "The piston pushed halfway down, the same particles squeezed into half the space",
+    "narration": "Push the piston halfway down. The same air is squeezed into half the space.",
+    "code": "stage.play(VGroup(piston, rod).animate.shift(1.75 * DOWN),\n           *[d.animate.move_to([d.get_x(), -2.3 + (d.get_y() + 2.3) * 0.5, 0]) for d in air])\nstage.caption(\"same air, half the space\")"
+   },
+   {
+    "intent": "Bars of pressure: 1 before, 2 after",
+    "narration": "Packed twice as tightly, the particles hit the walls twice as often: double the pressure.",
+    "code": "b = draw_bars(stage, [1, 2], labels=[\"before\", \"half the volume\"], where=\"right\", color=ORANGE)\nstage.caption(\"pressure doubles\")"
+   },
+   {
+    "intent": "The picture beside p × V stays the same",
+    "narration": "When the pressure is higher than in the tyre, the valve opens and air is pushed in.",
+    "code": "stage.equation(r\"p_1 V_1 = p_2 V_2\")"
+   }
+  ]
+ },
+ {
+  "request": "how do plants make their own food?",
+  "beats": [
+   {
+    "intent": "A leaf with the Sun above it",
+    "narration": "A plant makes food in its leaves, using sunlight.",
+    "code": "stage.title(\"Photosynthesis\")\nleaf = Ellipse(width=4.0, height=1.8, color=GREEN, fill_opacity=0.6).rotate(0.3).move_to([0, -0.4, 0])\nvein = Line([-1.8, -0.95, 0], [1.8, 0.15, 0], color=GREEN_E, stroke_width=4)\nsun = Circle(radius=0.55, color=YELLOW, fill_opacity=0.9).move_to([-4.5, 2.2, 0])\nlight = Arrow(sun.get_center() + 0.6 * DR, [-1.0, 0.1, 0], buff=0, color=YELLOW)\nstage.play(FadeIn(leaf), Create(vein), FadeIn(sun), GrowArrow(light))\nstage.add(leaf, vein, sun, light)\nstage.label(light, \"light\", direction=UP, color=YELLOW)"
+   },
+   {
+    "intent": "Arrows in: carbon dioxide from the air and water from the roots",
+    "narration": "It takes in carbon dioxide from the air through tiny pores, and water up from its roots.",
+    "code": "co2 = Arrow([4.8, 1.5, 0], [1.9, 0.2, 0], buff=0, color=GREY_B)\nwater = Arrow([0.0, -3.2, 0], [0.0, -1.2, 0], buff=0, color=BLUE)\nstage.play(GrowArrow(co2), GrowArrow(water))\nstage.add(co2, water)\nstage.label(co2, \"carbon dioxide\", direction=UP, color=GREY_B)\nstage.label(water, \"water\", direction=RIGHT, color=BLUE)"
+   },
+   {
+    "intent": "Arrows out: sugar staying in the plant and oxygen released",
+    "narration": "Light energy turns them into sugar, the plant's food, and oxygen, which it breathes out.",
+    "code": "o2 = Arrow([1.6, -0.9, 0], [4.6, -2.0, 0], buff=0, color=WHITE)\nsugar = Arrow([-1.2, -1.0, 0], [-3.4, -2.4, 0], buff=0, color=ORANGE)\nstage.play(GrowArrow(o2), GrowArrow(sugar))\nstage.add(o2, sugar)\nstage.label(o2, \"oxygen\", direction=DOWN)\nstage.label(sugar, \"sugar\", direction=DOWN, color=ORANGE)"
+   },
+   {
+    "intent": "The leaf beside CO₂ + water → sugar + O₂",
+    "narration": "Carbon dioxide plus water, with light, gives sugar plus oxygen.",
+    "code": "stage.equation(r\"6\\,\\mathrm{CO_2} + 6\\,\\mathrm{H_2O} \\to \\mathrm{C_6H_{12}O_6} + 6\\,\\mathrm{O_2}\")"
+   }
+  ]
+ }
+]
