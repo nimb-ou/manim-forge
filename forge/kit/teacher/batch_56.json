@@ -1,0 +1,92 @@
+[
+ {
+  "request": "why do a triangle's angles always add up to 180 degrees?",
+  "beats": [
+   {
+    "intent": "A triangle with its three angles coloured, lifted off and laid on a straight line",
+    "narration": "Tear off the three corners of any triangle and lay them side by side: they fill a straight line.",
+    "code": "stage.title(\"Angles in a triangle\")\nangle_sum(stage)"
+   },
+   {
+    "intent": "The straight line of angles beside a + b + c = 180°",
+    "narration": "A straight line is a half turn, so the three angles add to one hundred and eighty degrees.",
+    "code": "stage.equation(r\"a + b + c = 180^\\circ\")"
+   },
+   {
+    "intent": "A four-sided shape split by a diagonal into two triangles",
+    "narration": "Any four-sided shape splits into two triangles along a diagonal.",
+    "code": "stage.clear()\nquad = draw_polygon(stage, [(-2.5, -1.6), (2.5, -1.3), (1.8, 1.4), (-1.6, 1.1)])\ndiag = draw_line(stage, (-2.5, -1.6), (1.8, 1.4), color=YELLOW, dashed=True)"
+   },
+   {
+    "intent": "The shape beside 2 × 180° = 360°",
+    "narration": "Two triangles' worth of angles: three hundred and sixty degrees.",
+    "code": "stage.equation(r\"2 \\times 180^\\circ = 360^\\circ\")"
+   }
+  ]
+ },
+ {
+  "request": "how can you measure a tree's height from its shadow?",
+  "beats": [
+   {
+    "intent": "A 1 m stick with its 1.5 m shadow drawn as a right triangle",
+    "narration": "A one metre stick casts a shadow one and a half metres long.",
+    "code": "stage.title(\"Height from a shadow\")\nstick = draw_line(stage, (-5, -2), (-5, -0.8), color=ORANGE)\nshade1 = draw_line(stage, (-5, -2), (-3.2, -2), color=GREY_B)\nray1 = draw_line(stage, (-5, -0.8), (-3.2, -2), color=YELLOW, dashed=True)\nstage.label(stick, \"1 m\", direction=LEFT, color=ORANGE)\nstage.label(shade1, \"1.5 m\", direction=DOWN)"
+   },
+   {
+    "intent": "A tree with a 12 m shadow and the same sun angle",
+    "narration": "At the same moment, the tree's shadow is twelve metres. The sun's rays come in at the same angle.",
+    "code": "tree = draw_line(stage, (-1, -2), (-1, 1.2), color=GREEN)\ncrown = draw_circle(stage, radius=0.5, color=GREEN, fill=0.6)\ncrown.move_to([-1, 1.5, 0])\nshade2 = draw_line(stage, (-1, -2), (3.8, -2), color=GREY_B)\nray2 = draw_line(stage, (-1, 1.2), (3.8, -2), color=YELLOW, dashed=True)\nstage.label(shade2, \"12 m\", direction=DOWN)"
+   },
+   {
+    "intent": "The two triangles beside h / 12 = 1 / 1.5, so h = 8 m",
+    "narration": "The triangles are the same shape, so height over shadow is the same: the tree is eight metres tall.",
+    "code": "stage.label(tree, \"h\", direction=LEFT, color=GREEN)\nstage.equation(r\"\\frac{h}{12} = \\frac{1}{1.5}\", r\"\\Rightarrow h = 8\\ \\text{m}\")"
+   }
+  ]
+ },
+ {
+  "request": "how do you add a half and a third?",
+  "beats": [
+   {
+    "intent": "One bar with half shaded, another with a third shaded",
+    "narration": "Here is a half and here is a third. The pieces are different sizes, so we can't just add them.",
+    "code": "stage.title(\"1/2 + 1/3\")\nhalf = VGroup(*[Rectangle(width=3, height=0.8, color=WHITE) for _ in range(2)]).arrange(RIGHT, buff=0).move_to([0, 1.4, 0])\nhalf[0].set_fill(BLUE, opacity=0.7)\nthird = VGroup(*[Rectangle(width=2, height=0.8, color=WHITE) for _ in range(3)]).arrange(RIGHT, buff=0).move_to([0, 0.2, 0])\nthird[0].set_fill(ORANGE, opacity=0.7)\nstage.play(Create(half), Create(third))\nstage.add(half, third)\nstage.label(half, r\"\\frac{1}{2}\", direction=LEFT, color=BLUE)\nstage.label(third, r\"\\frac{1}{3}\", direction=LEFT, color=ORANGE)"
+   },
+   {
+    "intent": "Both bars cut into sixths: 3 sixths blue, 2 sixths orange",
+    "narration": "Cut both into sixths. A half is three sixths; a third is two sixths.",
+    "code": "cuts = VGroup(*[Line([-3 + k, 1.8, 0], [-3 + k, -0.2, 0], color=GREY_B, stroke_width=2) for k in range(1, 6)])\nstage.play(Create(cuts))\nstage.add(cuts)"
+   },
+   {
+    "intent": "A third bar of six sixths with 5 filled: 3 blue then 2 orange",
+    "narration": "Put them together: three sixths and two sixths make five sixths.",
+    "code": "sixths = VGroup(*[Rectangle(width=1, height=0.8, color=WHITE) for _ in range(6)]).arrange(RIGHT, buff=0).move_to([0, -1.2, 0])\nfor k in range(3):\n    sixths[k].set_fill(BLUE, opacity=0.7)\nfor k in range(3, 5):\n    sixths[k].set_fill(ORANGE, opacity=0.7)\nstage.play(Create(sixths))\nstage.add(sixths)\nstage.label(sixths, r\"\\frac{5}{6}\", direction=LEFT, color=YELLOW)"
+   },
+   {
+    "intent": "The bars beside 1/2 + 1/3 = 3/6 + 2/6 = 5/6",
+    "narration": "One half plus one third is five sixths.",
+    "code": "stage.equation(r\"\\tfrac12 + \\tfrac13 = \\tfrac36 + \\tfrac26\", r\"= \\tfrac56\")"
+   }
+  ]
+ },
+ {
+  "request": "what is the sine of an angle?",
+  "beats": [
+   {
+    "intent": "A radius turning on the unit circle with its height traced out as a wave",
+    "narration": "Turn a radius of length one around a circle. Its height, traced out, is the sine wave.",
+    "code": "stage.title(\"Sine is a height\")\nc, ax, wave = circle_to_sine(stage)"
+   },
+   {
+    "intent": "The wave beside sin 30° = 0.5, sin 90° = 1",
+    "narration": "At thirty degrees the height is one half. Straight up, at ninety degrees, it is one.",
+    "code": "stage.equation(r\"\\sin 30^\\circ = 0.5, \\quad \\sin 90^\\circ = 1\")"
+   },
+   {
+    "intent": "A 30-60-90 triangle with hypotenuse 1 and opposite side 1/2",
+    "narration": "In a right triangle with hypotenuse one, the side opposite a thirty degree angle is exactly one half.",
+    "code": "stage.clear()\ntri = draw_polygon(stage, [(-2, -1.5), (1.46, -1.5), (1.46, 0.5)], color=BLUE)\nstage.label((-0.27, -0.5), \"1\", direction=UL, color=WHITE)\nstage.label((1.46, -0.5), r\"\\frac{1}{2}\", direction=RIGHT, color=YELLOW)\nang = Angle(Line([-2, -1.5, 0], [1.46, -1.5, 0]), Line([-2, -1.5, 0], [1.46, 0.5, 0]), radius=0.9, color=GREEN)\nstage.play(Create(ang))\nstage.add(ang)\nstage.label(ang, \"30°\", direction=RIGHT, color=GREEN)\nstage.caption(\"sine = opposite ÷ hypotenuse\")"
+   }
+  ]
+ }
+]

@@ -254,7 +254,7 @@ class Stage:
             # "\\to 1") extends it; replacing the line with it left frames
             # showing a bare "= 12". Any other step is a new form of the
             # equation and transforms the line into it.
-            if _re.match(r"\s*(=|<|>|\\approx|\\to|\\le|\\ge|\\equiv|\\neq|\\sim)", str(t)):
+            if _re.match(r"\s*(=|<|>|\\approx|\\to|\\le|\\ge|\\equiv|\\neq|\\sim|\\Rightarrow|\\implies|\\iff)", str(t)):
                 line = f"{line} {t}"
             else:
                 line = str(t)
