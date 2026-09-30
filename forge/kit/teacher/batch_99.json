@@ -1,0 +1,102 @@
+[
+ {
+  "request": "how do you share 7 pizzas equally between 3 people?",
+  "beats": [
+   {
+    "intent": "Seven pizza circles in a row",
+    "narration": "Seven pizzas, three hungry people.",
+    "code": "stage.title(\"7 pizzas, 3 people\")\npizzas = VGroup(*[Circle(radius=0.55, color=ORANGE, fill_opacity=0.6) for _ in range(7)]).arrange(RIGHT, buff=0.25).move_to([0, 1.2, 0])\nstage.play(LaggedStart(*[FadeIn(p) for p in pizzas], lag_ratio=0.1))\nstage.add(pizzas)"
+   },
+   {
+    "intent": "Six whole pizzas given out, two to each person, one left",
+    "narration": "Hand out whole pizzas first: two each uses six. One is left over.",
+    "code": "cols = [BLUE, GREEN, RED]\nfor k in range(6):\n    stage.play(pizzas[k].animate.set_fill(cols[k // 2], opacity=0.7), run_time=0.2)\nstage.caption(\"2 each, 1 left\")"
+   },
+   {
+    "intent": "The last pizza cut into 3 equal slices, one per person",
+    "narration": "Cut the last one into three equal slices, one each.",
+    "code": "last = pizzas[6]\nslices = VGroup(*[Sector(radius=0.55, start_angle=PI / 2 + k * TAU / 3, angle=TAU / 3, color=WHITE, fill_color=cols[k], fill_opacity=0.8).move_arc_center_to(last.get_center()) for k in range(3)])\nstage.play(FadeOut(last), FadeIn(slices))\nstage.add(slices)\nstage.caption(\"the last pizza in thirds\")"
+   },
+   {
+    "intent": "The pizzas beside 7 ÷ 3 = 2⅓ each",
+    "narration": "So each person gets two and a third pizzas.",
+    "code": "stage.equation(r\"7 \\div 3 = 2\\tfrac13\")"
+   }
+  ]
+ },
+ {
+  "request": "how many snaps to break a 4 by 6 chocolate bar into squares?",
+  "beats": [
+   {
+    "intent": "A chocolate bar of 4 rows and 6 columns",
+    "narration": "A bar of chocolate, four squares by six: twenty four squares.",
+    "code": "stage.title(\"Breaking a chocolate bar\")\nbar = VGroup(*[Square(0.6, color=GREY_B, fill_color=\"#6b3e1d\", fill_opacity=1) for _ in range(24)]).arrange_in_grid(rows=4, cols=6, buff=0.04).move_to([0, 0, 0])\nstage.play(FadeIn(bar))\nstage.add(bar)\nstage.caption(\"24 squares\")"
+   },
+   {
+    "intent": "The first snap splitting it into two pieces, 8 and 16 squares",
+    "narration": "Every snap breaks one piece into two, so each snap adds exactly one piece.",
+    "code": "top = VGroup(*bar[:6], *bar[6:12])\nstage.play(VGroup(*bar[:12]).animate.shift(0.4 * UP), VGroup(*bar[12:]).animate.shift(0.4 * DOWN))\nstage.caption(\"1 snap: 2 pieces\")"
+   },
+   {
+    "intent": "The rows pulled apart into strips, then strips into single squares, a counter reading 23",
+    "narration": "Keep snapping until every square is loose. You start with one piece and need twenty four, however you do it.",
+    "code": "stage.play(*[sq.animate.shift(((k % 6) - 2.5) * 0.25 * RIGHT + ((k // 6) - 1.5) * 0.25 * DOWN) for k, sq in enumerate(bar)])\nstage.caption(\"23 snaps: 24 pieces\")"
+   },
+   {
+    "intent": "The squares beside snaps = 24 - 1 = 23",
+    "narration": "So it always takes twenty three snaps: pieces minus one.",
+    "code": "stage.equation(r\"\\text{snaps} = 24 - 1 = 23\")"
+   }
+  ]
+ },
+ {
+  "request": "how does a trebuchet throw so far?",
+  "beats": [
+   {
+    "intent": "A trebuchet: a long arm on a pivot, a heavy weight on the short end, a sling on the long end",
+    "narration": "A trebuchet is a see-saw with a huge weight on its short end and a sling on its long end.",
+    "code": "stage.title(\"The trebuchet\")\npivot = np.array([-1.0, -0.6, 0])\nframe = Polygon([-2.2, -2.6, 0], [0.2, -2.6, 0], pivot, color=GREY_B, fill_opacity=0.3)\narm = Line(pivot + 1.2 * np.array([-0.8, -0.6, 0]), pivot + 3.0 * np.array([0.8, 0.6, 0]), color=ORANGE, stroke_width=8)\nweight = Square(0.9, color=GREY_B, fill_opacity=1).move_to(arm.get_start())\nstone = Dot(arm.get_end(), color=WHITE, radius=0.15)\nstage.play(FadeIn(frame), Create(arm), FadeIn(weight), FadeIn(stone))\nstage.add(frame, arm, weight, stone)\ng = VGroup(arm, weight, stone)\nstage.play(Rotate(g, -1.1, about_point=pivot))\nstage.caption(\"weight raised, arm cocked\")"
+   },
+   {
+    "intent": "The weight dropping and the long arm swinging up fast",
+    "narration": "Let go. The weight falls a short way, and the long arm swings through a big arc, very fast.",
+    "code": "stage.play(Rotate(g, 1.9, about_point=pivot), run_time=0.8, rate_func=rate_functions.rush_into)\nstage.caption(\"short drop, big fast swing\")"
+   },
+   {
+    "intent": "The stone released from the tip flying off along a long curved path",
+    "narration": "At the top of the swing the stone is let go and flies off along a long curve.",
+    "code": "start = stone.get_center()\npath = VMobject(color=YELLOW).set_points_smoothly([start, start + np.array([2.0, 0.5, 0]), start + np.array([4.0, 0.0, 0]), start + np.array([6.0, -3.0, 0])])\nstage.play(MoveAlongPath(stone, path), Create(path), run_time=1.5)\nstage.add(path)"
+   },
+   {
+    "intent": "The picture beside: the long arm is 2.5 times the short one, so the tip moves 2.5 times as fast",
+    "narration": "Because the long arm is two and a half times the short one, its tip moves two and a half times as fast as the falling weight.",
+    "code": "stage.equation(r\"\\frac{v_{\\text{stone}}}{v_{\\text{weight}}} = \\frac{3.0}{1.2} = 2.5\")"
+   }
+  ]
+ },
+ {
+  "request": "why do stars twinkle?",
+  "beats": [
+   {
+    "intent": "A star far above and an eye below, with a layer of air between",
+    "narration": "Starlight crosses space in a straight line, then passes through our moving atmosphere.",
+    "code": "stage.title(\"Why stars twinkle\")\nstar = Star(5, outer_radius=0.35, color=YELLOW, fill_opacity=1).move_to([0, 2.6, 0])\neye = Ellipse(width=0.8, height=0.4, color=WHITE).move_to([0, -2.8, 0])\nair = Rectangle(width=9, height=2.4, stroke_width=0, fill_color=BLUE, fill_opacity=0.15).move_to([0, -0.8, 0])\nstage.play(FadeIn(star), Create(eye), FadeIn(air))\nstage.add(star, eye, air)\nstage.label(air, \"moving air\", direction=RIGHT, color=BLUE)"
+   },
+   {
+    "intent": "A wobbly ray bending in the air layer and still reaching the eye",
+    "narration": "Pockets of warmer and cooler air bend the light slightly, and they keep moving.",
+    "code": "ray = VMobject(color=YELLOW).set_points_smoothly([[0, 2.2, 0], [0, 0.4, 0], [0.25, -0.4, 0], [-0.2, -1.3, 0], [0, -2.6, 0]])\nstage.play(Create(ray))\nstage.add(ray)"
+   },
+   {
+    "intent": "The ray shifting sideways so it sometimes misses the eye",
+    "narration": "So the path wanders: sometimes more light reaches your eye, sometimes less.",
+    "code": "ray2 = VMobject(color=YELLOW).set_points_smoothly([[0, 2.2, 0], [0, 0.4, 0], [-0.3, -0.4, 0], [0.5, -1.3, 0], [0.9, -2.6, 0]])\nstage.play(Transform(ray, ray2))\nstage.play(star.animate.set_opacity(0.35), run_time=0.3)\nstage.play(star.animate.set_opacity(1), run_time=0.3)\nstage.caption(\"the path wanders: the star flickers\")"
+   },
+   {
+    "intent": "A planet beside the star with a thicker bundle of rays, shining steadily",
+    "narration": "Planets are close enough to look like tiny discs, not points. Their many rays average out, so they shine steadily.",
+    "code": "planet = Circle(radius=0.3, color=ORANGE, fill_opacity=1).move_to([4.0, 2.6, 0])\nbundle = VGroup(*[Line([4.0 + dx, 2.3, 0], [4.0 + dx * 0.3, -2.4, 0], color=ORANGE, stroke_width=2) for dx in np.linspace(-0.25, 0.25, 5)])\nstage.play(FadeIn(planet), Create(bundle))\nstage.add(planet, bundle)\nstage.label(planet, \"planet: steady\", direction=RIGHT, color=ORANGE)"
+   }
+  ]
+ }
+]
