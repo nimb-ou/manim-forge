@@ -1,0 +1,102 @@
+[
+ {
+  "request": "how does a stadium wave travel when nobody moves sideways?",
+  "beats": [
+   {
+    "intent": "A row of 16 people drawn as dots, all sitting",
+    "narration": "A row of fans sit in the stadium.",
+    "code": "stage.title(\"A stadium wave\")\nfans = VGroup(*[Dot([x, -1.0, 0], color=BLUE, radius=0.15) for x in np.linspace(-5.5, 5.5, 16)])\nseats = Line([-6, -1.3, 0], [6, -1.3, 0], color=GREY_B)\nstage.play(Create(seats), FadeIn(fans))\nstage.add(seats, fans)"
+   },
+   {
+    "intent": "Each fan standing up and sitting down just after the one on their left, a bump running along the row",
+    "narration": "Each fan stands up and sits down just after the person to their left. A bump runs along the row.",
+    "code": "t = ValueTracker(-2)\nxs = np.linspace(-5.5, 5.5, 16)\nfor d, x in zip(fans, xs):\n    d.add_updater(lambda m, x=x: m.move_to([x, -1.0 + 1.4 * np.exp(-((x - t.get_value()) ** 2) / 1.2), 0]))\nstage.play(t.animate.set_value(3), run_time=3, rate_func=linear)\nfor d in fans:\n    d.clear_updaters()\nstage.caption(\"the bump moves right\")"
+   },
+   {
+    "intent": "One fan marked red, moving only up and down while the wave passes",
+    "narration": "Watch one fan: they only go up and down. It's the pattern that travels, not the people.",
+    "code": "me = fans[10]\nme.set_color(RED)\npath = DashedLine([xs[10], -1.0, 0], [xs[10], 0.5, 0], color=RED)\nstage.play(Create(path))\nstage.add(path)\nstage.label(path, \"up and down only\", direction=LEFT, color=RED)"
+   },
+   {
+    "intent": "An arrow along the row for the wave's motion, beside: the wave moves, the fans don't",
+    "narration": "Waves in water, sound and light work the same way: the disturbance travels while each bit stays near its place.",
+    "code": "wave = Arrow([-4, 1.4, 0], [4, 1.4, 0], buff=0, color=YELLOW)\nstage.play(GrowArrow(wave))\nstage.add(wave)\nstage.label(wave, \"the wave travels\", direction=UP, color=YELLOW)"
+   }
+  ]
+ },
+ {
+  "request": "show selection sort on 4, 1, 3, 2",
+  "beats": [
+   {
+    "intent": "Four bars: 4, 1, 3, 2",
+    "narration": "Four numbers to sort: four, one, three, two.",
+    "code": "stage.title(\"Selection sort\")\narr = draw_array(stage, [4, 1, 3, 2])\nbars = arr[0] if len(arr) == 2 else arr"
+   },
+   {
+    "intent": "The smallest, 1, found and swapped to the front",
+    "narration": "Scan for the smallest: one. Swap it into the first place.",
+    "code": "highlight(stage, bars[1], color=YELLOW)\nswap_bars(stage, arr, 0, 1)\nstage.caption(\"1, 4, 3, 2\")"
+   },
+   {
+    "intent": "The smallest of the rest, 2, swapped into second place",
+    "narration": "Now find the smallest of what's left, two, and swap it into second place.",
+    "code": "highlight(stage, bars[3], color=YELLOW)\nswap_bars(stage, arr, 1, 3)\nstage.caption(\"1, 2, 3, 4\")"
+   },
+   {
+    "intent": "The sorted bars beside: n - 1 passes, each finding the smallest remaining",
+    "narration": "Three is already in place, so we're done. Each pass puts one more number in its final spot.",
+    "code": "stage.equation(r\"\\text{passes} = n - 1 = 3\")\nstage.caption(\"sorted: 1, 2, 3, 4\")"
+   }
+  ]
+ },
+ {
+  "request": "how tall would a stack of a billion sheets of paper be?",
+  "beats": [
+   {
+    "intent": "One sheet shown edge-on, 0.1 mm thick",
+    "narration": "One sheet of paper is about a tenth of a millimetre thick.",
+    "code": "stage.title(\"A billion sheets\")\nsheet = Rectangle(width=4, height=0.06, color=WHITE, fill_opacity=1).move_to([0, 0.5, 0])\nstage.play(FadeIn(sheet))\nstage.add(sheet)\nstage.label(sheet, \"0.1 mm\", direction=UP)"
+   },
+   {
+    "intent": "A ream of 500 sheets drawn as a 5 cm block",
+    "narration": "A pack of five hundred sheets is five centimetres tall.",
+    "code": "ream = Rectangle(width=4, height=1.0, color=WHITE, fill_opacity=0.8).move_to([0, -1.2, 0])\nstage.play(FadeIn(ream))\nstage.add(ream)\nstage.label(ream, \"500 sheets = 5 cm\", direction=DOWN)"
+   },
+   {
+    "intent": "Bars of height in km: a skyscraper 0.8, Everest 8.8, a billion sheets 100",
+    "narration": "A billion sheets would stand a hundred kilometres tall: more than ten Everests, up to the edge of space.",
+    "code": "stage.clear()\nb = draw_bars(stage, [0.8, 8.8, 100], labels=[\"skyscraper\", \"Everest\", \"10⁹ sheets\"], color=BLUE)\nstage.caption(\"height in km\")"
+   },
+   {
+    "intent": "The bars beside 10⁹ × 0.1 mm = 10⁸ mm = 100 km",
+    "narration": "A billion times a tenth of a millimetre is a hundred million millimetres: one hundred kilometres.",
+    "code": "stage.equation(r\"10^9 \\times 0.1\\ \\text{mm} = 10^8\\ \\text{mm}\", r\"= 100\\ \\text{km}\")"
+   }
+  ]
+ },
+ {
+  "request": "how do bees tell each other where the flowers are?",
+  "beats": [
+   {
+    "intent": "A honeycomb wall seen upright with a bee dot on it",
+    "narration": "Back in the hive, on the upright honeycomb, a bee that found flowers does a dance.",
+    "code": "stage.title(\"The waggle dance\")\ncomb = Rectangle(width=4.5, height=4.5, color=ORANGE, fill_opacity=0.15).move_to([-3, -0.4, 0])\nstage.play(FadeIn(comb))\nstage.add(comb)\nbee = Dot(comb.get_center(), color=YELLOW, radius=0.14)\nstage.play(GrowFromCenter(bee))\nstage.add(bee)\nup = DashedLine(comb.get_center(), comb.get_center() + 1.8 * UP, color=GREY_B)\nstage.play(Create(up))\nstage.add(up)\nstage.label(up, \"up\", direction=UP)"
+   },
+   {
+    "intent": "The bee's waggle run at 40° to the right of straight up, with loops back",
+    "narration": "She waggles along a straight line, forty degrees to the right of straight up, then loops back and repeats.",
+    "code": "a = 40 * DEGREES\nd = np.array([np.sin(a), np.cos(a), 0])\nrun = Line(comb.get_center(), comb.get_center() + 1.8 * d, color=YELLOW, stroke_width=6)\nstage.play(Create(run), bee.animate.move_to(run.get_end()))\nang = Angle(Line(comb.get_center(), comb.get_center() + UP), run, radius=0.7, other_angle=True, color=YELLOW)\nstage.play(Create(ang))\nstage.add(run, ang)\nstage.label(ang, \"40°\", direction=UR, color=YELLOW)"
+   },
+   {
+    "intent": "Outside: the Sun's direction and the flowers 40° to its right",
+    "narration": "Straight up on the comb means towards the Sun. So the flowers are forty degrees to the right of the Sun.",
+    "code": "hive = Square(0.5, color=ORANGE, fill_opacity=0.6).move_to([2.5, -2.2, 0])\nsun_dir = Arrow(hive.get_center(), hive.get_center() + 3.2 * UP, buff=0.3, color=YELLOW)\nflowers = Dot(hive.get_center() + 3.2 * d, color=PINK, radius=0.2)\npath = DashedLine(hive.get_center(), flowers.get_center(), color=PINK)\nstage.play(FadeIn(hive), GrowArrow(sun_dir))\nstage.play(Create(path), GrowFromCenter(flowers))\nstage.add(hive, sun_dir, path, flowers)\nstage.label(sun_dir, \"to the Sun\", direction=LEFT, color=YELLOW)\nstage.label(flowers, \"flowers\", direction=RIGHT, color=PINK)"
+   },
+   {
+    "intent": "A second, longer waggle run at 20° left of up, and flowers further away 20° left of the Sun",
+    "narration": "The angle gives the direction, and the length of the waggle gives the distance: a longer waggle means flowers further away.",
+    "code": "run2 = Line(comb.get_center(), comb.get_center() + 2.15 * np.array([-np.sin(20 * DEGREES), np.cos(20 * DEGREES), 0]), color=GREEN, stroke_width=6)\nfar = Dot(hive.get_center() + 3.9 * np.array([-np.sin(20 * DEGREES), np.cos(20 * DEGREES), 0]), color=GREEN, radius=0.2)\nstage.play(Create(run2))\nstage.play(Create(DashedLine(hive.get_center(), far.get_center(), color=GREEN)), GrowFromCenter(far))\nstage.add(run2, far)\nstage.caption(\"angle = direction, waggle length = distance\")"
+   }
+  ]
+ }
+]
