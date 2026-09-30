@@ -1,0 +1,277 @@
+[
+ {
+  "request": "why is the derivative of e^x equal to e^x?",
+  "beats": [
+   {
+    "intent": "Axes with the curve y = e^x from -2 to 2",
+    "narration": "Here is the curve e to the x.",
+    "code": "stage.title(\"The curve that is its own slope\")\nax = draw_axes(stage, x_range=(-2, 2), y_range=(0, 8))\nf = lambda x: np.exp(x)\ng = plot_graph(stage, ax, f, label=\"e^x\")"
+   },
+   {
+    "intent": "A tangent sliding along the curve with its slope read out",
+    "narration": "Slide a tangent along it and read its slope.",
+    "code": "slide_tangent(stage, ax, f, -1.5, 1.5)"
+   },
+   {
+    "intent": "The point (1, e) marked with the tangent's slope 2.72 beside its height 2.72",
+    "narration": "At x equals one the curve is two point seven two high, and its slope is also two point seven two.",
+    "code": "p = mark_point(stage, ax, 1, np.e, color=RED, label=\"height 2.72, slope 2.72\")"
+   },
+   {
+    "intent": "The point (0, 1) marked, height 1 and slope 1",
+    "narration": "At zero: height one, slope one. Everywhere, the slope equals the height.",
+    "code": "q = mark_point(stage, ax, 0, 1, color=GREEN, label=\"height 1, slope 1\")"
+   },
+   {
+    "intent": "The curve beside the equation d/dx e^x = e^x",
+    "narration": "That is what makes e special: e to the x is its own derivative.",
+    "code": "stage.equation(r\"\\frac{d}{dx} e^x = e^x\")"
+   }
+  ]
+ },
+ {
+  "request": "the area under sin x from 0 to pi",
+  "beats": [
+   {
+    "intent": "Axes with one arch of y = sin x from 0 to π",
+    "narration": "One arch of the sine curve, from zero to pi.",
+    "code": "stage.title(\"Area under one arch\")\nax = draw_axes(stage, x_range=(0, 3.2), y_range=(0, 1.2))\ng = plot_graph(stage, ax, np.sin, x_range=(0, PI), label=\"sin x\")"
+   },
+   {
+    "intent": "Four rectangles under the arch, then 8, 16 and 32, filling it",
+    "narration": "Fill it with rectangles, then thinner and thinner ones.",
+    "code": "riemann_refine(stage, ax, g, 0, PI, ns=(4, 8, 16, 32))"
+   },
+   {
+    "intent": "The arch shaded smoothly",
+    "narration": "In the limit the rectangles become the exact area.",
+    "code": "stage.clear(keep=[ax, g])\nshade_area(stage, ax, g, 0, PI)"
+   },
+   {
+    "intent": "The shaded arch beside the equation ∫ sin x dx from 0 to π = 2",
+    "narration": "And that area is exactly two.",
+    "code": "stage.equation(r\"\\int_0^\\pi \\sin x \\, dx\", r\"= [-\\cos x]_0^\\pi = 2\")"
+   }
+  ]
+ },
+ {
+  "request": "building e^x from its Taylor series",
+  "beats": [
+   {
+    "intent": "Axes with the curve y = e^x from -2 to 2",
+    "narration": "Start with e to the x.",
+    "code": "stage.title(\"e^x from polynomials\")\nax = draw_axes(stage, x_range=(-2, 2), y_range=(-1, 8))\ng = plot_graph(stage, ax, np.exp, label=\"e^x\")"
+   },
+   {
+    "intent": "Polynomials 1, 1 + x, 1 + x + x^2/2, ... closing in on the curve",
+    "narration": "Add one term at a time: one, then one plus x, then plus x squared over two. Each hugs the curve longer.",
+    "code": "taylor_approximate(stage, ax, np.exp, 0, [1, 1, 1, 1, 1])"
+   },
+   {
+    "intent": "The equation e^x = 1 + x + x^2/2! + x^3/3! + ... beside the curves",
+    "narration": "Every derivative of e to the x at zero is one, so the terms are x to the n over n factorial.",
+    "code": "stage.equation(r\"e^x = 1 + x + \\frac{x^2}{2!} + \\frac{x^3}{3!} + \\cdots\")"
+   }
+  ]
+ },
+ {
+  "request": "what are the chances of at least one six in several rolls?",
+  "beats": [
+   {
+    "intent": "Bars of the chance of no six after 1 to 8 rolls, shrinking by 5/6 each time",
+    "narration": "The chance of missing a six on one roll is five sixths. Every extra roll multiplies it by five sixths again.",
+    "code": "stage.title(\"At least one six\")\nmiss = [round((5 / 6) ** n, 2) for n in range(1, 9)]\nbars = draw_bars(stage, miss, labels=list(range(1, 9)))\nstage.caption(\"Chance of no six after n rolls\")"
+   },
+   {
+    "intent": "Fresh axes with the curve 1 - (5/6)^n rising towards 1",
+    "narration": "So the chance of at least one six is one minus that, climbing towards certainty.",
+    "code": "stage.clear()\nax = draw_axes(stage, x_range=(0, 12), y_range=(0, 1), labels=(\"rolls\", \"P\"))\ng = plot_graph(stage, ax, lambda n: 1 - (5 / 6) ** n, color=GREEN)"
+   },
+   {
+    "intent": "A dashed line at 1/2 crossing the curve at n = 4, where the chance is 0.52",
+    "narration": "It passes one half at four rolls: fifty two percent.",
+    "code": "half = draw_line(stage, ax.c2p(0, 0.5), ax.c2p(12, 0.5), color=RED, dashed=True)\np = mark_point(stage, ax, 4, 1 - (5 / 6) ** 4, color=RED, label=\"4 rolls: 0.52\")"
+   },
+   {
+    "intent": "The curve beside the equation P = 1 - (5/6)^4 ≈ 0.52",
+    "narration": "One minus five sixths to the fourth: about zero point five two.",
+    "code": "stage.equation(r\"P = 1 - \\left(\\tfrac56\\right)^4 \\approx 0.52\")"
+   }
+  ]
+ },
+ {
+  "request": "how does GPS find where you are from distances?",
+  "beats": [
+   {
+    "intent": "A plane with a satellite point A and a circle of radius 3 around it",
+    "narration": "One satellite says you are three units away: you are somewhere on this circle.",
+    "code": "stage.title(\"Finding a position from distances\")\np = draw_plane(stage)\nA = mark_point(stage, p, (-2, 0), color=RED, label=\"A\")\ncA = Circle(radius=3 * p.get_x_unit_size() if hasattr(p, \"get_x_unit_size\") else 3, color=RED).move_to(p.c2p(-2, 0))\nstage.play(Create(cA))"
+   },
+   {
+    "intent": "A second point B and its circle, crossing the first at two points",
+    "narration": "A second satellite gives another circle. They cross at only two points.",
+    "code": "B = mark_point(stage, p, (2, 0), color=BLUE, label=\"B\")\ncB = Circle(radius=np.linalg.norm(p.c2p(3, 0) - p.c2p(0, 0)), color=BLUE).move_to(p.c2p(2, 0))\ncA2 = Circle(radius=np.linalg.norm(p.c2p(3, 0) - p.c2p(0, 0)), color=RED).move_to(p.c2p(-2, 0))\nstage.play(Transform(cA, cA2), Create(cB))\nx1 = mark_point(stage, p, (0, np.sqrt(5)), color=YELLOW)\nx2 = mark_point(stage, p, (0, -np.sqrt(5)), color=YELLOW)"
+   },
+   {
+    "intent": "A third point C and circle passing through only the upper crossing, which is lit",
+    "narration": "A third satellite settles it: only one point is on all three circles.",
+    "code": "C = mark_point(stage, p, (0, -1.5), color=GREEN, label=\"C\")\nr = np.sqrt(5) + 1.5\ncC = Circle(radius=np.linalg.norm(p.c2p(r, 0) - p.c2p(0, 0)), color=GREEN).move_to(p.c2p(0, -1.5))\nstage.play(Create(cC))\nhighlight(stage, x1)\nstage.caption(\"One point on all three circles\")"
+   }
+  ]
+ },
+ {
+  "request": "the Collatz sequence starting from 6",
+  "beats": [
+   {
+    "intent": "Bars of the sequence 6, 3, 10, 5, 16, 8, 4, 2, 1",
+    "narration": "Start at six. If a number is even, halve it; if it is odd, triple it and add one.",
+    "code": "stage.title(\"The Collatz sequence\")\nseq = [6, 3, 10, 5, 16, 8, 4, 2, 1]\nbars = draw_bars(stage, seq, labels=seq)"
+   },
+   {
+    "intent": "The odd steps 3 → 10 and 5 → 16 lit in red",
+    "narration": "The odd numbers jump up: three becomes ten, five becomes sixteen.",
+    "code": "highlight(stage, VGroup(bars[1], bars[3]), color=RED)\nstage.caption(\"Odd: 3n + 1\")"
+   },
+   {
+    "intent": "The halving steps from 16 down to 1 lit in green",
+    "narration": "Then sixteen halves all the way down: eight, four, two, one.",
+    "code": "highlight(stage, VGroup(*bars[5:]), color=GREEN)\nstage.caption(\"Even: halve it\")"
+   },
+   {
+    "intent": "The bars beside the rule n → n/2 or 3n + 1, reaching 1 in 8 steps",
+    "narration": "Six reaches one in eight steps. Nobody has proved every starting number does.",
+    "code": "stage.equation(r\"n \\to \\begin{cases} n/2 & n \\text{ even} \\\\ 3n+1 & n \\text{ odd} \\end{cases}\")"
+   }
+  ]
+ },
+ {
+  "request": "why does a longer pendulum swing more slowly?",
+  "beats": [
+   {
+    "intent": "A pendulum of length 1 swinging, its angle traced as a cosine with period 2",
+    "narration": "A pendulum swings back and forth; its angle traces a wave over time.",
+    "code": "stage.title(\"Pendulum length and period\")\nax, trace = swing_pendulum(stage, length=1.2, period=2.0)\nstage.caption(\"Short string: period 2 s\")"
+   },
+   {
+    "intent": "A longer pendulum swinging with a slower wave, period 2.8",
+    "narration": "Make the string twice as long and each swing takes longer.",
+    "code": "stage.clear()\nax2, trace2 = swing_pendulum(stage, length=2.4, period=2.8)\nstage.caption(\"Twice as long: period 2.8 s\")"
+   },
+   {
+    "intent": "Axes of length against period with the curve T = 2√L through (1, 2) and (2, 2.83)",
+    "narration": "The period grows with the square root of the length: twice as long is only about 1.4 times as slow.",
+    "code": "stage.clear()\nax3 = draw_axes(stage, x_range=(0, 4), y_range=(0, 4), labels=(\"L\", \"T\"))\ng = plot_graph(stage, ax3, lambda L: 2 * np.sqrt(L), color=YELLOW, label=\"T = 2\\\\sqrt{L}\")\npts = plot_points(stage, ax3, [(1, 2), (2, 2.83)], color=RED)"
+   }
+  ]
+ },
+ {
+  "request": "how does gradient descent find the bottom of a valley?",
+  "beats": [
+   {
+    "intent": "Axes with the valley curve y = (x - 1)^2 + 0.5",
+    "narration": "Here is a valley. We want its lowest point, but we can only feel the slope where we stand.",
+    "code": "stage.title(\"Walking downhill\")\nax = draw_axes(stage, x_range=(-3, 4), y_range=(0, 10))\nf = lambda x: (x - 1) ** 2 + 0.5\ng = plot_graph(stage, ax, f)"
+   },
+   {
+    "intent": "A ball at x = -2.5 stepping downhill by the slope, steps shrinking near the bottom",
+    "narration": "Start at minus two and a half and step against the slope. Near the bottom the slope is gentle and the steps get small.",
+    "code": "gradient_descent(stage, ax, f, -2.5, lr=0.2, steps=10)"
+   },
+   {
+    "intent": "The minimum (1, 0.5) marked where the ball settles",
+    "narration": "The ball settles at one, where the slope is zero.",
+    "code": "m = mark_point(stage, ax, 1, 0.5, color=RED, label=\"minimum (1, 0.5)\")"
+   },
+   {
+    "intent": "The rule x_new = x - 0.2 × slope beside the curve",
+    "narration": "Each step is the same rule: move against the slope, a fifth of its size.",
+    "code": "stage.equation(r\"x_{\\text{new}} = x - 0.2 \\, f'(x)\")"
+   }
+  ]
+ },
+ {
+  "request": "what does a neural network do with its inputs?",
+  "beats": [
+   {
+    "intent": "A network with 2 inputs, a hidden layer of 3 and 1 output, a signal pulsing through",
+    "narration": "Two numbers go in on the left, pass through three hidden neurons, and one number comes out.",
+    "code": "stage.title(\"A small neural network\")\nnet = draw_neural_net(stage, layers=(2, 3, 1))"
+   },
+   {
+    "intent": "The network beside the equation for one hidden neuron h = σ(w1 x1 + w2 x2 + b)",
+    "narration": "Each hidden neuron weighs its inputs, adds them up with a bias, and squashes the result.",
+    "code": "stage.equation(r\"h = \\sigma(w_1 x_1 + w_2 x_2 + b)\")"
+   },
+   {
+    "intent": "Fresh axes with the squashing curve σ(z) = 1/(1 + e^{-z})",
+    "narration": "The squashing curve turns any number into something between zero and one.",
+    "code": "stage.clear()\nax = draw_axes(stage, x_range=(-6, 6), y_range=(0, 1), labels=(\"z\", \"\\\\sigma\"))\ns = plot_graph(stage, ax, lambda z: 1 / (1 + np.exp(-z)), color=YELLOW)"
+   },
+   {
+    "intent": "Points along the curve at z = -2, 0, 2 marked with outputs 0.12, 0.5, 0.88",
+    "narration": "Minus two gives zero point one two, zero gives a half, two gives zero point eight eight.",
+    "code": "for z in (-2, 0, 2):\n    mark_point(stage, ax, z, 1 / (1 + np.exp(-z)), color=RED, label=f\"{1 / (1 + np.exp(-z)):.2f}\")"
+   }
+  ]
+ },
+ {
+  "request": "how does 1 + 1/3 + 1/9 + ... add up?",
+  "beats": [
+   {
+    "intent": "Bars of 1, 1/3, 1/9, 1/27, ... stacking into a running total",
+    "narration": "Add one, a third, a ninth, a twenty seventh, each a third of the last.",
+    "code": "stage.title(\"A geometric series\")\nbars, total = show_partial_sums(stage, lambda k: (1 / 3) ** (k - 1), n=8)"
+   },
+   {
+    "intent": "A number line from 0 to 2 with the partial sums 1, 1.33, 1.44, 1.48 marked",
+    "narration": "On a number line the running total creeps towards one and a half.",
+    "code": "stage.clear()\nnl = draw_number_line(stage, x_range=(0, 2))\nfor s in (1, 4 / 3, 13 / 9, 40 / 27):\n    mark_point(stage, nl, s)\nlim = mark_point(stage, nl, 1.5, color=RED, label=\"1.5\", direction=DOWN)"
+   },
+   {
+    "intent": "The number line beside the equation 1 + 1/3 + 1/9 + ... = 1/(1 - 1/3) = 3/2",
+    "narration": "The sum is one over one minus a third: three halves.",
+    "code": "stage.equation(r\"\\sum_{k=0}^{\\infty} \\left(\\tfrac13\\right)^k\", r\"= \\frac{1}{1 - \\frac13} = \\frac32\")"
+   }
+  ]
+ },
+ {
+  "request": "how do you turn 1011 in binary into a decimal number?",
+  "beats": [
+   {
+    "intent": "Four bits counting up under the place values 8 4 2 1 until 1011",
+    "narration": "Each binary digit sits under a place value: eight, four, two, one. Count up to one zero one one.",
+    "code": "stage.title(\"Binary to decimal\")\nbits = count_binary(stage, bits=4, upto=11)"
+   },
+   {
+    "intent": "The bits 1011 beside the equation 8 + 0 + 2 + 1 = 11",
+    "narration": "Add the place values where there is a one: eight plus two plus one is eleven.",
+    "code": "stage.equation(r\"1011_2 = 8 + 0 + 2 + 1\", r\"= 11\")"
+   },
+   {
+    "intent": "Bars of the place values 8, 4, 2, 1 with the 4 bar dimmed",
+    "narration": "The four is switched off, so it does not count.",
+    "code": "stage.clear()\nbars = draw_bars(stage, [8, 4, 2, 1], labels=[8, 4, 2, 1])\nstage.play(bars[1].animate.set_opacity(0.2))\nstage.caption(\"8 + 2 + 1 = 11\")"
+   }
+  ]
+ },
+ {
+  "request": "the triangle inequality: why two sides beat the third",
+  "beats": [
+   {
+    "intent": "A triangle with sides 3, 4 and 5 labelled",
+    "narration": "In any triangle, going along two sides is longer than going straight along the third.",
+    "code": "stage.title(\"The triangle inequality\")\nA, B, C = (-2, -1), (1, -1), (1, 1.5)\ntri = draw_polygon(stage, [A, B, C], where=None)"
+   },
+   {
+    "intent": "The path A to C to B lit in yellow, the direct path A to B in green",
+    "narration": "Take the detour through C, or go straight from A to B.",
+    "code": "p1 = draw_line(stage, A, C, color=YELLOW)\np2 = draw_line(stage, C, B, color=YELLOW)\nd = draw_line(stage, A, B, color=GREEN)\nstage.label(d, \"direct\", direction=DOWN, color=GREEN)"
+   },
+   {
+    "intent": "The three sides labelled with their lengths 3.9, 2.5 and 3, beside 3.9 + 2.5 > 3",
+    "narration": "Measure them: the detour is three point nine plus two point five, six point four, against three straight across.",
+    "code": "stage.label(p1, \"3.9\", direction=LEFT, color=YELLOW)\nstage.label(p2, \"2.5\", direction=RIGHT, color=YELLOW)\nstage.equation(r\"3.9 + 2.5 = 6.4 > 3\", r\"|AC| + |CB| \\geq |AB|\")"
+   }
+  ]
+ }
+]
