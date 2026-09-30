@@ -120,9 +120,9 @@ def _beside_equation(key: str) -> str:
     if key not in ("center", "full") or not _CURRENT:
         return key
     st = _CURRENT[0]
-    eq = getattr(st, "_equation", None)
+    eq = getattr(st, "_equation", None) or []
     scene = getattr(st, "scene", None)
-    if eq is None or scene is None or eq not in scene.mobjects:
+    if scene is None or not any(m in scene.mobjects for m in eq):
         return key
     side = getattr(st, "_equation_where", "right")
     return {"right": "left", "left": "right"}.get(side, key)
@@ -255,31 +255,48 @@ class Stage:
         self.scene.add(*tops)
 
     def equation(self, *tex: str, where: str = "right", run_time: float = 1.2):
-        """A derivation: each step transforms into the next, in a region."""
+        """A derivation in a region: a step that continues the line ("= 12")
+        extends it; any other step is written on a new line below, the
+        earlier lines kept (up to four)."""
         old = getattr(self, "_equation", None)
-        if old is not None and old in self.scene.mobjects:   # one at a time
-            self.scene.play(FadeOut(old), run_time=0.5)
+        if old is not None and any(m in self.scene.mobjects for m in old):   # one at a time
+            self.scene.play(*[FadeOut(m) for m in old if m in self.scene.mobjects], run_time=0.5)
         self._make_room(where)
         cx, cy, w, h = _REGIONS[where]
         cur = MathTex(tex[0], font_size=40).move_to([cx, cy + h / 4, 0])
         cur.scale_to_fit_width(min(cur.width, w))
         self.scene.play(Write(cur), run_time=run_time)
-        line = str(tex[0])
+        lines, line = [cur], str(tex[0])
         for t in tex[1:]:
             # A step that continues the line ("= 12", "\\approx 0.64",
             # "\\to 1") extends it; replacing the line with it left frames
-            # showing a bare "= 12". Any other step is a new form of the
-            # equation and transforms the line into it.
+            # showing a bare "= 12".
             if _re.match(r"\s*(=|<|>|\\approx|\\to|\\le|\\ge|\\equiv|\\neq|\\sim|\\Rightarrow|\\implies|\\iff)", str(t)):
                 line = f"{line} {t}"
-            else:
-                line = str(t)
-            nxt = MathTex(line, font_size=40).move_to(cur)
+                nxt = MathTex(line, font_size=40).move_to(cur)
+                nxt.scale_to_fit_width(min(nxt.width, w))
+                self.scene.play(TransformMatchingTex(cur, nxt), run_time=run_time)
+                lines[-1] = cur = nxt
+                continue
+            # Any other step goes on the next line, the derivation so far
+            # kept above it: transforming "f'(x) = 4 - 2x" into "x = 2" left
+            # the beat's last frame with only the answer (183 of 226
+            # multi-step teacher equations did this, 2026-09-30).
+            line = str(t)
+            nxt = MathTex(line, font_size=40)
             nxt.scale_to_fit_width(min(nxt.width, w))
-            self.scene.play(TransformMatchingTex(cur, nxt), run_time=run_time)
+            nxt.next_to(cur, DOWN, buff=0.35).set_x(cx)
+            anims = [Write(nxt)]
+            if len(lines) >= 4:                       # the oldest line gives way
+                gone = lines.pop(0)
+                shift = gone.get_center()[1] - lines[0].get_center()[1]
+                anims += [FadeOut(gone)] + [m.animate.shift(shift * UP) for m in lines]
+                nxt.shift(shift * UP)
+            self.scene.play(*anims, run_time=run_time)
+            lines.append(nxt)
             cur = nxt
-        self._objects.append(cur)
-        self._equation = cur
+        self._objects += lines
+        self._equation = lines
         self._equation_where = _REGIONS._key(where)
         return cur
 

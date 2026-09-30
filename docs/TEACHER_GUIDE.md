@@ -78,7 +78,7 @@ Added 2026-09-30:
   `mark_point(stage, ax, x, y, color=RED)` for one point.
 - `highlight(stage, m)` leaves `m` lit in its colour.
 - `stage.equation("A = \\tfrac12 \\cdot 4 \\cdot 6", "= 12")`: a step that starts
-  with =, <, \\approx, \\to ... extends the line; any other step replaces it.
+  with =, <, \\approx, \\to ... extends the line; any other step starts a new line.
 - Bar and node labels that are words render as plain text ("3 for £2");
   bars are spaced to fit their labels.
 - `stage.label(obj, ...)` follows `obj` when it moves.
@@ -89,8 +89,9 @@ Added 2026-09-30:
 - Curve labels follow the axis-label rule: `label="more demand"` is text,
   `label=r"\cos x"` is maths.
 - A step starting with `\Rightarrow`, `\implies` or `\iff` extends the line too.
-- One `stage.equation` line per idea: two steps that don't start with an
-  operator show only the second.
+- `stage.equation(a, b, c)`: a step that doesn't start with an operator goes
+  on a new line below, earlier lines kept (up to four): derivations stay
+  visible at the beat's end.
 - A picture drawn in the middle while an equation is on screen goes to the
   other side; a vector's label switches side when its tip flips.
 - Axis and number-line numbers under 10 000 have no separator (years read 2020).

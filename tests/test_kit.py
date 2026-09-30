@@ -68,10 +68,11 @@ def test_middle_pictures_step_aside_for_an_equation_on_screen(monkeypatch):
     class Scene:
         mobjects = []
     st = kit.Stage.__new__(kit.Stage)
-    st.scene, st._equation, st._equation_where = Scene(), object(), "right"
+    line = object()
+    st.scene, st._equation, st._equation_where = Scene(), [line], "right"
     monkeypatch.setattr(kit, "_CURRENT", [st])
-    assert kit._REGIONS["center"] == kit._REGIONS["center"]  # nothing on screen
-    Scene.mobjects = [st._equation]
+    assert kit._REGIONS["center"] == dict.__getitem__(kit._REGIONS, "center")  # none on screen
+    Scene.mobjects = [line]
     assert kit._REGIONS["center"] == dict.__getitem__(kit._REGIONS, "left")
     assert kit._REGIONS["right"] == dict.__getitem__(kit._REGIONS, "right")
     st._equation_where = "left"
