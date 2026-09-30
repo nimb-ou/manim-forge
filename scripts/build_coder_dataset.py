@@ -125,8 +125,13 @@ def main() -> int:
     for scene, group in by_scene.items():
         target = valid if scene in valid_scenes else train
         src0 = group[0]["meta"]["source"]
+        # Claude arcs of three beats or fewer count once: most later batches
+        # are three beats, and at 3x they would teach the planner to stop
+        # before the 4-8 beats the short scenes aim for (2026-09-30).
+        short_claude = src0 == "plan-claude" and \
+            int(group[0]["meta"].get("n_beats") or 0) <= 3
         reps = a.gold_weight if src0 == "gold" else \
-            (3 if src0 in ("narration", "plan-claude") else 1)
+            (3 if src0 in ("narration", "plan-claude") and not short_claude else 1)
         # Gold is weighted in training only. Repeating it in validation would
         # make the eval loss a measurement of how well 44 scenes were
         # memorised.
