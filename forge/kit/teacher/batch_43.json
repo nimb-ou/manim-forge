@@ -1,0 +1,142 @@
+[
+ {
+  "request": "how do you expand (x + 3)(x + 2)?",
+  "beats": [
+   {
+    "intent": "A rectangle with sides x + 3 across and x + 2 down, split into four parts",
+    "narration": "Draw a rectangle x plus three wide and x plus two tall, split where x meets the numbers.",
+    "code": "stage.title(\"Expanding (x + 3)(x + 2)\")\nxs, xw = 2.0, 1.2\nA = Rectangle(width=xs, height=xs, color=BLUE, fill_opacity=0.5)\nB = Rectangle(width=xw * 1.5, height=xs, color=GREEN, fill_opacity=0.5).next_to(A, RIGHT, buff=0)\nCc = Rectangle(width=xs, height=xw, color=YELLOW, fill_opacity=0.5).next_to(A, DOWN, buff=0)\nD = Rectangle(width=xw * 1.5, height=xw, color=RED, fill_opacity=0.5).next_to(B, DOWN, buff=0)\nparts = VGroup(A, B, Cc, D).move_to(ORIGIN)\nstage.play(FadeIn(parts))\nstage.add(parts)\nstage.label(A, \"x\", direction=UP)\nstage.label(B, \"3\", direction=UP)\nstage.label(A, \"x\", direction=LEFT)\nstage.label(Cc, \"2\", direction=LEFT)"
+   },
+   {
+    "intent": "Each part labelled with its area: x^2, 3x, 2x, 6",
+    "narration": "The four pieces have areas x squared, three x, two x and six.",
+    "code": "for r, t in ((A, \"x^2\"), (B, \"3x\"), (Cc, \"2x\"), (D, \"6\")):\n    stage.play(FadeIn(MathTex(t, font_size=36).move_to(r)), run_time=0.3)"
+   },
+   {
+    "intent": "The rectangle beside (x + 3)(x + 2) = x^2 + 5x + 6",
+    "narration": "Add them: x squared plus five x plus six. Read backwards, that is how you factorise.",
+    "code": "stage.equation(r\"(x + 3)(x + 2) = x^2 + 5x + 6\")"
+   }
+  ]
+ },
+ {
+  "request": "why does x^2 = 9 have two answers?",
+  "beats": [
+   {
+    "intent": "Axes with the parabola y = x^2",
+    "narration": "Here is y equals x squared.",
+    "code": "stage.title(\"Two square roots\")\nax = draw_axes(stage, x_range=(-4, 4), y_range=(0, 12))\ng = plot_graph(stage, ax, lambda x: x ** 2)"
+   },
+   {
+    "intent": "A horizontal line at y = 9 crossing the parabola twice",
+    "narration": "Draw the line y equals nine. It crosses the parabola twice.",
+    "code": "line = draw_line(stage, ax.c2p(-4, 9), ax.c2p(4, 9), color=YELLOW, dashed=True)"
+   },
+   {
+    "intent": "The crossings at x = -3 and x = 3 marked beside x = ±3",
+    "narration": "At three and at minus three, because minus three squared is also nine.",
+    "code": "a = mark_point(stage, ax, -3, 9, color=RED, label=\"x = -3\")\nb = mark_point(stage, ax, 3, 9, color=RED, label=\"x = 3\")\nstage.equation(r\"x^2 = 9 \\Rightarrow x = \\pm 3\")"
+   }
+  ]
+ },
+ {
+  "request": "what is a function machine?",
+  "beats": [
+   {
+    "intent": "A box labelled ×2 then +1, with the input 3 arriving from the left",
+    "narration": "A function is a machine: put a number in, follow the rule, get a number out. Put in three.",
+    "code": "stage.title(\"A function machine\")\nm1 = VGroup(Square(side_length=1.3, color=BLUE), Text(\"×2\", font_size=30)).shift(LEFT * 1.2)\nm2 = VGroup(Square(side_length=1.3, color=GREEN), Text(\"+1\", font_size=30)).shift(RIGHT * 1.2)\nstage.play(FadeIn(m1), FadeIn(m2))\nstage.add(m1, m2)\nx = Text(\"3\", font_size=40, color=YELLOW).move_to(LEFT * 4.5)\nstage.play(FadeIn(x))\nstage.add(x)"
+   },
+   {
+    "intent": "The number moving through: 3 becomes 6, then 7",
+    "narration": "Times two makes six, plus one makes seven.",
+    "code": "stage.play(x.animate.move_to(m1), run_time=0.8)\nsix = Text(\"6\", font_size=40, color=YELLOW).move_to(m1)\nstage.play(Transform(x, six))\nstage.play(x.animate.move_to(m2), run_time=0.8)\nstage.play(Transform(x, Text(\"7\", font_size=40, color=YELLOW).move_to(m2)))\nstage.play(x.animate.move_to(RIGHT * 4.5), run_time=0.8)"
+   },
+   {
+    "intent": "The machines beside f(x) = 2x + 1, f(3) = 7",
+    "narration": "The whole machine is f of x equals two x plus one, and f of three is seven.",
+    "code": "stage.equation(r\"f(x) = 2x + 1,\\quad f(3) = 7\")"
+   }
+  ]
+ },
+ {
+  "request": "how do you undo a function, 2x + 1?",
+  "beats": [
+   {
+    "intent": "The machines ×2 then +1, with 7 at the output on the right",
+    "narration": "The function doubled and added one, turning three into seven. To go back, start from seven.",
+    "code": "stage.title(\"The inverse function\")\nm1 = VGroup(Square(side_length=1.3, color=BLUE), Text(\"×2\", font_size=30)).shift(LEFT * 1.2)\nm2 = VGroup(Square(side_length=1.3, color=GREEN), Text(\"+1\", font_size=30)).shift(RIGHT * 1.2)\nstage.play(FadeIn(m1), FadeIn(m2))\nstage.add(m1, m2)\ny = Text(\"7\", font_size=40, color=YELLOW).move_to(RIGHT * 4.5)\nstage.play(FadeIn(y))\nstage.add(y)"
+   },
+   {
+    "intent": "The machines flipped to −1 then ÷2, run right to left, turning 7 into 3",
+    "narration": "Undo the steps in reverse order: take one away, then halve. Seven becomes six, then three.",
+    "code": "stage.play(Transform(m2[1], Text(\"-1\", font_size=30).move_to(m2)), Transform(m1[1], Text(\"÷2\", font_size=30).move_to(m1)))\nstage.play(y.animate.move_to(m2), run_time=0.8)\nstage.play(Transform(y, Text(\"6\", font_size=40, color=YELLOW).move_to(m2)))\nstage.play(y.animate.move_to(m1), run_time=0.8)\nstage.play(Transform(y, Text(\"3\", font_size=40, color=YELLOW).move_to(m1)))\nstage.play(y.animate.move_to(LEFT * 4.5), run_time=0.8)"
+   },
+   {
+    "intent": "The machines beside f^{-1}(x) = (x - 1)/2",
+    "narration": "The inverse is x minus one, over two.",
+    "code": "stage.equation(r\"f^{-1}(x) = \\frac{x - 1}{2}\")"
+   }
+  ]
+ },
+ {
+  "request": "why is the square root of a negative number not allowed?",
+  "beats": [
+   {
+    "intent": "Axes with y = √x drawn from 0 to 9",
+    "narration": "The square root curve starts at zero and goes to the right.",
+    "code": "stage.title(\"Where √x lives\")\nax = draw_axes(stage, x_range=(-5, 9), y_range=(0, 3.5))\ng = plot_graph(stage, ax, np.sqrt, x_range=(0, 9), label=\"\\\\sqrt{x}\")"
+   },
+   {
+    "intent": "The region x < 0 shaded grey as outside the domain",
+    "narration": "Left of zero there is nothing: no real number squares to a negative.",
+    "code": "bad = Rectangle(width=ax.c2p(0, 0)[0] - ax.c2p(-5, 0)[0], height=ax.c2p(0, 3.5)[1] - ax.c2p(0, 0)[1], color=GREY, fill_opacity=0.4, stroke_width=0).move_to(ax.c2p(-2.5, 1.75))\nstage.play(FadeIn(bad))\nstage.add(bad)\nstage.label(bad, \"no real √\", direction=UP, color=GREY_B)"
+   },
+   {
+    "intent": "The curve beside the domain x ≥ 0",
+    "narration": "So the domain of the square root is x greater than or equal to zero.",
+    "code": "stage.equation(r\"\\sqrt{x}\\ \\text{is defined for}\\ x \\geq 0\")"
+   }
+  ]
+ },
+ {
+  "request": "how do you solve 2^x = 32?",
+  "beats": [
+   {
+    "intent": "Bars doubling: 2, 4, 8, 16, 32",
+    "narration": "Keep doubling from two: four, eight, sixteen, thirty two.",
+    "code": "stage.title(\"Solving 2^x = 32\")\nbars = draw_bars(stage, [2, 4, 8, 16, 32], labels=[\"2^1\", \"2^2\", \"2^3\", \"2^4\", \"2^5\"])"
+   },
+   {
+    "intent": "The fifth bar, 32, lit",
+    "narration": "Thirty two is the fifth one.",
+    "code": "highlight(stage, bars[4], color=RED)"
+   },
+   {
+    "intent": "The bars beside 2^5 = 32, x = 5",
+    "narration": "So two to the fifth is thirty two, and x is five.",
+    "code": "stage.equation(r\"2^x = 32 = 2^5 \\Rightarrow x = 5\")"
+   }
+  ]
+ },
+ {
+  "request": "how does the quadratic formula find the roots of x^2 - 2x - 3?",
+  "beats": [
+   {
+    "intent": "Axes with the parabola y = x^2 - 2x - 3",
+    "narration": "Here is x squared minus two x minus three.",
+    "code": "stage.title(\"The quadratic formula\")\nax = draw_axes(stage, x_range=(-3, 5), y_range=(-5, 6))\ng = plot_graph(stage, ax, lambda x: x ** 2 - 2 * x - 3)"
+   },
+   {
+    "intent": "The formula with a = 1, b = -2, c = -3 substituted beside the graph",
+    "narration": "Put a equals one, b minus two, c minus three into the formula.",
+    "code": "stage.equation(r\"x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a} = \\frac{2 \\pm \\sqrt{16}}{2}\")"
+   },
+   {
+    "intent": "The roots x = 3 and x = -1 marked where the curve crosses the axis",
+    "narration": "The root of sixteen is four, so x is three or minus one: exactly where the curve crosses the axis.",
+    "code": "r1 = mark_point(stage, ax, 3, 0, color=RED, label=\"3\", direction=DOWN)\nr2 = mark_point(stage, ax, -1, 0, color=RED, label=\"-1\", direction=DOWN)"
+   }
+  ]
+ }
+]
