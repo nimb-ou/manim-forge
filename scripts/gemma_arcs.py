@@ -141,7 +141,8 @@ def ask(key: str, text: str, max_tokens: int = 8000) -> str | None:
         except urllib.error.HTTPError as e:
             print(f"    HTTP {e.code} ({model})", flush=True)
             time.sleep(15 * (attempt + 1))
-        except (urllib.error.URLError, TimeoutError, KeyError, IndexError):
+        except (urllib.error.URLError, TimeoutError, KeyError, IndexError,
+                ConnectionError, OSError):          # RemoteDisconnected, resets
             time.sleep(10)
     return None
 
