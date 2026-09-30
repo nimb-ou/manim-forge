@@ -1,0 +1,82 @@
+[
+ {
+  "request": "how does a machine give 87p change with the fewest coins?",
+  "beats": [
+   {
+    "intent": "A row of coin types: 50p, 20p, 10p, 5p, 2p, 1p",
+    "narration": "The machine has coins of fifty, twenty, ten, five, two and one pence.",
+    "code": "stage.title(\"Fewest coins for 87p\")\nvals = [50, 20, 10, 5, 2, 1]\ncoins = VGroup(*[Circle(radius=0.25 + 0.05 * (5 - k), color=YELLOW if v >= 5 else ORANGE, fill_opacity=0.5) for k, v in enumerate(vals)]).arrange(RIGHT, buff=0.35).move_to([0, 1.8, 0])\nstage.play(LaggedStart(*[FadeIn(c) for c in coins], lag_ratio=0.1))\nstage.add(coins)\ntags = VGroup(*[Text(f\"{v}p\", font_size=20).move_to(c) for c, v in zip(coins, vals)])\nstage.play(FadeIn(tags))\nstage.add(tags)"
+   },
+   {
+    "intent": "Coins chosen one by one, biggest first: 50, 20, 10, 5, 2, with the amount left shrinking 87, 37, 17, 7, 2, 0",
+    "narration": "Always take the biggest coin that fits. Fifty leaves thirty seven; twenty leaves seventeen; ten leaves seven; five leaves two; two leaves nothing.",
+    "code": "picked = VGroup()\nleft = 87\nfor v in (50, 20, 10, 5, 2):\n    left -= v\n    c = Circle(radius=0.35, color=GREEN, fill_opacity=0.6)\n    c.add(Text(f\"{v}p\", font_size=22).move_to(c))\n    c.move_to([-3 + 1.2 * len(picked), -0.4, 0])\n    stage.play(FadeIn(c, shift=DOWN), run_time=0.4)\n    picked.add(c)\n    stage.caption(f\"{left}p left\")\nstage.add(picked)"
+   },
+   {
+    "intent": "The five coins beside 50 + 20 + 10 + 5 + 2 = 87",
+    "narration": "Five coins. For British coins, taking the biggest each time always gives the fewest.",
+    "code": "stage.equation(r\"50 + 20 + 10 + 5 + 2 = 87\")"
+   }
+  ]
+ },
+ {
+  "request": "why does a bigger wheel go further with each turn?",
+  "beats": [
+   {
+    "intent": "A small wheel of radius 0.3 m and a big wheel of radius 0.6 m on the ground",
+    "narration": "A small wheel with radius thirty centimetres, and a big one with sixty.",
+    "code": "stage.title(\"Bigger wheels go further\")\nground = Line([-6, -2.2, 0], [6, -2.2, 0], color=GREY_B)\nw1 = Circle(radius=0.45, color=BLUE).move_to([-5, -1.75, 0])\nw2 = Circle(radius=0.9, color=ORANGE).move_to([-4.6, -1.3, 0]).shift(1.6 * UP)\nground2 = Line([-6, 0.4, 0], [6, 0.4, 0], color=GREY_B)\nw2.move_to([-4.6, 1.3, 0])\nstage.play(Create(ground), Create(ground2), Create(w1), Create(w2))\nstage.add(ground, ground2, w1, w2)\nstage.label(w1, \"r = 0.3 m\", direction=UP, color=BLUE)\nstage.label(w2, \"r = 0.6 m\", direction=UP, color=ORANGE)"
+   },
+   {
+    "intent": "Each wheel rolling one full turn, leaving tracks of 1.88 m and 3.77 m",
+    "narration": "Roll each one full turn. The track it leaves is its circumference: the small wheel covers one point eight eight metres, the big one three point seven seven.",
+    "code": "k = 1.5\nt1 = Line([-5, -2.2, 0], [-5 + 1.885 * k, -2.2, 0], color=BLUE, stroke_width=8)\nt2 = Line([-4.6, 0.4, 0], [-4.6 + 3.77 * k * 1.0, 0.4, 0], color=ORANGE, stroke_width=8)\nstage.play(w1.animate.shift(1.885 * k * RIGHT), Create(t1), w2.animate.shift(3.77 * k * RIGHT), Create(t2), run_time=2.5)\nstage.add(t1, t2)\nstage.label(t1, \"1.88 m\", direction=DOWN, color=BLUE)\nstage.label(t2, \"3.77 m\", direction=DOWN, color=ORANGE)"
+   },
+   {
+    "intent": "The tracks beside distance per turn = 2πr",
+    "narration": "Distance per turn is two pi r, so doubling the radius doubles the distance.",
+    "code": "stage.equation(r\"2\\pi r:\\ 2\\pi(0.3) \\approx 1.88,\\ 2\\pi(0.6) \\approx 3.77\")"
+   }
+  ]
+ },
+ {
+  "request": "how can I estimate the jelly beans in a jar?",
+  "beats": [
+   {
+    "intent": "A jar drawn as a rectangle filled with little bean dots, labelled 2 litres",
+    "narration": "A jar holds two litres, that's two thousand cubic centimetres.",
+    "code": "stage.title(\"Beans in a jar\")\njar = RoundedRectangle(width=2.6, height=3.6, corner_radius=0.3, color=WHITE).move_to([-3, -0.5, 0])\nrng = np.random.default_rng(3)\nbeans = VGroup(*[Ellipse(width=0.16, height=0.1, color=c, fill_opacity=0.9, stroke_width=0).rotate(rng.uniform(0, PI)).move_to(\n    jar.get_center() + np.array([rng.uniform(-1.1, 1.1), rng.uniform(-1.6, 1.4), 0])) for c in [RED, GREEN, YELLOW, ORANGE, PURPLE] * 30])\nstage.play(Create(jar), FadeIn(beans))\nstage.add(jar, beans)\nstage.label(jar, \"2000 cm³\", direction=DOWN)"
+   },
+   {
+    "intent": "One bean enlarged, about 2 cm³",
+    "narration": "One bean is about two cubic centimetres.",
+    "code": "bean = Ellipse(width=1.6, height=1.0, color=RED, fill_opacity=0.8).move_to([2.2, 0.8, 0])\nstage.play(GrowFromCenter(bean))\nstage.add(bean)\nstage.label(bean, \"about 2 cm³\", direction=DOWN, color=RED)"
+   },
+   {
+    "intent": "The jar beside 2000 ÷ 2 × 0.65 ≈ 650 beans",
+    "narration": "Two thousand over two is a thousand, but beans leave gaps: only about two thirds of the jar is bean. So about six hundred and fifty.",
+    "code": "stage.equation(r\"\\frac{2000}{2} \\times 0.65\", r\"\\approx 650\")"
+   }
+  ]
+ },
+ {
+  "request": "why does an ambulance siren sound higher as it comes towards you?",
+  "beats": [
+   {
+    "intent": "A still siren sending out evenly spaced circular waves",
+    "narration": "A still siren sends out sound waves in evenly spaced rings.",
+    "code": "stage.title(\"The Doppler effect\")\nstill = VGroup(*[Circle(radius=0.5 * k, color=BLUE, stroke_opacity=1 - 0.15 * k).move_to([-3.5, 0, 0]) for k in range(1, 6)])\nsrc1 = Dot([-3.5, 0, 0], color=RED, radius=0.14)\nstage.play(LaggedStart(*[Create(c) for c in still], lag_ratio=0.2), FadeIn(src1))\nstage.add(still, src1)\nstage.caption(\"standing still: rings evenly spaced\")"
+   },
+   {
+    "intent": "A moving siren whose rings bunch up ahead of it and spread out behind",
+    "narration": "When it moves, each ring starts a little further ahead, so the rings bunch up in front and spread out behind.",
+    "code": "rings = VGroup()\nfor k in range(1, 6):\n    centre = np.array([2.0 + 0.35 * k, 0, 0])\n    rings.add(Circle(radius=0.5 * (6 - k), color=ORANGE, stroke_opacity=0.35 + 0.12 * k).move_to(centre))\nsrc2 = Dot([2.0 + 0.35 * 6, 0, 0], color=RED, radius=0.14)\nstage.play(LaggedStart(*[Create(c) for c in rings], lag_ratio=0.2), FadeIn(src2))\nstage.add(rings, src2)\narrow = Arrow(src2.get_center(), src2.get_center() + 1.0 * RIGHT, buff=0.1, color=RED)\nstage.play(GrowArrow(arrow))\nstage.add(arrow)"
+   },
+   {
+    "intent": "An ear in front hearing close-packed waves (higher pitch), an ear behind hearing spread waves (lower)",
+    "narration": "Ahead, the waves arrive closer together: a higher pitch. Behind, they are stretched: lower. As the ambulance passes, the siren drops.",
+    "code": "front = Text(\"higher\", font_size=28, color=YELLOW).move_to([5.3, 1.3, 0])\nback = Text(\"lower\", font_size=28, color=BLUE).move_to([0.2, 2.5, 0])\nstage.play(FadeIn(front), FadeIn(back))\nstage.add(front, back)\nstage.caption(\"bunched ahead: higher; stretched behind: lower\")"
+   }
+  ]
+ }
+]
