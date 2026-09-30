@@ -765,10 +765,16 @@ def trace_graph(stage: Stage, ax, f, x_start: float, x_end: float, color=YELLOW,
     t = ValueTracker(x_start)
     d = always_redraw(lambda: Dot(ax.c2p(t.get_value(), f(t.get_value())),
                                   color=color))
-    trail = TracedPath(d.get_center, stroke_color=color, stroke_width=3)
-    stage.scene.add(trail)
+    # The trail is the plotted curve drawn in step with the dot: a
+    # TracedPath samples once a frame, and at 15 fps two periods of a
+    # cosine came out as corners.
+    trail = ax.plot(f, x_range=[min(x_start, x_end), max(x_start, x_end)],
+                    color=color, stroke_width=3)
+    if x_end < x_start:
+        trail.reverse_points()
     stage.scene.play(FadeIn(d), run_time=0.4)
-    stage.scene.play(t.animate.set_value(x_end), run_time=run_time)
+    stage.scene.play(t.animate(rate_func=linear).set_value(x_end),
+                     Create(trail, rate_func=linear), run_time=run_time)
     stage._objects += [d, trail]
     return d, trail
 
