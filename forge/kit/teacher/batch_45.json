@@ -1,0 +1,142 @@
+[
+ {
+  "request": "explain the derivative of x^2 from scratch",
+  "beats": [
+   {
+    "intent": "Axes with the parabola y = x^2 from -2 to 2",
+    "narration": "Here is y equals x squared. How steep is it at each point?",
+    "code": "stage.title(\"The derivative of x²\")\nax = draw_axes(stage, x_range=(-2, 3), y_range=(-3, 5))\nf = lambda x: x ** 2\ng = plot_graph(stage, ax, f, x_range=(-2, 2.2), label=\"x^2\")"
+   },
+   {
+    "intent": "A secant from x = 1 to x = 2 with slope 3",
+    "narration": "Join the points at one and two: that secant rises three over one across, slope three.",
+    "code": "p1 = mark_point(stage, ax, 1, 1, color=RED)\np2 = mark_point(stage, ax, 2, 4, color=RED)\nsec = draw_line(stage, ax.c2p(0.5, -0.5), ax.c2p(2.3, 4.9), color=ORANGE)"
+   },
+   {
+    "intent": "The secant shrinking onto the tangent at x = 1, slope settling at 2",
+    "narration": "Slide the second point in towards the first: the slope settles at two. That is the derivative at one.",
+    "code": "secant_to_tangent(stage, ax, f, 1, h=1)"
+   },
+   {
+    "intent": "A tangent sliding along the whole curve with its slope read out",
+    "narration": "Do the same everywhere: the slope is minus two at minus one, zero at zero, two at one.",
+    "code": "stage.clear(keep=[ax, g])\nslide_tangent(stage, ax, f, -1.8, 2)"
+   },
+   {
+    "intent": "The slope values plotted as a line through (-1, -2), (0, 0), (1, 2)",
+    "narration": "Plot each slope above its x and the points line up.",
+    "code": "stage.clear(keep=[ax, g])\npts = plot_points(stage, ax, [(-1, -2), (0, 0), (1, 2), (2, 4)], color=YELLOW)"
+   },
+   {
+    "intent": "The line y = 2x drawn through them beside d/dx x^2 = 2x",
+    "narration": "The slope function is two x: the derivative of x squared.",
+    "code": "d = plot_graph(stage, ax, lambda x: 2 * x, x_range=(-1.3, 2.3), color=YELLOW, label=\"2x\")\nstage.equation(r\"\\frac{d}{dx}x^2 = 2x\")"
+   }
+  ]
+ },
+ {
+  "request": "explain the integral of 2x from 0 to 3 from scratch",
+  "beats": [
+   {
+    "intent": "Axes with the line y = 2x from 0 to 3",
+    "narration": "Take the line y equals two x.",
+    "code": "stage.title(\"The integral of 2x\")\nax = draw_axes(stage, x_range=(0, 3.5), y_range=(0, 7))\ng = plot_graph(stage, ax, lambda x: 2 * x, x_range=(0, 3.2), label=\"2x\")"
+   },
+   {
+    "intent": "Six rectangles under the line from 0 to 3",
+    "narration": "Estimate the area under it from zero to three with rectangles.",
+    "code": "riemann_refine(stage, ax, g, 0, 3, ns=(6,))"
+   },
+   {
+    "intent": "Thinner and thinner rectangles: 12, 24, 48",
+    "narration": "Make them thinner and the total closes in on the true area.",
+    "code": "riemann_refine(stage, ax, g, 0, 3, ns=(12, 24, 48))"
+   },
+   {
+    "intent": "The exact area shaded, a triangle of base 3 and height 6",
+    "narration": "In the limit it is exactly the triangle: base three, height six.",
+    "code": "stage.clear(keep=[ax, g])\nshade_area(stage, ax, g, 0, 3)"
+   },
+   {
+    "intent": "The triangle's area 9 labelled",
+    "narration": "Half of three times six is nine.",
+    "code": "stage.caption(\"½ · 3 · 6 = 9\")\nstage.equation(r\"\\tfrac12 \\cdot 3 \\cdot 6 = 9\")"
+   },
+   {
+    "intent": "The area beside ∫ 2x dx = x^2, from 0 to 3 gives 9",
+    "narration": "An antiderivative of two x is x squared: three squared minus zero squared, nine. The same answer.",
+    "code": "stage.equation(r\"\\int_0^3 2x\\,dx = \\left[x^2\\right]_0^3 = 9\")"
+   }
+  ]
+ },
+ {
+  "request": "explain what the matrix [[1, 1], [0, 2]] does to the plane",
+  "beats": [
+   {
+    "intent": "A grid with i-hat and j-hat",
+    "narration": "Start with the grid and its basis arrows, i-hat and j-hat.",
+    "code": "stage.title(\"What [[1, 1], [0, 2]] does\")\np = draw_plane(stage)\ni_hat, j_hat = draw_basis(stage, p)"
+   },
+   {
+    "intent": "The unit square and a test vector v = (1, 1) added",
+    "narration": "Add the unit square and a test vector one, one.",
+    "code": "sq = draw_unit_square(stage, p)\nv = draw_vector(stage, p, (1, 1), color=YELLOW, label=\"v\")"
+   },
+   {
+    "intent": "The matrix applied: the grid shears and stretches, everything riding along",
+    "narration": "Apply the matrix. Watch where everything goes.",
+    "code": "apply_matrix(stage, p, [[1, 1], [0, 2]], riders=[i_hat, j_hat, sq, v])"
+   },
+   {
+    "intent": "i-hat still at (1, 0), j-hat now at (1, 2), labelled",
+    "narration": "i-hat stays at one, zero. j-hat lands at one, two. Those are the matrix's columns.",
+    "code": "stage.label(i_hat, \"(1, 0)\", direction=DOWN, color=GREEN)\nstage.label(j_hat, \"(1, 2)\", direction=LEFT, color=RED)"
+   },
+   {
+    "intent": "v landing at (2, 2), lit and labelled",
+    "narration": "The test vector lands at two, two: one of each column added.",
+    "code": "highlight(stage, v, color=YELLOW)\nstage.label(v, \"(2, 2)\", direction=RIGHT, color=YELLOW)"
+   },
+   {
+    "intent": "The square now a parallelogram of area 2 beside det = 2",
+    "narration": "The unit square became a parallelogram of area two: the determinant.",
+    "code": "stage.equation(r\"\\det\\begin{bmatrix}1&1\\\\0&2\\end{bmatrix} = 2\")"
+   }
+  ]
+ },
+ {
+  "request": "walk me through selection sort on 6 numbers",
+  "beats": [
+   {
+    "intent": "Six bars of heights 5, 2, 6, 1, 4, 3",
+    "narration": "Six numbers in a row: five, two, six, one, four, three.",
+    "code": "stage.title(\"Selection sort\")\nbars = draw_array(stage, [5, 2, 6, 1, 4, 3])"
+   },
+   {
+    "intent": "The smallest, 1, found and swapped to the front",
+    "narration": "Find the smallest, one, and swap it to the front.",
+    "code": "highlight(stage, bars[3], color=RED)\nswap_bars(stage, bars, 0, 3)"
+   },
+   {
+    "intent": "The next smallest, 2, already in place; the front two lit as sorted",
+    "narration": "The next smallest, two, is already second.",
+    "code": "highlight(stage, VGroup(bars[0], bars[1]), color=GREEN)"
+   },
+   {
+    "intent": "3 swapped into third place",
+    "narration": "Find three and swap it into third place.",
+    "code": "swap_bars(stage, bars, 2, 5)"
+   },
+   {
+    "intent": "4 swapped into fourth place; 5 and 6 already in place",
+    "narration": "Then four swaps into fourth, and five and six are already where they belong.",
+    "code": "swap_bars(stage, bars, 3, 4)"
+   },
+   {
+    "intent": "All six bars in order, lit green, beside the count of comparisons 5 + 4 + 3 + 2 + 1 = 15",
+    "narration": "Sorted. Each pass scans what is left, so it takes five plus four plus three plus two plus one comparisons: fifteen.",
+    "code": "highlight(stage, VGroup(*bars), color=GREEN)\nstage.equation(r\"5 + 4 + 3 + 2 + 1 = 15\")"
+   }
+  ]
+ }
+]
