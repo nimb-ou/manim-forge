@@ -1,0 +1,77 @@
+[
+ {
+  "request": "if I flip two coins, what's the chance of exactly one head?",
+  "beats": [
+   {
+    "intent": "A tree: start splitting into H and T, each splitting again into H and T, four ends HH, HT, TH, TT",
+    "narration": "The first coin is heads or tails; for each, the second coin is heads or tails. Four equally likely outcomes.",
+    "code": "stage.title(\"Two coin flips\")\nnodes = {\"start\": (-0.9, 0), \"H\": (-0.2, 0.5), \"T\": (-0.2, -0.5),\n         \"HH\": (0.7, 0.8), \"HT\": (0.7, 0.25), \"TH\": (0.7, -0.25), \"TT\": (0.7, -0.8)}\nedges = [(\"start\", \"H\"), (\"start\", \"T\"), (\"H\", \"HH\"), (\"H\", \"HT\"), (\"T\", \"TH\"), (\"T\", \"TT\")]\ndots, links = draw_network(stage, nodes, edges)"
+   },
+   {
+    "intent": "The ends HT and TH lit green",
+    "narration": "Exactly one head happens two ways: heads then tails, or tails then heads.",
+    "code": "for k in (\"HT\", \"TH\"):\n    highlight(stage, dots[k], color=GREEN)\nstage.caption(\"2 of the 4 outcomes\")"
+   },
+   {
+    "intent": "The tree beside P(one head) = 2/4 = 1/2",
+    "narration": "Two out of four: a probability of one half.",
+    "code": "stage.equation(r\"P = \\frac{2}{4} = \\frac12\")"
+   }
+  ]
+ },
+ {
+  "request": "can sticks of length 2, 3 and 6 make a triangle?",
+  "beats": [
+   {
+    "intent": "A base stick of 6 with sticks of 2 and 3 hinged at its ends, swinging up",
+    "narration": "Lay the six stick down and hinge the two and the three at its ends. Swing them up to try to meet.",
+    "code": "stage.title(\"Can they make a triangle?\")\nk = 0.9\nA, B = np.array([-3 * k, -1.5, 0]), np.array([3 * k, -1.5, 0])\nbase = Line(A, B, color=WHITE, stroke_width=6)\ns2 = Line(A, A + 2 * k * UP, color=BLUE, stroke_width=6)\ns3 = Line(B, B + 3 * k * UP, color=ORANGE, stroke_width=6)\nstage.play(Create(base), Create(s2), Create(s3))\nstage.add(base, s2, s3)\nstage.label(base, \"6\", direction=DOWN)\nstage.label(s2, \"2\", direction=LEFT, color=BLUE)\nstage.label(s3, \"3\", direction=RIGHT, color=ORANGE)"
+   },
+   {
+    "intent": "Both sticks lowered flat along the base, still a gap of 1 between their tips",
+    "narration": "Even lying flat along the base they only reach two plus three, five. A gap of one is left: they can never meet.",
+    "code": "stage.play(Rotate(s2, -PI / 2, about_point=A), Rotate(s3, PI / 2, about_point=B))\ngap = Line(A + 2 * k * RIGHT, B - 3 * k * RIGHT, color=RED, stroke_width=10)\nstage.play(Create(gap))\nstage.add(gap)\nstage.label(gap, \"gap 1\", direction=UP, color=RED)"
+   },
+   {
+    "intent": "The sticks beside 2 + 3 < 6, the triangle rule",
+    "narration": "Any two sides of a triangle must add up to more than the third. Two plus three is less than six, so no triangle.",
+    "code": "stage.equation(r\"2 + 3 < 6\")\nstage.caption(\"two sides must add to more than the third\")"
+   }
+  ]
+ },
+ {
+  "request": "why are manhole covers round?",
+  "beats": [
+   {
+    "intent": "A square cover being tilted over its square hole, its diagonal longer than the hole's side",
+    "narration": "A square cover can be turned on its edge and slipped down the diagonal of its hole: the diagonal is longer than the side.",
+    "code": "stage.title(\"Why round covers?\")\nhole = Square(2.0, color=GREY_B).move_to([-3, -0.3, 0])\ncover = Square(2.0, color=ORANGE, fill_opacity=0.4).move_to([-3, -0.3, 0])\nstage.play(Create(hole), FadeIn(cover))\nstage.add(hole, cover)\ndiag = Line(hole.get_corner(DL), hole.get_corner(UR), color=YELLOW)\nstage.play(Create(diag))\nstage.add(diag)\nstage.label(diag, \"2.83\", direction=UL, color=YELLOW)\nstage.label(hole, \"side 2\", direction=DOWN)\nedge = Line([-4.0, -0.3, 0], [-2.0, -0.3, 0], color=ORANGE, stroke_width=10)\nstage.play(Transform(cover, edge))\nstage.play(cover.animate.rotate(PI / 4))\nstage.caption(\"on edge, it fits down the diagonal\")"
+   },
+   {
+    "intent": "A round cover over its hole: every way across is the same width",
+    "narration": "A circle is the same width in every direction, so however you turn a round cover, it can't fit through its hole.",
+    "code": "hole2 = Circle(radius=1.0, color=GREY_B).move_to([2.6, -0.3, 0])\ncover2 = Circle(radius=1.1, color=GREEN, fill_opacity=0.4).move_to([2.6, -0.3, 0])\nstage.play(Create(hole2), FadeIn(cover2))\nstage.add(hole2, cover2)\nfor a in (0, PI / 4, PI / 2):\n    d = Line(hole2.get_center() - 1.1 * np.array([np.cos(a), np.sin(a), 0]), hole2.get_center() + 1.1 * np.array([np.cos(a), np.sin(a), 0]), color=YELLOW)\n    stage.play(Create(d), run_time=0.4)\n    stage.add(d)\nstage.caption(\"round: the same width every way\")"
+   }
+  ]
+ },
+ {
+  "request": "how does a mirror reflect light?",
+  "beats": [
+   {
+    "intent": "A flat mirror with a ray coming in at an angle and the dashed normal line",
+    "narration": "A ray of light hits a flat mirror. Draw the normal: the line at right angles to the mirror where it hits.",
+    "code": "stage.title(\"Angle in, angle out\")\nmirror = Line([-4, -1.5, 0], [4, -1.5, 0], color=BLUE, stroke_width=10)\nhit = np.array([0, -1.5, 0])\nnormal = DashedLine(hit, hit + 3.2 * UP, color=GREY_B)\nsrc = hit + 3.0 * np.array([-np.sin(40 * DEGREES), np.cos(40 * DEGREES), 0])\nray_in = Arrow(src, hit, buff=0, color=YELLOW)\nstage.play(Create(mirror), Create(normal), GrowArrow(ray_in))\nstage.add(mirror, normal, ray_in)"
+   },
+   {
+    "intent": "The reflected ray leaving on the other side at the same 40° to the normal, both angles marked",
+    "narration": "It bounces off at the same angle to the normal on the other side: forty degrees in, forty degrees out.",
+    "code": "out = hit + 3.0 * np.array([np.sin(40 * DEGREES), np.cos(40 * DEGREES), 0])\nray_out = Arrow(hit, out, buff=0, color=YELLOW)\nstage.play(GrowArrow(ray_out))\nstage.add(ray_out)\na1 = Angle(Line(hit, hit + UP), Line(hit, src), radius=0.8, color=GREEN)\na2 = Angle(Line(hit, out), Line(hit, hit + UP), radius=0.8, color=GREEN)\nstage.play(Create(a1), Create(a2))\nstage.add(a1, a2)\nstage.label(a1, \"40°\", direction=UL, color=GREEN)\nstage.label(a2, \"40°\", direction=UR, color=GREEN)"
+   },
+   {
+    "intent": "The rays beside angle of incidence = angle of reflection",
+    "narration": "That is the law of reflection: the angle in equals the angle out.",
+    "code": "stage.equation(r\"\\theta_{\\text{in}} = \\theta_{\\text{out}}\")"
+   }
+  ]
+ }
+]
