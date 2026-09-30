@@ -1,0 +1,82 @@
+[
+ {
+  "request": "what's the difference between speed and velocity?",
+  "beats": [
+   {
+    "intent": "A circular track with a runner dot moving round it",
+    "narration": "A runner goes round a circular track at a steady ten kilometres an hour.",
+    "code": "stage.title(\"Speed and velocity\")\ntrack = Circle(radius=2.2, color=GREY_B).move_to([-1.5, -0.3, 0])\nrunner = Dot(track.point_from_proportion(0), color=YELLOW, radius=0.14)\nstage.play(Create(track), GrowFromCenter(runner))\nstage.add(track, runner)\nstage.play(MoveAlongPath(runner, track), run_time=3, rate_func=linear)"
+   },
+   {
+    "intent": "Four velocity arrows around the track, all the same length but pointing different ways",
+    "narration": "Their speed never changes, but their direction does. Velocity is speed with a direction, so it keeps changing.",
+    "code": "c = track.get_center()\narrows = []\nfor a in (0, PI / 2, PI, 3 * PI / 2):\n    p = c + 2.2 * np.array([np.cos(a), np.sin(a), 0])\n    t = np.array([-np.sin(a), np.cos(a), 0])\n    arrows.append(Arrow(p, p + 1.3 * t, buff=0, color=GREEN))\nstage.play(*[GrowArrow(a) for a in arrows])\nstage.add(*arrows)\nstage.caption(\"same length: same speed. Different directions: different velocity\")"
+   },
+   {
+    "intent": "After one full lap, the runner back at the start: distance 400 m but displacement 0",
+    "narration": "After a full lap they have run four hundred metres, yet ended where they started: their average velocity is zero.",
+    "code": "stage.equation(r\"\\text{distance} = 400\\ \\text{m},\\quad \\text{displacement} = 0\")"
+   }
+  ]
+ },
+ {
+  "request": "how do you cut a round cake fairly into 3?",
+  "beats": [
+   {
+    "intent": "A circle for the cake",
+    "narration": "A round cake, to be shared fairly between three people.",
+    "code": "stage.title(\"Cutting a cake in three\")\ncake = Circle(radius=2.2, color=ORANGE, fill_opacity=0.3).move_to([-1.5, -0.3, 0])\nstage.play(Create(cake))\nstage.add(cake)"
+   },
+   {
+    "intent": "Three cuts from the centre at 120° apart, each slice coloured",
+    "narration": "A full turn is three hundred and sixty degrees. Cut from the centre every hundred and twenty degrees.",
+    "code": "c = cake.get_center()\nslices = VGroup(*[Sector(radius=2.2, start_angle=PI / 2 + k * TAU / 3, angle=TAU / 3, color=col, fill_opacity=0.6, stroke_color=WHITE)\n                  .move_arc_center_to(c) for k, col in enumerate((RED, GREEN, BLUE))])\nstage.play(LaggedStart(*[FadeIn(s) for s in slices], lag_ratio=0.3))\nstage.add(slices)\nang = Angle(Line(c, c + UP), Line(c, c + np.array([np.cos(PI / 2 + TAU / 3), np.sin(PI / 2 + TAU / 3), 0])), radius=0.6, color=YELLOW)\nstage.play(Create(ang))\nstage.add(ang)\nstage.label(ang, \"120°\", direction=UL, color=YELLOW)"
+   },
+   {
+    "intent": "The cake beside 360° ÷ 3 = 120°",
+    "narration": "Three equal angles, so three equal slices.",
+    "code": "stage.equation(r\"360^\\circ \\div 3 = 120^\\circ\")"
+   }
+  ]
+ },
+ {
+  "request": "why does a three-legged stool never wobble?",
+  "beats": [
+   {
+    "intent": "A four-legged table on bumpy ground with one leg in the air",
+    "narration": "On uneven ground a four-legged table often rocks: one leg is left hanging.",
+    "code": "stage.title(\"Three legs never wobble\")\nground = VMobject(color=GREY_B).set_points_smoothly([[-6, -2.2, 0], [-4.5, -2.0, 0], [-3, -2.35, 0], [-1.5, -2.1, 0], [0, -2.2, 0]])\nstage.play(Create(ground))\nstage.add(ground)\ntop = Line([-5.2, -0.4, 0], [-1.0, -0.4, 0], color=ORANGE, stroke_width=10)\nlegs = VGroup(*[Line([x, -0.4, 0], [x, yb, 0], color=ORANGE, stroke_width=6) for x, yb in ((-5.0, -2.08), (-3.6, -2.2), (-2.4, -2.18), (-1.2, -2.0))])\nstage.play(Create(top), Create(legs))\nstage.add(top, legs)\ngap = Circle(radius=0.25, color=RED).move_to([-3.6, -2.22, 0])\nstage.play(Create(gap))\nstage.add(gap)\nstage.caption(\"four legs: one can hang in the air\")"
+   },
+   {
+    "intent": "A three-legged stool on the same ground with all three feet touching",
+    "narration": "A stool with three legs always touches with all three: any three points fix a flat plane for the seat to sit on.",
+    "code": "ground2 = ground.copy().shift(6.2 * RIGHT)\nstage.play(Create(ground2))\nstage.add(ground2)\nseat = Line([1.4, -0.3, 0], [4.8, -0.2, 0], color=GREEN, stroke_width=10)\nfeet = [ground2.point_from_proportion(p) for p in (0.18, 0.5, 0.82)]\ntops = [seat.point_from_proportion(p) for p in (0.05, 0.5, 0.95)]\nlegs3 = VGroup(*[Line(t, f, color=GREEN, stroke_width=6) for t, f in zip(tops, feet)])\nstage.play(Create(seat), Create(legs3))\nstage.add(seat, legs3)\nstage.caption(\"three legs: always all touching\")"
+   },
+   {
+    "intent": "Three dots with a plane through them, beside: 3 points fix a plane",
+    "narration": "Three points, not in a line, always lie on exactly one plane. A fourth point usually doesn't.",
+    "code": "stage.clear()\nplane = Polygon([-2.5, -1.8, 0], [2.0, -1.4, 0], [3.0, 0.8, 0], [-1.5, 0.4, 0], color=BLUE, fill_opacity=0.25)\nstage.play(FadeIn(plane))\nstage.add(plane)\nfor p in ([-1.2, -0.9, 0], [1.6, -0.8, 0], [0.8, 0.3, 0]):\n    d = Dot(p, color=YELLOW, radius=0.12)\n    stage.play(GrowFromCenter(d), run_time=0.3)\n    stage.add(d)\nodd = Dot([-0.3, 1.5, 0], color=RED, radius=0.12)\nstage.play(GrowFromCenter(odd))\nstage.add(odd)\nstage.label(odd, \"a 4th point: usually off the plane\", direction=RIGHT, color=RED)"
+   }
+  ]
+ },
+ {
+  "request": "how do I convert between miles and kilometres?",
+  "beats": [
+   {
+    "intent": "Two number lines stacked: miles 0 to 5 on top, kilometres 0 to 8 below, lined up",
+    "narration": "Put a mile scale above a kilometre scale, lined up at zero.",
+    "code": "stage.title(\"Miles and kilometres\")\nkm_unit = 1.2\nmiles = NumberLine(x_range=[0, 5, 1], unit_size=km_unit * 1.609, include_numbers=True, color=ORANGE).move_to([0, 0.8, 0])\nkms = NumberLine(x_range=[0, 8, 1], unit_size=km_unit, include_numbers=True, color=BLUE)\nkms.shift(miles.n2p(0) - kms.n2p(0) + 1.6 * DOWN)\nstage.play(Create(miles), Create(kms))\nstage.add(miles, kms)\nstage.label(miles, \"miles\", direction=LEFT, color=ORANGE)\nstage.label(kms, \"km\", direction=LEFT, color=BLUE)"
+   },
+   {
+    "intent": "A dashed line from 5 miles down to 8.05 km",
+    "narration": "Five miles lines up with just over eight kilometres.",
+    "code": "link = DashedLine(miles.n2p(5), kms.n2p(8.045), color=YELLOW)\nstage.play(Create(link))\nstage.add(link)\nstage.caption(\"5 miles ≈ 8 km\")"
+   },
+   {
+    "intent": "The scales beside 1 mile ≈ 1.609 km, km × 5/8 ≈ miles",
+    "narration": "One mile is about one point six kilometres. To go back, multiply kilometres by five eighths.",
+    "code": "stage.equation(r\"1\\ \\text{mile} \\approx 1.609\\ \\text{km}\")"
+   }
+  ]
+ }
+]
