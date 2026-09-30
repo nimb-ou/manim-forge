@@ -1,0 +1,142 @@
+[
+ {
+  "request": "why is momentum conserved when two carts collide?",
+  "beats": [
+   {
+    "intent": "A 2 kg cart moving right at 3 m/s towards a 1 kg cart at rest",
+    "narration": "A two kilogram cart rolls right at three metres per second towards a one kilogram cart at rest.",
+    "code": "stage.title(\"Conservation of momentum\")\ntrack = draw_line(stage, (-6, -1.2), (6, -1.2))\na = Rectangle(width=1.4, height=0.8, color=BLUE, fill_opacity=0.8).move_to([-4, -0.8, 0])\nb = Rectangle(width=0.9, height=0.6, color=RED, fill_opacity=0.8).move_to([0.5, -0.9, 0])\nstage.play(FadeIn(a), FadeIn(b))\nstage.add(a, b)\nva = Arrow(a.get_top() + UP * 0.2, a.get_top() + UP * 0.2 + RIGHT * 1.5, buff=0, color=YELLOW)\nstage.play(GrowArrow(va))\nstage.add(va)\nstage.label(a, \"2 kg, 3 m/s\", direction=DOWN + DOWN)"
+   },
+   {
+    "intent": "The carts colliding and sticking, moving on together at 2 m/s",
+    "narration": "They collide and stick together, moving on at two metres per second.",
+    "code": "stage.play(VGroup(a, va).animate.shift(RIGHT * 3.35), run_time=1.2)\nstage.remove(va)\nboth = VGroup(a, b)\nstage.play(both.animate.shift(RIGHT * 2.5), run_time=1.5)\nvb = Arrow(both.get_top() + UP * 0.2, both.get_top() + UP * 0.2 + RIGHT * 1.0, buff=0, color=YELLOW)\nstage.play(GrowArrow(vb))\nstage.add(vb)"
+   },
+   {
+    "intent": "Bars of momentum before (6) and after (6) beside 2×3 = 3×2",
+    "narration": "Momentum before is two times three, six; after it is three times two, six. It is conserved.",
+    "code": "stage.clear()\nbars = draw_bars(stage, [6, 6], labels=[\"before\", \"after\"])\nstage.equation(r\"2 \\times 3 = (2 + 1) \\times 2 = 6\")"
+   }
+  ]
+ },
+ {
+  "request": "do heavy things fall faster than light ones?",
+  "beats": [
+   {
+    "intent": "A heavy ball and a light ball side by side at the same height",
+    "narration": "Drop a heavy ball and a light ball from the same height, ignoring air.",
+    "code": "stage.title(\"Falling together\")\nheavy = Dot([-1.5, 2.5, 0], radius=0.35, color=GREY_B)\nlight = Dot([1.5, 2.5, 0], radius=0.15, color=YELLOW)\nground = draw_line(stage, (-4, -2.5), (4, -2.5))\nstage.play(FadeIn(heavy), FadeIn(light))\nstage.add(heavy, light)"
+   },
+   {
+    "intent": "Both balls falling and hitting the ground at the same moment",
+    "narration": "They speed up at the same rate and land together.",
+    "code": "stage.play(heavy.animate.move_to([-1.5, -2.15, 0]), light.animate.move_to([1.5, -2.35, 0]), run_time=1.5, rate_func=rate_functions.ease_in_quad)"
+   },
+   {
+    "intent": "Axes with one curve d = 5t^2 shared by both",
+    "narration": "Both follow the same law: distance fallen is five t squared, whatever the mass.",
+    "code": "stage.clear()\nax = draw_axes(stage, x_range=(0, 3), y_range=(0, 45), labels=(\"s\", \"m\"))\ng = plot_graph(stage, ax, lambda t: 5 * t ** 2, color=YELLOW, label=\"d = 5t^2\")\nstage.caption(\"Same curve for any mass\")"
+   }
+  ]
+ },
+ {
+  "request": "how do you work out the work done pushing a box?",
+  "beats": [
+   {
+    "intent": "A box on the floor with a force arrow of 20 N pushing it",
+    "narration": "Push a box with a steady force of twenty newtons.",
+    "code": "stage.title(\"Work = force × distance\")\nfloor = draw_line(stage, (-6, -1), (6, -1))\nbox = Square(side_length=1, color=ORANGE, fill_opacity=0.8).move_to([-4, -0.5, 0])\npush = Arrow(box.get_left() + LEFT * 1.2, box.get_left(), buff=0, color=RED)\nstage.play(FadeIn(box), GrowArrow(push))\nstage.add(box, push)\nstage.label(push, \"20 N\", direction=UP, color=RED)"
+   },
+   {
+    "intent": "The box sliding 5 m to the right",
+    "narration": "It slides five metres.",
+    "code": "stage.play(VGroup(box, push).animate.shift(RIGHT * 5), run_time=2)\nbr = Brace(Line([-4, -1, 0], [1, -1, 0]), DOWN)\nstage.play(GrowFromCenter(br))\nstage.add(br)\nstage.label(br, \"5 m\", direction=DOWN)"
+   },
+   {
+    "intent": "Axes of distance against force with a 20 N by 5 m rectangle shaded, beside W = 100 J",
+    "narration": "On a force-distance graph the work is the area: twenty times five, a hundred joules.",
+    "code": "stage.clear()\nax = draw_axes(stage, x_range=(0, 6), y_range=(0, 25), labels=(\"m\", \"N\"))\nline = plot_graph(stage, ax, lambda x: 20, x_range=(0, 5), color=RED)\nshade_area(stage, ax, line, 0, 5)\nstage.equation(r\"W = 20 \\times 5 = 100\\ \\text{J}\")"
+   }
+  ]
+ },
+ {
+  "request": "why does a sharp knife cut better than a blunt one?",
+  "beats": [
+   {
+    "intent": "Two blades pressing down with the same 50 N force, one thin edge and one wide edge",
+    "narration": "Press two blades down with the same fifty newtons: one sharp, one blunt.",
+    "code": "stage.title(\"Pressure = force / area\")\nsharp = Polygon([-3.5, 1, 0], [-2.5, 1, 0], [-3, -1, 0], color=GREY_B, fill_opacity=0.8)\nblunt = Polygon([1.8, 1, 0], [4.2, 1, 0], [3.8, -1, 0], [2.2, -1, 0], color=GREY_B, fill_opacity=0.8)\nstage.play(FadeIn(sharp), FadeIn(blunt))\nstage.add(sharp, blunt)\nfor x in (-3, 3):\n    a = Arrow([x, 2.3, 0], [x, 1.1, 0], buff=0, color=RED)\n    stage.play(GrowArrow(a), run_time=0.4)\n    stage.add(a)"
+   },
+   {
+    "intent": "The contact edges lit: a tiny one under the sharp blade, a wide one under the blunt",
+    "narration": "The sharp blade touches a tiny area; the blunt one spreads the force over much more.",
+    "code": "e1 = Line([-3.05, -1, 0], [-2.95, -1, 0], color=YELLOW, stroke_width=10)\ne2 = Line([2.2, -1, 0], [3.8, -1, 0], color=YELLOW, stroke_width=10)\nstage.play(Create(e1), Create(e2))\nstage.add(e1, e2)"
+   },
+   {
+    "intent": "Bars of the pressure under each: sharp far taller than blunt",
+    "narration": "Pressure is force over area, so the tiny edge gives a huge pressure that cuts.",
+    "code": "stage.clear()\nbars = draw_bars(stage, [50 / 0.1, 50 / 1.6], labels=[\"sharp\", \"blunt\"])\nstage.equation(r\"p = \\frac{F}{A}\")"
+   }
+  ]
+ },
+ {
+  "request": "why does oil float on water?",
+  "beats": [
+   {
+    "intent": "A glass with a layer of oil on top of water",
+    "narration": "Pour oil into water and it floats on top.",
+    "code": "stage.title(\"Why oil floats\")\nglass = Rectangle(width=2.5, height=4, color=WHITE).shift(LEFT * 3)\nwater = Rectangle(width=2.5, height=2.5, color=BLUE, fill_opacity=0.6).align_to(glass, DOWN).set_x(glass.get_x())\noil = Rectangle(width=2.5, height=1, color=YELLOW, fill_opacity=0.6).next_to(water, UP, buff=0)\nstage.play(Create(glass), FadeIn(water), FadeIn(oil))\nstage.add(glass, water, oil)\nstage.label(oil, \"oil\", direction=RIGHT, color=YELLOW)\nstage.label(water, \"water\", direction=RIGHT, color=BLUE)"
+   },
+   {
+    "intent": "Bars of density: oil 0.9 and water 1.0 g/cm³",
+    "narration": "A cubic centimetre of oil weighs about point nine grams; the same amount of water weighs one gram.",
+    "code": "bars = draw_bars(stage, [0.9, 1.0], labels=[\"oil\", \"water\"], where=\"right\")"
+   },
+   {
+    "intent": "The glass beside the rule: less dense liquids rise to the top",
+    "narration": "The less dense liquid ends up on top.",
+    "code": "stage.caption(\"Less dense floats on more dense\")"
+   }
+  ]
+ },
+ {
+  "request": "how far away is a cliff if the echo comes back after 2 seconds?",
+  "beats": [
+   {
+    "intent": "A person on the left and a cliff wall on the right with a sound pulse leaving",
+    "narration": "Shout towards a cliff. The sound travels out at three hundred and forty metres per second.",
+    "code": "stage.title(\"Timing an echo\")\nyou = Dot([-5, -1, 0], radius=0.2, color=YELLOW)\ncliff = Rectangle(width=0.6, height=4, color=GREY, fill_opacity=0.8).move_to([5, 0, 0])\nstage.play(FadeIn(you), FadeIn(cliff))\nstage.add(you, cliff)\npulse = Arc(radius=0.5, angle=PI / 2, start_angle=-PI / 4, color=BLUE).move_to([-4.3, -1, 0])\nstage.play(pulse.animate.move_to([4.4, -1, 0]), run_time=1.5)"
+   },
+   {
+    "intent": "The pulse bouncing back to the person",
+    "narration": "It bounces off the cliff and comes back. The round trip took two seconds.",
+    "code": "stage.play(Rotate(pulse, PI), run_time=0.2)\nstage.play(pulse.animate.move_to([-4.3, -1, 0]), run_time=1.5)\nbr = Brace(Line([-5, -2, 0], [4.7, -2, 0]), DOWN)\nstage.play(GrowFromCenter(br))\nstage.add(br)\nstage.label(br, \"d\", direction=DOWN)"
+   },
+   {
+    "intent": "The scene beside 2d = 340 × 2, d = 340 m",
+    "narration": "The sound went there and back, twice the distance: so the cliff is three hundred and forty metres away.",
+    "code": "stage.equation(r\"2d = 340 \\times 2 \\Rightarrow d = 340\\ \\text{m}\")"
+   }
+  ]
+ },
+ {
+  "request": "where is the balance point of a rod with two weights?",
+  "beats": [
+   {
+    "intent": "A rod from 0 to 6 with a 2 kg weight at 0 and a 4 kg weight at 6",
+    "narration": "A light rod six metres long: two kilograms at one end, four at the other.",
+    "code": "stage.title(\"Centre of mass\")\nnl = draw_number_line(stage, x_range=(0, 6))\nw1 = Square(side_length=0.6, color=BLUE, fill_opacity=0.8).next_to(nl.n2p(0), UP, buff=0)\nw2 = Square(side_length=0.85, color=RED, fill_opacity=0.8).next_to(nl.n2p(6), UP, buff=0)\nstage.play(FadeIn(w1), FadeIn(w2))\nstage.add(w1, w2)\nstage.label(w1, \"2 kg\", direction=UP, color=BLUE)\nstage.label(w2, \"4 kg\", direction=UP, color=RED)"
+   },
+   {
+    "intent": "A pivot triangle placed under x = 4",
+    "narration": "The balance point is nearer the heavier end: at four metres.",
+    "code": "piv = Triangle(color=YELLOW, fill_opacity=1).scale(0.25).next_to(nl.n2p(4), DOWN, buff=0.05)\nstage.play(FadeIn(piv))\nstage.add(piv)"
+   },
+   {
+    "intent": "The rod beside x = (2·0 + 4·6) / 6 = 4",
+    "narration": "Weight times position, added, divided by the total weight: twenty four over six, four.",
+    "code": "stage.equation(r\"\\bar x = \\frac{2 \\cdot 0 + 4 \\cdot 6}{2 + 4} = 4\")"
+   }
+  ]
+ }
+]

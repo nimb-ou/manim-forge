@@ -14,18 +14,22 @@ until [ -f adapters/mlx-coder8-kit/adapters.safetensors ]; do sleep 600; done
 log "kit v8 collected"
 while pgrep -f "scorecard.py" >/dev/null; do sleep 60; done
 pkill -f critic_loop.sh; pkill -f "critic_kit_scenes.py --local"
-for s in heldout short; do
-  t=v8_${s%out}
-  python -u scripts/scorecard.py --$s --n 20 --kit --relevance --coder adapters/mlx-coder8-kit \
-    --plans data/eval/plans_p3.json --tag $t > data/logs/scorecard_$t.log 2>&1
-  python -u scripts/local_judge.py $t >> data/logs/scorecard_$t.log 2>&1
+# v6 is re-scored with today's kit too: the kit keeps improving, and a
+# baseline from an older kit would credit v8 with the kit's gains.
+for c in 8 6; do
+  for s in heldout short; do
+    t=v${c}_${s%out}_r2
+    python -u scripts/scorecard.py --$s --n 20 --kit --relevance --coder adapters/mlx-coder${c}-kit \
+      --plans data/eval/plans_p3.json --tag $t > data/logs/scorecard_$t.log 2>&1
+    python -u scripts/local_judge.py $t >> data/logs/scorecard_$t.log 2>&1
+  done
 done
 share() { python -c "
 import json,sys
 t=sys.argv[1]; j=json.load(open(f'data/scorecard/{t}/judge_local.json'))
 rows=json.load(open(f'data/scorecard/{t}/scorecard.json'))['rows']
 print(sum(sum(v=='YES' for v in s['verdicts'].values()) for s in j.values())/sum(r['beats'] for r in rows))" $1; }
-v8=$(share v8_held); v6=$(share ab_held_scaf); v8s=$(share v8_short); v6s=$(share ab_short_scaf)
+v8=$(share v8_held_r2); v6=$(share v6_held_r2); v8s=$(share v8_short_r2); v6s=$(share v6_short_r2)
 log "held-out v8 $v8 vs v6 $v6; short v8 $v8s vs v6 $v6s" | tee data/kit/round2_decision
 nohup scripts/queue/critic_loop.sh >> data/logs/kit_critic_local.log 2>&1 < /dev/null &
 if python -c "import sys; sys.exit(0 if float('$v8') >= float('$v6') - 0.03 else 1)"; then

@@ -275,10 +275,15 @@ class Stage:
             return self.caption(m)
         if isinstance(m, (tuple, list)) and m and not np.isscalar(m[0]):
             m = m[0]                     # a block's (picture, readout) pair
-        if not hasattr(m, "get_center"):                 # a point: label there
+        follow = hasattr(m, "get_center")
+        if not follow:                                   # a point: label there
             m = Dot(_xy(m), radius=0.001, fill_opacity=0)
         t = self._text(str(s), 28).set_color(color).next_to(m, direction, buff=0.15)
         self.scene.play(FadeIn(t), run_time=0.5)
+        if follow:
+            # The label rides with its object: a cart that rolled on or a
+            # box that was pushed left its "2 kg" behind (2026-09-30).
+            t.add_updater(lambda l, m=m, d=direction: l.next_to(m, d, buff=0.15))
         self._objects.append(t)
         return t
 
