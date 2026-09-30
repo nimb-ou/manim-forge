@@ -1,0 +1,92 @@
+[
+ {
+  "request": "what does the dot product measure?",
+  "beats": [
+   {
+    "intent": "A plane with v = (3, 1) and w = (2, 2)",
+    "narration": "Take two vectors, v is three, one and w is two, two.",
+    "code": "stage.title(\"The dot product\")\np = draw_plane(stage)\nv = draw_vector(stage, p, (3, 1), color=YELLOW, label=\"v\")\nw = draw_vector(stage, p, (2, 2), color=BLUE, label=\"w\")"
+   },
+   {
+    "intent": "The shadow of v dropped onto w's line",
+    "narration": "Drop v's shadow onto the line of w. The dot product is the shadow's length times the length of w.",
+    "code": "project_vector(stage, p, (3, 1), (2, 2))"
+   },
+   {
+    "intent": "The picture beside v · w = 3·2 + 1·2 = 8",
+    "narration": "In numbers: multiply matching parts and add. Three times two plus one times two is eight.",
+    "code": "stage.equation(r\"v \\cdot w = 3 \\cdot 2 + 1 \\cdot 2\", r\"= 8\")"
+   },
+   {
+    "intent": "Perpendicular vectors (1, 2) and (2, -1) with a right-angle mark, dot product 0",
+    "narration": "Now turn them to a right angle: one, two and two, minus one. The shadow shrinks to a point, and the dot product is zero.",
+    "code": "stage.clear()\np2 = draw_plane(stage)\na = draw_vector(stage, p2, (1, 2), color=YELLOW, label=\"a\")\nb = draw_vector(stage, p2, (2, -1), color=BLUE, label=\"b\")\nsq = RightAngle(Line(p2.c2p(0, 0), p2.c2p(1, 2)), Line(p2.c2p(0, 0), p2.c2p(2, -1)), length=0.3, quadrant=(1, 1), color=WHITE)\nstage.play(Create(sq))\nstage.add(sq)\nstage.equation(r\"1 \\cdot 2 + 2 \\cdot (-1) = 0\")"
+   }
+  ]
+ },
+ {
+  "request": "what are eigenvectors, visually?",
+  "beats": [
+   {
+    "intent": "A grid with a yellow arrow on the x-axis and a green arrow along (1, -1)",
+    "narration": "Here is a grid. Watch what the matrix three, one, zero, two does to it.",
+    "code": "stage.title(\"Eigenvectors\")\np = draw_plane(stage)\nstage.caption(\"A = [[3, 1], [0, 2]]\")"
+   },
+   {
+    "intent": "The grid transformed: the arrows on (1, 0) and (1, -1) stay on their lines, another arrow is knocked off",
+    "narration": "Most arrows get knocked off their line. But arrows along one, zero and along one, minus one only stretch.",
+    "code": "show_eigenvectors(stage, p, matrix=((3, 1), (0, 2)))"
+   },
+   {
+    "intent": "The picture beside A(1, 0) = 3(1, 0) and A(1, -1) = 2(1, -1)",
+    "narration": "The first is stretched by three, the second by two. Those stretch factors are the eigenvalues.",
+    "code": "stage.equation(r\"A\\begin{pmatrix}1\\\\0\\end{pmatrix} = 3\\begin{pmatrix}1\\\\0\\end{pmatrix},\\ A\\begin{pmatrix}1\\\\-1\\end{pmatrix} = 2\\begin{pmatrix}1\\\\-1\\end{pmatrix}\")"
+   }
+  ]
+ },
+ {
+  "request": "how can the same point have different coordinates?",
+  "beats": [
+   {
+    "intent": "A plane with the point (2, 0) and its arrow",
+    "narration": "On the usual grid, this arrow ends at two, zero.",
+    "code": "stage.title(\"Changing the basis\")\np = draw_plane(stage)\nv = draw_vector(stage, p, (2, 0), color=YELLOW, label=\"(2, 0)\")"
+   },
+   {
+    "intent": "A tilted grid built from b1 = (1, 1) and b2 = (-1, 1) over the plane",
+    "narration": "Now build a new grid from two other arrows: one, one and minus one, one.",
+    "code": "b1 = draw_vector(stage, p, (1, 1), color=GREEN, label=\"b_1\")\nb2 = draw_vector(stage, p, (-1, 1), color=RED, label=\"b_2\")\nbasis_grid(stage, p, (1, 1), (-1, 1))"
+   },
+   {
+    "intent": "The steps b1 then minus b2 reaching the same point, beside (2, 0) = 1·b1 - 1·b2",
+    "narration": "To reach the same point on the new grid: one step of b one, then one step back along b two. Its new coordinates are one, minus one.",
+    "code": "s1 = draw_arrow(stage, p.c2p(0, 0), p.c2p(1, 1), color=GREEN)\ns2 = draw_arrow(stage, p.c2p(1, 1), p.c2p(2, 0), color=RED)\nstage.equation(r\"(2, 0) = 1\\,b_1 - 1\\,b_2\")"
+   }
+  ]
+ },
+ {
+  "request": "what is the span of a vector?",
+  "beats": [
+   {
+    "intent": "A plane with the vector (2, 1)",
+    "narration": "Take the vector two, one.",
+    "code": "stage.title(\"Span\")\np = draw_plane(stage)\nv = draw_vector(stage, p, (2, 1), color=YELLOW, label=\"v\")"
+   },
+   {
+    "intent": "The vector stretched to twice its length then flipped to minus one times",
+    "narration": "Scale it: twice as long, or flipped backwards. Every scaling stays on one line.",
+    "code": "scale_vector(stage, p, v, 2)\nscale_vector(stage, p, v, -0.5)"
+   },
+   {
+    "intent": "The whole line through the origin along (2, 1) lit as its span",
+    "narration": "All its multiples together fill that line. The line is the span of v.",
+    "code": "draw_span(stage, p, (2, 1))\nstage.caption(\"span of one vector: a line\")"
+   },
+   {
+    "intent": "A second vector (-1, 2) added and the caption: two vectors span the whole plane",
+    "narration": "Add a second vector that points another way. Mixing the two reaches every point: the span is the whole plane.",
+    "code": "w = draw_vector(stage, p, (-1, 2), color=GREEN, label=\"w\")\ndraw_span(stage, p, (-1, 2), color=GREEN)\nstage.caption(\"two independent vectors: the whole plane\")"
+   }
+  ]
+ }
+]
