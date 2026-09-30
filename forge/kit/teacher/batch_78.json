@@ -1,0 +1,82 @@
+[
+ {
+  "request": "how does a sundial tell the time?",
+  "beats": [
+   {
+    "intent": "A sundial face with hour lines from 6 am to 6 pm and a shadow at noon",
+    "narration": "A sundial's pointer casts a shadow on a dial marked with the hours.",
+    "code": "stage.title(\"A sundial\")\nc = np.array([0, -1.8, 0])\nlines = VGroup()\nfor h in range(6, 19):\n    a = PI - (h - 6) * PI / 12\n    lines.add(Line(c, c + 3.4 * np.array([np.cos(a), np.sin(a), 0]), color=GREY_B, stroke_width=2))\nnums = VGroup(*[Text(str(h if h <= 12 else h - 12), font_size=22).move_to(c + 3.8 * np.array([np.cos(PI - (h - 6) * PI / 12), np.sin(PI - (h - 6) * PI / 12), 0]))\n                for h in range(6, 19, 2)])\nstage.play(Create(lines), FadeIn(nums))\nstage.add(lines, nums)\nshadow = Line(c, c + 3.2 * UP, color=ORANGE, stroke_width=8)\nstage.play(Create(shadow))\nstage.add(shadow)\nstage.caption(\"noon: the shadow points straight up the dial\")"
+   },
+   {
+    "intent": "The shadow sweeping round to 3 pm, 45° further",
+    "narration": "As the Sun crosses the sky the shadow turns, fifteen degrees every hour. Three hours later it points at three.",
+    "code": "stage.play(Rotate(shadow, -PI / 4, about_point=c), run_time=2)\nstage.caption(\"3 pm: turned 3 × 15° = 45°\")"
+   },
+   {
+    "intent": "The dial beside 360° ÷ 24 h = 15° per hour",
+    "narration": "The Earth turns once in twenty four hours: three hundred and sixty degrees, fifteen each hour.",
+    "code": "stage.equation(r\"\\frac{360^\\circ}{24\\ \\text{h}} = 15^\\circ\\ \\text{per hour}\")"
+   }
+  ]
+ },
+ {
+  "request": "how can a steel ship float when steel sinks?",
+  "beats": [
+   {
+    "intent": "A solid steel block sinking to the bottom of a tank",
+    "narration": "A lump of steel sinks: it is about eight times as dense as water.",
+    "code": "stage.title(\"Why ships float\")\ntank = Rectangle(width=10, height=3.2, color=BLUE, fill_opacity=0.2).move_to([0, -1.5, 0])\nstage.play(FadeIn(tank))\nstage.add(tank)\nblock = Square(0.7, color=GREY_B, fill_opacity=0.9).move_to([-3, 1.2, 0])\nstage.play(FadeIn(block))\nstage.play(block.animate.move_to([-3, -2.75, 0]), run_time=1.2)\nstage.add(block)\nstage.label(block, \"steel lump\", direction=UP)"
+   },
+   {
+    "intent": "The same steel shaped into a wide open hull floating, sitting low in the water",
+    "narration": "Shape the same steel into a wide, hollow hull. Now it pushes a lot of water aside as it settles.",
+    "code": "surf = tank.get_top()[1]\nhull = Polygon([1.0, surf + 0.5, 0], [4.0, surf + 0.5, 0], [3.6, surf - 0.5, 0], [1.4, surf - 0.5, 0], color=GREY_B, fill_opacity=0.3, stroke_width=6)\nstage.play(Create(hull))\nstage.add(hull)\nunder = Polygon([1.0 + 0.2, surf, 0], [4.0 - 0.2, surf, 0], [3.6, surf - 0.5, 0], [1.4, surf - 0.5, 0], stroke_width=0, fill_color=BLUE, fill_opacity=0.6)\nstage.play(FadeIn(under))\nstage.add(under)\nstage.label(under, \"water pushed aside\", direction=DOWN, color=BLUE)"
+   },
+   {
+    "intent": "Bars: weight of the ship equal to the weight of water pushed aside",
+    "narration": "It floats when the water it pushes aside weighs as much as the whole ship. The water pushes back up with exactly that force.",
+    "code": "stage.clear()\nb = draw_bars(stage, [10, 10], labels=[\"ship's weight\", \"water displaced\"], color=TEAL)\nstage.caption(\"floating: the two weights match\")"
+   }
+  ]
+ },
+ {
+  "request": "how do you split a £90 bill when one person had twice as much?",
+  "beats": [
+   {
+    "intent": "A bar for £90 split into 4 equal parts of £22.50",
+    "narration": "Three friends share a ninety pound bill, but one had twice as much. Count shares: one, one and two, four in all.",
+    "code": "stage.title(\"Splitting a bill\")\nparts = VGroup(*[Rectangle(width=2.2, height=0.9, color=WHITE, fill_opacity=0.5, fill_color=c) for c in (BLUE, GREEN, ORANGE, ORANGE)]).arrange(RIGHT, buff=0).move_to([0, 0.5, 0])\nstage.play(LaggedStart(*[FadeIn(p) for p in parts], lag_ratio=0.2))\nstage.add(parts)\nstage.label(parts, \"£90\", direction=UP)\nfor p in parts:\n    t = Text(\"£22.50\", font_size=24).move_to(p)\n    stage.add(t)\n    stage.play(FadeIn(t), run_time=0.2)"
+   },
+   {
+    "intent": "The shares grouped by person: Ana £22.50, Ben £22.50, Cal £45",
+    "narration": "Each share is ninety over four: twenty two fifty. Ana and Ben pay one share each; Cal pays two, forty five pounds.",
+    "code": "for grp, name, col in ((parts[0:1], \"Ana £22.50\", BLUE), (parts[1:2], \"Ben £22.50\", GREEN), (parts[2:4], \"Cal £45\", ORANGE)):\n    br = Brace(VGroup(*grp), DOWN, color=col)\n    stage.play(GrowFromCenter(br), run_time=0.4)\n    stage.add(br)\n    stage.label(br, name, direction=DOWN, color=col)"
+   },
+   {
+    "intent": "The bar beside 90 ÷ (1 + 1 + 2) = 22.50",
+    "narration": "Total divided by the number of shares gives one share; multiply by each person's shares.",
+    "code": "stage.equation(r\"\\frac{90}{1 + 1 + 2} = 22.50\")"
+   }
+  ]
+ },
+ {
+  "request": "with 20 m of fence, what rectangle gives the biggest area?",
+  "beats": [
+   {
+    "intent": "Three rectangles with perimeter 20: 8 by 2, 6 by 4, 5 by 5, with their areas",
+    "narration": "Twenty metres of fence can make many rectangles: eight by two, six by four, five by five.",
+    "code": "stage.title(\"Most area from 20 m of fence\")\nk = 0.42\nrects = VGroup(*[Rectangle(width=w * k, height=h * k, color=c, fill_opacity=0.35) for w, h, c in ((8, 2, BLUE), (6, 4, GREEN), (5, 5, ORANGE))])\nrects.arrange(RIGHT, buff=0.8, aligned_edge=DOWN).move_to([0, 0, 0])\nstage.play(LaggedStart(*[Create(r) for r in rects], lag_ratio=0.3))\nstage.add(rects)\nfor r, t in zip(rects, [\"8×2 = 16\", \"6×4 = 24\", \"5×5 = 25\"]):\n    stage.label(r, t + \" m²\", direction=DOWN, color=r.get_color())"
+   },
+   {
+    "intent": "Axes of width and area with the curve A = w(10 - w), peaking at w = 5",
+    "narration": "Width w leaves ten minus w for the other side, so the area is w times ten minus w. It peaks in the middle.",
+    "code": "stage.clear()\nax = draw_axes(stage, x_range=(0, 10), y_range=(0, 30), labels=(\"width\", \"area\"))\ng = plot_graph(stage, ax, lambda w: w * (10 - w), color=ORANGE)\ntop = mark_point(stage, ax, (5, 25), color=YELLOW, label=\"(5, 25)\")"
+   },
+   {
+    "intent": "The curve beside A = w(10 - w), largest at w = 5: a square",
+    "narration": "The best rectangle is a square, five by five: twenty five square metres.",
+    "code": "stage.equation(r\"A = w(10 - w)\", r\"w = 5:\\ A = 25\\ \\text{m}^2\")"
+   }
+  ]
+ }
+]
