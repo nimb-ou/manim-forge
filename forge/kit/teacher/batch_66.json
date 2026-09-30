@@ -1,0 +1,87 @@
+[
+ {
+  "request": "if 6 people all shake hands with each other, how many handshakes is that?",
+  "beats": [
+   {
+    "intent": "Six people as dots in a circle, labelled A to F",
+    "narration": "Six people stand in a circle.",
+    "code": "stage.title(\"Handshakes\")\nnames = \"ABCDEF\"\nnodes = {n: (0.8 * np.cos(PI / 2 - k * TAU / 6), 0.9 * np.sin(PI / 2 - k * TAU / 6)) for k, n in enumerate(names)}\ndots, _ = draw_network(stage, nodes, [])"
+   },
+   {
+    "intent": "A's five handshakes drawn as lines to everyone else",
+    "narration": "A shakes hands with the other five.",
+    "code": "pos = {n: d.get_center() for n, d in dots.items()}\na_lines = [Line(pos[\"A\"], pos[n], color=YELLOW) for n in \"BCDEF\"]\nstage.play(*[Create(l) for l in a_lines])\nstage.add(*a_lines)\nstage.caption(\"A: 5 handshakes\")"
+   },
+   {
+    "intent": "All 15 lines between the six people drawn",
+    "narration": "B has four left to do, C three, D two and E one. Every pair is joined once.",
+    "code": "rest = [Line(pos[a], pos[b], color=BLUE) for i, a in enumerate(names) for b in names[i + 1:] if a != \"A\"]\nstage.play(LaggedStart(*[Create(l) for l in rest], lag_ratio=0.1))\nstage.add(*rest)\nstage.caption(\"5 + 4 + 3 + 2 + 1 = 15\")"
+   },
+   {
+    "intent": "The picture beside 6 × 5 ÷ 2 = 15",
+    "narration": "Or: each of six people shakes five hands, and every handshake is counted twice. Six times five over two is fifteen.",
+    "code": "stage.equation(r\"\\frac{6 \\times 5}{2} = 15\")"
+   }
+  ]
+ },
+ {
+  "request": "how do I find the point halfway between two points?",
+  "beats": [
+   {
+    "intent": "A grid with the points (1, 1) and (5, 3) joined by a line",
+    "narration": "Here are two points, one, one and five, three.",
+    "code": "stage.title(\"The midpoint\")\np = draw_plane(stage, x_extent=6, y_extent=4)\nA = mark_point(stage, p, (1, 1), color=BLUE, label=\"(1, 1)\")\nB = mark_point(stage, p, (5, 3), color=BLUE, label=\"(5, 3)\")\nseg = draw_line(stage, p.c2p(1, 1), p.c2p(5, 3), color=GREY_B)"
+   },
+   {
+    "intent": "Half the run and half the rise marked: 2 across and 1 up",
+    "narration": "Going from one to the other is four across and two up. Halfway is two across and one up.",
+    "code": "run = draw_line(stage, p.c2p(1, 1), p.c2p(3, 1), color=GREEN)\nrise = draw_line(stage, p.c2p(3, 1), p.c2p(3, 2), color=YELLOW)\nstage.label(run, \"2\", direction=DOWN, color=GREEN)\nstage.label(rise, \"1\", direction=RIGHT, color=YELLOW)"
+   },
+   {
+    "intent": "The midpoint (3, 2) lit, beside ((1+5)/2, (1+3)/2) = (3, 2)",
+    "narration": "That lands on three, two: the average of the x's and the average of the y's.",
+    "code": "M = mark_point(stage, p, (3, 2), color=RED, label=\"(3, 2)\")\nstage.equation(r\"\\left(\\frac{1+5}{2}, \\frac{1+3}{2}\\right) = (3, 2)\")"
+   }
+  ]
+ },
+ {
+  "request": "why do we have leap years?",
+  "beats": [
+   {
+    "intent": "Bars of how far the calendar drifts behind the Sun: 6, 12, 18 and 24 hours after 1 to 4 years",
+    "narration": "The Earth takes about three hundred and sixty five and a quarter days to go round the Sun, but a calendar year has three hundred and sixty five. Each year the calendar falls about six hours behind.",
+    "code": "stage.title(\"Leap years\")\nb = draw_bars(stage, [6, 12, 18, 24], labels=[\"1 year\", \"2 years\", \"3 years\", \"4 years\"], color=TEAL)\nstage.caption(\"hours behind: a whole day after 4 years\")"
+   },
+   {
+    "intent": "A number line of years 2020 to 2028 with the leap years 2020, 2024 and 2028 marked",
+    "narration": "The missing quarter days add up to a whole day every four years, so every fourth year gets a twenty ninth of February.",
+    "code": "stage.clear()\nnl = draw_number_line(stage, x_range=(2020, 2028))\nfor y in (2020, 2024, 2028):\n    mark_point(stage, nl, y, color=YELLOW, label=str(y))\nstage.caption(\"every 4th year: 366 days\")"
+   },
+   {
+    "intent": "The number line beside 365.25 - 365.2422 = 0.0078 days a year too many",
+    "narration": "But a quarter is slightly too much. The fix: skip the leap day in century years, unless they divide by four hundred. So 1900 had none, and 2000 did.",
+    "code": "stage.equation(r\"365.25 - 365.2422 = 0.0078\")\nstage.caption(\"skip 3 leap days every 400 years\")"
+   }
+  ]
+ },
+ {
+  "request": "30 people like tea, 20 like coffee and 8 like both. How many like at least one?",
+  "beats": [
+   {
+    "intent": "Two overlapping circles labelled tea and coffee",
+    "narration": "Draw one circle for tea drinkers and one for coffee drinkers, overlapping where people like both.",
+    "code": "stage.title(\"Tea, coffee or both\")\ntea = Circle(radius=1.8, color=ORANGE, fill_opacity=0.25).move_to([-1.1, -0.3, 0])\ncoffee = Circle(radius=1.8, color=BLUE, fill_opacity=0.25).move_to([1.1, -0.3, 0])\nstage.play(Create(tea), Create(coffee))\nstage.add(tea, coffee)\nstage.label(tea, \"tea 30\", direction=UP, color=ORANGE)\nstage.label(coffee, \"coffee 20\", direction=UP, color=BLUE)"
+   },
+   {
+    "intent": "The regions filled in: 22 tea only, 8 both, 12 coffee only",
+    "narration": "Eight like both, so twenty two like only tea and twelve like only coffee.",
+    "code": "for txt, x in ((\"22\", -2.0), (\"8\", 0.0), (\"12\", 2.0)):\n    t = Text(txt, font_size=40).move_to([x, -0.3, 0])\n    stage.play(FadeIn(t), run_time=0.4)\n    stage.add(t)"
+   },
+   {
+    "intent": "The diagram beside 30 + 20 - 8 = 42",
+    "narration": "Adding thirty and twenty counts the eight in the middle twice, so take them off once: forty two people.",
+    "code": "stage.equation(r\"30 + 20 - 8 = 42\")"
+   }
+  ]
+ }
+]

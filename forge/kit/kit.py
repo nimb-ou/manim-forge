@@ -681,6 +681,9 @@ def draw_axes(stage: Stage, x_range=(-1, 5), y_range=(-1, 5), where: str = "cent
     """Axes with tick numbers, drawn in a region."""
     xs, ys = _span(x_range), _span(y_range)
 
+    def commas(r):                    # 1990-2020 as years, not "1,990"
+        return max(abs(float(v)) for v in r[:2]) >= 10000
+
     def places(r):                    # "12", not "12.0"; "0.25" keeps two
         step = r[2]
         if all(float(v).is_integer() for v in r):
@@ -688,8 +691,10 @@ def draw_axes(stage: Stage, x_range=(-1, 5), y_range=(-1, 5), where: str = "cent
         return 1 if float(step * 10).is_integer() else 2
     ax = Axes(x_range=xs, y_range=ys, x_length=8, y_length=5, tips=False,
               axis_config={"include_numbers": True, "font_size": 24},
-              x_axis_config={"decimal_number_config": {"num_decimal_places": places(xs)}},
-              y_axis_config={"decimal_number_config": {"num_decimal_places": places(ys)}})
+              x_axis_config={"decimal_number_config": {"num_decimal_places": places(xs),
+                                                       "group_with_commas": commas(xs)}},
+              y_axis_config={"decimal_number_config": {"num_decimal_places": places(ys),
+                                                       "group_with_commas": commas(ys)}})
     stage.place(ax, where)
     # An axis label with a space or a symbol LaTeX drops ("£k income",
     # "m/s²") as plain text; short maths labels (x, y, t, N) stay LaTeX.
@@ -848,8 +853,11 @@ def draw_number_line(stage: Stage, x_range=(0, 10), where: str = "center"):
     xs = _span(x_range, 10)
     dp = 0 if all(float(v).is_integer() for v in xs) else \
         (1 if float(xs[2] * 10).is_integer() else 2)       # 0.25 keeps two places
+    # No thousands separator below 10 000: years read "2,020" (2026-09-30).
+    commas = max(abs(float(v)) for v in xs[:2]) >= 10000
     nl = NumberLine(x_range=xs, length=10, include_numbers=True,
-                    decimal_number_config={"num_decimal_places": dp})
+                    decimal_number_config={"num_decimal_places": dp,
+                                           "group_with_commas": commas})
     stage.place(nl, where)
     stage.scene.play(Create(nl), run_time=1.0)
     return nl
