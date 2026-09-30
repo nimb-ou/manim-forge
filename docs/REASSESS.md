@@ -532,3 +532,38 @@ worst of them.
 learns from, the one lever left. The pattern worth noting: every automatic
 judge so far (keyword metric, critic, eval judge) has been more lenient
 than my eye. The final check on kit v8 must include reading its sheets.
+
+## Log · 2026-09-30 05:00Z
+
+**Asked.** Step back, reassess, plan to finish quickly using Kaggle, the
+CPU, Gemini and Mistral. Plan written into docs/PLAN.md ("Finish plan").
+
+**Found.**
+- *The coder is the binding constraint, not the planner.* Kit v6 on
+  reference plans for the 20 held-out prompts (intents that name pictures;
+  eval only) scored no better than on planner v3's plans (local judge 41%
+  vs 46%, keyword 44% vs 39%). By eye: axes drawn and the named curve or
+  data never plotted; invented blocks (merge_bars, draw_bar_graph,
+  draw_wave) pruned to empty beats; no kit block for data on axes;
+  mark_point(stage, ax, 1, 32) put the dot on the x-axis.
+- *The Gemini critic was the data bottleneck* (772 of ~3,000 scenes in two
+  days). A local critic (Qwen3.5-4B via mlx-vlm, already on disk) judged
+  the remaining 684 overnight: at P(YES) >= 0.8 its YES agrees with
+  Gemini's 83% of the time (recall 56%, 654 calibration beats). It is
+  strict: 40% of beats pass, 432 scenes dropped whole.
+- *highlight() was a flash*: beat-end frames of 47 teacher beats showed
+  nothing lit.
+- *Disk at 97%*: smoke and intermediate checkpoints removed (36 GB free).
+
+**Changed.** Kit: plot_points, mark_point(ax, x, y), draw_triangle, a few
+aliases, persistent highlight (fuzz 73/73). Teacher batches 12-14 (46
+scenes aimed at the failures above, every sheet looked at). Gemma 4 as
+arc writer and kit teacher (Mistral still 402); its rows need the critic.
+Kaggle CPU critic renders written (not needed once the local critic
+finished). README rewritten. claude_kit_scenes skips when up to date, so
+the Oct 3 launcher does not spend hours rendering before pushing.
+
+**Spiralling?** No: one diagnostic moved the data effort from planner to
+coder, and everything since is coder data or measurement. One slip: a
+commit went out with a failing test (pytest piped into tail before &&);
+fixed next commit.
