@@ -1,0 +1,137 @@
+[
+ {
+  "request": "why do we have leap years?",
+  "beats": [
+   {
+    "intent": "Bars of the leftover quarter day piling up over 4 years: 0.25, 0.5, 0.75, 1",
+    "narration": "A year is about three hundred and sixty five and a quarter days. Each year the extra quarter day piles up.",
+    "code": "stage.title(\"Leap years\")\nbars = draw_bars(stage, [0.25, 0.5, 0.75, 1.0], labels=[\"year 1\", \"year 2\", \"year 3\", \"year 4\"])"
+   },
+   {
+    "intent": "The fourth bar, a whole day, lit",
+    "narration": "After four years the quarters make a whole day.",
+    "code": "highlight(stage, bars[3], color=RED)\nstage.caption(\"Four quarters make a day\")"
+   },
+   {
+    "intent": "The bars beside 4 × 0.25 = 1 day, added as 29 February",
+    "narration": "So every fourth year gets an extra day, the twenty ninth of February.",
+    "code": "stage.equation(r\"4 \\times 0.25 = 1 \\text{ day}\")"
+   }
+  ]
+ },
+ {
+  "request": "why are time zones 15 degrees wide?",
+  "beats": [
+   {
+    "intent": "A circle for the Earth split into 24 equal slices",
+    "narration": "The Earth turns once, three hundred and sixty degrees, in twenty four hours.",
+    "code": "stage.title(\"Time zones\")\nslices = VGroup(*[Sector(radius=2.2, angle=TAU / 24, start_angle=TAU * k / 24, color=BLUE if k % 2 else TEAL, fill_opacity=0.6, stroke_color=WHITE, stroke_width=1) for k in range(24)])\nstage.play(FadeIn(slices))\nstage.add(slices)"
+   },
+   {
+    "intent": "One slice lit with its angle of 15° marked",
+    "narration": "Split into twenty four hour-slices, each is fifteen degrees wide.",
+    "code": "highlight(stage, slices[0], color=YELLOW)\nstage.label(slices[0], \"15°\", direction=RIGHT, color=YELLOW)"
+   },
+   {
+    "intent": "The circle beside 360° ÷ 24 = 15° per hour",
+    "narration": "Move fifteen degrees east and the sun rises an hour earlier.",
+    "code": "stage.equation(r\"360^\\circ \\div 24 = 15^\\circ \\text{ per hour}\")"
+   }
+  ]
+ },
+ {
+  "request": "how long does light take to reach the Moon?",
+  "beats": [
+   {
+    "intent": "The Earth and the Moon as circles 384,000 km apart",
+    "narration": "The Moon is about three hundred and eighty four thousand kilometres away.",
+    "code": "stage.title(\"Light to the Moon\")\nearth = Circle(radius=0.6, color=BLUE, fill_opacity=0.8).move_to(LEFT * 5)\nmoon = Circle(radius=0.2, color=GREY_B, fill_opacity=0.9).move_to(RIGHT * 5)\nstage.play(FadeIn(earth), FadeIn(moon))\nstage.add(earth, moon)\nbr = Brace(Line(LEFT * 5, RIGHT * 5), DOWN)\nstage.play(GrowFromCenter(br))\nstage.add(br)\nstage.label(br, \"384 000 km\", direction=DOWN)"
+   },
+   {
+    "intent": "A flash of light travelling from the Earth to the Moon",
+    "narration": "Light covers three hundred thousand kilometres every second.",
+    "code": "flash = Dot(earth.get_right(), color=YELLOW, radius=0.12)\nstage.play(FadeIn(flash))\nstage.play(flash.animate.move_to(moon.get_left()), run_time=1.3, rate_func=linear)"
+   },
+   {
+    "intent": "The trip beside 384000 / 300000 ≈ 1.3 seconds",
+    "narration": "So the trip takes about one point three seconds.",
+    "code": "stage.equation(r\"\\frac{384\\,000}{300\\,000} \\approx 1.3\\ \\text{s}\")"
+   }
+  ]
+ },
+ {
+  "request": "why does crushed ice melt faster than a big cube?",
+  "beats": [
+   {
+    "intent": "A 2 by 2 square of ice with its outline, perimeter 8",
+    "narration": "Look at ice from the side: a two by two block has an outline of eight.",
+    "code": "stage.title(\"Crushed ice melts faster\")\nbig = Square(side_length=2, color=BLUE, fill_opacity=0.5).shift(LEFT * 3)\nstage.play(Create(big))\nstage.add(big)\nstage.label(big, \"edge 8\", direction=DOWN)"
+   },
+   {
+    "intent": "The same ice split into four 1 by 1 squares spread apart, total edge 16",
+    "narration": "Break it into four small blocks: same amount of ice, but the edges add up to sixteen.",
+    "code": "smalls = VGroup(*[Square(side_length=1, color=BLUE, fill_opacity=0.5) for _ in range(4)]).arrange_in_grid(2, 2, buff=0.4).shift(RIGHT * 3)\nstage.play(TransformFromCopy(big, smalls))\nstage.add(smalls)\nstage.label(smalls, \"edge 16\", direction=DOWN)"
+   },
+   {
+    "intent": "The blocks beside: same area, twice the surface",
+    "narration": "More surface touches the warm drink, so the crushed ice melts faster.",
+    "code": "stage.caption(\"Same ice, twice the surface\")"
+   }
+  ]
+ },
+ {
+  "request": "why do elephants have thick legs? (the square-cube law)",
+  "beats": [
+   {
+    "intent": "Bars for a size doubled: strength (area) 4 times, weight (volume) 8 times",
+    "narration": "Double an animal's size. Its bones' strength depends on area, which grows four times; its weight on volume, which grows eight times.",
+    "code": "stage.title(\"The square-cube law\")\nbars = draw_bars(stage, [1, 4, 8], labels=[\"size 1\", \"area ×4\", \"volume ×8\"])"
+   },
+   {
+    "intent": "Fresh axes of size against area and volume, the volume curve pulling away",
+    "narration": "Keep scaling and weight outgrows strength faster and faster.",
+    "code": "stage.clear()\nax = draw_axes(stage, x_range=(0, 4), y_range=(0, 64), labels=(\"scale\", \"\"))\na = plot_graph(stage, ax, lambda k: k ** 2, color=GREEN, label=\"k^2\")\nv = plot_graph(stage, ax, lambda k: k ** 3, color=RED, label=\"k^3\")\nstage.caption(\"Green: strength (area). Red: weight (volume)\")"
+   },
+   {
+    "intent": "The curves beside the ratio: weight per strength grows like k",
+    "narration": "So big animals need much thicker legs just to stand up.",
+    "code": "stage.equation(r\"\\frac{k^3}{k^2} = k\")"
+   }
+  ]
+ },
+ {
+  "request": "why do we always see the same side of the Moon?",
+  "beats": [
+   {
+    "intent": "The Earth in the middle and the Moon at four points of its orbit, a red mark on its near side",
+    "narration": "The Moon circles the Earth. Put a red mark on the side facing us.",
+    "code": "stage.title(\"One face of the Moon\")\nearth = Circle(radius=0.5, color=BLUE, fill_opacity=0.8)\norbit = DashedVMobject(Circle(radius=2.5, color=GREY), num_dashes=40)\nstage.play(FadeIn(earth), Create(orbit))\nstage.add(earth, orbit)\nmoons = VGroup()\nfor a in (0, PI / 2, PI, 3 * PI / 2):\n    c = 2.5 * np.array([np.cos(a), np.sin(a), 0])\n    m = Circle(radius=0.3, color=GREY_B, fill_opacity=0.9).move_to(c)\n    mark = Dot(c - 0.3 * np.array([np.cos(a), np.sin(a), 0]), color=RED, radius=0.08)\n    moons.add(VGroup(m, mark))\nstage.play(LaggedStart(*[FadeIn(m) for m in moons], lag_ratio=0.3))\nstage.add(moons)"
+   },
+   {
+    "intent": "The red mark facing the Earth at every position",
+    "narration": "At every point of the orbit the red mark still faces the Earth: the Moon turns once for each orbit.",
+    "code": "highlight(stage, VGroup(*[m[1] for m in moons]), color=RED)\nstage.caption(\"It spins once per orbit\")"
+   }
+  ]
+ },
+ {
+  "request": "how do bicycle gears make you go faster?",
+  "beats": [
+   {
+    "intent": "A front gear of 40 teeth and a rear gear of 20 teeth joined by a chain",
+    "narration": "The pedals turn a front gear with forty teeth; the chain drives a rear gear with twenty.",
+    "code": "stage.title(\"Bicycle gears\")\nfront = Circle(radius=1.4, color=YELLOW).shift(LEFT * 2.5)\nrear = Circle(radius=0.7, color=BLUE).shift(RIGHT * 2.5)\nchain = VGroup(Line(front.get_top(), rear.get_top()), Line(front.get_bottom(), rear.get_bottom())).set_color(GREY_B)\nstage.play(Create(front), Create(rear), Create(chain))\nstage.add(front, rear, chain)\nstage.label(front, \"40 teeth\", direction=DOWN, color=YELLOW)\nstage.label(rear, \"20 teeth\", direction=DOWN, color=BLUE)"
+   },
+   {
+    "intent": "The front gear turning once while the rear gear turns twice, marks on each showing it",
+    "narration": "Turn the pedals once: forty teeth pass, which turns the small gear twice.",
+    "code": "fm = Dot(front.get_top(), color=RED)\nrm = Dot(rear.get_top(), color=RED)\nstage.add(fm, rm)\nstage.play(Rotate(fm, TAU, about_point=front.get_center()), Rotate(rm, 2 * TAU, about_point=rear.get_center()), run_time=3, rate_func=linear)"
+   },
+   {
+    "intent": "The gears beside 40 / 20 = 2 wheel turns per pedal turn",
+    "narration": "The back wheel turns twice for every pedal turn: a gear ratio of two.",
+    "code": "stage.equation(r\"\\frac{40}{20} = 2\")"
+   }
+  ]
+ }
+]
