@@ -1,0 +1,62 @@
+[
+ {
+  "request": "solve 3x + 5 = 20 with a balance scale",
+  "beats": [
+   {
+    "intent": "A balance scale level with 3 x-boxes and 5 unit weights on the left, 20 unit weights on the right",
+    "narration": "Three boxes of x plus five weights balance twenty weights.",
+    "code": "stage.title(\"Solving 3x + 5 = 20\")\nbeam = Line([-4.5, 0, 0], [4.5, 0, 0], color=GREY_B, stroke_width=8)\npivot = Triangle(color=GREY_B, fill_opacity=0.8).scale(0.4).move_to([0, -0.35, 0])\nstage.play(Create(beam), FadeIn(pivot))\nstage.add(beam, pivot)\nxs = VGroup(*[Square(0.6, color=BLUE, fill_opacity=0.6) for _ in range(3)]).arrange(RIGHT, buff=0.1).move_to([-3.4, 0.4, 0])\nones = VGroup(*[Square(0.28, color=YELLOW, fill_opacity=0.9) for _ in range(5)]).arrange(RIGHT, buff=0.06).move_to([-1.4, 0.25, 0])\nright = VGroup(*[Square(0.28, color=YELLOW, fill_opacity=0.9) for _ in range(20)]).arrange_in_grid(rows=2, cols=10, buff=0.06).move_to([2.6, 0.4, 0])\nstage.play(FadeIn(xs), FadeIn(ones), FadeIn(right))\nstage.add(xs, ones, right)\nfor b in xs:\n    t = MathTex(\"x\", font_size=30).move_to(b)\n    stage.add(t)\nstage.equation(r\"3x + 5 = 20\", where=\"center\")"
+   },
+   {
+    "intent": "5 weights taken off both sides, leaving 3 boxes against 15 weights",
+    "narration": "Take five weights off both sides. It still balances: three x equals fifteen.",
+    "code": "stage.play(FadeOut(ones), *[FadeOut(right[k]) for k in range(15, 20)])\nstage.equation(r\"3x + 5 = 20\", r\"3x = 15\")"
+   },
+   {
+    "intent": "The 15 weights split into 3 groups of 5, one per box, beside x = 5",
+    "narration": "Share the fifteen weights among the three boxes: five each. So x is five.",
+    "code": "stage.play(*[right[k].animate.set_color([GREEN, ORANGE, RED][k // 5]) for k in range(15)])\nstage.equation(r\"3x + 5 = 20\", r\"3x = 15\", r\"x = 5\")"
+   }
+  ]
+ },
+ {
+  "request": "how does a light switch on the stairs work from both ends?",
+  "beats": [
+   {
+    "intent": "Two switches A and B, each able to connect to an upper or lower wire, and a lamp",
+    "narration": "Stair lights use two switches, one at the bottom and one at the top, joined by two wires.",
+    "code": "stage.title(\"Two-way switches\")\nwires = VGroup(Line([-2, 1, 0], [2, 1, 0], color=GREY_B), Line([-2, -1, 0], [2, -1, 0], color=GREY_B))\nlamp = Circle(radius=0.45, color=YELLOW).move_to([4.8, 0, 0])\nfeedA = Line([-5, 0, 0], [-3.2, 0, 0], color=GREY_B)\nfeedB = Line([3.2, 0, 0], [4.35, 0, 0], color=GREY_B)\nstage.play(Create(wires), Create(lamp), Create(feedA), Create(feedB))\nstage.add(wires, lamp, feedA, feedB)\nswA = Line([-3.2, 0, 0], [-2, 1, 0], color=WHITE, stroke_width=6)\nswB = Line([3.2, 0, 0], [2, 1, 0], color=WHITE, stroke_width=6)\nstage.play(Create(swA), Create(swB))\nstage.add(swA, swB)\nstage.label(swA, \"A\", direction=LEFT)\nstage.label(swB, \"B\", direction=RIGHT)"
+   },
+   {
+    "intent": "Both switches on the upper wire: the circuit closes and the lamp lights",
+    "narration": "When both switches point to the same wire, current has a path and the lamp lights.",
+    "code": "stage.play(wires[0].animate.set_color(YELLOW), feedA.animate.set_color(YELLOW), feedB.animate.set_color(YELLOW),\n           lamp.animate.set_fill(YELLOW, opacity=0.9))\nstage.caption(\"same wire: on\")"
+   },
+   {
+    "intent": "Switch B flipped to the lower wire: the path breaks and the lamp goes dark",
+    "narration": "Flip either switch and they point to different wires. The path breaks and the light goes off, whichever end you are at.",
+    "code": "stage.play(Transform(swB, Line([3.2, 0, 0], [2, -1, 0], color=WHITE, stroke_width=6)),\n           wires[0].animate.set_color(GREY_B), feedA.animate.set_color(GREY_B), feedB.animate.set_color(GREY_B),\n           lamp.animate.set_fill(opacity=0))\nstage.caption(\"different wires: off\")"
+   }
+  ]
+ },
+ {
+  "request": "why does a cyclist lean into a corner?",
+  "beats": [
+   {
+    "intent": "A cyclist drawn as a leaning line on a wheel, going round a curve",
+    "narration": "Riding round a corner, a cyclist leans in towards the centre of the turn.",
+    "code": "stage.title(\"Leaning into a corner\")\nground = Line([-4, -2.2, 0], [4, -2.2, 0], color=GREY_B)\nwheel = Circle(radius=0.35, color=WHITE).move_to([0, -1.85, 0])\nbody = Line([0, -1.85, 0], [-1.2, 1.2, 0], color=ORANGE, stroke_width=10)\nhead = Circle(radius=0.28, color=ORANGE, fill_opacity=0.8).move_to([-1.3, 1.5, 0])\nstage.play(Create(ground), Create(wheel), Create(body), FadeIn(head))\nstage.add(ground, wheel, body, head)\ncentre = Dot([-4.5, -2.2, 0], color=GREY_B)\nstage.add(centre)\nstage.label(centre, \"centre of turn\", direction=UP, color=GREY_B)"
+   },
+   {
+    "intent": "Arrows at the tyre: the road's push up and its sideways grip inward, adding to a push along the lean",
+    "narration": "The road pushes up on the tyre and grips it sideways, towards the centre. Together those pushes point along the leaning bike.",
+    "code": "up = Arrow([0, -2.2, 0], [0, 0.6, 0], buff=0, color=BLUE)\ngrip = Arrow([0, -2.2, 0], [-1.1, -2.2, 0], buff=0, color=GREEN)\ntotal = Arrow([0, -2.2, 0], [-1.1, 0.6, 0], buff=0, color=YELLOW)\nstage.play(GrowArrow(up), GrowArrow(grip))\nstage.play(GrowArrow(total))\nstage.add(up, grip, total)\nstage.label(up, \"support\", direction=RIGHT, color=BLUE)\nstage.label(grip, \"grip\", direction=DOWN, color=GREEN)"
+   },
+   {
+    "intent": "The picture beside tan θ = v² / (g r)",
+    "narration": "If that total push runs through the rider's centre of mass, there is no twist to tip them over. Faster or tighter turns need a bigger lean.",
+    "code": "stage.equation(r\"\\tan\\theta = \\frac{v^2}{g\\,r}\")"
+   }
+  ]
+ }
+]
