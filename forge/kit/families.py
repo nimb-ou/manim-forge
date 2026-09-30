@@ -80,13 +80,23 @@ def kit_calls(code: str) -> list[tuple[str, str]]:
     return out
 
 
+_SCAFFOLD = {"draw_plane", "draw_axes", "draw_number_line", "draw_complex_plane"}
+
+
 def relevant(code: str, text: str) -> bool | None:
     """True if a kit family the code draws with matches ``text`` (a beat's
     intent and request, lower-cased); False if it draws only with families
     that do not; None if it uses no kit block (raw Manim: not judged)."""
-    fams = {BLOCK_FAMILY[b] for b, _ in kit_calls(code)}
+    calls = {b for b, _ in kit_calls(code)}
+    fams = {BLOCK_FAMILY[b] for b in calls}
     if not fams:
         return None
+    # Axes, a grid or a number line and nothing on them is a background,
+    # not the beat's picture -- the commonest held-out failure (2026-09-29:
+    # "axes with the curve N = 64 * 2^-t" came back as empty axes, and
+    # draw_axes' family matched the word "curve").
+    if calls <= _SCAFFOLD and not re.search(r"\.(plot|animate)\b|\bplay\(|\b(Dot|Line|Arrow|Polygon)\(", code):
+        return False
     return any(re.search(FAMILIES[f][1], text.lower()) for f in fams)
 
 
