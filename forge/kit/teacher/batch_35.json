@@ -1,0 +1,142 @@
+[
+ {
+  "request": "why is 0! equal to 1?",
+  "beats": [
+   {
+    "intent": "Bars of n! for n = 4, 3, 2, 1: 24, 6, 2, 1",
+    "narration": "Four factorial is twenty four, three factorial six, two factorial two, one factorial one.",
+    "code": "stage.title(\"Why 0! = 1\")\nbars = draw_bars(stage, [24, 6, 2, 1], labels=[\"4!\", \"3!\", \"2!\", \"1!\"])"
+   },
+   {
+    "intent": "Arrows between the bars labelled ÷4, ÷3, ÷2",
+    "narration": "Going down, you divide by four, then three, then two.",
+    "code": "for k, d in enumerate((4, 3, 2)):\n    a = CurvedArrow(bars[k].get_top() + UP * 0.1, bars[k + 1].get_top() + UP * 0.1, angle=-PI / 3, color=YELLOW)\n    stage.play(Create(a), run_time=0.4)\n    stage.add(a)\n    stage.label(a, f\"÷{d}\", direction=UP, color=YELLOW)"
+   },
+   {
+    "intent": "A fifth bar for 0! of height 1 after dividing 1! by 1",
+    "narration": "One more step down divides by one: zero factorial is one. It also counts the one way to arrange nothing.",
+    "code": "stage.clear()\nbars2 = draw_bars(stage, [24, 6, 2, 1, 1], labels=[\"4!\", \"3!\", \"2!\", \"1!\", \"0!\"])\nhighlight(stage, bars2[4])\nstage.equation(r\"0! = \\frac{1!}{1} = 1\")"
+   }
+  ]
+ },
+ {
+  "request": "how many subsets does the set {a, b, c} have?",
+  "beats": [
+   {
+    "intent": "Three items a, b, c each with an in/out switch",
+    "narration": "For each of a, b and c, a subset either takes it or leaves it.",
+    "code": "stage.title(\"Subsets of {a, b, c}\")\nitems = VGroup(*[VGroup(Circle(radius=0.4, color=c, fill_opacity=0.6), Text(t, font_size=28)) for t, c in zip(\"abc\", (RED, GREEN, BLUE))]).arrange(RIGHT, buff=0.8)\nstage.play(FadeIn(items))\nstage.add(items)"
+   },
+   {
+    "intent": "All 8 subsets listed as rows, from the empty set to {a, b, c}",
+    "narration": "Two choices three times over gives eight subsets, from the empty set to all three.",
+    "code": "stage.play(items.animate.scale(0.5).to_edge(UP, buff=1.2))\nsubsets = [\"{}\", \"{a}\", \"{b}\", \"{c}\", \"{a,b}\", \"{a,c}\", \"{b,c}\", \"{a,b,c}\"]\nrows = VGroup(*[Text(s, font_size=26) for s in subsets]).arrange_in_grid(2, 4, buff=(0.8, 0.5)).shift(DOWN * 0.5)\nstage.play(LaggedStart(*[FadeIn(r) for r in rows], lag_ratio=0.15))\nstage.add(rows)"
+   },
+   {
+    "intent": "The list beside 2 × 2 × 2 = 2^3 = 8",
+    "narration": "Each element doubles the count: two to the three is eight.",
+    "code": "stage.equation(r\"2 \\times 2 \\times 2 = 2^3 = 8\")"
+   }
+  ]
+ },
+ {
+  "request": "how are the roots of x^2 - 5x + 6 related to its coefficients?",
+  "beats": [
+   {
+    "intent": "Axes with the parabola y = x^2 - 5x + 6",
+    "narration": "Plot x squared minus five x plus six.",
+    "code": "stage.title(\"Roots and coefficients\")\nax = draw_axes(stage, x_range=(-1, 6), y_range=(-1, 7))\ng = plot_graph(stage, ax, lambda x: x ** 2 - 5 * x + 6)"
+   },
+   {
+    "intent": "The roots x = 2 and x = 3 marked on the x-axis",
+    "narration": "It crosses zero at two and three.",
+    "code": "r1 = mark_point(stage, ax, 2, 0, color=RED, label=\"2\", direction=DOWN)\nr2 = mark_point(stage, ax, 3, 0, color=RED, label=\"3\", direction=DOWN)"
+   },
+   {
+    "intent": "The graph beside 2 + 3 = 5 and 2 × 3 = 6",
+    "narration": "The roots add to five, the middle coefficient with its sign flipped, and multiply to six, the constant.",
+    "code": "stage.equation(r\"r_1 + r_2 = 2 + 3 = 5,\\quad r_1 r_2 = 2 \\times 3 = 6\")"
+   }
+  ]
+ },
+ {
+  "request": "how do you draw an ellipse with a string and two pins?",
+  "beats": [
+   {
+    "intent": "Two pins F1 and F2 on a plane and a pencil point P with string to both",
+    "narration": "Push in two pins and tie a loop of string round them. Pull it tight with a pencil.",
+    "code": "stage.title(\"An ellipse from a string\")\nF1, F2 = np.array([-1.6, 0, 0]), np.array([1.6, 0, 0])\na = 2.6\nP = np.array([0, np.sqrt(a ** 2 - 1.6 ** 2), 0])\npins = VGroup(Dot(F1, color=RED), Dot(F2, color=RED))\ns1, s2 = Line(F1, P, color=YELLOW), Line(F2, P, color=YELLOW)\nstage.play(FadeIn(pins), Create(s1), Create(s2), FadeIn(Dot(P)))\nstage.add(pins, s1, s2)"
+   },
+   {
+    "intent": "The pencil moving round, keeping the string taut, tracing the ellipse",
+    "narration": "Move the pencil round keeping the string taut: it traces an ellipse.",
+    "code": "t = ValueTracker(PI / 2)\npt = lambda: np.array([a * np.cos(t.get_value()), np.sqrt(a ** 2 - 1.6 ** 2) * np.sin(t.get_value()), 0])\nl1 = always_redraw(lambda: Line(F1, pt(), color=YELLOW))\nl2 = always_redraw(lambda: Line(F2, pt(), color=YELLOW))\npen = always_redraw(lambda: Dot(pt(), color=WHITE))\nstage.remove(s1, s2)\nstage.add(l1, l2, pen)\ntrace = TracedPath(pen.get_center, stroke_color=BLUE, stroke_width=4)\nstage.add(trace)\nstage.play(t.animate.set_value(PI / 2 + TAU), run_time=4, rate_func=linear)"
+   },
+   {
+    "intent": "The ellipse beside PF1 + PF2 = 2a",
+    "narration": "The two pieces of string always add to the same length: that is what an ellipse is.",
+    "code": "stage.equation(r\"PF_1 + PF_2 = 2a\")"
+   }
+  ]
+ },
+ {
+  "request": "why do satellite dishes have a parabolic shape?",
+  "beats": [
+   {
+    "intent": "A parabola y = x^2/4 with its focus at (0, 1)",
+    "narration": "Here is the parabola y equals x squared over four. Its focus is at zero, one.",
+    "code": "stage.title(\"The parabola's focus\")\nax = draw_axes(stage, x_range=(-4, 4), y_range=(0, 5))\nf = lambda x: x ** 2 / 4\ng = plot_graph(stage, ax, f)\nF = mark_point(stage, ax, 0, 1, color=RED, label=\"focus\")"
+   },
+   {
+    "intent": "Vertical rays coming down onto the curve at x = -3, -1.5, 1.5, 3",
+    "narration": "Signals come straight down, parallel to the axis.",
+    "code": "for x in (-3, -1.5, 1.5, 3):\n    draw_arrow(stage, ax.c2p(x, 5), ax.c2p(x, f(x)))"
+   },
+   {
+    "intent": "Each ray bouncing off the curve and meeting at the focus",
+    "narration": "Each one bounces off the curve and every bounce passes through the focus: the dish gathers them all at one point.",
+    "code": "for x in (-3, -1.5, 1.5, 3):\n    draw_line(stage, ax.c2p(x, f(x)), ax.c2p(0, 1), color=YELLOW)\nstage.caption(\"Every ray reflects through the focus\")"
+   }
+  ]
+ },
+ {
+  "request": "how can dropping needles on lined paper estimate pi?",
+  "beats": [
+   {
+    "intent": "Parallel lines 2 units apart with needles of length 2 dropped at random",
+    "narration": "Drop needles as long as the gap between the lines onto lined paper.",
+    "code": "stage.title(\"Buffon's needle\")\nlines = VGroup(*[Line(np.array([-5, y, 0]), np.array([5, y, 0]), color=GREY_B) for y in (-2, 0, 2)])\nstage.play(Create(lines))\nstage.add(lines)\nrng = np.random.default_rng(4)\nneedles = VGroup()\nhits = 0\nfor _ in range(30):\n    c = np.array([rng.uniform(-4, 4), rng.uniform(-2, 2), 0])\n    th = rng.uniform(0, PI)\n    d = np.array([np.cos(th), np.sin(th), 0])\n    a, b = c - d, c + d\n    hit = np.floor(a[1] / 2) != np.floor(b[1] / 2)\n    hits += int(hit)\n    needles.add(Line(a, b, color=RED if hit else BLUE, stroke_width=3))\nstage.play(LaggedStart(*[Create(n) for n in needles], lag_ratio=0.05), run_time=2)\nstage.add(needles)"
+   },
+   {
+    "intent": "The needles crossing a line lit in red, with the count read out",
+    "narration": "Count those that cross a line, the red ones.",
+    "code": "stage.caption(f\"{hits} of 30 cross a line\")"
+   },
+   {
+    "intent": "The needles beside P(cross) = 2/π, so π ≈ 2 × 30 / crossings",
+    "narration": "The chance of crossing is two over pi, so pi is about twice the number dropped over the number that cross. More needles, better estimate.",
+    "code": "stage.equation(r\"P(\\text{cross}) = \\frac{2}{\\pi} \\Rightarrow \\pi \\approx \\frac{2 \\times 30}{\\text{crossings}}\")"
+   }
+  ]
+ },
+ {
+  "request": "how do three overlapping sets look in a Venn diagram?",
+  "beats": [
+   {
+    "intent": "Three overlapping circles A, B, C",
+    "narration": "Three sets, drawn as three overlapping circles.",
+    "code": "stage.title(\"Three sets\")\ncs = VGroup(*[Circle(radius=1.6, color=c, fill_opacity=0.15).move_to(p) for c, p in ((RED, [-0.9, 0.5, 0]), (GREEN, [0.9, 0.5, 0]), (BLUE, [0, -0.9, 0]))])\nstage.play(Create(cs))\nstage.add(cs)\nfor circ, name, d in zip(cs, \"ABC\", (UP + LEFT, UP + RIGHT, DOWN)):\n    stage.label(circ, name, direction=d, color=circ.get_color())"
+   },
+   {
+    "intent": "The centre where all three overlap shaded",
+    "narration": "The middle region is in all three sets at once.",
+    "code": "mid = Intersection(cs[0], cs[1], cs[2], color=YELLOW, fill_opacity=0.8)\nstage.play(FadeIn(mid))\nstage.add(mid)"
+   },
+   {
+    "intent": "The diagram beside its 8 regions, counting the outside",
+    "narration": "Three circles split the page into eight regions: every combination of in or out of each set.",
+    "code": "stage.equation(r\"2^3 = 8 \\text{ regions}\")"
+   }
+  ]
+ }
+]
