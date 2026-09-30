@@ -46,7 +46,18 @@ def scenes() -> list[tuple[str, str, list[tuple[str, str, str]]]]:
     return out
 
 
+def up_to_date() -> bool:
+    """Both outputs newer than every source: rendering ~340 scenes takes
+    hours on a busy Mac, and the Oct 3 launcher calls this before pushing."""
+    srcs = list(BATCHES.glob("*.json")) + [ROOT / "forge" / "kit" / "exemplars.py"]
+    return OUT.exists() and PLANS.exists() and \
+        min(OUT.stat().st_mtime, PLANS.stat().st_mtime) > max(p.stat().st_mtime for p in srcs)
+
+
 def main() -> int:
+    if "--force" not in sys.argv and up_to_date():
+        print(f"{OUT.name} and {PLANS.name} are newer than every batch: nothing to do")
+        return 0
     from forge.harness import RenderHarness
     h = RenderHarness(python_bin=str(ROOT / ".venv" / "bin" / "python"),
                       cache_dir=str(ROOT / "data" / "frames"), timeout=600)
