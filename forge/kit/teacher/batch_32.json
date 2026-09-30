@@ -1,0 +1,152 @@
+[
+ {
+  "request": "what does a histogram of people's heights look like?",
+  "beats": [
+   {
+    "intent": "A histogram growing from random heights around 170 cm, bins 150 to 190",
+    "narration": "Measure the heights of four hundred adults and sort them into five-centimetre bins.",
+    "code": "stage.title(\"A histogram of heights\")\nhist = grow_histogram(stage, lambda rng, k: rng.normal(170, 7, size=k), bins=list(range(150, 195, 5)), n=400)"
+   },
+   {
+    "intent": "The tallest bars around 165 to 175 lit",
+    "narration": "Most people are between one sixty five and one seventy five.",
+    "code": "highlight(stage, VGroup(hist[3], hist[4]), color=YELLOW)\nstage.caption(\"Most heights near the middle\")"
+   },
+   {
+    "intent": "Fresh axes with a smooth bump over the same range",
+    "narration": "With more people and thinner bins the outline smooths into a bump.",
+    "code": "stage.clear()\nax = draw_axes(stage, x_range=(150, 190), y_range=(0, 0.07), labels=(\"cm\", \"\"))\nbump = plot_graph(stage, ax, lambda x: np.exp(-((x - 170) / 7) ** 2 / 2) / (7 * np.sqrt(TAU)), color=YELLOW)"
+   },
+   {
+    "intent": "The peak at 170 cm marked as the mean",
+    "narration": "Its peak is at the average height, a hundred and seventy centimetres.",
+    "code": "m = mark_point(stage, ax, 170, 0.057, color=RED, label=\"170 cm\")\nmid = draw_line(stage, ax.c2p(170, 0), ax.c2p(170, 0.057), color=RED, dashed=True)"
+   },
+   {
+    "intent": "The area under the bump between 160 and 180 shaded",
+    "narration": "The area between one sixty and one eighty holds most of the people.",
+    "code": "shade_area(stage, ax, bump, 160, 180)\nstage.caption(\"Most of the area lies near the middle\")"
+   }
+  ]
+ },
+ {
+  "request": "what do 2 sin x, sin 2x and sin x + 1 look like?",
+  "beats": [
+   {
+    "intent": "Axes with y = sin x from 0 to 2π",
+    "narration": "Start with the plain sine curve.",
+    "code": "stage.title(\"Transforming sin x\")\nax = draw_axes(stage, x_range=(0, 6.3), y_range=(-2.2, 2.2))\nbase = plot_graph(stage, ax, np.sin, color=BLUE, label=\"sin x\")"
+   },
+   {
+    "intent": "The curve 2 sin x added, twice as tall",
+    "narration": "Two sine x: every height doubles, so the waves are twice as tall.",
+    "code": "tall = plot_graph(stage, ax, lambda x: 2 * np.sin(x), color=GREEN, label=\"2 sin x\")"
+   },
+   {
+    "intent": "Fresh axes with sin x and sin 2x, the second squeezed to twice as many waves",
+    "narration": "Sine of two x: the input runs twice as fast, so two waves fit where one did.",
+    "code": "ax2 = draw_axes(stage, x_range=(0, 6.3), y_range=(-2.2, 2.2))\nb2 = plot_graph(stage, ax2, np.sin, color=BLUE)\nfast = plot_graph(stage, ax2, lambda x: np.sin(2 * x), color=RED, label=\"sin 2x\")"
+   },
+   {
+    "intent": "Fresh axes with sin x and sin x + 1, the second lifted up by 1",
+    "narration": "Sine x plus one: the whole wave shifts up by one.",
+    "code": "ax3 = draw_axes(stage, x_range=(0, 6.3), y_range=(-2.2, 2.2))\nb3 = plot_graph(stage, ax3, np.sin, color=BLUE)\nup = plot_graph(stage, ax3, lambda x: np.sin(x) + 1, color=YELLOW, label=\"sin x + 1\")"
+   },
+   {
+    "intent": "All three rules beside the curves",
+    "narration": "Outside the function stretches or shifts up and down; inside, it squeezes or shifts sideways.",
+    "code": "stage.equation(r\"a\\sin x:\\ \\text{taller} \\quad \\sin bx:\\ \\text{faster} \\quad \\sin x + c:\\ \\text{higher}\")"
+   }
+  ]
+ },
+ {
+  "request": "why is the area of a triangle ½ ab sin C?",
+  "beats": [
+   {
+    "intent": "A triangle with sides a = 5 and b = 4 meeting at angle C = 40°",
+    "narration": "Two sides, five and four, meet at an angle of forty degrees.",
+    "code": "stage.title(\"Area = ½ ab sin C\")\nC = np.array([-2.5, -1.5, 0])\nBp = C + 5 * 0.9 * RIGHT\nAp = C + 4 * 0.9 * np.array([np.cos(np.radians(40)), np.sin(np.radians(40)), 0])\ntri = Polygon(C, Bp, Ap, color=BLUE, fill_opacity=0.3)\nstage.play(Create(tri))\nstage.add(tri)\nang = Angle(Line(C, Bp), Line(C, Ap), radius=0.6, color=YELLOW)\nstage.play(Create(ang))\nstage.add(ang)\nstage.label(ang, \"40°\", direction=RIGHT, color=YELLOW)"
+   },
+   {
+    "intent": "The side a = 5 along the base and b = 4 up the slope labelled",
+    "narration": "Call the base a, five, and the slanted side b, four.",
+    "code": "base = draw_line(stage, C, Bp, color=GREEN)\nside = draw_line(stage, C, Ap, color=RED)\nstage.label(base, \"a = 5\", direction=DOWN, color=GREEN)\nstage.label(side, \"b = 4\", direction=LEFT, color=RED)"
+   },
+   {
+    "intent": "The height from the top corner dropped to the base, a dashed line",
+    "narration": "Drop a height from the top corner to the base.",
+    "code": "foot = np.array([Ap[0], C[1], 0])\nh = DashedLine(Ap, foot, color=WHITE)\nstage.play(Create(h))\nstage.add(h)\nstage.label(h, \"h\", direction=RIGHT)"
+   },
+   {
+    "intent": "The small right triangle with h = b sin C shown",
+    "narration": "In the little right triangle, the height is b times sine C: four times sine forty, about two point five seven.",
+    "code": "small = Polygon(C, foot, Ap, color=YELLOW, fill_opacity=0.3)\nstage.play(FadeIn(small))\nstage.add(small)\nstage.caption(\"h = b sin C ≈ 2.57\")"
+   },
+   {
+    "intent": "The triangle beside Area = ½ a h = ½ ab sin C ≈ 6.4",
+    "narration": "Half base times height is half a b sine C: about six point four.",
+    "code": "stage.equation(r\"\\tfrac12 a h = \\tfrac12 ab\\sin C = \\tfrac12 \\cdot 5 \\cdot 4 \\cdot \\sin 40^\\circ \\approx 6.4\")"
+   }
+  ]
+ },
+ {
+  "request": "how do you find the equation of the line through (1, 2) and (4, 8)?",
+  "beats": [
+   {
+    "intent": "A grid with the points (1, 2) and (4, 8)",
+    "narration": "Two points: one, two and four, eight.",
+    "code": "stage.title(\"The line through two points\")\nax = draw_axes(stage, x_range=(-1, 6), y_range=(-1, 10))\np1 = mark_point(stage, ax, 1, 2, color=RED, label=\"(1, 2)\")\np2 = mark_point(stage, ax, 4, 8, color=RED, label=\"(4, 8)\")"
+   },
+   {
+    "intent": "A step of 3 across and 6 up drawn between them",
+    "narration": "From the first to the second: three across and six up.",
+    "code": "run = draw_line(stage, ax.c2p(1, 2), ax.c2p(4, 2), color=GREEN)\nrise = draw_line(stage, ax.c2p(4, 2), ax.c2p(4, 8), color=YELLOW)\nstage.label(run, \"3\", direction=DOWN, color=GREEN)\nstage.label(rise, \"6\", direction=RIGHT, color=YELLOW)"
+   },
+   {
+    "intent": "The slope 6/3 = 2 written beside the step",
+    "narration": "So the slope is six over three, two.",
+    "code": "stage.equation(r\"m = \\frac{8 - 2}{4 - 1} = 2\")"
+   },
+   {
+    "intent": "The line through both points extended to the y-axis at 0",
+    "narration": "Extend the line back: it passes through the origin, so the intercept is zero.",
+    "code": "line = plot_graph(stage, ax, lambda x: 2 * x, x_range=(-0.5, 5), color=BLUE)\no = mark_point(stage, ax, 0, 0, color=GREEN, label=\"(0, 0)\")"
+   },
+   {
+    "intent": "The line beside its equation y = 2x",
+    "narration": "The line is y equals two x.",
+    "code": "stage.equation(r\"y = 2x\")"
+   }
+  ]
+ },
+ {
+  "request": "what happens to a triangle when you translate, reflect and rotate it?",
+  "beats": [
+   {
+    "intent": "A grid with the triangle (1, 1), (3, 1), (1, 2)",
+    "narration": "A small triangle on the grid.",
+    "code": "stage.title(\"Moving a triangle\")\np = draw_plane(stage)\ntri = Polygon(p.c2p(1, 1), p.c2p(3, 1), p.c2p(1, 2), color=BLUE, fill_opacity=0.6)\nstage.play(Create(tri))\nstage.add(tri)"
+   },
+   {
+    "intent": "A copy translated 2 left and 2 down",
+    "narration": "Slide a copy two left and two down: a translation. Same shape, same way round.",
+    "code": "t = tri.copy().set_color(GREEN)\nstage.play(t.animate.shift(p.c2p(-2, -2) - p.c2p(0, 0)), run_time=1.2)\nstage.add(t)"
+   },
+   {
+    "intent": "A copy reflected in the y-axis",
+    "narration": "Flip a copy over the y axis: a reflection. Now it faces the other way.",
+    "code": "r = tri.copy().set_color(YELLOW)\nstage.play(r.animate.flip(UP, about_point=p.c2p(0, 0)), run_time=1.2)\nstage.add(r)"
+   },
+   {
+    "intent": "A copy rotated a half turn about the origin",
+    "narration": "Turn a copy half way round the origin: a rotation.",
+    "code": "q = tri.copy().set_color(RED)\nstage.play(Rotate(q, PI, about_point=p.c2p(0, 0)), run_time=1.5)\nstage.add(q)"
+   },
+   {
+    "intent": "All four triangles on the grid, the same size, beside the note: lengths and angles unchanged",
+    "narration": "All four are the same size and shape: moves like these never change lengths or angles.",
+    "code": "stage.caption(\"Same size and shape every time\")"
+   }
+  ]
+ }
+]
