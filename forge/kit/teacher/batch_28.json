@@ -1,0 +1,177 @@
+[
+ {
+  "request": "what's the chance of guessing which of three cups hides the ball?",
+  "beats": [
+   {
+    "intent": "Three cups as upside-down trapezoids in a row",
+    "narration": "Three cups on a table; a ball is hidden under one of them.",
+    "code": "stage.title(\"Find the ball\")\ncup = lambda x: Polygon([x - 0.6, -1, 0], [x + 0.6, -1, 0], [x + 0.4, 0.4, 0], [x - 0.4, 0.4, 0], color=ORANGE, fill_opacity=0.8)\ncups = VGroup(*[cup(x) for x in (-3, 0, 3)])\nstage.play(FadeIn(cups))\nstage.add(cups)"
+   },
+   {
+    "intent": "The middle cup lifting to show a yellow ball underneath",
+    "narration": "Lift a cup: here the ball was under the middle one.",
+    "code": "ball = Dot(np.array([0, -0.75, 0]), radius=0.22, color=YELLOW)\nself.add(ball)\nself.bring_to_back(ball)\nstage.play(cups[1].animate.shift(UP * 1.5))"
+   },
+   {
+    "intent": "Bars of 1/3 for each cup beside P = 1/3",
+    "narration": "Each cup is equally likely, so a guess is right one time in three.",
+    "code": "stage.clear()\nbars = draw_bars(stage, [1, 1, 1], labels=[\"left\", \"middle\", \"right\"])\nstage.equation(r\"P(\\text{right guess}) = \\tfrac13\")"
+   }
+  ]
+ },
+ {
+  "request": "what's the chance of picking a red marble from a bag of 3 red and 2 blue?",
+  "beats": [
+   {
+    "intent": "A bag drawn as a circle holding 3 red and 2 blue dots",
+    "narration": "A bag holds three red marbles and two blue.",
+    "code": "stage.title(\"Marbles in a bag\")\nbag = Circle(radius=1.6, color=GREY_B)\nmarbles = VGroup(*[Dot(radius=0.25, color=c) for c in (RED, RED, RED, BLUE, BLUE)]).arrange_in_grid(2, 3, buff=0.3)\nstage.play(Create(bag), FadeIn(marbles))\nstage.add(bag, marbles)"
+   },
+   {
+    "intent": "One red marble pulled out of the bag to the right",
+    "narration": "Reach in and pull one out without looking.",
+    "code": "stage.play(marbles[0].animate.move_to(RIGHT * 3.5), run_time=1)"
+   },
+   {
+    "intent": "The bag beside P(red) = 3/5",
+    "narration": "Three of the five are red, so the chance of red is three fifths.",
+    "code": "stage.equation(r\"P(\\text{red}) = \\frac{3}{5}\")"
+   }
+  ]
+ },
+ {
+  "request": "how many games are there in a knockout tournament of 8 teams?",
+  "beats": [
+   {
+    "intent": "Eight team dots on the left paired into 4 matches",
+    "narration": "Eight teams, paired off into four matches.",
+    "code": "stage.title(\"A knockout tournament\")\nnodes = {f\"T{k}\": (-0.9, 0.85 - 0.24 * k) for k in range(8)}\nnodes.update({f\"Q{k}\": (-0.3, 0.73 - 0.48 * k) for k in range(4)})\nedges = [(f\"T{2 * k + i}\", f\"Q{k}\") for k in range(4) for i in range(2)]\ndots, lines = draw_network(stage, nodes, edges)"
+   },
+   {
+    "intent": "Winners joined into 2 semi-finals and 1 final",
+    "narration": "Four winners play two semi-finals, and the two winners play the final.",
+    "code": "nodes.update({\"S0\": (0.3, 0.49), \"S1\": (0.3, -0.47), \"F\": (0.9, 0.01)})\nedges += [(\"Q0\", \"S0\"), (\"Q1\", \"S0\"), (\"Q2\", \"S1\"), (\"Q3\", \"S1\"), (\"S0\", \"F\"), (\"S1\", \"F\")]\ndots2, lines2 = draw_network(stage, nodes, edges)"
+   },
+   {
+    "intent": "The bracket beside 4 + 2 + 1 = 7 games, one per losing team",
+    "narration": "Four plus two plus one is seven games. Quicker: every game knocks out one team, and seven must lose.",
+    "code": "stage.equation(r\"4 + 2 + 1 = 7 = 8 - 1\")"
+   }
+  ]
+ },
+ {
+  "request": "how many ways can 4 people sit around a round table?",
+  "beats": [
+   {
+    "intent": "A round table with four people A, B, C, D as dots around it",
+    "narration": "Four people around a round table.",
+    "code": "stage.title(\"A round table\")\ntable = draw_circle(stage, radius=1.2)\nnames = \"ABCD\"\nppl = VGroup(*[Dot(1.9 * np.array([np.cos(TAU * k / 4), np.sin(TAU * k / 4), 0]), radius=0.2, color=[RED, GREEN, BLUE, YELLOW][k]) for k in range(4)])\nstage.play(FadeIn(ppl))\nstage.add(ppl)\nfor k, d in enumerate(ppl):\n    stage.label(d, names[k], direction=UP)"
+   },
+   {
+    "intent": "Everyone moving one seat round, the same arrangement",
+    "narration": "Everyone moves one seat round: nobody's neighbours changed, so it is the same seating.",
+    "code": "stage.play(Rotate(ppl, TAU / 4, about_point=ORIGIN), run_time=1.5)\nstage.caption(\"Rotating does not make a new seating\")"
+   },
+   {
+    "intent": "The table beside 4!/4 = 3! = 6",
+    "narration": "The twenty four orders come in groups of four rotations, so there are six different seatings.",
+    "code": "stage.equation(r\"\\frac{4!}{4} = 3! = 6\")"
+   }
+  ]
+ },
+ {
+  "request": "if today is Monday, what day is it in 10 days?",
+  "beats": [
+   {
+    "intent": "Seven boxes in a row labelled Mon to Sun with Monday lit",
+    "narration": "A week is seven days. Today is Monday.",
+    "code": "stage.title(\"Counting days\")\ndays = [\"Mon\", \"Tue\", \"Wed\", \"Thu\", \"Fri\", \"Sat\", \"Sun\"]\nboxes = VGroup(*[Square(side_length=0.9, color=BLUE) for _ in days]).arrange(RIGHT, buff=0.1)\nstage.play(Create(boxes))\nstage.add(boxes)\nfor b, d in zip(boxes, days):\n    stage.play(FadeIn(Text(d, font_size=22).move_to(b)), run_time=0.15)\nhighlight(stage, boxes[0], color=GREEN)"
+   },
+   {
+    "intent": "An arrow looping once round all seven days and on three more to Thursday",
+    "narration": "Ten days on: seven brings you back to Monday, then three more.",
+    "code": "loop = CurvedArrow(boxes[0].get_top() + UP * 0.1, boxes[6].get_top() + UP * 0.1, angle=-PI / 3, color=YELLOW)\nmore = CurvedArrow(boxes[0].get_bottom() + DOWN * 0.1, boxes[3].get_bottom() + DOWN * 0.1, angle=PI / 3, color=RED)\nstage.play(Create(loop))\nstage.play(Create(more))\nstage.add(loop, more)"
+   },
+   {
+    "intent": "Thursday lit beside 10 = 7 + 3, 10 mod 7 = 3",
+    "narration": "Ten leaves a remainder of three after sevens, so it is three days after Monday: Thursday.",
+    "code": "highlight(stage, boxes[3], color=RED)\nstage.caption(\"10 = 7 + 3: Thursday\")"
+   }
+  ]
+ },
+ {
+  "request": "how many outfits can you make from 3 shirts and 2 pairs of trousers?",
+  "beats": [
+   {
+    "intent": "Three shirt rectangles in red, green and blue, and two trouser rectangles in grey and black",
+    "narration": "Three shirts and two pairs of trousers.",
+    "code": "stage.title(\"Counting outfits\")\nshirts = VGroup(*[Rectangle(width=0.8, height=0.6, color=c, fill_opacity=0.8) for c in (RED, GREEN, BLUE)]).arrange(RIGHT, buff=0.6).shift(UP * 1.8)\ntrousers = VGroup(*[Rectangle(width=0.5, height=0.9, color=c, fill_opacity=0.8) for c in (GREY, DARK_BROWN)]).arrange(DOWN, buff=0.4).shift(LEFT * 4.5 + DOWN * 0.3)\nstage.play(FadeIn(shirts), FadeIn(trousers))\nstage.add(shirts, trousers)"
+   },
+   {
+    "intent": "A 2 by 3 grid of outfits, each cell a shirt on top of trousers",
+    "narration": "Every shirt goes with every pair: a grid of combinations.",
+    "code": "cells = VGroup()\nfor i, t in enumerate(trousers):\n    for j, s in enumerate(shirts):\n        outfit = VGroup(s.copy().scale(0.8), t.copy().scale(0.8)).arrange(DOWN, buff=0.05)\n        outfit.move_to(np.array([s.get_x(), t.get_y(), 0]))\n        cells.add(outfit)\nstage.play(LaggedStart(*[FadeIn(c) for c in cells], lag_ratio=0.15))\nstage.add(cells)"
+   },
+   {
+    "intent": "The grid beside 3 × 2 = 6 outfits",
+    "narration": "Three shirts times two trousers: six outfits.",
+    "code": "stage.equation(r\"3 \\times 2 = 6\")"
+   }
+  ]
+ },
+ {
+  "request": "does each person get more pizza with 3 people or 4?",
+  "beats": [
+   {
+    "intent": "A pizza cut into 3 equal slices, one slice lit",
+    "narration": "Share a pizza between three: each gets a third.",
+    "code": "stage.title(\"Sharing a pizza\")\nthree = VGroup(*[Sector(radius=1.5, angle=TAU / 3, start_angle=TAU * k / 3, color=ORANGE if k else YELLOW, fill_opacity=0.8, stroke_color=WHITE, stroke_width=3) for k in range(3)]).shift(LEFT * 3)\nstage.play(FadeIn(three))\nstage.add(three)\nstage.label(three, \"1/3 each\", direction=DOWN)"
+   },
+   {
+    "intent": "A second pizza cut into 4 slices beside it, one slice lit",
+    "narration": "Share an equal pizza between four: each gets a quarter.",
+    "code": "four = VGroup(*[Sector(radius=1.5, angle=TAU / 4, start_angle=TAU * k / 4, color=ORANGE if k else YELLOW, fill_opacity=0.8, stroke_color=WHITE, stroke_width=3) for k in range(4)]).shift(RIGHT * 3)\nstage.play(FadeIn(four))\nstage.add(four)\nstage.label(four, \"1/4 each\", direction=DOWN)"
+   },
+   {
+    "intent": "The two lit slices side by side, the third bigger than the quarter",
+    "narration": "Put the two slices side by side: a third is bigger than a quarter. More people, smaller slices.",
+    "code": "a, b = three[0].copy(), four[0].copy()\nstage.play(a.animate.move_to(DOWN * 2.3 + LEFT * 0.9), b.animate.move_to(DOWN * 2.3 + RIGHT * 0.9), run_time=1.5)\nstage.add(a, b)\nstage.caption(\"1/3 > 1/4\")"
+   }
+  ]
+ },
+ {
+  "request": "how many cannonballs are in a triangular pyramid with 4 layers?",
+  "beats": [
+   {
+    "intent": "Four triangles of dots side by side with 1, 3, 6 and 10 dots",
+    "narration": "Stack cannonballs in triangular layers: one, three, six and ten.",
+    "code": "stage.title(\"A pyramid of cannonballs\")\ndef tri(n, x):\n    return VGroup(*[Dot(np.array([x + (j - i / 2) * 0.4, 1 - i * 0.35, 0]), radius=0.14, color=GREY_B) for i in range(n) for j in range(i + 1)])\nlayers = VGroup(*[tri(n, x) for n, x in ((1, -4.5), (2, -2.5), (3, 0), (4, 3))])\nstage.play(LaggedStart(*[FadeIn(l) for l in layers], lag_ratio=0.3))\nstage.add(layers)\nfor l, c in zip(layers, (1, 3, 6, 10)):\n    stage.label(l, str(c), direction=DOWN)"
+   },
+   {
+    "intent": "The layers beside 1 + 3 + 6 + 10 = 20",
+    "narration": "Add the layers: twenty cannonballs.",
+    "code": "stage.equation(r\"1 + 3 + 6 + 10 = 20\")"
+   }
+  ]
+ },
+ {
+  "request": "how many small cubes make a 3 by 2 by 2 box?",
+  "beats": [
+   {
+    "intent": "One layer of 3 by 2 squares",
+    "narration": "The bottom layer of the box is three by two: six cubes.",
+    "code": "stage.title(\"Volume by counting cubes\")\nlayer = lambda c, dx, dy: VGroup(*[Square(side_length=0.6, color=c, fill_opacity=0.6).move_to(np.array([dx + i * 0.6, dy + j * 0.6, 0])) for i in range(3) for j in range(2)])\nbottom = layer(BLUE, -2.5, -1)\nstage.play(FadeIn(bottom))\nstage.add(bottom)\nstage.label(bottom, \"6 cubes\", direction=DOWN)"
+   },
+   {
+    "intent": "A second identical layer drawn offset up and right, as if stacked on top",
+    "narration": "Stack a second layer of six on top.",
+    "code": "top = layer(GREEN, -2.2, -0.7)\nstage.play(FadeIn(top))\nstage.add(top)"
+   },
+   {
+    "intent": "The two layers beside 3 × 2 × 2 = 12",
+    "narration": "Two layers of six: twelve cubes. Length times width times height.",
+    "code": "stage.equation(r\"3 \\times 2 \\times 2 = 12\")"
+   }
+  ]
+ }
+]
