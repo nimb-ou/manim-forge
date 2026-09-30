@@ -1,0 +1,202 @@
+[
+ {
+  "request": "how do you scale a recipe from 4 people to 6?",
+  "beats": [
+   {
+    "intent": "Bars of the ingredients for 4 people: 200 g flour, 100 g sugar, 2 eggs, 300 ml milk",
+    "narration": "A recipe for four: two hundred grams of flour, a hundred of sugar, two eggs, three hundred millilitres of milk.",
+    "code": "stage.title(\"Scaling a recipe\")\nbars = draw_bars(stage, [200, 100, 2, 300], labels=[\"flour g\", \"sugar g\", \"eggs\", \"milk ml\"])"
+   },
+   {
+    "intent": "The bars for 6 people: 300 g flour, 150 g sugar, 3 eggs, 450 ml milk",
+    "narration": "For six people multiply everything by six over four, one and a half.",
+    "code": "big = draw_bars(stage, [300, 150, 3, 450], labels=[\"flour 300\", \"sugar 150\", \"eggs 3\", \"milk 450\"], color=GREEN)"
+   },
+   {
+    "intent": "The six-person bars beside the scale factor 6/4 = 1.5",
+    "narration": "Every amount grows by the same factor, so the proportions stay the same.",
+    "code": "stage.caption(\"Every amount × 1.5\")\nstage.equation(r\"\\frac{6}{4} = 1.5\")"
+   }
+  ]
+ },
+ {
+  "request": "why do tides rise and fall twice a day?",
+  "beats": [
+   {
+    "intent": "Axes of hours against water height with a sine curve of period 12.4 hours",
+    "narration": "At the coast the water rises and falls on a smooth wave, about every twelve and a half hours.",
+    "code": "stage.title(\"Tides\")\nax = draw_axes(stage, x_range=(0, 24), y_range=(-3, 3), labels=(\"hours\", \"m\"))\ntide = lambda t: 2.5 * np.cos(TAU * t / 12.4)\ng = plot_graph(stage, ax, tide, color=BLUE)"
+   },
+   {
+    "intent": "The two high tides at 0 and 12.4 hours marked",
+    "narration": "High tide now, and high tide again twelve point four hours later.",
+    "code": "for t in (0, 12.4):\n    mark_point(stage, ax, t, 2.5, color=YELLOW, label=\"high\")"
+   },
+   {
+    "intent": "The low tides at 6.2 and 18.6 hours marked",
+    "narration": "In between, low tides: so two highs and two lows in roughly a day.",
+    "code": "for t in (6.2, 18.6):\n    mark_point(stage, ax, t, -2.5, color=RED, label=\"low\", direction=DOWN)"
+   }
+  ]
+ },
+ {
+  "request": "how do sunrise times change over a year?",
+  "beats": [
+   {
+    "intent": "Axes of month against sunrise time with a smooth wave, latest in winter and earliest in summer",
+    "narration": "In London the sun rises around eight in winter and before five in summer, and the change follows a smooth wave.",
+    "code": "stage.title(\"Sunrise through the year\")\nax = draw_axes(stage, x_range=(0, 12), y_range=(4, 9), labels=(\"month\", \"hour\"))\nsun = lambda m: 6.4 + 1.6 * np.cos(TAU * (m - 0) / 12)\ng = plot_graph(stage, ax, sun, color=YELLOW)"
+   },
+   {
+    "intent": "The latest sunrise in December and earliest in June marked",
+    "narration": "Latest at midwinter, earliest at midsummer, six months apart.",
+    "code": "a = mark_point(stage, ax, 0, 8.0, color=BLUE, label=\"Dec: 8:00\")\nb = mark_point(stage, ax, 6, 4.8, color=RED, label=\"Jun: 4:48\", direction=DOWN)"
+   },
+   {
+    "intent": "A tangent sliding along the curve, steepest in March and September",
+    "narration": "The times change fastest around the equinoxes and hardly at all near the solstices.",
+    "code": "slide_tangent(stage, ax, sun, 1, 11)"
+   }
+  ]
+ },
+ {
+  "request": "why do rabbit and fox numbers go up and down in cycles?",
+  "beats": [
+   {
+    "intent": "Axes of years against population with the rabbit curve rising and falling",
+    "narration": "Rabbits multiply until there are many of them.",
+    "code": "stage.title(\"Predators and prey\")\nax = draw_axes(stage, x_range=(0, 20), y_range=(0, 12), labels=(\"years\", \"thousands\"))\nrabbits = plot_graph(stage, ax, lambda t: 6 + 4 * np.sin(TAU * t / 10), color=GREEN, label=\"rabbits\")"
+   },
+   {
+    "intent": "The fox curve added, its peaks a quarter cycle after the rabbits'",
+    "narration": "With plenty to eat, foxes increase a little later. Then there are too many foxes, and the rabbits fall.",
+    "code": "foxes = plot_graph(stage, ax, lambda t: 4 + 2 * np.sin(TAU * (t - 2.5) / 10), color=RED, label=\"foxes\")"
+   },
+   {
+    "intent": "The two peaks at year 2.5 and year 5 marked, the fox peak following the rabbit peak",
+    "narration": "Fewer rabbits means fewer foxes, and the cycle starts again: each fox peak follows a rabbit peak.",
+    "code": "p1 = mark_point(stage, ax, 2.5, 10, color=GREEN, label=\"rabbit peak\")\np2 = mark_point(stage, ax, 5, 6, color=RED, label=\"fox peak\")"
+   }
+  ]
+ },
+ {
+  "request": "how long until I've saved £200 at £15 a week, starting with £20?",
+  "beats": [
+   {
+    "intent": "Axes of weeks against savings with the line S = 20 + 15w",
+    "narration": "You have twenty pounds and add fifteen every week.",
+    "code": "stage.title(\"Saving up\")\nax = draw_axes(stage, x_range=(0, 14), y_range=(0, 240), labels=(\"weeks\", \"£\"))\nline = plot_graph(stage, ax, lambda w: 20 + 15 * w, color=GREEN, label=\"20 + 15w\")"
+   },
+   {
+    "intent": "A dashed line at the target of £200",
+    "narration": "The target is two hundred pounds.",
+    "code": "goal = draw_line(stage, ax.c2p(0, 200), ax.c2p(14, 200), color=RED, dashed=True)\nstage.label(goal, \"target £200\", direction=UP, color=RED)"
+   },
+   {
+    "intent": "The crossing at 12 weeks marked beside 20 + 15w = 200, w = 12",
+    "narration": "The line reaches the target at twelve weeks.",
+    "code": "m = mark_point(stage, ax, 12, 200, color=YELLOW, label=\"week 12\")\nstage.equation(r\"20 + 15w = 200 \\Rightarrow w = 12\")"
+   }
+  ]
+ },
+ {
+  "request": "when will my phone battery run out?",
+  "beats": [
+   {
+    "intent": "Axes of hours against battery percent with a line falling from 80% at 8% an hour",
+    "narration": "The battery is at eighty percent and drops eight percent every hour.",
+    "code": "stage.title(\"Battery running down\")\nax = draw_axes(stage, x_range=(0, 12), y_range=(0, 100), labels=(\"hours\", \"%\"))\nb = plot_graph(stage, ax, lambda t: 80 - 8 * t, x_range=(0, 10), color=YELLOW, label=\"80 - 8t\")"
+   },
+   {
+    "intent": "The point where the line hits 0% at 10 hours marked",
+    "narration": "It hits zero after ten hours.",
+    "code": "m = mark_point(stage, ax, 10, 0, color=RED, label=\"empty at 10 h\")"
+   },
+   {
+    "intent": "A second, shallower line for low-power mode at 5% an hour reaching 0 at 16 hours",
+    "narration": "In low-power mode it drops only five percent an hour, so it would last sixteen hours.",
+    "code": "ax2 = draw_axes(stage, x_range=(0, 18), y_range=(0, 100), labels=(\"hours\", \"%\"))\nfast = plot_graph(stage, ax2, lambda t: 80 - 8 * t, x_range=(0, 10), color=YELLOW)\nslow = plot_graph(stage, ax2, lambda t: 80 - 5 * t, x_range=(0, 16), color=GREEN, label=\"low power\")\nm2 = mark_point(stage, ax2, 16, 0, color=GREEN, label=\"16 h\")"
+   }
+  ]
+ },
+ {
+  "request": "how do you use a map scale of 1 : 50 000?",
+  "beats": [
+   {
+    "intent": "A map line of 4 cm between two towns A and B",
+    "narration": "On the map, the road from A to B is four centimetres long.",
+    "code": "stage.title(\"Reading a map scale\")\na = Dot(LEFT * 2, color=RED, radius=0.12)\nb = Dot(RIGHT * 2, color=RED, radius=0.12)\nroad = Line(LEFT * 2, RIGHT * 2, color=YELLOW)\nstage.play(FadeIn(a), FadeIn(b), Create(road))\nstage.add(a, b, road)\nstage.label(a, \"A\", direction=UP)\nstage.label(b, \"B\", direction=UP)\nstage.label(road, \"4 cm on the map\", direction=DOWN, color=YELLOW)"
+   },
+   {
+    "intent": "A scale bar below showing 1 cm = 50 000 cm = 0.5 km",
+    "narration": "Each map centimetre stands for fifty thousand real centimetres: half a kilometre.",
+    "code": "ticks = VGroup(*[Line(np.array([-2 + k, -1.2, 0]), np.array([-2 + k, -1.4, 0])) for k in range(5)])\nsbar = Line(np.array([-2, -1.3, 0]), np.array([2, -1.3, 0]), color=WHITE)\nstage.play(Create(sbar), Create(ticks))\nstage.add(sbar, ticks)\nstage.label(sbar, \"each cm = 0.5 km\", direction=DOWN)"
+   },
+   {
+    "intent": "The map beside 4 × 0.5 = 2 km",
+    "narration": "Four centimetres is four halves of a kilometre: two kilometres in real life.",
+    "code": "stage.equation(r\"4 \\times 50\\,000\\ \\text{cm} = 2\\ \\text{km}\")"
+   }
+  ]
+ },
+ {
+  "request": "if there's a 30% chance of rain each day, what's the chance of a dry weekend?",
+  "beats": [
+   {
+    "intent": "A unit square split: 30% rain on Saturday across the top, 70% dry below",
+    "narration": "Split a square by Saturday: thirty percent rain, seventy percent dry.",
+    "code": "stage.title(\"A dry weekend\")\nsq = Square(side_length=4, color=WHITE)\nsat_rain = Rectangle(width=4, height=1.2, color=BLUE, fill_opacity=0.5).align_to(sq, UP)\nstage.play(Create(sq), FadeIn(sat_rain))\nstage.add(sq, sat_rain)\nstage.label(sat_rain, \"Sat rain 30%\", direction=LEFT, color=BLUE)"
+   },
+   {
+    "intent": "The square split again by Sunday: 30% rain on the left, 70% dry on the right",
+    "narration": "Split it the other way by Sunday: thirty percent rain on the left.",
+    "code": "sun_rain = Rectangle(width=1.2, height=4, color=TEAL, fill_opacity=0.4).align_to(sq, LEFT)\nstage.play(FadeIn(sun_rain))\nstage.add(sun_rain)\nstage.label(sun_rain, \"Sun rain 30%\", direction=DOWN, color=TEAL)"
+   },
+   {
+    "intent": "The dry-dry corner lit, 0.7 by 0.7, beside 0.49",
+    "narration": "The dry weekend is the corner that is dry both ways: seventy percent of seventy percent, forty nine percent.",
+    "code": "dry = Rectangle(width=2.8, height=2.8, color=YELLOW, fill_opacity=0.6).align_to(sq, DOWN + RIGHT)\nstage.play(FadeIn(dry))\nstage.add(dry)\nstage.equation(r\"0.7 \\times 0.7 = 0.49\")"
+   }
+  ]
+ },
+ {
+  "request": "how tall is a flagpole if its shadow is 12 m when a 1 m stick casts 1.5 m?",
+  "beats": [
+   {
+    "intent": "A 1 m stick and its 1.5 m shadow as a small right triangle",
+    "narration": "A one metre stick casts a shadow one and a half metres long.",
+    "code": "stage.title(\"Heights from shadows\")\nsmall = Polygon([-5, -2, 0], [-3.5, -2, 0], [-5, -1, 0], color=BLUE, fill_opacity=0.4)\nstage.play(Create(small))\nstage.add(small)\nstage.label(small, \"1 m, shadow 1.5 m\", direction=DOWN, color=BLUE)"
+   },
+   {
+    "intent": "A flagpole with a 12 m shadow as a big right triangle of the same shape",
+    "narration": "At the same moment the sun's rays make the same angle, so the flagpole's triangle has the same shape: its shadow is twelve metres.",
+    "code": "k = 0.4\nbig = Polygon([-2, -2, 0], [-2 + 12 * k, -2, 0], [-2, -2 + 8 * k, 0], color=GREEN, fill_opacity=0.4)\nstage.play(Create(big))\nstage.add(big)\nstage.label(big, \"shadow 12 m\", direction=DOWN, color=GREEN)"
+   },
+   {
+    "intent": "The pole side labelled h beside h / 12 = 1 / 1.5, h = 8 m",
+    "narration": "Heights are to shadows in the same ratio: the flagpole is eight metres tall.",
+    "code": "pole = draw_line(stage, (-2, -2), (-2, -2 + 8 * 0.4), color=RED)\nstage.label(pole, \"h\", direction=LEFT, color=RED)\nstage.equation(r\"\\frac{h}{12} = \\frac{1}{1.5} \\Rightarrow h = 8\\ \\text{m}\")"
+   }
+  ]
+ },
+ {
+  "request": "how far does a bouncing ball travel if each bounce is 2/3 as high?",
+  "beats": [
+   {
+    "intent": "Bars of the bounce heights 9, 6, 4, 2.7, 1.8 metres",
+    "narration": "Drop a ball from nine metres. Each bounce reaches two thirds of the one before: six, four, two point seven...",
+    "code": "stage.title(\"A bouncing ball\")\nhs = [9 * (2 / 3) ** k for k in range(6)]\nbars = draw_bars(stage, [round(h, 2) for h in hs], labels=[f\"{h:.1f}\" for h in hs])"
+   },
+   {
+    "intent": "Axes with the ball's path as a row of shrinking arches",
+    "narration": "The ball's path is a row of arches, each lower than the last.",
+    "code": "stage.clear()\nax = draw_axes(stage, x_range=(0, 12), y_range=(0, 10), labels=(\"\", \"m\"))\nx0 = 0\nfor k, h in enumerate(hs[1:]):\n    w = 2 * np.sqrt(h) * 0.6\n    arch = plot_graph(stage, ax, lambda x, x0=x0, w=w, h=h: max(h * (1 - ((x - x0 - w / 2) / (w / 2)) ** 2), 0), x_range=(x0, x0 + w), color=YELLOW)\n    x0 += w"
+   },
+   {
+    "intent": "The arches beside the total distance 9 + 2(6 + 4 + ...) = 9 + 2 × 18 = 45 m",
+    "narration": "Down nine, then up and down each bounce: the bounces add up to eighteen, so the total is forty five metres.",
+    "code": "stage.equation(r\"9 + 2(6 + 4 + \\cdots) = 9 + 2 \\times 18 = 45\\ \\text{m}\")"
+   }
+  ]
+ }
+]
