@@ -1,0 +1,82 @@
+[
+ {
+  "request": "why does pressing a guitar string halfway make the note an octave higher?",
+  "beats": [
+   {
+    "intent": "A long string stretched between two posts vibrating as one arch, 110 Hz",
+    "narration": "An open string vibrates as one long arch. This one plays a low A, a hundred and ten vibrations a second.",
+    "code": "stage.title(\"Strings and octaves\")\nL = 8\npost1 = Line([-4, 0.4, 0], [-4, 1.6, 0], color=GREY_B, stroke_width=6)\npost2 = Line([4, 0.4, 0], [4, 1.6, 0], color=GREY_B, stroke_width=6)\nt = ValueTracker(0)\nstring = always_redraw(lambda: FunctionGraph(lambda x: 1.0 + 0.45 * np.sin(PI * (x + 4) / L) * np.cos(t.get_value()),\n                                               x_range=[-4, 4], color=YELLOW))\nstage.add(post1, post2, string)\nstage.play(t.animate.set_value(4 * TAU), run_time=3, rate_func=linear)\nstage.label(post2, \"110 Hz\", direction=RIGHT, color=YELLOW)"
+   },
+   {
+    "intent": "A second string pressed at its middle, vibrating as a shorter arch at 220 Hz",
+    "narration": "Press it at the middle and only half the string vibrates. The half-length arch shakes twice as fast: two hundred and twenty.",
+    "code": "t2 = ValueTracker(0)\npost3 = Line([-4, -2.2, 0], [-4, -1.0, 0], color=GREY_B, stroke_width=6)\nfret = Line([0, -2.2, 0], [0, -1.0, 0], color=RED, stroke_width=6)\ndead = Line([0, -1.6, 0], [4, -1.6, 0], color=GREY_B)\nhalf = always_redraw(lambda: FunctionGraph(lambda x: -1.6 + 0.45 * np.sin(PI * (x + 4) / 4) * np.cos(t2.get_value()),\n                                             x_range=[-4, 0], color=ORANGE))\nstage.add(post3, fret, dead, half)\nstage.play(t2.animate.set_value(8 * TAU), run_time=3, rate_func=linear)\nstage.label(fret, \"220 Hz\", direction=UP, color=ORANGE)"
+   },
+   {
+    "intent": "Bars of frequency for full, half and quarter length: 110, 220, 440 Hz",
+    "narration": "Halve it again for four hundred and forty. Every halving doubles the pitch: that doubling is what we hear as an octave.",
+    "code": "stage.clear()\nb = draw_bars(stage, [110, 220, 440], labels=[\"full\", \"half\", \"quarter\"], color=ORANGE)\nstage.caption(\"frequency in Hz: half the length, twice the pitch\")"
+   }
+  ]
+ },
+ {
+  "request": "how do I change a recipe for 4 people into one for 6?",
+  "beats": [
+   {
+    "intent": "Bars of a recipe for 4: flour 200 g, sugar 100 g, butter 80 g",
+    "narration": "A cake for four uses two hundred grams of flour, a hundred of sugar and eighty of butter.",
+    "code": "stage.title(\"Scaling a recipe\")\nb = draw_bars(stage, [200, 100, 80], labels=[\"flour\", \"sugar\", \"butter\"])\nstage.caption(\"serves 4\")"
+   },
+   {
+    "intent": "The bars beside the scale factor 6 ÷ 4 = 1.5",
+    "narration": "Six people is one and a half times four, so every amount is multiplied by one point five.",
+    "code": "stage.equation(r\"\\frac{6}{4} = 1.5\")"
+   },
+   {
+    "intent": "Bars for 6 people: flour 300 g, sugar 150 g, butter 120 g, next to the old ones",
+    "narration": "Flour becomes three hundred grams, sugar a hundred and fifty, butter a hundred and twenty. The proportions stay the same.",
+    "code": "stage.clear()\nb2 = draw_bars(stage, [200, 300, 100, 150, 80, 120], labels=[\"flour 4\", \"flour 6\", \"sugar 4\", \"sugar 6\", \"butter 4\", \"butter 6\"], color=GREEN)\nstage.caption(\"serves 6: every amount × 1.5\")"
+   }
+  ]
+ },
+ {
+  "request": "why is the sky blue?",
+  "beats": [
+   {
+    "intent": "Sunlight entering a band of atmosphere, with blue light bouncing off in all directions",
+    "narration": "Sunlight is a mix of all colours. As it passes through the air, tiny molecules scatter some of it sideways.",
+    "code": "stage.title(\"Why the sky is blue\")\nsun = Circle(radius=0.6, color=YELLOW, fill_opacity=0.9).move_to([-5.3, 1.8, 0])\nair = Rectangle(width=11, height=2.2, color=BLUE, fill_opacity=0.1).move_to([0.6, -0.4, 0])\nstage.play(FadeIn(sun), FadeIn(air))\nstage.add(sun, air)\nbeam = Arrow([-4.7, 1.4, 0], [5.5, -1.2, 0], buff=0, color=WHITE)\nstage.play(GrowArrow(beam))\nstage.add(beam)\nrng = np.random.default_rng(2)\nblips = []\nfor k in range(8):\n    p = np.array([-3 + k * 1.1, 1.4 - (k * 1.1 + 1.7) * 0.255, 0])\n    ang = rng.uniform(0, TAU)\n    blips.append(Arrow(p, p + 0.9 * np.array([np.cos(ang), np.sin(ang), 0]), buff=0, color=BLUE, stroke_width=3))\nstage.play(*[GrowArrow(a) for a in blips])\nstage.add(*blips)"
+   },
+   {
+    "intent": "Bars of how strongly each colour is scattered: red 1, blue about 6",
+    "narration": "Short blue waves scatter far more than long red ones, nearly six times as much. So blue light reaches your eyes from every part of the sky.",
+    "code": "stage.clear()\nb = draw_bars(stage, [1, 5.9], labels=[\"red 700 nm\", \"blue 450 nm\"], color=BLUE)\nstage.caption(\"scattering: blue about 6 times red\")"
+   },
+   {
+    "intent": "The bars beside (700 / 450)⁴ ≈ 5.9",
+    "narration": "Scattering goes as one over the wavelength to the fourth power: seven hundred over four hundred and fifty, to the fourth, is about five point nine.",
+    "code": "stage.equation(r\"\\left(\\frac{700}{450}\\right)^4 \\approx 5.9\")"
+   }
+  ]
+ },
+ {
+  "request": "how does the moon cause tides?",
+  "beats": [
+   {
+    "intent": "The Earth with an ocean layer around it and the Moon off to the right",
+    "narration": "The Earth is wrapped in oceans. The Moon, off to one side, pulls on everything.",
+    "code": "stage.title(\"Tides\")\nearth = Circle(radius=1.2, color=GREEN, fill_opacity=0.8).move_to([-1.5, -0.3, 0])\nocean = Circle(radius=1.55, color=BLUE, fill_opacity=0.35).move_to(earth.get_center()).set_z_index(-1)\nmoon = Circle(radius=0.35, color=GREY_B, fill_opacity=0.9).move_to([4.8, -0.3, 0])\nstage.play(FadeIn(ocean), FadeIn(earth), FadeIn(moon))\nstage.add(ocean, earth, moon)\nstage.label(moon, \"Moon\", direction=DOWN)"
+   },
+   {
+    "intent": "Pull arrows: longest on the near side, medium at the centre, shortest on the far side",
+    "narration": "The pull is strongest on the side facing the Moon and weakest on the far side.",
+    "code": "c = earth.get_center()\narrows = [Arrow(c + x * RIGHT, c + x * RIGHT + L * RIGHT, buff=0, color=YELLOW, stroke_width=8,\n                max_stroke_width_to_length_ratio=20, max_tip_length_to_length_ratio=0.4).set_z_index(3)\n          for x, L in ((1.55, 1.8), (0, 1.2), (-1.55, 0.7))]\nstage.play(*[GrowArrow(a) for a in arrows])\nstage.add(*arrows)\nstage.caption(\"stronger pull on the near side\")"
+   },
+   {
+    "intent": "The ocean stretched into an oval with bulges toward and away from the Moon, labelled high tide",
+    "narration": "That difference stretches the oceans into an oval: one bulge toward the Moon, one on the far side. As the Earth turns under them, each coast gets two high tides a day.",
+    "code": "bulge = Ellipse(width=3.9, height=2.7, color=BLUE, fill_opacity=0.35).move_to(c).set_z_index(-1)\nstage.play(Transform(ocean, bulge), *[FadeOut(a) for a in arrows])\nstage.add(ocean)\nhi1 = Dot(c + 1.95 * RIGHT, color=WHITE)\nhi2 = Dot(c + 1.95 * LEFT, color=WHITE)\nstage.add(hi1, hi2)\nstage.label(hi1, \"high\", direction=UP, color=WHITE)\nstage.label(hi2, \"high\", direction=UP, color=WHITE)\nstage.caption(\"two bulges: two high tides a day\")"
+   }
+  ]
+ }
+]
