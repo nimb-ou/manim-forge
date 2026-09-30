@@ -1,0 +1,102 @@
+[
+ {
+  "request": "why does a spinning skater speed up when she pulls her arms in?",
+  "beats": [
+   {
+    "intent": "A top view of a skater: a body dot with two arm weights held far out, spinning slowly",
+    "narration": "Seen from above, a spinning skater holds her arms out wide, turning slowly.",
+    "code": "stage.title(\"The spinning skater\")\nc = np.array([0, -0.3, 0])\nbody = Circle(radius=0.35, color=BLUE, fill_opacity=0.8).move_to(c)\narms = VGroup(Line(c + 2.0 * LEFT, c + 2.0 * RIGHT, color=WHITE, stroke_width=6),\n              Dot(c + 2.0 * LEFT, color=ORANGE, radius=0.18), Dot(c + 2.0 * RIGHT, color=ORANGE, radius=0.18))\nstage.play(FadeIn(body), FadeIn(arms))\nstage.add(body, arms)\nstage.play(Rotate(arms, PI / 2, about_point=c), run_time=2, rate_func=linear)\nstage.caption(\"arms out: slow\")"
+   },
+   {
+    "intent": "The arms pulled in to half the distance and the spin much faster",
+    "narration": "She pulls her arms in to half the distance, and she spins much faster, four times as fast.",
+    "code": "stage.play(arms.animate.scale(0.5, about_point=c))\nstage.play(Rotate(arms, 2 * PI, about_point=c), run_time=2, rate_func=linear)\nstage.caption(\"arms in: fast\")"
+   },
+   {
+    "intent": "Bars of spin rate: 1 turn per 4 s with arms out, 1 turn per 1 s with arms in",
+    "narration": "Pulling the weight closer means it must go round faster to carry the same spin.",
+    "code": "stage.clear()\nb = draw_bars(stage, [1, 4], labels=[\"arms out\", \"arms in\"], color=GREEN)\nstage.caption(\"turns per 4 seconds\")"
+   },
+   {
+    "intent": "The bars beside m r² ω stays the same: half r, four times ω",
+    "narration": "The quantity mass times distance squared times spin rate stays fixed. Halve the distance, and the spin rate goes up four times.",
+    "code": "stage.equation(r\"m r^2 \\omega = \\text{constant}\", r\"r \\to \\tfrac{r}{2} \\Rightarrow \\omega \\to 4\\omega\")"
+   }
+  ]
+ },
+ {
+  "request": "how big is a million?",
+  "beats": [
+   {
+    "intent": "A 10 by 10 grid of 100 small dots",
+    "narration": "Start with a hundred dots: ten rows of ten.",
+    "code": "stage.title(\"How big is a million?\")\ng100 = VGroup(*[Dot(radius=0.04, color=YELLOW) for _ in range(100)]).arrange_in_grid(rows=10, cols=10, buff=0.08).move_to([-4.5, 0.4, 0])\nstage.play(FadeIn(g100))\nstage.add(g100)\nstage.label(g100, \"100\", direction=DOWN, color=YELLOW)"
+   },
+   {
+    "intent": "A 10 by 10 block of those squares, each a tiny square: 10 000",
+    "narration": "Now make a hundred of those squares, in a ten by ten block: ten thousand dots.",
+    "code": "g10k = VGroup(*[Square(0.2, stroke_width=0, fill_color=YELLOW, fill_opacity=0.8) for _ in range(100)]).arrange_in_grid(rows=10, cols=10, buff=0.04).move_to([-0.9, 0.4, 0])\nstage.play(FadeIn(g10k))\nstage.add(g10k)\nstage.label(g10k, \"10 000\", direction=DOWN, color=YELLOW)"
+   },
+   {
+    "intent": "A 10 by 10 block of those blocks: 1 000 000, each 10 000-block now a small square",
+    "narration": "And a hundred of those blocks makes a million.",
+    "code": "g1m = VGroup(*[Square(0.2, stroke_width=0, fill_color=ORANGE, fill_opacity=0.8) for _ in range(100)]).arrange_in_grid(rows=10, cols=10, buff=0.04).move_to([3.3, 0.4, 0])\nstage.play(FadeIn(g1m))\nstage.add(g1m)\nstage.label(g1m, \"1 000 000\", direction=DOWN, color=ORANGE)\nstage.caption(\"each orange square is a whole yellow block\")"
+   },
+   {
+    "intent": "The blocks beside 100 × 100 × 100 = 1 000 000, and 1 000 000 seconds ≈ 11.6 days",
+    "narration": "Counting one a second, a million takes over eleven and a half days without stopping.",
+    "code": "stage.equation(r\"100 \\times 100 \\times 100 = 10^6\", r\"10^6\\ \\text{s} \\approx 11.6\\ \\text{days}\")"
+   }
+  ]
+ },
+ {
+  "request": "how can a file be squeezed smaller without losing anything?",
+  "beats": [
+   {
+    "intent": "A row of 12 letter tiles: A A A A A B B B C C C C",
+    "narration": "Here is some data: twelve letters, five A's, three B's and four C's.",
+    "code": "stage.title(\"Run-length encoding\")\nseq = \"AAAAABBBCCCC\"\ncols = {\"A\": BLUE, \"B\": GREEN, \"C\": ORANGE}\ntiles = VGroup(*[Square(0.7, color=cols[ch], fill_opacity=0.5) for ch in seq]).arrange(RIGHT, buff=0.08).move_to([0, 1.2, 0])\nletters = VGroup(*[Text(ch, font_size=28).move_to(t) for ch, t in zip(seq, tiles)])\nstage.play(FadeIn(tiles), FadeIn(letters))\nstage.add(tiles, letters)\nstage.label(tiles, \"12 symbols\", direction=UP)"
+   },
+   {
+    "intent": "Braces grouping the runs: 5 A, 3 B, 4 C",
+    "narration": "Notice the runs: the same letter repeated.",
+    "code": "for a, b, lab, col in ((0, 5, \"5 A\", BLUE), (5, 8, \"3 B\", GREEN), (8, 12, \"4 C\", ORANGE)):\n    br = Brace(VGroup(*tiles[a:b]), DOWN, color=col)\n    stage.play(GrowFromCenter(br), run_time=0.4)\n    stage.add(br)\n    stage.label(br, lab, direction=DOWN, color=col)"
+   },
+   {
+    "intent": "The compressed code 5A 3B 4C as six tiles below",
+    "narration": "Write each run as a count and a letter: five A, three B, four C. Six symbols instead of twelve.",
+    "code": "code = \"5A3B4C\"\nsmall = VGroup(*[Square(0.7, color=YELLOW, fill_opacity=0.3) for _ in code]).arrange(RIGHT, buff=0.08).move_to([0, -2.2, 0])\ncl = VGroup(*[Text(ch, font_size=28).move_to(t) for ch, t in zip(code, small)])\nstage.play(FadeIn(small), FadeIn(cl))\nstage.add(small, cl)\nstage.label(small, \"6 symbols\", direction=DOWN, color=YELLOW)"
+   },
+   {
+    "intent": "The rows beside 12 → 6, and decoding 5A 3B 4C back to the original",
+    "narration": "Nothing is lost: read the code back and you rebuild the original exactly. That's lossless compression.",
+    "code": "stage.equation(r\"12 \\to 6\", r\"\\text{5A 3B 4C} \\to \\text{AAAAABBBCCCC}\")"
+   }
+  ]
+ },
+ {
+  "request": "how far out to sea can you see a lighthouse?",
+  "beats": [
+   {
+    "intent": "The curved sea surface, a lighthouse on the left and a ship on the right",
+    "narration": "The sea curves with the Earth. A lighthouse stands on the coast, a ship far out.",
+    "code": "stage.title(\"Seeing over the curve\")\nc = np.array([0, -8.2, 0])\nR = 7.0\nsea = Arc(radius=R, start_angle=PI / 2 - 0.55, angle=1.1, color=BLUE, stroke_width=6).move_arc_center_to(c)\ntower = Line(c + R * np.array([np.sin(-0.45), np.cos(-0.45), 0]), c + (R + 1.3) * np.array([np.sin(-0.45), np.cos(-0.45), 0]), color=WHITE, stroke_width=10)\nlamp = Dot(tower.get_end(), color=YELLOW, radius=0.14)\nship = Triangle(color=ORANGE, fill_opacity=0.8).scale(0.25).move_to(c + (R + 0.2) * np.array([np.sin(0.45), np.cos(0.45), 0]))\nstage.play(Create(sea), Create(tower), FadeIn(lamp), FadeIn(ship))\nstage.add(sea, tower, lamp, ship)"
+   },
+   {
+    "intent": "A straight light ray from the lamp grazing the sea surface, the ship just below it",
+    "narration": "Light travels in straight lines, so the furthest the lamp can reach is where its ray just grazes the sea.",
+    "code": "def_tangent = lambda P: c + R * np.array([np.cos(np.arctan2(*(P - c)[1::-1]) - np.arccos(R / np.linalg.norm(P - c))),\n                                          np.sin(np.arctan2(*(P - c)[1::-1]) - np.arccos(R / np.linalg.norm(P - c))), 0])\ngraze = def_tangent(lamp.get_center())\nray = Line(lamp.get_center(), graze + 1.5 * (graze - lamp.get_center()) / np.linalg.norm(graze - lamp.get_center()), color=YELLOW)\nstage.play(Create(ray))\nstage.add(ray)\nstage.caption(\"beyond the grazing point, the light passes overhead\")"
+   },
+   {
+    "intent": "A taller tower's ray reaching further",
+    "narration": "A taller tower lifts the lamp higher, and its grazing point is further out.",
+    "code": "tall = Line(tower.get_start(), c + (R + 2.3) * np.array([np.sin(-0.45), np.cos(-0.45), 0]), color=GREY_B, stroke_width=6)\ng2 = def_tangent(tall.get_end())\nray2 = Line(tall.get_end(), g2 + 1.5 * (g2 - tall.get_end()) / np.linalg.norm(g2 - tall.get_end()), color=ORANGE)\nstage.play(Create(tall))\nstage.play(Create(ray2))\nstage.add(tall, ray2)\nstage.caption(\"taller: you see it from further away\")"
+   },
+   {
+    "intent": "The picture beside distance ≈ 3.6 √h km, h in metres: 3.6 √49 ≈ 25 km",
+    "narration": "Roughly, the distance in kilometres is three point six times the square root of the height in metres. A forty nine metre lighthouse reaches about twenty five kilometres.",
+    "code": "stage.equation(r\"d \\approx 3.6\\sqrt{h}\", r\"3.6\\sqrt{49} \\approx 25\\ \\text{km}\")"
+   }
+  ]
+ }
+]
