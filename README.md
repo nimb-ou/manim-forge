@@ -36,6 +36,9 @@ request ──► planner ──► beats ──► kit coder ──► Forge ki
 The headline metric: for 20 held-out prompts on topics nothing was built
 for, the share of planned beats whose end frame a vision judge (Gemini)
 says shows a picture of the beat's idea (`scripts/judge_sheets.py`).
+The 20 short prompts are the classic topics the kit and its teacher scenes
+were built around, so they measure the familiar case; the held-out topics
+never appear in any training data.
 
 | configuration | 20 short prompts | 20 held-out |
 |---|---|---|
