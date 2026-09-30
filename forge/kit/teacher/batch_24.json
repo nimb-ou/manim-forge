@@ -1,0 +1,192 @@
+[
+ {
+  "request": "why is the slope of sin x equal to cos x?",
+  "beats": [
+   {
+    "intent": "Axes with y = sin x from 0 to 2π",
+    "narration": "Here is the sine curve over one full turn.",
+    "code": "stage.title(\"The slope of sin x\")\nax = draw_axes(stage, x_range=(0, 6.3), y_range=(-1.5, 1.5))\ng = plot_graph(stage, ax, np.sin, color=BLUE, label=\"sin x\")"
+   },
+   {
+    "intent": "A tangent sliding along the curve, its slope read out",
+    "narration": "Slide a tangent along it: the slope is one at zero, zero at the top, minus one at pi.",
+    "code": "slide_tangent(stage, ax, np.sin, 0, 6.2)"
+   },
+   {
+    "intent": "Dots of the slope plotted at x = 0, π/2, π, 3π/2, 2π: 1, 0, -1, 0, 1",
+    "narration": "Plot those slopes as points: one, zero, minus one, zero, one.",
+    "code": "pts = plot_points(stage, ax, [(0, 1), (PI / 2, 0), (PI, -1), (3 * PI / 2, 0), (TAU, 1)], color=YELLOW)"
+   },
+   {
+    "intent": "The curve cos x drawn through the slope dots",
+    "narration": "They trace out the cosine curve: the slope of sine is cosine.",
+    "code": "c = plot_graph(stage, ax, np.cos, color=YELLOW, label=\"cos x\")\nstage.equation(r\"\\frac{d}{dx}\\sin x = \\cos x\")"
+   }
+  ]
+ },
+ {
+  "request": "how does Newton's method find where x^3 - x - 1 crosses zero?",
+  "beats": [
+   {
+    "intent": "Axes with the curve y = x^3 - x - 1 crossing zero near 1.32",
+    "narration": "This cubic crosses zero somewhere between one and two.",
+    "code": "stage.title(\"Newton's method\")\nax = draw_axes(stage, x_range=(0, 2.5), y_range=(-2, 6))\nf = lambda x: x ** 3 - x - 1\ng = plot_graph(stage, ax, f)"
+   },
+   {
+    "intent": "The tangent at x = 2 extended to where it hits the x-axis at 1.55",
+    "narration": "Start at two. Follow the tangent line down to the axis: it lands at about one point five five.",
+    "code": "p0 = mark_point(stage, ax, 2, f(2), color=RED)\nt0 = draw_line(stage, ax.c2p(2, f(2)), ax.c2p(1.545, 0), color=RED)\nx1 = mark_point(stage, ax, 1.545, 0, color=RED, label=\"1.55\")"
+   },
+   {
+    "intent": "The second tangent from x = 1.55 landing at 1.36",
+    "narration": "Go up to the curve and do it again: now we land at one point three six.",
+    "code": "up = draw_line(stage, ax.c2p(1.545, 0), ax.c2p(1.545, f(1.545)), color=GREY, dashed=True)\nt1 = draw_line(stage, ax.c2p(1.545, f(1.545)), ax.c2p(1.359, 0), color=ORANGE)\nx2 = mark_point(stage, ax, 1.359, 0, color=ORANGE, label=\"1.36\")"
+   },
+   {
+    "intent": "The root 1.3247 marked beside the update rule x - f(x)/f'(x)",
+    "narration": "One more step gives one point three two four seven: each step roughly doubles the correct digits.",
+    "code": "root = mark_point(stage, ax, 1.3247, 0, color=GREEN)\nstage.equation(r\"x_{n+1} = x_n - \\frac{f(x_n)}{f'(x_n)}\")"
+   }
+  ]
+ },
+ {
+  "request": "how does the bisection method find a root?",
+  "beats": [
+   {
+    "intent": "Axes with y = x^2 - 2 between 0 and 2, negative at 0 and positive at 2",
+    "narration": "The curve x squared minus two is negative at zero and positive at two, so it crosses somewhere between.",
+    "code": "stage.title(\"Bisection\")\nax = draw_axes(stage, x_range=(0, 2), y_range=(-2, 2))\nf = lambda x: x ** 2 - 2\ng = plot_graph(stage, ax, f)\na = mark_point(stage, ax, 0, -2, color=RED, label=\"-\")\nb = mark_point(stage, ax, 2, 2, color=GREEN, label=\"+\")"
+   },
+   {
+    "intent": "The midpoint x = 1 tested, f(1) = -1 negative, the left half shaded out",
+    "narration": "Try the middle, one: the value is minus one, still negative, so the root is in the right half.",
+    "code": "m1 = mark_point(stage, ax, 1, -1, color=RED, label=\"f(1) = -1\")\nout1 = Rectangle(width=ax.c2p(1, 0)[0] - ax.c2p(0, 0)[0], height=ax.c2p(0, 2)[1] - ax.c2p(0, -2)[1], color=GREY, fill_opacity=0.3, stroke_width=0).move_to(ax.c2p(0.5, 0))\nstage.play(FadeIn(out1))\nstage.add(out1)"
+   },
+   {
+    "intent": "The midpoint 1.5 tested, f(1.5) = 0.25 positive, the right quarter shaded out",
+    "narration": "Try one point five: plus a quarter, positive, so the root is between one and one and a half.",
+    "code": "m2 = mark_point(stage, ax, 1.5, 0.25, color=GREEN, label=\"f(1.5) = 0.25\")\nout2 = Rectangle(width=ax.c2p(2, 0)[0] - ax.c2p(1.5, 0)[0], height=ax.c2p(0, 2)[1] - ax.c2p(0, -2)[1], color=GREY, fill_opacity=0.3, stroke_width=0).move_to(ax.c2p(1.75, 0))\nstage.play(FadeIn(out2))\nstage.add(out2)"
+   },
+   {
+    "intent": "The remaining interval from 1 to 1.5 around the root √2 ≈ 1.414",
+    "narration": "Each step halves the interval. It closes in on the square root of two, one point four one four.",
+    "code": "r = mark_point(stage, ax, 1.414, 0, color=YELLOW, label=\"1.414\")\nstage.caption(\"Each step halves the interval\")"
+   }
+  ]
+ },
+ {
+  "request": "how does the trapezoid rule estimate an area?",
+  "beats": [
+   {
+    "intent": "Axes with the curve y = 1 + x^2/4 from 0 to 4 and the area under it shaded",
+    "narration": "We want the area under this curve from zero to four.",
+    "code": "stage.title(\"The trapezoid rule\")\nax = draw_axes(stage, x_range=(0, 4), y_range=(0, 5))\nf = lambda x: 1 + x ** 2 / 4\ng = plot_graph(stage, ax, f)"
+   },
+   {
+    "intent": "Four trapezoids under the curve, their tops joining the curve's points",
+    "narration": "Split it into four strips and join the curve's heights with straight lines: four trapezoids.",
+    "code": "traps = VGroup(*[Polygon(ax.c2p(x, 0), ax.c2p(x + 1, 0), ax.c2p(x + 1, f(x + 1)), ax.c2p(x, f(x)), color=GREEN, fill_opacity=0.4) for x in range(4)])\nstage.play(LaggedStart(*[FadeIn(t) for t in traps], lag_ratio=0.3))\nstage.add(traps)"
+   },
+   {
+    "intent": "The small gap between the curve and the trapezoid tops highlighted",
+    "narration": "The straight tops sit just above the curve, so the estimate is a little too big.",
+    "code": "highlight(stage, traps[3], color=YELLOW)\nstage.caption(\"Straight tops overshoot slightly\")"
+   },
+   {
+    "intent": "The trapezoids beside the estimate 9.5 against the exact 9.33",
+    "narration": "Adding the trapezoids gives nine and a half; the exact area is nine and a third.",
+    "code": "stage.equation(r\"\\tfrac12(1 + 2\\cdot1.25 + 2\\cdot2 + 2\\cdot3.25 + 5) = 9.5\", r\"\\int_0^4 f = 9.33\")"
+   }
+  ]
+ },
+ {
+  "request": "how does a weather Markov chain settle down?",
+  "beats": [
+   {
+    "intent": "Two nodes, Sunny and Rainy, with arrows between them and back to themselves",
+    "narration": "Each day is sunny or rainy. Tomorrow depends only on today.",
+    "code": "stage.title(\"A Markov chain\")\nnodes = {\"Sunny\": (-0.5, 0), \"Rainy\": (0.5, 0)}\ndots, lines = draw_network(stage, nodes, [(\"Sunny\", \"Rainy\")])\nstage.caption(\"Sunny stays sunny 80%; rainy stays rainy 60%\")"
+   },
+   {
+    "intent": "Bars of the chance of sun on day 0, 1, 2: 1.0, 0.8, 0.72",
+    "narration": "Start on a sunny day. Tomorrow is sunny with chance point eight, the day after point seven two.",
+    "code": "stage.clear()\np = [1.0]\nfor _ in range(7):\n    p.append(0.8 * p[-1] + 0.4 * (1 - p[-1]))\nbars = draw_bars(stage, [round(x, 3) for x in p[:3]], labels=[\"day 0\", \"day 1\", \"day 2\"])"
+   },
+   {
+    "intent": "Bars for days 0 to 7 levelling off at 2/3",
+    "narration": "Keep going and the chance of sun settles at two thirds, whatever the first day was.",
+    "code": "stage.clear()\nbars2 = draw_bars(stage, [round(x, 3) for x in p], labels=[str(k) for k in range(8)])"
+   },
+   {
+    "intent": "The bars beside the steady state π = 0.8π + 0.4(1 - π), π = 2/3",
+    "narration": "The steady chance is where the rule gives back the same number: two thirds.",
+    "code": "stage.equation(r\"\\pi = 0.8\\pi + 0.4(1 - \\pi)\", r\"\\pi = \\tfrac23\")"
+   }
+  ]
+ },
+ {
+  "request": "what is a Lissajous curve?",
+  "beats": [
+   {
+    "intent": "A dot moving side to side with x = sin 3t",
+    "narration": "Move a dot side to side, three times a second.",
+    "code": "stage.title(\"A Lissajous curve\")\np = draw_plane(stage)\nx_only = ParametricFunction(lambda t: p.c2p(2.5 * np.sin(3 * t), 0), t_range=[0, TAU], color=BLUE)\nstage.play(Create(x_only), run_time=1.5)\nstage.add(x_only)"
+   },
+   {
+    "intent": "The curve x = sin 3t, y = sin 2t traced out",
+    "narration": "At the same time move it up and down twice a second. Together they trace a looping figure.",
+    "code": "liss = ParametricFunction(lambda t: p.c2p(2.5 * np.sin(3 * t), 2.5 * np.sin(2 * t)), t_range=[0, TAU], color=YELLOW)\nstage.play(Create(liss), run_time=3)\nstage.add(liss)"
+   },
+   {
+    "intent": "The figure beside x = sin 3t, y = sin 2t, with 3 lobes across and 2 up",
+    "narration": "The ratio three to two shows as three lobes across and two up.",
+    "code": "stage.equation(r\"x = \\sin 3t,\\; y = \\sin 2t\")"
+   }
+  ]
+ },
+ {
+  "request": "what curve does a point on a rolling wheel trace?",
+  "beats": [
+   {
+    "intent": "A wheel of radius 1 on a line with a red point at its bottom",
+    "narration": "A wheel sits on the ground with a red mark on its rim.",
+    "code": "stage.title(\"The cycloid\")\nground = draw_line(stage, (-5, -1.5), (5, -1.5))\nt = ValueTracker(0)\ncx = lambda: -4 + t.get_value()\nwheel = always_redraw(lambda: Circle(radius=1, color=BLUE).move_to(np.array([cx(), -0.5, 0])))\nmark = always_redraw(lambda: Dot(np.array([cx() - np.sin(t.get_value()), -0.5 - np.cos(t.get_value()), 0]), color=RED))\nstage.play(FadeIn(wheel), FadeIn(mark))\nstage.add(wheel, mark)"
+   },
+   {
+    "intent": "The wheel rolling one turn to the right, the red point tracing an arch",
+    "narration": "Roll it one full turn. The mark lifts off, sweeps over the top and comes back down: an arch.",
+    "code": "path = TracedPath(mark.get_center, stroke_color=RED, stroke_width=4)\nstage.add(path)\nstage.play(t.animate.set_value(TAU), run_time=4, rate_func=linear)"
+   },
+   {
+    "intent": "The arch beside its width 2π, the wheel's circumference",
+    "narration": "The arch is exactly one circumference wide, two pi, and one diameter high, two.",
+    "code": "br = Brace(Line(np.array([-4, -1.5, 0]), np.array([-4 + TAU, -1.5, 0])), DOWN)\nstage.play(GrowFromCenter(br))\nstage.add(br)\nstage.label(br, \"2π\", direction=DOWN, color=YELLOW)"
+   }
+  ]
+ },
+ {
+  "request": "how do sine waves add up to a sawtooth?",
+  "beats": [
+   {
+    "intent": "Axes with one sine wave sin x",
+    "narration": "Start with one sine wave.",
+    "code": "stage.title(\"Building a sawtooth\")\nax = draw_axes(stage, x_range=(0, 12.6), y_range=(-2, 2))\nsaw = lambda n: (lambda x: sum((-1) ** (k + 1) * np.sin(k * x) / k for k in range(1, n + 1)))\ng1 = plot_graph(stage, ax, saw(1), color=BLUE)"
+   },
+   {
+    "intent": "The sum of the first three terms sin x - sin 2x/2 + sin 3x/3",
+    "narration": "Subtract half of a wave twice as fast, add a third of one three times as fast.",
+    "code": "g3 = plot_graph(stage, ax, saw(3), color=GREEN)"
+   },
+   {
+    "intent": "The sum of 12 terms, a clear sawtooth of ramps and drops",
+    "narration": "With twelve terms the sum is a sawtooth: slow ramps up and sudden drops.",
+    "code": "g12 = plot_graph(stage, ax, saw(12), color=YELLOW)\nstage.caption(\"Twelve sines make a sawtooth\")"
+   },
+   {
+    "intent": "The sawtooth beside the series Σ (-1)^{k+1} sin(kx)/k",
+    "narration": "The recipe: every frequency, with strength one over k and alternating signs.",
+    "code": "stage.equation(r\"\\sum_{k=1}^{\\infty} \\frac{(-1)^{k+1}}{k}\\sin kx\")"
+   }
+  ]
+ }
+]
