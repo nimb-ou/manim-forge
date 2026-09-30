@@ -1,0 +1,142 @@
+[
+ {
+  "request": "what is a linear combination of two vectors?",
+  "beats": [
+   {
+    "intent": "A grid with u = (1, 0.5) and v = (-0.5, 1)",
+    "narration": "Two vectors, u and v.",
+    "code": "stage.title(\"A linear combination\")\np = draw_plane(stage)\nu = draw_vector(stage, p, (1, 0.5), color=YELLOW, label=\"u\")\nv = draw_vector(stage, p, (-0.5, 1), color=BLUE, label=\"v\")"
+   },
+   {
+    "intent": "u scaled to 2u = (2, 1)",
+    "narration": "Stretch u to twice its length.",
+    "code": "scale_vector(stage, p, u, 2)"
+   },
+   {
+    "intent": "v added tip to tail after 2u, landing at (1.5, 2), with the result drawn in green",
+    "narration": "Add v on the end: two u plus v lands at one point five, two. Every point of the plane is some mix like this.",
+    "code": "step = draw_arrow(stage, p.c2p(2, 1), p.c2p(1.5, 2))\nw = draw_vector(stage, p, (1.5, 2), color=GREEN, label=\"2u + v\")"
+   }
+  ]
+ },
+ {
+  "request": "what does the matrix [[1, 0], [0, 0.5]] do to shapes?",
+  "beats": [
+   {
+    "intent": "A grid with a unit square and a circle of radius 1",
+    "narration": "The unit square and a circle on the grid.",
+    "code": "stage.title(\"Squashing vertically\")\np = draw_plane(stage)\nsq = draw_unit_square(stage, p)\ncirc = Circle(radius=np.linalg.norm(p.c2p(1, 0) - p.c2p(0, 0)), color=YELLOW).move_to(p.c2p(0, 0))\nstage.play(Create(circ))\nstage.add(circ)"
+   },
+   {
+    "intent": "The matrix applied: everything squashed to half height",
+    "narration": "Apply the matrix: heights halve, widths stay.",
+    "code": "apply_matrix(stage, p, [[1, 0], [0, 0.5]], riders=[sq, circ])"
+   },
+   {
+    "intent": "The squashed square labelled area 1/2 beside det = 0.5",
+    "narration": "The square now has area a half, and so does every region: the determinant is one half.",
+    "code": "stage.label(sq, \"area ½\", direction=UP, color=GREEN)\nstage.equation(r\"\\det\\begin{bmatrix} 1 & 0 \\\\ 0 & 0.5 \\end{bmatrix} = 0.5\")"
+   }
+  ]
+ },
+ {
+  "request": "how can solving two equations be seen as mixing the columns of a matrix?",
+  "beats": [
+   {
+    "intent": "A grid with the column vectors a1 = (2, 1) and a2 = (1, 3) and the target b = (4, 7)",
+    "narration": "Solve two x plus y equals four and x plus three y equals seven. The columns are two, one and one, three; the target is four, seven.",
+    "code": "stage.title(\"Ax = b as a mix of columns\")\np = draw_plane(stage, x_extent=6, y_extent=8)\na1 = draw_vector(stage, p, (2, 1), color=YELLOW, label=\"a1\")\na2 = draw_vector(stage, p, (1, 3), color=BLUE, label=\"a2\")\nb = mark_point(stage, p, (4, 7), color=RED, label=\"b = (4, 7)\")"
+   },
+   {
+    "intent": "One a1 then two a2 laid tip to tail from the origin, reaching b",
+    "narration": "Take one of the first column, then two of the second: you arrive exactly at b.",
+    "code": "s1 = draw_arrow(stage, p.c2p(2, 1), p.c2p(3, 4))\ns2 = draw_arrow(stage, p.c2p(3, 4), p.c2p(4, 7))"
+   },
+   {
+    "intent": "The path beside 1·(2, 1) + 2·(1, 3) = (4, 7), so x = 1, y = 2",
+    "narration": "So the solution is x equals one, y equals two: the amounts of each column.",
+    "code": "stage.equation(r\"1\\begin{bmatrix}2\\\\1\\end{bmatrix} + 2\\begin{bmatrix}1\\\\3\\end{bmatrix} = \\begin{bmatrix}4\\\\7\\end{bmatrix}\")"
+   }
+  ]
+ },
+ {
+  "request": "how do you make a unit vector?",
+  "beats": [
+   {
+    "intent": "A grid with v = (3, 4) and its length 5 labelled",
+    "narration": "The vector three, four has length five.",
+    "code": "stage.title(\"A unit vector\")\np = draw_plane(stage, x_extent=5, y_extent=5)\nv = draw_vector(stage, p, (3, 4))\nstage.caption(\"v = (3, 4) has length 5\")"
+   },
+   {
+    "intent": "v shrunk by 1/5 to (0.6, 0.8), sitting on the unit circle",
+    "narration": "Divide by its length: it shrinks to point six, point eight, length exactly one.",
+    "code": "circ = Circle(radius=np.linalg.norm(p.c2p(1, 0) - p.c2p(0, 0)), color=GREY_B).move_to(p.c2p(0, 0))\nstage.play(Create(circ))\nstage.add(circ)\nscale_vector(stage, p, v, 0.2)\nstage.caption(\"Divided by 5: length 1\")"
+   },
+   {
+    "intent": "The short vector beside v/|v| = (0.6, 0.8)",
+    "narration": "Same direction, length one: that is a unit vector.",
+    "code": "stage.equation(r\"\\frac{v}{|v|} = \\frac{(3, 4)}{5} = (0.6, 0.8)\")"
+   }
+  ]
+ },
+ {
+  "request": "how far is a point from a line?",
+  "beats": [
+   {
+    "intent": "A grid with the line y = x/2 and the point P = (1, 3)",
+    "narration": "Here is a line through the origin and a point P above it.",
+    "code": "stage.title(\"Distance to a line\")\np = draw_plane(stage)\nln = draw_line(stage, p.c2p(-4, -2), p.c2p(4, 2), color=BLUE)\nP = mark_point(stage, p, (1, 3), color=RED, label=\"P\")"
+   },
+   {
+    "intent": "The shadow of P on the line: the foot at (2, 1)",
+    "narration": "Drop P straight onto the line: its shadow lands at two, one.",
+    "code": "project_vector(stage, p, (1, 3), (2, 1))"
+   },
+   {
+    "intent": "The perpendicular from P to the foot drawn in yellow beside its length √5",
+    "narration": "The shortest distance is that perpendicular: from one, three to two, one, root five long.",
+    "code": "perp = draw_line(stage, p.c2p(1, 3), p.c2p(2, 1), color=YELLOW)\nstage.equation(r\"d = \\sqrt{(2-1)^2 + (1-3)^2} = \\sqrt5\")"
+   }
+  ]
+ },
+ {
+  "request": "does a quarter-turn rotation have any eigenvectors?",
+  "beats": [
+   {
+    "intent": "A grid with three vectors pointing different ways",
+    "narration": "Take a few vectors pointing in different directions.",
+    "code": "stage.title(\"A rotation has no eigenvectors\")\np = draw_plane(stage)\nvs = [draw_vector(stage, p, xy, color=c) for xy, c in (((2, 0), YELLOW), ((1, 1), GREEN), ((-1, 2), BLUE))]"
+   },
+   {
+    "intent": "The quarter-turn [[0, -1], [1, 0]] applied, every vector knocked off its line",
+    "narration": "Turn the plane a quarter turn. Every vector swings to a new direction: none stays on its own line.",
+    "code": "apply_matrix(stage, p, [[0, -1], [1, 0]], riders=vs)"
+   },
+   {
+    "intent": "The grid beside λ^2 + 1 = 0, no real solution",
+    "narration": "The stretch factors would have to solve lambda squared plus one equals zero, which has no real answer.",
+    "code": "stage.equation(r\"\\lambda^2 + 1 = 0 \\Rightarrow \\lambda = \\pm i\")"
+   }
+  ]
+ },
+ {
+  "request": "what is the vector equation of a line?",
+  "beats": [
+   {
+    "intent": "A grid with the point a = (1, 1) and a direction arrow d = (2, 1) from it",
+    "narration": "A line through the point one, one heading in the direction two, one.",
+    "code": "stage.title(\"r = a + t d\")\np = draw_plane(stage)\na = mark_point(stage, p, (1, 1), color=RED, label=\"a\")\nd = draw_arrow(stage, p.c2p(1, 1), p.c2p(3, 2))\nstage.label(d, \"d\", direction=UP, color=YELLOW)"
+   },
+   {
+    "intent": "Points for t = -1, 0, 0.5, 1 marked along the line",
+    "narration": "Step t times along d: t equals minus one, zero, a half and one give points on the line.",
+    "code": "for t in (-1, 0, 0.5, 1):\n    mark_point(stage, p, (1 + 2 * t, 1 + t), color=GREEN, label=f\"t={t}\")"
+   },
+   {
+    "intent": "The whole line drawn through them beside r = (1, 1) + t(2, 1)",
+    "narration": "Every value of t gives a point, and together they make the line.",
+    "code": "line = draw_line(stage, p.c2p(-3, -1), p.c2p(4, 2.5), color=BLUE)\nstage.equation(r\"r = \\begin{bmatrix}1\\\\1\\end{bmatrix} + t\\begin{bmatrix}2\\\\1\\end{bmatrix}\")"
+   }
+  ]
+ }
+]
