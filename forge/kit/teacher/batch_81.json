@@ -1,0 +1,82 @@
+[
+ {
+  "request": "to mix green paint I need blue and yellow in the ratio 2:3. How much of each for 10 litres?",
+  "beats": [
+   {
+    "intent": "One batch of 5 blocks: 2 blue, 3 yellow",
+    "narration": "A ratio of two to three means every batch has two parts blue and three parts yellow: five parts in all.",
+    "code": "stage.title(\"Mixing in a ratio\")\nbatch = VGroup(*[Square(0.8, color=WHITE, fill_opacity=0.8, fill_color=(BLUE if k < 2 else YELLOW)) for k in range(5)]).arrange(RIGHT, buff=0.1).move_to([0, 1.2, 0])\nstage.play(LaggedStart(*[FadeIn(b) for b in batch], lag_ratio=0.15))\nstage.add(batch)\nstage.label(batch, \"one batch: 5 parts\", direction=UP)"
+   },
+   {
+    "intent": "Ten blocks for 10 litres: 4 blue, 6 yellow, one litre each",
+    "narration": "Ten litres is ten parts, two batches, so each part is one litre: four litres blue and six litres yellow.",
+    "code": "two = VGroup(*[Square(0.8, color=WHITE, fill_opacity=0.8, fill_color=(BLUE if k % 5 < 2 else YELLOW)) for k in range(10)]).arrange(RIGHT, buff=0.1).move_to([0, -0.6, 0])\nstage.play(LaggedStart(*[FadeIn(b) for b in two], lag_ratio=0.08))\nstage.add(two)\nstage.label(two, \"10 litres: 4 blue + 6 yellow\", direction=DOWN)"
+   },
+   {
+    "intent": "The blocks beside 10 × 2/5 = 4 and 10 × 3/5 = 6",
+    "narration": "Or directly: blue is two fifths of the total, yellow three fifths.",
+    "code": "stage.equation(r\"10 \\times \\tfrac{2}{5} = 4\", r\"10 \\times \\tfrac{3}{5} = 6\")"
+   }
+  ]
+ },
+ {
+  "request": "how can I find the area of an odd-shaped field?",
+  "beats": [
+   {
+    "intent": "A five-sided field drawn on a grid",
+    "narration": "Here is a field with five straight sides, drawn on a grid of ten metre squares.",
+    "code": "stage.title(\"Area of a field\")\np = draw_plane(stage, x_extent=4, y_extent=3)\nV = [p.c2p(x, y) for x, y in ((-3, -2), (3, -2), (3, 1), (0, 2), (-3, 1))]\nfield = Polygon(*V, color=GREEN, fill_opacity=0.3, stroke_width=5)\nstage.play(Create(field))\nstage.add(field)"
+   },
+   {
+    "intent": "Two lines from one corner splitting it into three triangles",
+    "narration": "Cut it into triangles from one corner. Each triangle's area is easy: half base times height.",
+    "code": "cuts = [DashedLine(V[0], V[2], color=YELLOW), DashedLine(V[0], V[3], color=YELLOW)]\nstage.play(*[Create(c) for c in cuts])\nstage.add(*cuts)\ncols = (BLUE, ORANGE, RED)\ntris = [Polygon(V[0], V[k], V[k + 1], stroke_width=0, fill_color=c, fill_opacity=0.35) for k, c in zip((1, 2, 3), cols)]\nstage.play(*[FadeIn(t) for t in tris])\nstage.add(*tris)\nfor t, a, c in zip(tris, (\"9\", \"7.5\", \"4.5\"), cols):\n    stage.add(Text(a, font_size=28, color=c).move_to(t.get_center()))"
+   },
+   {
+    "intent": "The field beside 9 + 7.5 + 4.5 = 21 squares = 2100 m²",
+    "narration": "Add the triangles: twenty one grid squares. At a hundred square metres each, the field is two thousand one hundred square metres.",
+    "code": "stage.equation(r\"9 + 7.5 + 4.5 = 21\", r\"21 \\times 100 = 2100\\ \\text{m}^2\")"
+   }
+  ]
+ },
+ {
+  "request": "why doesn't a satellite fall down?",
+  "beats": [
+   {
+    "intent": "The Earth as a circle with a tall mountain and a cannon on top",
+    "narration": "Imagine a cannon on a very tall mountain, firing sideways.",
+    "code": "stage.title(\"Newton's cannonball\")\nearth = Circle(radius=1.9, color=BLUE, fill_opacity=0.4).move_to([0, -0.7, 0])\nmount = Polygon([-0.4, 1.15, 0], [0.4, 1.15, 0], [0, 1.7, 0], color=GREY_B, fill_opacity=0.8)\nstage.play(FadeIn(earth), FadeIn(mount))\nstage.add(earth, mount)"
+   },
+   {
+    "intent": "Three paths: a slow shot landing close, a faster one landing further round",
+    "narration": "Fire it slowly and it falls to the ground nearby. Faster, and it lands further round, because the ground curves away beneath it.",
+    "code": "c = earth.get_center()\nstart = np.array([0, 1.7, 0])\npaths = []\nfor land, col in ((0.35, RED), (0.9, ORANGE)):\n    end = c + 1.9 * np.array([np.sin(land), np.cos(land), 0])\n    arc = ArcBetweenPoints(start, end, angle=-0.9 * land, color=col, stroke_width=5)\n    paths.append(arc)\n    stage.play(Create(arc))\n    stage.add(arc)"
+   },
+   {
+    "intent": "A full circle round the Earth: the fastest shot never lands, labelled orbit",
+    "narration": "Fire it fast enough, about eight kilometres a second, and the ground curves away as fast as it falls. It keeps falling and never lands: it is in orbit.",
+    "code": "orbit = Circle(radius=np.linalg.norm(start - c), color=GREEN).move_to(c)\nstage.play(Create(orbit), run_time=2)\nstage.add(orbit)\nstage.caption(\"orbit: falling all the way round\")"
+   }
+  ]
+ },
+ {
+  "request": "what does an order of magnitude mean?",
+  "beats": [
+   {
+    "intent": "A number line of powers of ten from 10 to 100 000, each step ten times the last",
+    "narration": "Each step along this line is ten times bigger than the one before: ten, a hundred, a thousand, ten thousand, a hundred thousand.",
+    "code": "stage.title(\"Orders of magnitude\")\nnl = NumberLine(x_range=[1, 5, 1], length=10, include_numbers=False).move_to([0, -0.3, 0])\nstage.play(Create(nl))\nstage.add(nl)\nfor k in range(1, 6):\n    t = MathTex(f\"10^{k}\", font_size=34, color=YELLOW).next_to(nl.n2p(k), DOWN, buff=0.3)\n    stage.play(FadeIn(t), run_time=0.2)\n    stage.add(t)\nstage.caption(\"mass in grams: each step is ×10\")"
+   },
+   {
+    "intent": "A mouse, a cat and a person marked at 20 g, 4 kg and 70 kg",
+    "narration": "A mouse is about twenty grams, a cat four kilos, a person seventy. On this line each is a couple of steps from the next.",
+    "code": "for g, name, col in ((20, \"mouse 20 g\", GREY_B), (4000, \"cat 4 kg\", ORANGE), (70000, \"person 70 kg\", BLUE)):\n    d = Dot(nl.n2p(np.log10(g)), color=col, radius=0.12)\n    stage.play(GrowFromCenter(d), run_time=0.4)\n    stage.add(d)\n    stage.label(d, name, direction=UP, color=col)"
+   },
+   {
+    "intent": "The line beside 4000 ÷ 20 = 200 ≈ 10^2.3",
+    "narration": "A cat outweighs a mouse two hundred times: a bit over two orders of magnitude.",
+    "code": "stage.equation(r\"\\frac{4000}{20} = 200 \\approx 10^{2.3}\")"
+   }
+  ]
+ }
+]
