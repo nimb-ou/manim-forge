@@ -671,3 +671,24 @@ headline; the keyword share stays as a cheap diagnostic. The remaining
 levers are the kit's rendering (fixes from the teacher batches, being
 measured) and training data (Claude-written teacher scenes, for the Oct 3
 SFT).
+
+### The coder is the constraint; empty axes resampled -- 2026-09-30
+
+Kit v6 + names hint, 20 held-out prompts, local vision judge (Qwen3.5-4B,
+per frame; share of planned beats; calibrated against Gemini: at 0.8 its
+YES agrees with Gemini's 83% of the time, recall 56%):
+
+| run | plans | judge ≥0.5 | judge ≥0.8 | keyword |
+|---|---|---|---|---|
+| ab_held_names (2026-09-28) | planner v3, cached | 46% | 27% | 39% |
+| oracle_held | hand-written, picture-naming | 41% | 26% | 44% |
+| ab_held_scaf | planner v3, cached | **52%** | **33%** | 42% |
+
+*Oracle plans do not help*: the coder, not the planner, is the binding
+constraint (empty axes where the intent names a curve, invented blocks,
+no block for data on axes). *ab_held_scaf* resamples beats that draw only
+axes / a grid / a number line (families.relevant) and runs today's kit:
+plot_points, mark_point(ax, x, y), persistent highlight, smooth
+trace_graph, aliases. Same coder and plans as ab_held_names, so the +6
+points are inference and kit only; the Gemini judge re-checks both when
+its quota resets.
