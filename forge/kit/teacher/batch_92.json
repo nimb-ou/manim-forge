@@ -1,0 +1,102 @@
+[
+ {
+  "request": "if I run 5 km in 25 minutes, what's my pace?",
+  "beats": [
+   {
+    "intent": "A number line from 0 to 5 km with a runner dot at 0",
+    "narration": "A five kilometre run.",
+    "code": "stage.title(\"Running pace\")\nnl = draw_number_line(stage, x_range=(0, 5))\nrunner = Dot(nl.n2p(0), color=YELLOW, radius=0.14)\nstage.play(GrowFromCenter(runner))\nstage.add(runner)\nstage.caption(\"km\")"
+   },
+   {
+    "intent": "The runner moving along with the minutes 5, 10, 15, 20, 25 marked at each km",
+    "narration": "It takes twenty five minutes: five minutes for each kilometre.",
+    "code": "for k in range(1, 6):\n    stage.play(runner.animate.move_to(nl.n2p(k)), run_time=0.5, rate_func=linear)\n    t = Text(f\"{5 * k} min\", font_size=22, color=GREEN).next_to(nl.n2p(k), UP, buff=0.35)\n    stage.play(FadeIn(t), run_time=0.2)\n    stage.add(t)"
+   },
+   {
+    "intent": "The line beside pace = 25 ÷ 5 = 5 minutes per km",
+    "narration": "Pace is time over distance: five minutes per kilometre.",
+    "code": "stage.equation(r\"\\frac{25\\ \\text{min}}{5\\ \\text{km}} = 5\\ \\text{min/km}\")"
+   },
+   {
+    "intent": "Bars comparing pace 5 min/km with speed 12 km/h",
+    "narration": "Flip it and you get speed: sixty minutes over five is twelve kilometres an hour.",
+    "code": "stage.clear()\nstage.equation(r\"\\frac{60}{5} = 12\\ \\text{km/h}\")\nb = draw_bars(stage, [5, 12], labels=[\"pace min/km\", \"speed km/h\"], color=GREEN)"
+   }
+  ]
+ },
+ {
+  "request": "how does a submarine dive and come back up?",
+  "beats": [
+   {
+    "intent": "A submarine floating at the surface with empty ballast tanks",
+    "narration": "A submarine has tanks along its sides. When they are full of air it floats at the surface.",
+    "code": "stage.title(\"Diving and surfacing\")\nsea = Rectangle(width=13, height=4.8, stroke_width=0, fill_color=BLUE, fill_opacity=0.3).move_to([0, -1.2, 0])\nstage.play(FadeIn(sea))\nstage.add(sea)\nhull = RoundedRectangle(width=4.0, height=1.0, corner_radius=0.5, color=GREY_B, fill_opacity=0.8).move_to([0, 1.2, 0])\ntank = Rectangle(width=2.8, height=0.35, color=WHITE, fill_opacity=0.1).move_to(hull.get_center() + 0.12 * DOWN)\ntower = Rectangle(width=0.6, height=0.5, color=GREY_B, fill_opacity=0.8).next_to(hull, UP, buff=0).shift(0.5 * LEFT)\nsub = VGroup(hull, tank, tower)\nstage.play(FadeIn(sub))\nstage.add(sub)"
+   },
+   {
+    "intent": "The tank filling with blue water and the submarine sinking",
+    "narration": "Open the valves and seawater floods the tanks. The sub gets heavier than the water it displaces, and sinks.",
+    "code": "water = Rectangle(width=2.8, height=0.35, stroke_width=0, fill_color=BLUE_D, fill_opacity=0.9).move_to(tank)\nsub.add(water)\nstage.play(FadeIn(water))\nstage.play(sub.animate.shift(2.8 * DOWN), run_time=2)\nstage.caption(\"tanks full of water: sinks\")"
+   },
+   {
+    "intent": "Compressed air blowing the water out and the submarine rising",
+    "narration": "To come up, compressed air blows the water back out. Lighter than the water it displaces, it rises.",
+    "code": "stage.play(FadeOut(water))\nsub.remove(water)\nstage.play(sub.animate.shift(2.8 * UP), run_time=2)\nstage.caption(\"water blown out: rises\")"
+   },
+   {
+    "intent": "Bars of weight against buoyancy: heavier than water to sink, lighter to rise",
+    "narration": "It's about balancing its weight against the push of the water it displaces.",
+    "code": "stage.clear()\nb = draw_bars(stage, [11, 10, 9, 10], labels=[\"sub full\", \"water pushed\", \"sub empty\", \"water pushed\"], color=GREY_B)\nstage.caption(\"tonnes: 11 > 10 sinks, 9 < 10 rises\")"
+   }
+  ]
+ },
+ {
+  "request": "how does a solar eclipse happen?",
+  "beats": [
+   {
+    "intent": "The Sun, the Moon and the Earth in a line, drawn not to scale",
+    "narration": "Sometimes the Moon passes exactly between the Sun and the Earth.",
+    "code": "stage.title(\"A solar eclipse\")\nsun = Circle(radius=1.4, color=YELLOW, fill_opacity=0.9).move_to([-5.0, 0, 0])\nmoon = Circle(radius=0.25, color=GREY_B, fill_opacity=1).move_to([1.0, 0, 0])\nearth = Circle(radius=0.9, color=BLUE, fill_opacity=0.8).move_to([4.5, 0, 0])\nstage.play(FadeIn(sun), FadeIn(moon), FadeIn(earth))\nstage.add(sun, moon, earth)\nstage.caption(\"not to scale\")"
+   },
+   {
+    "intent": "Light rays from the Sun's edges grazing the Moon, a dark shadow cone reaching the Earth",
+    "narration": "The Moon blocks the sunlight and casts a cone of shadow behind it.",
+    "code": "top_s, bot_s = sun.get_top(), sun.get_bottom()\ntop_m, bot_m = moon.get_top(), moon.get_bottom()\ntip = top_m + (top_m - top_s) * 3.6 / np.linalg.norm(top_m - top_s) * 1.0\nr1 = Line(top_s, moon.get_top(), color=YELLOW, stroke_width=2)\nr2 = Line(bot_s, moon.get_bottom(), color=YELLOW, stroke_width=2)\ncone = Polygon(moon.get_top(), moon.get_bottom(), np.array([4.0, 0, 0]), stroke_width=0, fill_color=GREY_D, fill_opacity=0.9)\ncone.set_z_index(2)\nstage.play(Create(r1), Create(r2))\nstage.play(FadeIn(cone))\nstage.add(r1, r2, cone)"
+   },
+   {
+    "intent": "The small dark spot on the Earth's face where the shadow lands",
+    "narration": "Where the shadow touches the Earth, a small patch goes dark in the middle of the day: a total eclipse.",
+    "code": "spot = Dot([3.62, 0, 0], color=GREY_E, radius=0.16).set_z_index(3)\nring = Circle(radius=0.3, color=RED).move_to(spot).set_z_index(3)\nstage.play(FadeIn(spot), Create(ring))\nstage.add(spot, ring)\nstage.label(earth, \"total eclipse on this spot\", direction=DOWN, color=RED)"
+   },
+   {
+    "intent": "The picture beside: the Sun is 400 times wider but 400 times further away",
+    "narration": "It works because the Sun is about four hundred times wider than the Moon, but also about four hundred times further away, so they look the same size.",
+    "code": "stage.equation(r\"\\frac{\\text{Sun width}}{\\text{Moon width}} \\approx \\frac{\\text{Sun distance}}{\\text{Moon distance}} \\approx 400\")"
+   }
+  ]
+ },
+ {
+  "request": "why do we always see the same side of the Moon?",
+  "beats": [
+   {
+    "intent": "The Earth in the middle and the Moon with a red mark on its face pointing at the Earth",
+    "narration": "Mark the side of the Moon that faces us.",
+    "code": "stage.title(\"The Moon's hidden side\")\nearth = Circle(radius=0.8, color=BLUE, fill_opacity=0.8).move_to([-1, -0.3, 0])\norbit = Circle(radius=2.6, color=GREY_B, stroke_opacity=0.4).move_to(earth)\nstage.play(FadeIn(earth), Create(orbit))\nstage.add(earth, orbit)\nc = earth.get_center()\nmoon = VGroup(Circle(radius=0.35, color=GREY_B, fill_opacity=1), Dot(0.25 * LEFT, color=RED, radius=0.08)).move_to(c + 2.6 * RIGHT)\nstage.play(FadeIn(moon))\nstage.add(moon)"
+   },
+   {
+    "intent": "The Moon moving a quarter of the way round its orbit, also turning a quarter turn, the mark still facing the Earth",
+    "narration": "As it goes a quarter of the way round the Earth, it also turns a quarter of the way on its own axis. The mark still points at us.",
+    "code": "stage.play(Rotate(moon, PI / 2, about_point=c), run_time=2)\nstage.caption(\"a quarter orbit, a quarter spin\")"
+   },
+   {
+    "intent": "The Moon completing its orbit, four snapshots with the mark always pointing inward",
+    "narration": "All the way round, one orbit takes the same time as one spin, about twenty seven days. So one face always looks at the Earth.",
+    "code": "ghosts = VGroup(*[moon.copy().set_opacity(0.4).rotate(k * PI / 2, about_point=c) for k in (1, 2, 3)])\nstage.play(FadeIn(ghosts))\nstage.add(ghosts)\nstage.play(Rotate(moon, 3 * PI / 2, about_point=c), run_time=3)\nstage.caption(\"one orbit, one spin: the same face towards us\")"
+   },
+   {
+    "intent": "The picture beside 1 spin = 1 orbit ≈ 27 days",
+    "narration": "Long ago the Earth's pull slowed the Moon's spin until the two matched: it's called tidal locking.",
+    "code": "stage.equation(r\"1\\ \\text{spin} = 1\\ \\text{orbit} \\approx 27\\ \\text{days}\")"
+   }
+  ]
+ }
+]
