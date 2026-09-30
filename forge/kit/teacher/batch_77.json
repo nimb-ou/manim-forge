@@ -1,0 +1,82 @@
+[
+ {
+  "request": "what's the difference between a percentage point and a percent?",
+  "beats": [
+   {
+    "intent": "Bars of an interest rate going from 2% to 3%",
+    "narration": "An interest rate goes up from two percent to three percent.",
+    "code": "stage.title(\"Points or percent?\")\nb = draw_bars(stage, [2, 3], labels=[\"before\", \"after\"], color=BLUE)\nstage.caption(\"rate in %\")"
+   },
+   {
+    "intent": "The gap between the bars marked +1 percentage point",
+    "narration": "The rate went up by one percentage point: three minus two.",
+    "code": "bars = b[0] if len(b) == 2 else b\nx0 = bars[0].get_left()[0] - 0.1\nlevel = DashedLine([x0, bars[1].get_top()[1], 0], bars[1].get_corner(UL), color=GREY_B)\ngap = Brace(Line([x0, bars[0].get_top()[1], 0], [x0, bars[1].get_top()[1], 0]), LEFT, color=YELLOW)\nstage.play(Create(level), GrowFromCenter(gap))\nstage.add(level, gap)\nstage.label(gap, \"+1 point\", direction=LEFT, color=YELLOW)"
+   },
+   {
+    "intent": "The bars beside (3 - 2) / 2 = 50% increase",
+    "narration": "But compared with where it started, it rose by half: a fifty percent increase. Both are true; they answer different questions.",
+    "code": "stage.equation(r\"\\frac{3 - 2}{2} = 50\\%\")"
+   }
+  ]
+ },
+ {
+  "request": "how many squares are there on a chessboard?",
+  "beats": [
+   {
+    "intent": "An 8 by 8 board with one 1×1 square and one 2×2 square outlined",
+    "narration": "There are sixty four little squares, but also bigger squares made of several: two by two, three by three, up to the whole board.",
+    "code": "stage.title(\"Squares on a chessboard\")\nboard = VGroup(*[Square(0.55, stroke_width=0, fill_color=(GREY_D if (r + c) % 2 else GREY_B), fill_opacity=1)\n                 for r in range(8) for c in range(8)]).arrange_in_grid(rows=8, cols=8, buff=0).move_to([-2.5, -0.3, 0])\nstage.play(FadeIn(board))\nstage.add(board)\ns1 = Square(0.55, color=RED, stroke_width=5).move_to(board[0])\ns2 = Square(1.1, color=YELLOW, stroke_width=5).move_to((board[18].get_center() + board[27].get_center()) / 2)\ns3 = Square(1.65, color=GREEN, stroke_width=5).move_to(board[45])\nstage.play(Create(s1), Create(s2), Create(s3))\nstage.add(s1, s2, s3)"
+   },
+   {
+    "intent": "Bars of how many squares of each size: 64, 49, 36, 25, 16, 9, 4, 1",
+    "narration": "A k by k square can start in 9 minus k places across and down: sixty four of size one, forty nine of size two, down to one of size eight.",
+    "code": "stage.clear()\nb = draw_bars(stage, [64, 49, 36, 25, 16, 9, 4, 1], labels=[\"1\", \"2\", \"3\", \"4\", \"5\", \"6\", \"7\", \"8\"], color=ORANGE)\nstage.caption(\"number of squares of each size\")"
+   },
+   {
+    "intent": "The bars beside 1² + 2² + ... + 8² = 204",
+    "narration": "Add them up: two hundred and four squares.",
+    "code": "stage.equation(r\"1^2 + 2^2 + \\cdots + 8^2 = 204\")"
+   }
+  ]
+ },
+ {
+  "request": "how does a periscope let you see over a wall?",
+  "beats": [
+   {
+    "intent": "A tall tube with a mirror at 45° at the top and one at the bottom, a wall beside it",
+    "narration": "A periscope is a tube with two mirrors, each tilted at forty five degrees.",
+    "code": "stage.title(\"A periscope\")\ntube = Rectangle(width=1.0, height=4.4, color=GREY_B).move_to([0, -0.2, 0])\ntop_m = Line([-0.5, 1.5, 0], [0.5, 2.5, 0], color=BLUE, stroke_width=8)\nbot_m = Line([-0.5, -2.9, 0], [0.5, -1.9, 0], color=BLUE, stroke_width=8)\nwall = Rectangle(width=0.6, height=3.0, color=ORANGE, fill_opacity=0.6).move_to([2.2, -1.2, 0])\nstage.play(Create(tube), Create(top_m), Create(bot_m), FadeIn(wall))\nstage.add(tube, top_m, bot_m, wall)"
+   },
+   {
+    "intent": "A light ray coming from the right above the wall, bouncing down at the top mirror and out at the bottom mirror to an eye",
+    "narration": "Light from beyond the wall hits the top mirror and turns straight down the tube, then the bottom mirror turns it out to your eye.",
+    "code": "ray = VMobject(color=YELLOW, stroke_width=5).set_points_as_corners([[5.5, 2.0, 0], [0, 2.0, 0], [0, -2.4, 0], [-3.0, -2.4, 0]])\nstage.play(Create(ray), run_time=2)\nstage.add(ray)\neye = Ellipse(width=0.6, height=0.35, color=WHITE).move_to([-3.4, -2.4, 0])\nstage.play(Create(eye))\nstage.add(eye)\nstage.label(eye, \"eye\", direction=DOWN)"
+   },
+   {
+    "intent": "The two mirrors each turning the light through 90°",
+    "narration": "Each mirror turns the light through ninety degrees, so it comes out travelling the way it went in, just lower down.",
+    "code": "for p in ([0, 2.0, 0], [0, -2.4, 0]):\n    mark = Circle(radius=0.3, color=RED).move_to(p)\n    stage.play(Create(mark), run_time=0.4)\n    stage.add(mark)\nstage.caption(\"two 90° turns: same direction, lower down\")"
+   }
+  ]
+ },
+ {
+  "request": "why does a straw look bent in a glass of water?",
+  "beats": [
+   {
+    "intent": "A glass of water with a straight straw leaning in it",
+    "narration": "Put a straight straw in a glass of water.",
+    "code": "stage.title(\"The bent straw\")\nwater = Rectangle(width=4, height=2.4, color=BLUE, fill_opacity=0.25).move_to([0, -1.6, 0])\nglass = Rectangle(width=4, height=3.8, color=WHITE).move_to([0, -0.9, 0])\nstraw = Line([-1.4, -2.6, 0], [1.2, 1.4, 0], color=ORANGE, stroke_width=8)\nstage.play(Create(glass), FadeIn(water), Create(straw))\nstage.add(glass, water, straw)"
+   },
+   {
+    "intent": "A ray from the underwater tip bending away from the vertical at the surface on its way to an eye",
+    "narration": "Light from the underwater part bends as it leaves the water, away from the vertical, before it reaches your eye.",
+    "code": "surf = water.get_top()[1]\ntip = np.array([-1.4, -2.6, 0])\nexit_p = np.array([-0.1, surf, 0])\nray = VMobject(color=YELLOW, stroke_width=4).set_points_as_corners([tip, exit_p, [2.8, 2.2, 0]])\nstage.play(Create(ray))\nstage.add(ray)\neye = Ellipse(width=0.5, height=0.3, color=WHITE).move_to([3.0, 2.35, 0])\nstage.play(Create(eye))\nstage.add(eye)\nnormal = DashedLine(exit_p + 1.0 * DOWN, exit_p + 1.0 * UP, color=GREY_B)\nstage.play(Create(normal))\nstage.add(normal)"
+   },
+   {
+    "intent": "The eye's straight-back line to where the tip seems to be, higher up: a dashed ghost straw bent at the surface",
+    "narration": "Your brain assumes light travels straight, so traces it back to a point that is higher than the real tip. The straw seems to bend at the surface.",
+    "code": "back = DashedLine(exit_p, exit_p + 1.9 * (exit_p - np.array([2.8, 2.2, 0])) / np.linalg.norm(exit_p - np.array([2.8, 2.2, 0])), color=YELLOW)\nstage.play(Create(back))\nstage.add(back)\ncross = np.array([-1.4 + 2.6 * (surf + 2.6) / 4.0, surf, 0])\nghost = Line(cross, back.get_end(), color=ORANGE, stroke_opacity=0.5, stroke_width=8)\nstage.play(Create(ghost))\nstage.add(ghost)\nstage.caption(\"the tip looks higher than it is\")"
+   }
+  ]
+ }
+]
