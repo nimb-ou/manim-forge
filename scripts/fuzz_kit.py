@@ -164,7 +164,9 @@ CASES: dict[str, tuple[str, list[str]]] = {
         "plot_points(stage, ax, [[1, 2, 3, 4], [2, 3, 5, 7]])",
         "d = plot_points(stage, ax, np.array([[1, 1], [2, 4], [3, 9]]))\nhighlight(stage, d)"]),
     "mark_point_xy": ("ax = draw_axes(stage, x_range=(0, 5), y_range=(0, 64))", [
-        "mark_point(stage, ax, 1, 32, label='N = 32')", "mark_point(stage, ax, (2, 16))"]),
+        "mark_point(stage, ax, 1, 32, label='N = 32')", "mark_point(stage, ax, (2, 16))",
+        "mark_point(stage, ax, 4, 6, color=RED, label='c')", "mark_point(stage, ax, 2, 16, RED)",
+        "nl = draw_number_line(stage)\nmark_point(stage, nl, 2, RED)\nmark_point(stage, nl, 3, 'three')"]),
     "aliases": ("", ["draw_triangle(stage)", "draw_triangle(stage, [(0, 0), (3, 0), (0, 2)])",
                      "draw_dice(stage)", "p = draw_axes(stage)\ndraw_point(stage, p, 1, 1)",
                      "ax = draw_axes(stage)\ndraw_scatter(stage, ax, [(1, 1), (2, 2)])"]),

@@ -1,0 +1,157 @@
+[
+ {
+  "request": "how does counting sort work?",
+  "beats": [
+   {
+    "intent": "Bars of the list 3, 1, 4, 1, 3, 2, 1",
+    "narration": "Here is a list of small numbers: three, one, four, one, three, two, one.",
+    "code": "stage.title(\"Counting sort\")\ndata = [3, 1, 4, 1, 3, 2, 1]\narr = draw_array(stage, data)"
+   },
+   {
+    "intent": "Bars counting how many times each value appears: 1 three times, 2 once, 3 twice, 4 once",
+    "narration": "Count each value: three ones, one two, two threes, one four.",
+    "code": "stage.clear()\ncounts = draw_bars(stage, [3, 1, 2, 1], labels=[\"1\", \"2\", \"3\", \"4\"])\nstage.caption(\"How many of each value\")"
+   },
+   {
+    "intent": "The sorted list 1, 1, 1, 2, 3, 3, 4 as bars, written out from the counts",
+    "narration": "Write each value out as many times as it was counted, and the list is sorted.",
+    "code": "stage.clear()\nout = draw_array(stage, [1, 1, 1, 2, 3, 3, 4])\nstage.caption(\"Sorted without a single comparison\")"
+   }
+  ]
+ },
+ {
+  "request": "how does a hash table decide where to store a key?",
+  "beats": [
+   {
+    "intent": "Five empty buckets in a row labelled 0 to 4",
+    "narration": "A hash table is a row of buckets, here five of them.",
+    "code": "stage.title(\"A hash table\")\nbuckets = VGroup(*[Square(side_length=1, color=BLUE) for _ in range(5)]).arrange(RIGHT, buff=0.2).shift(DOWN)\nstage.play(Create(buckets))\nstage.add(buckets)\nfor k, b in enumerate(buckets):\n    stage.label(b, str(k), direction=DOWN)"
+   },
+   {
+    "intent": "The key 12 above the buckets with an arrow into bucket 2, since 12 mod 5 = 2",
+    "narration": "To store the key twelve, divide by five and keep the remainder, two: it goes in bucket two.",
+    "code": "k12 = Text(\"12\", font_size=32).move_to(buckets[2].get_center() + UP * 2)\nstage.play(FadeIn(k12))\nstage.play(k12.animate.move_to(buckets[2]), run_time=1)\nstage.add(k12)\nstage.caption(\"12 mod 5 = 2\")"
+   },
+   {
+    "intent": "Keys 7 and 19 dropped into buckets 2 and 4, two keys sharing bucket 2",
+    "narration": "Seven also lands in bucket two, a collision, so the bucket holds a short list. Nineteen goes to bucket four.",
+    "code": "k7 = Text(\"7\", font_size=28, color=YELLOW).move_to(buckets[2].get_center() + UP * 2)\nk19 = Text(\"19\", font_size=28).move_to(buckets[4].get_center() + UP * 2)\nstage.play(FadeIn(k7), FadeIn(k19))\nstage.play(k7.animate.next_to(buckets[2], UP, buff=0.1), k19.animate.move_to(buckets[4]))\nstage.add(k7, k19)\nstage.caption(\"7 mod 5 = 2: a collision\")"
+   }
+  ]
+ },
+ {
+  "request": "how do you search a binary search tree?",
+  "beats": [
+   {
+    "intent": "A tree with 8 at the root, 4 and 12 below, then 2, 6, 10, 14",
+    "narration": "In a binary search tree every node has smaller values to its left and bigger to its right.",
+    "code": "stage.title(\"Binary search tree\")\nnodes = {\"8\": (0, 0.8), \"4\": (-0.5, 0.2), \"12\": (0.5, 0.2), \"2\": (-0.75, -0.4), \"6\": (-0.25, -0.4), \"10\": (0.25, -0.4), \"14\": (0.75, -0.4)}\nedges = [(\"8\", \"4\"), (\"8\", \"12\"), (\"4\", \"2\"), (\"4\", \"6\"), (\"12\", \"10\"), (\"12\", \"14\")]\ntree, links = draw_network(stage, nodes, edges)"
+   },
+   {
+    "intent": "The path 8 → 12 → 10 lit while searching for 10",
+    "narration": "Look for ten: it is bigger than eight, go right; smaller than twelve, go left; found.",
+    "code": "for k in (\"8\", \"12\", \"10\"):\n    highlight(stage, tree[k], color=YELLOW)\nstage.caption(\"Right, then left: found in 3 steps\")"
+   },
+   {
+    "intent": "The tree beside the fact that 7 nodes need at most 3 comparisons",
+    "narration": "Each step halves what is left, so seven values need at most three comparisons.",
+    "code": "stage.equation(r\"\\log_2 (7 + 1) = 3 \\text{ steps}\")"
+   }
+  ]
+ },
+ {
+  "request": "how does Euclid's algorithm find the gcd of 48 and 18?",
+  "beats": [
+   {
+    "intent": "A 48 by 18 rectangle",
+    "narration": "Draw a rectangle forty eight by eighteen.",
+    "code": "stage.title(\"Euclid's algorithm\")\ns = 0.1\nrect = Rectangle(width=48 * s, height=18 * s, color=WHITE).shift(DOWN * 0.3)\nstage.play(Create(rect))\nstage.add(rect)\nstage.label(rect, \"48 × 18\", direction=UP)"
+   },
+   {
+    "intent": "Two 18 by 18 squares cut from it, leaving a 12 by 18 strip",
+    "narration": "Cut out as many eighteen by eighteen squares as fit: two, leaving a strip twelve wide.",
+    "code": "x0 = rect.get_left()[0]\ny = rect.get_center()[1]\nsq = [Square(side_length=18 * s, color=BLUE, fill_opacity=0.5).move_to(np.array([x0 + (9 + 18 * k) * s, y, 0])) for k in range(2)]\nstage.play(*[FadeIn(q) for q in sq])\nstage.add(*sq)"
+   },
+   {
+    "intent": "The strip cut into a 12 by 12 square and two 6 by 6 squares that fit exactly",
+    "narration": "From the twelve by eighteen strip cut a twelve square, leaving six by twelve: that splits into two six squares exactly.",
+    "code": "xs = x0 + 36 * s\nq12 = Square(side_length=12 * s, color=GREEN, fill_opacity=0.5).move_to(np.array([xs + 6 * s, y + 3 * s, 0]))\nq6a = Square(side_length=6 * s, color=RED, fill_opacity=0.7).move_to(np.array([xs + 3 * s, y - 6 * s, 0]))\nq6b = Square(side_length=6 * s, color=RED, fill_opacity=0.7).move_to(np.array([xs + 9 * s, y - 6 * s, 0]))\nstage.play(FadeIn(q12), FadeIn(q6a), FadeIn(q6b))\nstage.add(q12, q6a, q6b)\nstage.equation(r\"\\gcd(48, 18) = 6\")"
+   }
+  ]
+ },
+ {
+  "request": "how does a perceptron separate two groups of points?",
+  "beats": [
+   {
+    "intent": "Axes with blue dots in the lower left and red dots in the upper right",
+    "narration": "Two kinds of points: blue ones in the lower left and red ones in the upper right.",
+    "code": "stage.title(\"A line between two groups\")\nax = draw_axes(stage, x_range=(0, 10), y_range=(0, 10))\nblue = plot_points(stage, ax, [(1, 2), (2, 1), (2, 3), (3, 2), (1, 4), (4, 1)], color=BLUE)\nred = plot_points(stage, ax, [(6, 7), (7, 6), (8, 8), (7, 9), (9, 6), (6, 9)], color=RED)"
+   },
+   {
+    "intent": "A first guess line that cuts through the red group",
+    "narration": "The perceptron starts with a poor line that puts some red points on the wrong side.",
+    "code": "guess = plot_graph(stage, ax, lambda x: 11 - 0.5 * x, color=GREY)"
+   },
+   {
+    "intent": "The line tilting into y = 10 - x, cleanly between the groups",
+    "narration": "Each mistake nudges the line, until every blue point is on one side and every red on the other.",
+    "code": "good = plot_graph(stage, ax, lambda x: 10 - x, color=YELLOW, label=\"y = 10 - x\")\nstage.play(FadeOut(guess))\nstage.caption(\"Every point on its own side\")"
+   }
+  ]
+ },
+ {
+  "request": "how does k-means clustering group points?",
+  "beats": [
+   {
+    "intent": "Axes with twelve points in two loose clumps, and two random centres as crosses",
+    "narration": "Twelve points and two starting centres, placed at random.",
+    "code": "stage.title(\"k-means\")\nax = draw_axes(stage, x_range=(0, 10), y_range=(0, 10))\nA = [(2, 2), (3, 1.5), (2.5, 3), (1.5, 2.5), (3, 3), (2, 1)]\nB = [(7, 8), (8, 7), (7.5, 8.5), (8.5, 8), (7, 7), (8, 9)]\npts = plot_points(stage, ax, A + B, color=WHITE)\nc1 = mark_point(stage, ax, 4, 6, color=RED)\nc2 = mark_point(stage, ax, 6, 4, color=GREEN)\nstage.caption(\"Two random centres, red and green\")"
+   },
+   {
+    "intent": "Each point coloured by its nearest centre",
+    "narration": "Colour each point by the nearer centre.",
+    "code": "P = A + B\nnear = [0 if (x - 4) ** 2 + (y - 6) ** 2 < (x - 6) ** 2 + (y - 4) ** 2 else 1 for x, y in P]\nstage.play(*[pts[k].animate.set_color(RED if n == 0 else GREEN) for k, n in enumerate(near)])"
+   },
+   {
+    "intent": "Each centre moving to the middle of its points, the colours settling into the two clumps",
+    "narration": "Move each centre to the average of its points and repeat: the centres settle in the middle of the two clumps.",
+    "code": "stage.play(c1.animate.move_to(ax.c2p(2.33, 2.17)), c2.animate.move_to(ax.c2p(7.67, 7.92)), run_time=1.5)\nstage.play(*[pts[k].animate.set_color(RED if k < 6 else GREEN) for k in range(12)])\nstage.caption(\"Centres settle in the clumps\")"
+   }
+  ]
+ },
+ {
+  "request": "what is a linked list?",
+  "beats": [
+   {
+    "intent": "Four boxes holding 5, 8, 2, 9, each with an arrow to the next",
+    "narration": "A linked list is a chain: each box holds a value and an arrow to the next box.",
+    "code": "stage.title(\"A linked list\")\nboxes = VGroup(*[Square(side_length=0.9, color=BLUE) for _ in range(4)]).arrange(RIGHT, buff=0.9)\nvals = VGroup(*[Text(str(v), font_size=30).move_to(b) for v, b in zip((5, 8, 2, 9), boxes)])\narrows = VGroup(*[Arrow(boxes[k].get_right(), boxes[k + 1].get_left(), buff=0.05) for k in range(3)])\nstage.play(Create(boxes), FadeIn(vals))\nstage.play(LaggedStart(*[GrowArrow(a) for a in arrows], lag_ratio=0.3))\nstage.add(boxes, vals, arrows)"
+   },
+   {
+    "intent": "A new box 7 inserted between 8 and 2, its arrows rewired",
+    "narration": "To insert seven after eight, point eight's arrow at the new box and the new box's arrow at two.",
+    "code": "new = VGroup(Square(side_length=0.9, color=GREEN), Text(\"7\", font_size=30)).next_to(arrows[1], UP, buff=0.6)\nstage.play(FadeIn(new))\na1 = Arrow(boxes[1].get_top(), new.get_left(), buff=0.05, color=GREEN)\na2 = Arrow(new.get_right(), boxes[2].get_top(), buff=0.05, color=GREEN)\nstage.play(FadeOut(arrows[1]), GrowArrow(a1), GrowArrow(a2))\nstage.add(new, a1, a2)\nstage.caption(\"Nothing else has to move\")"
+   }
+  ]
+ },
+ {
+  "request": "how do you add binary numbers like 0110 + 0011?",
+  "beats": [
+   {
+    "intent": "The bits 0110 counting up under 8 4 2 1, reading 6",
+    "narration": "Zero one one zero is six: a four and a two.",
+    "code": "stage.title(\"Adding in binary\")\nbits = count_binary(stage, bits=4, upto=6)"
+   },
+   {
+    "intent": "The sum 0110 + 0011 written as a column addition with carries",
+    "narration": "Add three, zero zero one one, column by column. One plus one is two, which is ten in binary: write zero, carry one.",
+    "code": "stage.equation(r\"\\begin{array}{r} 0110 \\\\ +\\,0011 \\\\ \\hline 1001 \\end{array}\")"
+   },
+   {
+    "intent": "Bits counting on up to 1001, reading 9",
+    "narration": "The answer is one zero zero one: eight plus one, nine. Six plus three is nine.",
+    "code": "stage.clear()\nbits2 = count_binary(stage, bits=4, upto=9)\nstage.caption(\"6 + 3 = 9\")"
+   }
+  ]
+ }
+]

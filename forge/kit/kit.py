@@ -793,18 +793,25 @@ def draw_number_line(stage: Stage, x_range=(0, 10), where: str = "center"):
     return nl
 
 
-def mark_point(stage: Stage, nl, x: float, color=YELLOW, label: str | None = None,
+def mark_point(stage: Stage, nl, x: float, y=None, color=YELLOW, label: str | None = None,
                direction=UP):
-    """A dot at x on a number line, optionally labelled."""
-    if isinstance(color, (int, float)) and not isinstance(color, bool) \
-            and hasattr(nl, "c2p"):
-        # mark_point(stage, ax, 1, 32): a point (x, y) on axes, the y
-        # passed where the colour goes (the oracle run, 2026-09-29)
-        x, color = (x, color), YELLOW
+    """A dot at x on a number line, or at (x, y) on axes, optionally labelled."""
+    # The slot after x takes what models put there: a y on axes
+    # (mark_point(stage, ax, 1, 32, color=RED) -- the colour keyword then
+    # collided with the y), else a colour or a label, as before.
+    if y is not None and not isinstance(y, (int, float, np.number)) or isinstance(y, bool):
+        if isinstance(y, str) and not y.startswith("#"):
+            label, y = label or y, None
+        else:
+            color, y = y, None
+    if y is not None:
+        x = (x, y)
     if np.ndim(x) == 1 and hasattr(nl, "c2p"):          # a point on axes
         d = Dot(nl.c2p(*list(x)[:2]), color=color)
+    elif np.ndim(x) == 1:                               # (x, y) on a number line
+        d = Dot(nl.n2p(float(np.ravel(x)[0])), color=color)
     else:
-        d = Dot(nl.n2p(float(np.ravel(x)[0]) if np.ndim(x) else x), color=color)
+        d = Dot(nl.n2p(x), color=color)
     stage.scene.play(GrowFromCenter(d), run_time=0.5)
     stage._objects.append(d)
     if label:
@@ -1886,7 +1893,7 @@ nouns (p, ax, g, v) and animate those -- never a block's name.
   shade_area(stage, ax, g, a, b)   riemann_refine(stage, ax, g, a, b, ns=(4, 8, 16, 32))
   trace_graph(stage, ax, f, x_start, x_end)   -- a dot runs along f
   draw_number_line(stage, x_range=(a, b)) -> NumberLine
-  mark_point(stage, nl, x, label=None) -> Dot
+  mark_point(stage, nl, x, label=None) -> Dot   mark_point(stage, ax, x, y) on axes
   plot_points(stage, ax, [(x, y), ...]) -> dots   -- data points on axes
   draw_triangle(stage, [(x0, y0), (x1, y1), (x2, y2)]) -> Polygon
   draw_bars(stage, values, labels=None) -> bars
