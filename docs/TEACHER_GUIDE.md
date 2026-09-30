@@ -82,6 +82,10 @@ Added 2026-09-30:
 - Bar and node labels that are words render as plain text ("3 for £2");
   bars are spaced to fit their labels.
 - `stage.label(obj, ...)` follows `obj` when it moves.
+- `draw_polygon(stage, points)` draws at those points when they fit on screen,
+  so lines and arrows at the same coordinates meet it; pass `where="left"` to move it.
+- `gradient_descent` draws its curve if nothing is plotted yet.
+- Labels like `r"\pi r"` (maths, no words) render as LaTeX.
 - A beat that draws only axes / a grid / a number line is a background,
   never a beat's picture: always put something on it.
 
