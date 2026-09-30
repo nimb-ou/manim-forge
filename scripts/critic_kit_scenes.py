@@ -194,7 +194,7 @@ def main() -> int:
                                     for im in images]
         body = json.dumps({"contents": [{"role": "user", "parts": parts}],
                            "generationConfig": {"temperature": 0,
-                                                "maxOutputTokens": 400}}).encode()
+                                                "maxOutputTokens": 2048}}).encode()
         data = None
         for attempt in range(2 * len(MODELS)):
             model = MODELS[attempt % len(MODELS)]

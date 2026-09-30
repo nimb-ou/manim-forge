@@ -70,7 +70,7 @@ def tiles(sheet: Path, n: int) -> list[bytes]:
 def ask(key: str, parts: list) -> str | None:
     body = json.dumps({"contents": [{"role": "user", "parts": parts}],
                        "generationConfig": {"temperature": 0,
-                                            "maxOutputTokens": 300}}).encode()
+                                            "maxOutputTokens": 2048}}).encode()
     for attempt in range(8):
         model = MODELS[attempt % len(MODELS)]
         req = urllib.request.Request(f"{URL}/models/{model}:generateContent",
@@ -113,12 +113,22 @@ def judge(tag: str, key: str) -> dict:
         parts = [{"text": text}] + [{"inline_data": {"mime_type": "image/jpeg",
                                                      "data": base64.b64encode(b).decode()}}
                                     for b in imgs]
-        reply = ask(key, parts)
-        if reply is None:
+        # Thinking models spend output tokens before answering; a reply cut
+        # short once scored the missing beats as NO (2026-09-30: 13% where
+        # the same runs had scored ~45%). Only a verdict for every beat counts.
+        verdicts = {}
+        for _ in range(3):
+            reply = ask(key, parts)
+            if reply is None:
+                break
+            verdicts = {int(m.group(1)): m.group(2).upper() for m in
+                        re.finditer(r"^\s*(\d+)\s*[:.)-]\s*(YES|NO)", reply, re.M | re.I)
+                        if 0 < int(m.group(1)) <= len(intents)}
+            if len(verdicts) == len(intents):
+                break
+        if len(verdicts) != len(intents):
+            print(f"    {tag} {k}: incomplete reply, not recorded", flush=True)
             continue
-        verdicts = {int(m.group(1)): m.group(2).upper() for m in
-                    re.finditer(r"^\s*(\d+)\s*[:.)-]\s*(YES|NO)", reply, re.M | re.I)
-                    if 0 < int(m.group(1)) <= len(intents)}
         done[k] = {"title": r["title"], "intents": intents,
                    "verdicts": {str(a): b for a, b in sorted(verdicts.items())}}
         out_path.write_text(json.dumps(done, indent=1))
