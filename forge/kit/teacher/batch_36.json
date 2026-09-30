@@ -1,0 +1,152 @@
+[
+ {
+  "request": "what is conditional probability, using a table of 100 people?",
+  "beats": [
+   {
+    "intent": "A 10 by 10 grid of people with 30 coloured as smokers",
+    "narration": "A hundred people; thirty of them smoke.",
+    "code": "stage.title(\"Conditional probability\")\ndots = draw_dots(stage, n=100, cols=10, color=GREY_B)\nstage.play(*[dots[k].animate.set_color(ORANGE) for k in range(30)])\nstage.caption(\"30 smokers (orange) out of 100\")"
+   },
+   {
+    "intent": "The people with a cough ringed: 15 of the smokers and 7 of the others",
+    "narration": "Twenty two people have a cough: fifteen smokers and seven non-smokers.",
+    "code": "cough = list(range(15)) + list(range(30, 37))\nrings = VGroup(*[Circle(radius=0.2, color=WHITE).move_to(dots[k]) for k in cough])\nstage.play(Create(rings))\nstage.add(rings)"
+   },
+   {
+    "intent": "The smokers alone highlighted beside P(cough | smoker) = 15/30 = 1/2",
+    "narration": "Among smokers only, fifteen of thirty cough: a half. Among non-smokers, seven of seventy: a tenth.",
+    "code": "highlight(stage, VGroup(*[dots[k] for k in range(30)]), color=RED)\nstage.equation(r\"P(\\text{cough} \\mid \\text{smoker}) = \\frac{15}{30} = \\frac12\")"
+   }
+  ]
+ },
+ {
+  "request": "what's the chance of rolling a double six?",
+  "beats": [
+   {
+    "intent": "The 6 by 6 grid of two-dice outcomes with the single cell (6, 6) lit",
+    "narration": "Two dice have thirty six outcomes; only one of them is six and six.",
+    "code": "stage.title(\"A double six\")\ncells = draw_dice_grid(stage, highlight_sum=12)"
+   },
+   {
+    "intent": "The grid beside 1/6 × 1/6 = 1/36",
+    "narration": "Each die shows six with chance a sixth, and the dice do not affect each other, so multiply: one in thirty six.",
+    "code": "stage.equation(r\"\\frac16 \\times \\frac16 = \\frac{1}{36}\")"
+   }
+  ]
+ },
+ {
+  "request": "if a coin gives 15 heads in 20 flips, is it biased?",
+  "beats": [
+   {
+    "intent": "Bars of the chance of each number of heads from 0 to 20 for a fair coin",
+    "narration": "For a fair coin, here is how likely each number of heads is in twenty flips.",
+    "code": "stage.title(\"Is the coin fair?\")\nfrom math import comb\np = [comb(20, k) / 2 ** 20 for k in range(21)]\nbars = draw_bars(stage, p, labels=[str(k) if k % 5 == 0 else \"\" for k in range(21)])"
+   },
+   {
+    "intent": "The bars for 15 or more heads lit in red",
+    "narration": "Light up fifteen heads or more: the results at least as extreme as ours.",
+    "code": "highlight(stage, VGroup(*bars[15:21]), color=RED)"
+   },
+   {
+    "intent": "The red tail beside P(15 or more) ≈ 0.021",
+    "narration": "Together they have a chance of about two percent. A fair coin rarely does this, so we suspect bias.",
+    "code": "stage.equation(r\"P(\\geq 15 \\text{ heads}) \\approx 0.021\")"
+   }
+  ]
+ },
+ {
+  "request": "why doesn't ice cream cause drowning even though they rise together?",
+  "beats": [
+   {
+    "intent": "Axes of month against ice cream sales and drownings, both curves peaking in summer",
+    "narration": "Ice cream sales and drownings both rise and fall together through the year.",
+    "code": "stage.title(\"Correlation is not causation\")\nax = draw_axes(stage, x_range=(0, 12), y_range=(0, 10), labels=(\"month\", \"\"))\nice = plot_graph(stage, ax, lambda m: 5 + 4 * np.sin(TAU * (m - 3) / 12), color=YELLOW, label=\"ice cream\")\ndrown = plot_graph(stage, ax, lambda m: 3 + 2 * np.sin(TAU * (m - 3) / 12), color=BLUE, label=\"drownings\")"
+   },
+   {
+    "intent": "A third curve, temperature, peaking at the same time",
+    "narration": "Both follow a third thing: hot weather.",
+    "code": "temp = plot_graph(stage, ax, lambda m: 5.5 + 3.5 * np.sin(TAU * (m - 3) / 12), color=RED, label=\"temperature\")"
+   },
+   {
+    "intent": "A diagram of temperature with arrows to ice cream and to drownings",
+    "narration": "Heat makes people buy ice cream and makes people swim. Neither causes the other.",
+    "code": "stage.clear()\nnodes = {\"heat\": (0, 0.6), \"ice cream\": (-0.6, -0.5), \"swimming\": (0.6, -0.5)}\ndots, lines = draw_network(stage, nodes, [(\"heat\", \"ice cream\"), (\"heat\", \"swimming\")])\nstage.caption(\"A hidden cause drives both\")"
+   }
+  ]
+ },
+ {
+  "request": "how can a treatment look worse overall but better in every group?",
+  "beats": [
+   {
+    "intent": "Two clusters of points for small and large hospitals with a rising trend inside each",
+    "narration": "Two groups of hospitals. Inside each group, more treatment goes with better recovery.",
+    "code": "stage.title(\"Simpson's paradox\")\nax = draw_axes(stage, x_range=(0, 10), y_range=(0, 10), labels=(\"treated\", \"recovery\"))\na = plot_points(stage, ax, [(1, 7), (2, 7.5), (3, 8), (4, 8.6)], color=GREEN)\nb = plot_points(stage, ax, [(6, 2), (7, 2.6), (8, 3), (9, 3.5)], color=RED)"
+   },
+   {
+    "intent": "Rising lines drawn through each cluster",
+    "narration": "Draw a line through each group: both slope upward.",
+    "code": "la = plot_graph(stage, ax, lambda x: 6.5 + 0.52 * x, x_range=(0.5, 4.5), color=GREEN)\nlb = plot_graph(stage, ax, lambda x: -1 + 0.5 * x, x_range=(5.5, 9.5), color=RED)"
+   },
+   {
+    "intent": "A falling line through all the points together",
+    "narration": "But lump them together and the overall line slopes down, because the sicker hospitals treat more. Always check the groups.",
+    "code": "lall = plot_graph(stage, ax, lambda x: 9.4 - 0.75 * x, x_range=(0.5, 9.5), color=YELLOW)\nstage.caption(\"Each group rises; together they fall\")"
+   }
+  ]
+ },
+ {
+  "request": "why does asking only gym-goers give a bad survey?",
+  "beats": [
+   {
+    "intent": "A town of 100 dots, 20 of them in a box labelled gym",
+    "narration": "A town of a hundred people; twenty of them are at the gym.",
+    "code": "stage.title(\"Sampling bias\")\ndots = draw_dots(stage, n=100, cols=10)\ngym = SurroundingRectangle(VGroup(*dots[:20]), color=YELLOW)\nstage.play(Create(gym))\nstage.add(gym)\nstage.label(gym, \"gym\", direction=LEFT, color=YELLOW)"
+   },
+   {
+    "intent": "The gym-goers coloured green as all exercising, the rest mostly grey",
+    "narration": "Everyone at the gym exercises. Out in the town, only a third do.",
+    "code": "ex = list(range(20)) + list(range(20, 100, 3))\nstage.play(*[dots[k].animate.set_color(GREEN) for k in ex])"
+   },
+   {
+    "intent": "Bars comparing the gym sample's 100% with the town's true share of about 47%",
+    "narration": "Ask only the gym and you conclude everyone exercises. The true share is under half.",
+    "code": "stage.clear()\nbars = draw_bars(stage, [1.0, len(ex) / 100], labels=[\"gym sample\", \"whole town\"])"
+   }
+  ]
+ },
+ {
+  "request": "on average how many rolls does it take to get a six?",
+  "beats": [
+   {
+    "intent": "Bars of the chance the first six comes on roll 1 to 10, shrinking by 5/6 each time",
+    "narration": "The first six could come on the first roll, with chance a sixth, or later: each later roll is five sixths as likely.",
+    "code": "stage.title(\"Waiting for a six\")\np = [(5 / 6) ** (k - 1) / 6 for k in range(1, 11)]\nbars = draw_bars(stage, [round(x, 3) for x in p], labels=list(range(1, 11)))"
+   },
+   {
+    "intent": "The bars beside the average wait E = 6",
+    "narration": "Averaged over all the possibilities, you wait six rolls: one over the chance.",
+    "code": "stage.equation(r\"E = \\sum_{k \\ge 1} k \\cdot \\tfrac16\\left(\\tfrac56\\right)^{k-1} = 6\")"
+   }
+  ]
+ },
+ {
+  "request": "what's the difference between odds of 1 to 3 and a probability of 1/4?",
+  "beats": [
+   {
+    "intent": "A bar split into 1 part win and 3 parts lose",
+    "narration": "Odds of one to three: one way to win for every three ways to lose.",
+    "code": "stage.title(\"Odds and probability\")\nparts = VGroup(*[Rectangle(width=1.2, height=0.8, color=GREEN if k == 0 else RED, fill_opacity=0.7) for k in range(4)]).arrange(RIGHT, buff=0)\nstage.play(FadeIn(parts))\nstage.add(parts)\nstage.label(parts[0], \"win\", direction=UP, color=GREEN)\nstage.label(VGroup(*parts[1:]), \"lose\", direction=UP, color=RED)"
+   },
+   {
+    "intent": "A brace over all four parts labelled the whole",
+    "narration": "Probability compares the wins with everything: one out of four.",
+    "code": "br = Brace(parts, DOWN)\nstage.play(GrowFromCenter(br))\nstage.add(br)\nstage.label(br, \"all 4 outcomes\", direction=DOWN)"
+   },
+   {
+    "intent": "The bar beside odds 1 : 3 = probability 1/4",
+    "narration": "So odds of one to three and a probability of a quarter describe the same chance.",
+    "code": "stage.equation(r\"1 : 3 \\;\\Longleftrightarrow\\; \\frac{1}{1 + 3} = \\frac14\")"
+   }
+  ]
+ }
+]
