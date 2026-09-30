@@ -62,3 +62,17 @@ def test_axis_and_curve_labels_keep_words_and_maths_apart(monkeypatch):
         assert kit._axis_tag(s)[0] == "MathTex", s
     for s in ("more demand", "£k income", "m/s²"):
         assert kit._axis_tag(s)[0] == "Text", s
+
+
+def test_middle_pictures_step_aside_for_an_equation_on_screen(monkeypatch):
+    class Scene:
+        mobjects = []
+    st = kit.Stage.__new__(kit.Stage)
+    st.scene, st._equation, st._equation_where = Scene(), object(), "right"
+    monkeypatch.setattr(kit, "_CURRENT", [st])
+    assert kit._REGIONS["center"] == kit._REGIONS["center"]  # nothing on screen
+    Scene.mobjects = [st._equation]
+    assert kit._REGIONS["center"] == dict.__getitem__(kit._REGIONS, "left")
+    assert kit._REGIONS["right"] == dict.__getitem__(kit._REGIONS, "right")
+    st._equation_where = "left"
+    assert kit._REGIONS["full"] == dict.__getitem__(kit._REGIONS, "right")

@@ -1,0 +1,82 @@
+[
+ {
+  "request": "how do you balance the equation for burning methane?",
+  "beats": [
+   {
+    "intent": "The unbalanced equation CH4 + O2 → CO2 + H2O beside paired bars of C, H and O atoms: 1-1, 4-2, 2-3",
+    "narration": "Methane burns in oxygen to make carbon dioxide and water. Count the atoms on each side: as written, they don't match.",
+    "code": "stage.title(\"Balancing an equation\")\nstage.equation(r\"\\mathrm{CH_4 + O_2 \\to CO_2 + H_2O}\")\nb = draw_bars(stage, [1, 1, 4, 2, 2, 3], labels=[\"C in\", \"C out\", \"H in\", \"H out\", \"O in\", \"O out\"])\nbars = b[0] if len(b) == 2 else b"
+   },
+   {
+    "intent": "The hydrogen and oxygen bars that don't match lit red",
+    "narration": "Carbon matches, but there are four hydrogens going in and only two coming out, and the oxygens are off too.",
+    "code": "highlight(stage, bars[3], color=RED)\nhighlight(stage, bars[5], color=RED)\nstage.caption(\"H: 4 in, 2 out.  O: 2 in, 3 out\")"
+   },
+   {
+    "intent": "The balanced equation CH4 + 2 O2 → CO2 + 2 H2O beside equal bars: 1-1, 4-4, 4-4",
+    "narration": "Make two waters to fix hydrogen. That needs four oxygens, so take two oxygen molecules. Now every atom balances.",
+    "code": "stage.clear()\nstage.equation(r\"\\mathrm{CH_4 + 2\\,O_2 \\to CO_2 + 2\\,H_2O}\")\nb2 = draw_bars(stage, [1, 1, 4, 4, 4, 4], labels=[\"C in\", \"C out\", \"H in\", \"H out\", \"O in\", \"O out\"], color=GREEN)\nstage.caption(\"Balanced: 1 C, 4 H and 4 O on each side\")"
+   }
+  ]
+ },
+ {
+  "request": "what does the pH scale mean?",
+  "beats": [
+   {
+    "intent": "A number line from 0 to 14 with lemon juice at 2, water at 7 and soap at 10",
+    "narration": "The pH scale runs from zero to fourteen. Lemon juice is about two, pure water is seven, soap is about ten.",
+    "code": "stage.title(\"The pH scale\")\nnl = draw_number_line(stage, x_range=(0, 14))\nlemon = mark_point(stage, nl, 2, color=YELLOW, label=\"lemon\")\nwater = mark_point(stage, nl, 7, color=BLUE, label=\"water\")\nsoap = mark_point(stage, nl, 10, color=PURPLE, label=\"soap\")"
+   },
+   {
+    "intent": "The part below 7 shaded red for acid, above 7 blue for alkali",
+    "narration": "Below seven is acidic; above seven is alkaline.",
+    "code": "acid = Line(nl.n2p(0), nl.n2p(7), color=RED, stroke_width=10, stroke_opacity=0.5)\nbase = Line(nl.n2p(7), nl.n2p(14), color=BLUE, stroke_width=10, stroke_opacity=0.5)\nstage.play(Create(acid), Create(base))\nstage.add(acid, base)\nstage.caption(\"acid below 7, alkali above\")"
+   },
+   {
+    "intent": "Bars of acid strength for pH 4, 3 and 2: 1, 10 and 100",
+    "narration": "Each step down the scale is ten times more acidic: pH two is a hundred times more acidic than pH four.",
+    "code": "stage.clear()\nb = draw_bars(stage, [1, 10, 100], labels=[\"pH 4\", \"pH 3\", \"pH 2\"], color=RED)\nstage.caption(\"each step is 10 times stronger\")"
+   }
+  ]
+ },
+ {
+  "request": "how far away is a storm if the thunder comes 3 seconds after the lightning?",
+  "beats": [
+   {
+    "intent": "A lightning bolt drawn as a zigzag and a person far off on the ground",
+    "narration": "Lightning strikes far away. You see the flash at once, because light is so fast.",
+    "code": "stage.title(\"Counting to the thunder\")\nground = draw_line(stage, (-6, -2.5), (6, -2.5), color=GREY_B)\nbolt = VMobject(color=YELLOW, stroke_width=6).set_points_as_corners(\n    [[-4.5, 2.2, 0], [-4.9, 0.8, 0], [-4.3, 0.6, 0], [-4.8, -0.9, 0], [-4.2, -1.1, 0], [-4.6, -2.5, 0]])\nstage.play(Create(bolt))\nstage.add(bolt)\nyou = draw_circle(stage, radius=0.25, color=WHITE, fill=0.8)\nyou.move_to([4.5, -2.0, 0])\nstage.label(you, \"you\", direction=UP)"
+   },
+   {
+    "intent": "A sound wave arrow crawling along the ground from the bolt to the person",
+    "narration": "The sound is much slower: about three hundred and forty metres every second.",
+    "code": "wave = Arrow([-4.4, -2.1, 0], [-4.4, -2.1, 0] + 0.1 * RIGHT, buff=0, color=BLUE)\nstage.add(wave)\nstage.play(wave.animate.put_start_and_end_on([-4.4, -2.1, 0], [4.1, -2.1, 0]), run_time=3, rate_func=linear)\nstage.caption(\"3 seconds for the sound to arrive\")"
+   },
+   {
+    "intent": "The picture beside 343 × 3 ≈ 1030 m ≈ 1 km",
+    "narration": "Three seconds times three hundred and forty three metres a second is about a kilometre.",
+    "code": "stage.equation(r\"343 \\times 3 \\approx 1030\\ \\text{m}\", r\"\\approx 1\\ \\text{km}\")"
+   }
+  ]
+ },
+ {
+  "request": "how does a lens focus light?",
+  "beats": [
+   {
+    "intent": "Five parallel light rays coming from the left towards a lens",
+    "narration": "Parallel rays of light travel towards a curved glass lens.",
+    "code": "stage.title(\"A lens bends light\")\nlens = Ellipse(width=0.6, height=4, color=BLUE, fill_opacity=0.25)\nstage.play(Create(lens))\nstage.add(lens)\nys = [-1.4, -0.7, 0, 0.7, 1.4]\nrays_in = [draw_line(stage, (-6, y), (0, y), color=YELLOW) for y in ys]"
+   },
+   {
+    "intent": "The rays bending at the lens and meeting at one point on the right",
+    "narration": "The glass bends each ray a little, more at the edges, so they all meet at one point.",
+    "code": "f = np.array([3.5, 0, 0])\nrays_out = [Line([0, y, 0], f, color=YELLOW) for y in ys]\nstage.play(*[Create(r) for r in rays_out])\nstage.add(*rays_out)\nfocus = Dot(f, color=RED, radius=0.12)\nstage.play(GrowFromCenter(focus))\nstage.add(focus)\nstage.label(focus, \"focus\", direction=DOWN, color=RED)"
+   },
+   {
+    "intent": "The distance from lens to focus marked as the focal length",
+    "narration": "That distance, from the lens to the focus, is the focal length. A fatter lens bends more and has a shorter one.",
+    "code": "fl = draw_arrow(stage, (0, -2.4), (3.5, -2.4), color=GREEN, label=\"focal length\")"
+   }
+  ]
+ }
+]

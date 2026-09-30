@@ -97,19 +97,35 @@ class _Regions(dict):
     region instead of raising KeyError deep inside a block."""
 
     def __getitem__(self, where):
+        return dict.__getitem__(self, _beside_equation(self._key(where)))
+
+    def _key(self, where):
         if isinstance(where, str):
             w = where.strip().lower()
             if dict.__contains__(self, w):
-                return dict.__getitem__(self, w)
-            key = "left" if "left" in w else "right" if "right" in w else \
+                return w
+            return "left" if "left" in w else "right" if "right" in w else \
                 "full" if w in ("all", "whole", "screen", "full screen") else "center"
-            return dict.__getitem__(self, key)
         try:
             x = float(np.asarray(where, dtype=float).ravel()[0])
         except (TypeError, ValueError, IndexError):
-            return dict.__getitem__(self, "center")
-        key = "left" if x < -0.5 else "right" if x > 0.5 else "center"
-        return dict.__getitem__(self, key)
+            return "center"
+        return "left" if x < -0.5 else "right" if x > 0.5 else "center"
+
+
+def _beside_equation(key: str) -> str:
+    """A picture drawn in the middle while an equation is on screen goes to
+    the other side: bars drawn after "CH4 + O2 -> ..." grew over it
+    (2026-09-30). _make_room covers the other order."""
+    if key not in ("center", "full") or not _CURRENT:
+        return key
+    st = _CURRENT[0]
+    eq = getattr(st, "_equation", None)
+    scene = getattr(st, "scene", None)
+    if eq is None or scene is None or eq not in scene.mobjects:
+        return key
+    side = getattr(st, "_equation_where", "right")
+    return {"right": "left", "left": "right"}.get(side, key)
 
 
 _REGIONS = _Regions({
@@ -264,6 +280,7 @@ class Stage:
             cur = nxt
         self._objects.append(cur)
         self._equation = cur
+        self._equation_where = _REGIONS._key(where)
         return cur
 
     # regions ------------------------------------------------------------
