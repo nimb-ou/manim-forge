@@ -672,14 +672,22 @@ def draw_axes(stage: Stage, x_range=(-1, 5), y_range=(-1, 5), where: str = "cent
     stage.place(ax, where)
     # An axis label with a space or a symbol LaTeX drops ("£k income",
     # "m/s²") as plain text; short maths labels (x, y, t, N) stay LaTeX.
-    axis_tag = lambda t: Text(str(t), font_size=26) if _re.search(r"[ £$%€°²³]", str(t)) \
-        else MathTex(str(t))
-    lab = ax.get_axis_labels(axis_tag(labels[0]), axis_tag(labels[1]))
+    lab = ax.get_axis_labels(_axis_tag(labels[0]), _axis_tag(labels[1]))
     stage.scene.play(Create(ax), FadeIn(lab), run_time=1.5)
     # Part of the axes: moved with them, and kept by clear(keep=[ax]).
     stage.scene.remove(lab)
     ax.add(lab)
     return ax
+
+
+def _axis_tag(t, font_size: int = 48, color=WHITE):
+    """An axis or curve label: LaTeX for maths (x, t, x^2, \\cos x); plain
+    text for words with a space or a symbol LaTeX drops ("£k income",
+    "m/s²", "more demand" came out "moredemand")."""
+    s = str(t)
+    if not _re.search(r"[\\^_]", s) and _re.search(r"[ £$%€°²³]", s):
+        return Text(s, font_size=round(font_size * 0.55), color=color)
+    return MathTex(s, font_size=font_size, color=color)
 
 
 def plot_graph(stage: Stage, ax, f, x_range=None, color=BLUE, label: str | None = None):
@@ -694,8 +702,7 @@ def plot_graph(stage: Stage, ax, f, x_range=None, color=BLUE, label: str | None 
     stage.scene.play(Create(g), run_time=1.5)
     stage._objects.append(g)
     if label:
-        t = MathTex(label, color=color, font_size=32).next_to(
-            g.get_end(), UP + RIGHT, buff=0.1)
+        t = _axis_tag(label, 32, color).next_to(g.get_end(), UP + RIGHT, buff=0.1)
         stage.scene.play(FadeIn(t), run_time=0.5)
         stage._objects.append(t)
     return g

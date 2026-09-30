@@ -1,0 +1,102 @@
+[
+ {
+  "request": "explain supply and demand with a graph",
+  "beats": [
+   {
+    "intent": "Axes of quantity and price with a falling demand line",
+    "narration": "As the price rises, people buy less: the demand line slopes down.",
+    "code": "stage.title(\"Supply and demand\")\nax = draw_axes(stage, x_range=(0, 10), y_range=(0, 10), labels=(\"quantity\", \"price\"))\ndemand = plot_graph(stage, ax, lambda q: 9 - 0.8 * q, x_range=(0, 10), color=BLUE, label=\"demand\")"
+   },
+   {
+    "intent": "A rising supply line crossing it",
+    "narration": "Sellers offer more when the price is higher: the supply line slopes up.",
+    "code": "supply = plot_graph(stage, ax, lambda q: 1 + 0.8 * q, x_range=(0, 10), color=ORANGE, label=\"supply\")"
+   },
+   {
+    "intent": "The crossing point (5, 5) marked as the market price",
+    "narration": "Where they cross, buyers and sellers agree: five units at a price of five.",
+    "code": "eq = mark_point(stage, ax, (5, 5), color=YELLOW, label=\"(5, 5)\")\nstage.caption(\"The market settles where the lines cross\")"
+   },
+   {
+    "intent": "The demand line shifted up and the new crossing at (6, 5.8)",
+    "narration": "If demand grows, its line shifts up. The new crossing is higher and further right: more sold, at a higher price.",
+    "code": "demand2 = plot_graph(stage, ax, lambda q: 10.6 - 0.8 * q, x_range=(0, 10), color=GREEN, label=\"more demand\")\neq2 = mark_point(stage, ax, (6, 5.8), color=GREEN, label=\"(6, 5.8)\")"
+   }
+  ]
+ },
+ {
+  "request": "if a price goes up 20% and then down 20%, is it back where it started?",
+  "beats": [
+   {
+    "intent": "A bar of 100 for the starting price",
+    "narration": "Start with a price of one hundred.",
+    "code": "stage.title(\"Up 20%, then down 20%\")\nb = draw_bars(stage, [100], labels=[\"start\"])"
+   },
+   {
+    "intent": "A second bar of 120 after the rise",
+    "narration": "Up twenty percent: one hundred and twenty.",
+    "code": "b2 = draw_bars(stage, [100, 120], labels=[\"start\", \"+20%\"])"
+   },
+   {
+    "intent": "A third bar of 96 after the fall, shorter than the first",
+    "narration": "Now down twenty percent, but of one hundred and twenty: that's twenty four off, leaving ninety six.",
+    "code": "b3 = draw_bars(stage, [100, 120, 96], labels=[\"start\", \"+20%\", \"-20%\"])\nhighlight(stage, b3[0][2] if len(b3) == 2 else b3[2], color=RED)"
+   },
+   {
+    "intent": "The bars beside 100 × 1.2 × 0.8 = 96",
+    "narration": "The two changes multiply: one point two times zero point eight is zero point nine six.",
+    "code": "stage.equation(r\"100 \\times 1.2 \\times 0.8 = 96\")\nstage.caption(\"4% lower than it started\")"
+   }
+  ]
+ },
+ {
+  "request": "what does the slope of a distance-time graph tell you?",
+  "beats": [
+   {
+    "intent": "Axes of time in hours and distance in km with a car's journey drawn",
+    "narration": "Here is a car trip: distance from home against time.",
+    "code": "stage.title(\"Distance against time\")\nax = draw_axes(stage, x_range=(0, 4), y_range=(0, 200), labels=(\"hours\", \"km\"))\ntrip = lambda t: 60 * t if t <= 2 else (120 if t <= 2.5 else 120 + 50 * (t - 2.5))\ng = plot_graph(stage, ax, trip, color=BLUE)"
+   },
+   {
+    "intent": "The first steady stretch with its rise of 120 km over 2 hours marked",
+    "narration": "For two hours it climbs a hundred and twenty kilometres: a slope of sixty, which is sixty kilometres an hour.",
+    "code": "run = draw_line(stage, ax.c2p(0, 0), ax.c2p(2, 0), color=GREEN)\nrise = draw_line(stage, ax.c2p(2, 0), ax.c2p(2, 120), color=YELLOW)\nstage.label(rise, \"120 km\", direction=RIGHT, color=YELLOW)\nstage.caption(\"slope = 120 ÷ 2 = 60 km/h\")"
+   },
+   {
+    "intent": "The flat stretch from 2 to 2.5 hours lit as a stop",
+    "narration": "Then the line goes flat for half an hour: no distance gained. The car has stopped.",
+    "code": "stop = draw_line(stage, ax.c2p(2, 120), ax.c2p(2.5, 120), color=RED)\nstage.label(stop, \"stopped\", direction=UP, color=RED)"
+   },
+   {
+    "intent": "The last stretch beside its slope, 50 km/h",
+    "narration": "The last stretch is less steep: fifty kilometres an hour. Steeper means faster.",
+    "code": "stage.equation(r\"\\text{slope} = \\frac{75}{1.5} = 50\\ \\text{km/h}\")\nstage.caption(\"Last stretch: less steep, so slower\")"
+   }
+  ]
+ },
+ {
+  "request": "how does a bigger resistor change the current? Ohm's law",
+  "beats": [
+   {
+    "intent": "A battery and resistor loop drawn as a rectangle with a 12 V label",
+    "narration": "A twelve volt battery pushes current around a loop through a resistor.",
+    "code": "stage.title(\"Ohm's law\")\nloop = draw_rectangle(stage, width=5, height=2.6, color=GREY_B, fill=0)\nbat = draw_rectangle(stage, width=0.3, height=0.9, color=YELLOW, fill=0.8)\nbat.move_to(loop.get_left())\nstage.label(bat, \"12 V\", direction=LEFT, color=YELLOW)\nres = draw_rectangle(stage, width=1.2, height=0.4, color=ORANGE, fill=0.6)\nres.move_to(loop.get_top())\nstage.label(res, \"R\", direction=UP, color=ORANGE)"
+   },
+   {
+    "intent": "Dots flowing round the loop for the current",
+    "narration": "Charges flow round the loop. How fast depends on the resistor.",
+    "code": "t = ValueTracker(0)\ncharges = VGroup(*[Dot(radius=0.08, color=YELLOW) for _ in range(12)])\ncharges.add_updater(lambda g: [d.move_to(loop.point_from_proportion((k / 12 + t.get_value()) % 1))\n                               for k, d in enumerate(g)])\nstage.add(charges)\nstage.play(t.animate.set_value(0.5), run_time=4, rate_func=linear)\nstage.caption(\"Current: charge flowing round the loop\")"
+   },
+   {
+    "intent": "Bars of current for R = 2, 4 and 6 ohms: 6, 3 and 2 amps",
+    "narration": "With two ohms, six amps flow. Double the resistance to four: three amps. Six ohms: two amps.",
+    "code": "stage.clear()\nb = draw_bars(stage, [6, 3, 2], labels=[\"2 Ω\", \"4 Ω\", \"6 Ω\"])\nstage.caption(\"current in amps\")"
+   },
+   {
+    "intent": "The bars beside I = V / R = 12 / R",
+    "narration": "Current is voltage divided by resistance: twelve over R.",
+    "code": "stage.equation(r\"I = \\frac{V}{R} = \\frac{12}{R}\")"
+   }
+  ]
+ }
+]

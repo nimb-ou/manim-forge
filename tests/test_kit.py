@@ -53,3 +53,12 @@ def test_spaced_maths_labels_are_latex_and_words_stay_text(monkeypatch):
         assert st._text(s, 28)[0] == "MathTex", s
     for s in ("day 0", r"the \pi slice", "Legs 3 and 4"):
         assert st._text(s, 28)[0] == "Text", s
+
+
+def test_axis_and_curve_labels_keep_words_and_maths_apart(monkeypatch):
+    monkeypatch.setattr(kit, "MathTex", lambda s, **k: ("MathTex", s))
+    monkeypatch.setattr(kit, "Text", lambda s, **k: ("Text", s))
+    for s in ("x", "x^2", r"\cos x", "guess"):
+        assert kit._axis_tag(s)[0] == "MathTex", s
+    for s in ("more demand", "£k income", "m/s²"):
+        assert kit._axis_tag(s)[0] == "Text", s
