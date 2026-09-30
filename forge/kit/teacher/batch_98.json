@@ -1,0 +1,102 @@
+[
+ {
+  "request": "how many times does a heart beat in a day?",
+  "beats": [
+   {
+    "intent": "A heart shape pulsing with 70 beats per minute written beside it",
+    "narration": "A resting heart beats about seventy times a minute.",
+    "code": "stage.title(\"Heartbeats in a day\")\nheart = VGroup(Circle(radius=0.55, color=RED, fill_opacity=0.9).move_to([-4.35, 0.6, 0]), Circle(radius=0.55, color=RED, fill_opacity=0.9).move_to([-3.65, 0.6, 0]),\n               Triangle(color=RED, fill_opacity=0.9).scale(0.95).rotate(PI).move_to([-4.0, -0.25, 0]))\nstage.play(FadeIn(heart))\nstage.add(heart)\nfor _ in range(2):\n    stage.play(heart.animate.scale(1.15), run_time=0.25)\n    stage.play(heart.animate.scale(1 / 1.15), run_time=0.25)\nstage.label(heart, \"70 per minute\", direction=DOWN, color=RED)"
+   },
+   {
+    "intent": "A row showing 60 minutes in an hour and 24 hours in a day",
+    "narration": "There are sixty minutes in an hour and twenty four hours in a day: one thousand four hundred and forty minutes.",
+    "code": "stage.equation(r\"60 \\times 24 = 1440\\ \\text{minutes}\")"
+   },
+   {
+    "intent": "Bars of beats in a minute, an hour and a day: 70, 4200, 100 800",
+    "narration": "Seventy a minute is four thousand two hundred an hour and about a hundred thousand a day.",
+    "code": "stage.clear()\nb = draw_bars(stage, [70, 4200, 100800], labels=[\"minute\", \"hour\", \"day\"], color=RED)\nstage.caption(\"heartbeats\")"
+   },
+   {
+    "intent": "The bars beside 70 × 1440 = 100 800",
+    "narration": "Seventy times fourteen forty is one hundred thousand eight hundred beats, every single day.",
+    "code": "stage.equation(r\"70 \\times 1440 = 100\\,800\")"
+   }
+  ]
+ },
+ {
+  "request": "how does a ramp make lifting easier?",
+  "beats": [
+   {
+    "intent": "A 100 N box on the ground next to a 1 m high step",
+    "narration": "Lifting a hundred newton box straight up one metre takes a hundred newtons of force.",
+    "code": "stage.title(\"Ramps\")\nground = Line([-6, -2.2, 0], [6, -2.2, 0], color=GREY_B)\nstep = Rectangle(width=2.0, height=1.2, color=GREY_B, fill_opacity=0.4).move_to([4.0, -1.6, 0])\nbox = Square(0.6, color=ORANGE, fill_opacity=0.8).move_to([2.6, -1.9, 0])\nstage.play(Create(ground), FadeIn(step), FadeIn(box))\nstage.add(ground, step, box)\nup = Arrow([2.6, -1.5, 0], [2.6, 0.2, 0], buff=0, color=RED)\nstage.play(GrowArrow(up))\nstage.add(up)\nup_lab = stage.label(up, \"100 N straight up\", direction=LEFT, color=RED)"
+   },
+   {
+    "intent": "A long ramp 5 m long rising to the step, the box on it with a small push arrow along it",
+    "narration": "Push it up a ramp five metres long instead, and you only need twenty newtons along the slope.",
+    "code": "stage.play(FadeOut(up), FadeOut(up_lab))\nramp = Polygon([-3.0, -2.2, 0], [3.0, -2.2, 0], [3.0, -1.0, 0], color=BLUE, fill_opacity=0.3)\nstage.play(FadeIn(ramp))\nstage.add(ramp)\nd = np.array([6.0, 1.2, 0]) / np.linalg.norm([6.0, 1.2])\nspot = np.array([-3.0, -2.2, 0]) + 2.0 * d + 0.32 * np.array([-d[1], d[0], 0])\nstage.play(box.animate.move_to(spot).rotate(np.arctan2(1.2, 6.0)))\npush = Arrow(box.get_center() - 1.2 * d, box.get_center() - 0.35 * d, buff=0, color=GREEN)\nstage.play(GrowArrow(push))\nstage.add(push)\nstage.label(push, \"20 N\", direction=UP, color=GREEN)"
+   },
+   {
+    "intent": "The distances labelled: 1 m up the step, 5 m along the ramp",
+    "narration": "The catch: you push it five times as far.",
+    "code": "stage.label(ramp, \"5 m\", direction=DOWN, color=BLUE)\nh = DoubleArrow([3.3, -2.2, 0], [3.3, -1.0, 0], buff=0, color=YELLOW)\nstage.play(GrowArrow(h))\nstage.add(h)\nstage.label(h, \"1 m\", direction=RIGHT, color=YELLOW)"
+   },
+   {
+    "intent": "The picture beside 100 × 1 = 20 × 5",
+    "narration": "Force times distance, the work done, is the same either way: a hundred times one equals twenty times five.",
+    "code": "stage.equation(r\"100 \\times 1 = 20 \\times 5\")"
+   }
+  ]
+ },
+ {
+  "request": "is one 16-inch pizza more than two 12-inch pizzas?",
+  "beats": [
+   {
+    "intent": "One big circle labelled 16 inches and two smaller circles labelled 12 inches",
+    "narration": "One sixteen inch pizza, or two twelve inch pizzas?",
+    "code": "stage.title(\"One big or two small?\")\nk = 0.14\nbig = Circle(radius=8 * k * 1.9, color=ORANGE, fill_opacity=0.5).move_to([-3.2, -0.3, 0])\ns1 = Circle(radius=6 * k * 1.9, color=YELLOW, fill_opacity=0.5).move_to([1.4, -0.3, 0])\ns2 = Circle(radius=6 * k * 1.9, color=YELLOW, fill_opacity=0.5).move_to([4.6, -0.3, 0])\nstage.play(FadeIn(big), FadeIn(s1), FadeIn(s2))\nstage.add(big, s1, s2)\nstage.label(big, \"16 inch\", direction=DOWN, color=ORANGE)\nstage.label(s1, \"12 inch\", direction=DOWN, color=YELLOW)\nstage.label(s2, \"12 inch\", direction=DOWN, color=YELLOW)"
+   },
+   {
+    "intent": "The big pizza's area written as π × 8² ≈ 201",
+    "narration": "The big one has radius eight, so its area is pi times sixty four: about two hundred and one square inches.",
+    "code": "stage.label(big, \"π × 8² ≈ 201\", direction=UP, color=ORANGE)"
+   },
+   {
+    "intent": "Each small pizza's area π × 6² ≈ 113, together 226",
+    "narration": "Each small one has radius six: pi times thirty six, a hundred and thirteen. Two of them make two hundred and twenty six.",
+    "code": "stage.label(s1, \"π × 6² ≈ 113\", direction=UP, color=YELLOW)\nstage.label(s2, \"π × 6² ≈ 113\", direction=UP, color=YELLOW)"
+   },
+   {
+    "intent": "Bars of total pizza: 201 against 226",
+    "narration": "So the two twelve inch pizzas give more pizza. When prices differ, compare the price per square inch.",
+    "code": "stage.clear()\nb = draw_bars(stage, [201, 226], labels=[\"one 16 inch\", \"two 12 inch\"], color=ORANGE)\nstage.caption(\"square inches of pizza\")"
+   }
+  ]
+ },
+ {
+  "request": "what makes an isosceles triangle symmetric?",
+  "beats": [
+   {
+    "intent": "A triangle with two equal sides marked with ticks",
+    "narration": "An isosceles triangle has two equal sides.",
+    "code": "stage.title(\"Isosceles symmetry\")\nA, B, C = np.array([-2.4, -2.0, 0]), np.array([2.4, -2.0, 0]), np.array([0, 2.0, 0])\ntri = Polygon(A, B, C, color=WHITE, fill_color=BLUE, fill_opacity=0.3)\nstage.play(Create(tri))\nstage.add(tri)\nticks = VGroup(*[Line(ORIGIN, 0.3 * RIGHT, color=YELLOW).rotate(PI / 2 + np.arctan2(*(Q - P)[1::-1])).move_to((P + Q) / 2) for P, Q in ((A, C), (B, C))])\nstage.play(Create(ticks))\nstage.add(ticks)"
+   },
+   {
+    "intent": "A dashed fold line from the top down to the middle of the base",
+    "narration": "Draw a line from the top corner straight down to the middle of the base.",
+    "code": "fold = DashedLine(C, (A + B) / 2, color=YELLOW)\nstage.play(Create(fold))\nstage.add(fold)"
+   },
+   {
+    "intent": "The left half flipping over the line onto the right half exactly",
+    "narration": "Fold along it and the two halves match exactly: the line is a line of symmetry.",
+    "code": "left = Polygon(A, (A + B) / 2, C, color=ORANGE, fill_opacity=0.5)\nstage.add(left)\nstage.play(left.animate.flip(UP, about_point=ORIGIN), run_time=1.5)\nstage.caption(\"the halves match\")"
+   },
+   {
+    "intent": "The two base angles marked equal",
+    "narration": "So the two angles at the base must be equal too.",
+    "code": "a1 = Angle(Line(A, B), Line(A, C), radius=0.6, color=GREEN)\na2 = Angle(Line(B, C), Line(B, A), radius=0.6, color=GREEN)\nstage.play(Create(a1), Create(a2))\nstage.add(a1, a2)\nstage.caption(\"equal sides, equal base angles\")"
+   }
+  ]
+ }
+]
