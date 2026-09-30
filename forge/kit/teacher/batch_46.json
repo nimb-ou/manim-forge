@@ -1,0 +1,142 @@
+[
+ {
+  "request": "why is 80 to 100 a 25% rise but 100 to 80 only a 20% fall?",
+  "beats": [
+   {
+    "intent": "Two bars, 80 and 100, with the gap of 20 lit",
+    "narration": "Going from eighty to a hundred adds twenty.",
+    "code": "stage.title(\"Percent change depends on the start\")\nbars = draw_bars(stage, [80, 100], labels=[\"80\", \"100\"])\nstage.caption(\"The gap is 20 either way\")"
+   },
+   {
+    "intent": "The gap 20 compared with 80: a 25% rise",
+    "narration": "Twenty out of the starting eighty is a quarter: a twenty five percent rise.",
+    "code": "highlight(stage, bars[0], color=GREEN)\nstage.equation(r\"\\frac{20}{80} = 25\\%\")"
+   },
+   {
+    "intent": "The same gap compared with 100: a 20% fall",
+    "narration": "Coming back, the same twenty is measured against a hundred: a twenty percent fall.",
+    "code": "highlight(stage, bars[1], color=RED)\nstage.equation(r\"\\frac{20}{100} = 20\\%\")"
+   }
+  ]
+ },
+ {
+  "request": "why can't you just average two averages?",
+  "beats": [
+   {
+    "intent": "Bars of two classes: 10 students averaging 90 and 30 students averaging 50",
+    "narration": "One class of ten averages ninety; another of thirty averages fifty.",
+    "code": "stage.title(\"Averaging averages\")\nbars = draw_bars(stage, [90, 50], labels=[\"10 students\", \"30 students\"])"
+   },
+   {
+    "intent": "A dashed line at 70, the naive average of the two averages",
+    "narration": "The average of the two averages is seventy.",
+    "code": "stage.caption(\"Naive: (90 + 50) / 2 = 70\")"
+   },
+   {
+    "intent": "A dot grid of 40 students, 10 blue and 30 red, beside the true mean 60",
+    "narration": "But there are three times as many students in the second class. Counting everyone: ninety times ten plus fifty times thirty, over forty, is sixty.",
+    "code": "stage.clear()\ndots = draw_dots(stage, n=40, cols=10, color=RED)\nstage.play(*[dots[k].animate.set_color(BLUE) for k in range(10)])\nstage.equation(r\"\\frac{10 \\cdot 90 + 30 \\cdot 50}{40} = 60\")"
+   }
+  ]
+ },
+ {
+  "request": "what is rotational symmetry?",
+  "beats": [
+   {
+    "intent": "A five-pointed star",
+    "narration": "Here is a five-pointed star.",
+    "code": "stage.title(\"Rotational symmetry\")\nstar = Star(n=5, outer_radius=2, color=YELLOW, fill_opacity=0.5)\nstage.play(Create(star))\nstage.add(star)\ndot = Dot(star.get_vertices()[0], color=RED)\nstage.add(dot)"
+   },
+   {
+    "intent": "The star turning a fifth of a turn, 72°, and landing on itself",
+    "narration": "Turn it by seventy two degrees, a fifth of a turn: it looks exactly the same. Only the red point moved.",
+    "code": "stage.play(Rotate(VGroup(star, dot), TAU / 5, about_point=ORIGIN), run_time=1.5)"
+   },
+   {
+    "intent": "The star beside order 5: 360° ÷ 72° = 5",
+    "narration": "It fits onto itself five times in a full turn: rotational symmetry of order five.",
+    "code": "stage.equation(r\"360^\\circ \\div 72^\\circ = 5\")"
+   }
+  ]
+ },
+ {
+  "request": "how many lines of symmetry does a square have?",
+  "beats": [
+   {
+    "intent": "A square",
+    "narration": "Here is a square.",
+    "code": "stage.title(\"Lines of symmetry\")\nsq = Square(side_length=3, color=BLUE, fill_opacity=0.3)\nstage.play(Create(sq))\nstage.add(sq)"
+   },
+   {
+    "intent": "The vertical and horizontal mirror lines through the middle",
+    "narration": "Fold it down the middle either way and the halves match: two lines.",
+    "code": "v = DashedLine(UP * 2, DOWN * 2, color=YELLOW)\nh = DashedLine(LEFT * 2, RIGHT * 2, color=YELLOW)\nstage.play(Create(v), Create(h))\nstage.add(v, h)"
+   },
+   {
+    "intent": "The two diagonal mirror lines added, four in all",
+    "narration": "The two diagonals also work, so a square has four lines of symmetry.",
+    "code": "d1 = DashedLine(np.array([-2, -2, 0]), np.array([2, 2, 0]), color=GREEN)\nd2 = DashedLine(np.array([-2, 2, 0]), np.array([2, -2, 0]), color=GREEN)\nstage.play(Create(d1), Create(d2))\nstage.add(d1, d2)\nstage.caption(\"4 lines of symmetry\")"
+   }
+  ]
+ },
+ {
+  "request": "what are corresponding and alternate angles?",
+  "beats": [
+   {
+    "intent": "Two parallel horizontal lines crossed by a slanted transversal",
+    "narration": "Two parallel lines, crossed by a third line.",
+    "code": "stage.title(\"Angles and parallel lines\")\nl1 = Line(np.array([-4, 1, 0]), np.array([4, 1, 0]), color=WHITE)\nl2 = Line(np.array([-4, -1, 0]), np.array([4, -1, 0]), color=WHITE)\nt = Line(np.array([-1.5, -2.5, 0]), np.array([1.5, 2.5, 0]), color=BLUE)\nstage.play(Create(l1), Create(l2), Create(t))\nstage.add(l1, l2, t)"
+   },
+   {
+    "intent": "The corresponding angles at the two crossings marked equal in yellow",
+    "narration": "At each crossing the angle in the same position is equal: corresponding angles.",
+    "code": "P1, P2 = np.array([0.6, 1, 0]), np.array([-0.6, -1, 0])\nd = np.array([3, 5, 0]) / np.linalg.norm([3, 5])\na1 = Angle(Line(P1, P1 + RIGHT), Line(P1, P1 + d), radius=0.5, color=YELLOW)\na2 = Angle(Line(P2, P2 + RIGHT), Line(P2, P2 + d), radius=0.5, color=YELLOW)\nstage.play(Create(a1), Create(a2))\nstage.add(a1, a2)"
+   },
+   {
+    "intent": "An alternate angle below the top line marked equal in green, making a Z",
+    "narration": "And the angle on the other side of the transversal, under the top line, matches too: alternate angles, in a Z shape.",
+    "code": "a3 = Angle(Line(P1, P1 + LEFT), Line(P1, P1 - d), radius=0.5, color=GREEN)\nstage.play(Create(a3))\nstage.add(a3)\nstage.caption(\"Corresponding (F) and alternate (Z) angles are equal\")"
+   }
+  ]
+ },
+ {
+  "request": "what does a bearing of 060° mean?",
+  "beats": [
+   {
+    "intent": "A compass circle with North at the top",
+    "narration": "Bearings are measured clockwise from North.",
+    "code": "stage.title(\"Bearings\")\nc = draw_circle(stage, radius=2)\nnorth = Arrow(ORIGIN, UP * 2.3, buff=0, color=WHITE)\nstage.play(GrowArrow(north))\nstage.add(north)\nstage.label(north, \"N\", direction=UP)"
+   },
+   {
+    "intent": "An arrow turned 60° clockwise from North, the angle marked",
+    "narration": "Turn sixty degrees clockwise from North.",
+    "code": "b = Arrow(ORIGIN, 2.3 * np.array([np.sin(np.radians(60)), np.cos(np.radians(60)), 0]), buff=0, color=YELLOW)\nstage.play(GrowArrow(b))\nstage.add(b)\nang = Angle(Line(ORIGIN, b.get_end()), Line(ORIGIN, UP), radius=0.7, color=YELLOW)\nstage.play(Create(ang))\nstage.add(ang)"
+   },
+   {
+    "intent": "The arrow labelled 060°, with 180° pointing South shown for comparison",
+    "narration": "That direction is written zero six zero. Due South would be one eight zero.",
+    "code": "stage.label(b, \"060°\", direction=RIGHT, color=YELLOW)\ns = Arrow(ORIGIN, DOWN * 2.3, buff=0, color=GREY_B)\nstage.play(GrowArrow(s))\nstage.add(s)\nstage.label(s, \"180°\", direction=DOWN)"
+   }
+  ]
+ },
+ {
+  "request": "how do you enlarge a shape by scale factor 2 from a point?",
+  "beats": [
+   {
+    "intent": "A small triangle and a centre point O",
+    "narration": "A small triangle, and a centre of enlargement O.",
+    "code": "stage.title(\"Enlargement\")\np = draw_plane(stage)\nO = mark_point(stage, p, (-3, -2), color=RED, label=\"O\")\ntri = Polygon(p.c2p(-2, -1), p.c2p(0, -1), p.c2p(-1, 0.5), color=BLUE, fill_opacity=0.5)\nstage.play(Create(tri))\nstage.add(tri)"
+   },
+   {
+    "intent": "Rays from O through each corner, extended to twice the distance",
+    "narration": "Draw a ray from O through each corner and go twice as far.",
+    "code": "for x, y in ((-2, -1), (0, -1), (-1, 0.5)):\n    draw_line(stage, p.c2p(-3, -2), p.c2p(-3 + 2 * (x + 3), -2 + 2 * (y + 2)), color=GREY_B, dashed=True)"
+   },
+   {
+    "intent": "The enlarged triangle with corners (-1, 0), (3, 0), (1, 3) drawn",
+    "narration": "Join the new points: the same shape, every length doubled.",
+    "code": "big = Polygon(p.c2p(-1, 0), p.c2p(3, 0), p.c2p(1, 3), color=GREEN, fill_opacity=0.4)\nstage.play(Create(big))\nstage.add(big)\nstage.caption(\"Scale factor 2: every length doubles\")"
+   }
+  ]
+ }
+]
