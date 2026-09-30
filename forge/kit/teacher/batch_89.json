@@ -1,0 +1,102 @@
+[
+ {
+  "request": "why are there 60 minutes in an hour?",
+  "beats": [
+   {
+    "intent": "60 dots arranged as a 6 by 10 grid",
+    "narration": "Sixty is a friendly number: it splits evenly in lots of ways.",
+    "code": "stage.title(\"Why 60?\")\ndots = draw_dots(stage, n=60, cols=10, color=YELLOW)\nstage.caption(\"60 = 6 × 10\")"
+   },
+   {
+    "intent": "The same 60 dots regrouped as 4 by 15 and 5 by 12",
+    "narration": "It is six tens, four fifteens, five twelves, three twenties.",
+    "code": "stage.play(dots.animate.arrange_in_grid(rows=4, cols=15, buff=0.25).move_to([0, -0.3, 0]))\nstage.caption(\"60 = 4 × 15 = 5 × 12 = 3 × 20\")"
+   },
+   {
+    "intent": "Bars comparing how many numbers divide 60 (12) and 100 (9)",
+    "narration": "Sixty has twelve divisors. A hundred, though bigger, has only nine.",
+    "code": "stage.clear()\nb = draw_bars(stage, [12, 9], labels=[\"60\", \"100\"], color=GREEN)\nstage.caption(\"how many whole numbers divide it\")"
+   },
+   {
+    "intent": "The bars beside 60's divisors 1, 2, 3, 4, 5, 6, 10, 12, 15, 20, 30, 60",
+    "narration": "So an hour splits neatly into halves, thirds, quarters, fifths and sixths: probably why the ancient Babylonians counted in sixties.",
+    "code": "stage.equation(r\"1, 2, 3, 4, 5, 6,\", r\"10, 12, 15, 20, 30, 60\")"
+   }
+  ]
+ },
+ {
+  "request": "why are bulbs in parallel brighter than bulbs in series?",
+  "beats": [
+   {
+    "intent": "A battery with two bulbs in a single loop, one after the other, both dim",
+    "narration": "Wire two bulbs one after the other in a single loop: in series. The current has to push through both.",
+    "code": "stage.title(\"Series and parallel\")\nloop1 = Rectangle(width=4.0, height=2.4, color=GREY_B).move_to([-3.3, -0.3, 0])\nbat1 = Rectangle(width=0.3, height=0.8, color=YELLOW, fill_opacity=0.8).move_to(loop1.get_left())\nb1 = Circle(radius=0.3, color=YELLOW, fill_opacity=0.25).move_to(loop1.get_top() + 0.8 * LEFT)\nb2 = Circle(radius=0.3, color=YELLOW, fill_opacity=0.25).move_to(loop1.get_top() + 0.8 * RIGHT)\nstage.play(Create(loop1), FadeIn(bat1), FadeIn(b1), FadeIn(b2))\nstage.add(loop1, bat1, b1, b2)\nstage.label(loop1, \"series\", direction=DOWN)"
+   },
+   {
+    "intent": "A second circuit where each bulb has its own branch across the battery, both bright",
+    "narration": "Now give each bulb its own branch: in parallel. Each one gets the battery's full push.",
+    "code": "loop2 = Rectangle(width=4.0, height=2.4, color=GREY_B).move_to([3.0, -0.3, 0])\nmid = Line(loop2.get_top() + 0.2 * RIGHT, loop2.get_bottom() + 0.2 * RIGHT, color=GREY_B)\nbat2 = Rectangle(width=0.3, height=0.8, color=YELLOW, fill_opacity=0.8).move_to(loop2.get_left())\nc1 = Circle(radius=0.3, color=YELLOW, fill_opacity=0.95).move_to(mid.get_center())\nc2 = Circle(radius=0.3, color=YELLOW, fill_opacity=0.95).move_to(loop2.get_right())\nstage.play(Create(loop2), Create(mid), FadeIn(bat2), FadeIn(c1), FadeIn(c2))\nstage.add(loop2, mid, bat2, c1, c2)\nstage.label(loop2, \"parallel\", direction=DOWN)"
+   },
+   {
+    "intent": "Bars of brightness: series bulbs 1/4 each, parallel bulbs 1 each",
+    "narration": "In series each bulb gets half the voltage and half the current: a quarter of the power. In parallel, each shines at full power.",
+    "code": "stage.clear()\nb = draw_bars(stage, [0.25, 0.25, 1, 1], labels=[\"series 1\", \"series 2\", \"parallel 1\", \"parallel 2\"], color=YELLOW)\nstage.caption(\"power in each bulb\")"
+   },
+   {
+    "intent": "The bars beside P = V² / R: half the voltage gives a quarter of the power",
+    "narration": "Power goes as voltage squared over resistance, so halving the voltage quarters it.",
+    "code": "stage.equation(r\"P = \\frac{V^2}{R}\", r\"\\left(\\tfrac12\\right)^2 = \\tfrac14\")"
+   }
+  ]
+ },
+ {
+  "request": "explain the water cycle",
+  "beats": [
+   {
+    "intent": "Sea at the bottom, a mountain on the right, the Sun above, arrows of vapour rising from the sea",
+    "narration": "The Sun warms the sea, and water evaporates, rising as invisible vapour.",
+    "code": "stage.title(\"The water cycle\")\nsea = Rectangle(width=6, height=0.8, stroke_width=0, fill_color=BLUE, fill_opacity=0.6).move_to([-2.5, -2.6, 0])\nhill = Polygon([0.5, -3.0, 0], [5.5, -3.0, 0], [3.5, 0.2, 0], color=GREEN, fill_opacity=0.4)\nsun = Circle(radius=0.5, color=YELLOW, fill_opacity=0.9).move_to([-5.2, 2.2, 0])\nstage.play(FadeIn(sea), FadeIn(hill), FadeIn(sun))\nstage.add(sea, hill, sun)\nvapour = VGroup(*[Arrow([x, -2.1, 0], [x, 0.3, 0], buff=0, color=WHITE, stroke_width=3) for x in (-4, -2.8, -1.6)])\nstage.play(LaggedStart(*[GrowArrow(a) for a in vapour], lag_ratio=0.2))\nstage.add(vapour)\nstage.caption(\"evaporation\")"
+   },
+   {
+    "intent": "A cloud forming high up and drifting over the mountain",
+    "narration": "High up it cools and condenses into tiny droplets: a cloud. Wind carries it towards the land.",
+    "code": "cloud = VGroup(*[Circle(radius=r, color=GREY_A, fill_opacity=0.9, stroke_width=0).move_to([x, 1.2 + y, 0]) for x, y, r in ((-2.6, 0, 0.5), (-2.0, 0.2, 0.6), (-1.4, 0, 0.5))])\nstage.play(FadeIn(cloud))\nstage.play(cloud.animate.shift(5.3 * RIGHT), run_time=2)\nstage.add(cloud)\nstage.caption(\"condensation\")"
+   },
+   {
+    "intent": "Rain falling from the cloud onto the mountain",
+    "narration": "Over the mountain the droplets join, grow heavy and fall as rain.",
+    "code": "drops = VGroup(*[Line([x, 0.6, 0], [x - 0.1, 0.1, 0], color=BLUE) for x in np.linspace(2.4, 4.4, 8)])\nstage.play(LaggedStart(*[Create(d) for d in drops], lag_ratio=0.1))\nstage.add(drops)\nstage.caption(\"precipitation\")"
+   },
+   {
+    "intent": "A river running down the mountain back to the sea, closing the loop",
+    "narration": "Rivers carry the water downhill back to the sea, and the cycle starts again.",
+    "code": "river = VMobject(color=BLUE, stroke_width=6).set_points_smoothly([[3.2, -0.3, 0], [2.4, -1.4, 0], [1.2, -2.2, 0], [0.4, -2.5, 0]])\nstage.play(Create(river))\nstage.add(river)\nstage.caption(\"collection: back to the sea\")"
+   }
+  ]
+ },
+ {
+  "request": "how does a pin tumbler lock work?",
+  "beats": [
+   {
+    "intent": "A lock cylinder with five pin stacks pushed down across the shear line by springs",
+    "narration": "Inside a lock, spring-loaded pins cross the gap between the turning plug and the fixed body, so the plug can't turn.",
+    "code": "stage.title(\"A pin tumbler lock\")\nbody = Rectangle(width=7, height=1.4, color=GREY_B, fill_opacity=0.25).move_to([0, 1.1, 0])\nplug = Rectangle(width=7, height=1.4, color=ORANGE, fill_opacity=0.25).move_to([0, -0.3, 0])\nshear = DashedLine([-3.5, 0.4, 0], [3.5, 0.4, 0], color=RED)\nstage.play(FadeIn(body), FadeIn(plug), Create(shear))\nstage.add(body, plug, shear)\nstage.label(shear, \"shear line\", direction=RIGHT, color=RED)\ncuts = [0.9, 0.5, 1.1, 0.7, 0.4]\nxs = np.linspace(-2.6, 2.6, 5)\ntops, bots = VGroup(), VGroup()\nfor x, c in zip(xs, cuts):\n    bots.add(Rectangle(width=0.35, height=c, color=YELLOW, fill_opacity=0.8).move_to([x, 0.4 - c / 2 + 0.3, 0]))\n    tops.add(Rectangle(width=0.35, height=0.7, color=BLUE, fill_opacity=0.8).move_to([x, 0.4 + 0.35 + 0.3, 0]))\nstage.play(FadeIn(bots), FadeIn(tops))\nstage.add(bots, tops)"
+   },
+   {
+    "intent": "A key sliding in with cuts of different depths under the pins",
+    "narration": "The key has cuts of different depths, one under each pin.",
+    "code": "key = Polygon(*[[x, y, 0] for x, y in [(-4.0, -1.0)] + [(x0, 0.4 - c - 0.05) for x0, c in zip(xs, cuts)] + [(3.3, -0.5), (3.3, -1.0)]],\n              color=GREY_A, fill_opacity=0.6)\nkey.shift(3 * LEFT)\nstage.play(FadeIn(key))\nstage.play(key.animate.shift(3 * RIGHT), run_time=1.5)\nstage.add(key)"
+   },
+   {
+    "intent": "Each pin stack lifted so the gap between its two pins sits exactly on the shear line",
+    "narration": "Each cut lifts its pins by just the right amount: the join between the lower and upper pin lands exactly on the shear line.",
+    "code": "stage.play(*[b.animate.move_to([x, 0.4 - c / 2, 0]) for b, x, c in zip(bots, xs, cuts)],\n           *[t.animate.move_to([x, 0.4 + 0.35, 0]) for t, x in zip(tops, xs)])\nstage.caption(\"every join on the shear line\")"
+   },
+   {
+    "intent": "The plug and key turning free while the body stays put",
+    "narration": "Nothing crosses the shear line any more, so the plug turns. The wrong key leaves at least one pin in the way.",
+    "code": "arrow = CurvedArrow([3.8, -0.8, 0], [3.8, 0.2, 0], color=GREEN)\nstage.play(Create(arrow), VGroup(plug, bots, key).animate.shift(0.12 * DOWN))\nstage.add(arrow)\nstage.caption(\"the plug turns: unlocked\")"
+   }
+  ]
+ }
+]
