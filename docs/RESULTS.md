@@ -692,3 +692,9 @@ plot_points, mark_point(ax, x, y), persistent highlight, smooth
 trace_graph, aliases. Same coder and plans as ab_held_names, so the +6
 points are inference and kit only; the Gemini judge re-checks both when
 its quota resets.
+
+Later kit fixes (persistent highlight, equation continuation, text labels
+on bars, labels that follow, smooth trace_graph): held-out with kit v6 on
+the same plans came out identical (52% / 33%), 19 of 20 contact sheets
+byte-identical -- kit v6 rarely writes the calls they change. The kit is
+saturated for this coder; the lever is data (Claude batches 12-47).
