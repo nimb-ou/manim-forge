@@ -1,0 +1,102 @@
+[
+ {
+  "request": "why does a skater spin faster when she pulls her arms in?",
+  "beats": [
+   {
+    "intent": "A spinning skater seen from above: a dot at the centre with arms reaching out to radius 2, a slow arrow at each hand",
+    "narration": "Seen from above, a skater spins slowly with her arms out.",
+    "code": "stage.title(\"Pulling the arms in\")\nbody = Dot(ORIGIN, radius=0.25, color=BLUE)\narms = Line(LEFT * 2, RIGHT * 2, color=YELLOW, stroke_width=6)\nslow = Arrow(RIGHT * 2, RIGHT * 2 + UP * 0.8, buff=0, color=GREEN)\nstage.play(FadeIn(body), Create(arms), GrowArrow(slow))\nstage.add(body, arms, slow)\nstage.play(Rotate(VGroup(arms, slow), PI / 3, about_point=ORIGIN), run_time=2)"
+   },
+   {
+    "intent": "The arms pulled in to radius 1 and the spin speeding up",
+    "narration": "She pulls her arms in to half the radius, and spins much faster.",
+    "code": "arms2 = Line(LEFT * 1, RIGHT * 1, color=YELLOW, stroke_width=6).rotate(PI / 3)\nstage.play(Transform(arms, arms2), FadeOut(slow))\nstage.play(Rotate(arms, 4 * PI / 3, about_point=ORIGIN), run_time=2)"
+   },
+   {
+    "intent": "The skater beside L = I ω kept constant: I down, ω up",
+    "narration": "Her spin, angular momentum, stays the same. With her mass closer in, the turning rate has to rise.",
+    "code": "stage.equation(r\"L = I\\omega = \\text{constant}\")"
+   }
+  ]
+ },
+ {
+  "request": "how does a pulley halve the force you need?",
+  "beats": [
+   {
+    "intent": "A 100 N weight hanging from one rope over a fixed pulley",
+    "narration": "Lift a hundred newton weight with one rope over a fixed wheel: you pull a hundred newtons.",
+    "code": "stage.title(\"Pulleys\")\nwheel = Circle(radius=0.5, color=GREY_B).move_to([-3, 2, 0])\nrope = VGroup(Line([-3.5, 2, 0], [-3.5, -1, 0]), Line([-2.5, 2, 0], [-2.5, 0, 0])).set_color(WHITE)\nbox = Square(side_length=0.8, color=ORANGE, fill_opacity=0.8).move_to([-3.5, -1.4, 0])\nstage.play(Create(wheel), Create(rope), FadeIn(box))\nstage.add(wheel, rope, box)\nstage.label(box, \"100 N\", direction=DOWN)\npull = Arrow([-2.5, 0, 0], [-2.5, -1.2, 0], buff=0, color=RED)\nstage.play(GrowArrow(pull))\nstage.add(pull)\nstage.label(pull, \"100 N\", direction=RIGHT, color=RED)"
+   },
+   {
+    "intent": "A second set-up: the weight hangs from a moving pulley held by two rope sections, each pulling 50 N",
+    "narration": "Hang the weight from a moving pulley instead. Two sections of rope now hold it up, so each carries fifty.",
+    "code": "w2 = Circle(radius=0.5, color=GREY_B).move_to([3, -0.2, 0])\ntop = Line([1.8, 2.5, 0], [4.2, 2.5, 0], color=GREY)\nr1 = Line([2.5, 2.5, 0], [2.5, -0.2, 0], color=WHITE)\nr2 = Line([3.5, -0.2, 0], [3.5, 1.5, 0], color=WHITE)\nbox2 = Square(side_length=0.8, color=ORANGE, fill_opacity=0.8).move_to([3, -1.3, 0])\nstage.play(Create(top), Create(w2), Create(r1), Create(r2), FadeIn(box2))\nstage.add(top, w2, r1, r2, box2)\nup = Arrow([3.5, 1.5, 0], [3.5, 2.4, 0], buff=0, color=RED)\nstage.play(GrowArrow(up))\nstage.add(up)\nstage.label(up, \"50 N\", direction=RIGHT, color=RED)"
+   },
+   {
+    "intent": "Both set-ups beside 'half the force, twice the rope'",
+    "narration": "You pull half as hard, but you must pull twice as much rope: the work is the same.",
+    "code": "stage.caption(\"Half the force, twice the rope\")"
+   }
+  ]
+ },
+ {
+  "request": "why is pushing a box up a ramp easier than lifting it?",
+  "beats": [
+   {
+    "intent": "A ramp 5 m long rising 1 m, with a box on it",
+    "narration": "A ramp five metres long that rises one metre, with a two hundred newton box.",
+    "code": "stage.title(\"A ramp\")\nramp = Polygon([-4, -2, 0], [3, -2, 0], [3, -0.6, 0], color=GREY_B, fill_opacity=0.4)\nstage.play(Create(ramp))\nstage.add(ramp)\nbox = Square(side_length=0.7, color=ORANGE, fill_opacity=0.8).move_to([-3, -1.45, 0]).rotate(np.arctan(1.4 / 7))\nstage.play(FadeIn(box))\nstage.add(box)\nstage.label(box, \"200 N\", direction=UP)"
+   },
+   {
+    "intent": "The box pushed up the ramp with a small arrow of 40 N along it",
+    "narration": "Push it up the slope: you only need about forty newtons, a fifth of its weight.",
+    "code": "push = Arrow(box.get_center() + LEFT * 1.2 + DOWN * 0.24, box.get_center(), buff=0.3, color=RED)\nstage.play(GrowArrow(push))\nstage.add(push)\nstage.play(VGroup(box, push).animate.shift(np.array([5, 1.0, 0])), run_time=2)\nstage.label(push, \"40 N\", direction=DOWN, color=RED)"
+   },
+   {
+    "intent": "The ramp beside 40 × 5 = 200 × 1: same work, smaller force",
+    "narration": "Forty newtons over five metres is the same work as two hundred newtons lifted one metre.",
+    "code": "stage.equation(r\"40 \\times 5 = 200 \\times 1 = 200\\ \\text{J}\")"
+   }
+  ]
+ },
+ {
+  "request": "how does a thermostat keep a room at 20 degrees?",
+  "beats": [
+   {
+    "intent": "Axes of time against temperature with a target band from 19 to 21",
+    "narration": "The thermostat aims for twenty degrees, allowing a band from nineteen to twenty one.",
+    "code": "stage.title(\"A thermostat\")\nax = draw_axes(stage, x_range=(0, 60), y_range=(15, 23), labels=(\"min\", \"°C\"))\nband = Rectangle(width=ax.c2p(60, 0)[0] - ax.c2p(0, 0)[0], height=ax.c2p(0, 21)[1] - ax.c2p(0, 19)[1], color=GREEN, fill_opacity=0.2, stroke_width=0).move_to(ax.c2p(30, 20))\nstage.play(FadeIn(band))\nstage.add(band)"
+   },
+   {
+    "intent": "A zigzag temperature line rising to 21, falling to 19, rising again",
+    "narration": "When it drops to nineteen the heating switches on and warms the room to twenty one, then switches off and it cools again.",
+    "code": "pts = [(0, 17), (8, 21)] + [(8 + 13 * k + d, t) for k in range(4) for d, t in ((7, 19), (13, 21))]\nzig = VMobject(color=RED).set_points_as_corners([ax.c2p(x, y) for x, y in pts if x <= 60])\nstage.play(Create(zig), run_time=2.5)\nstage.add(zig)"
+   },
+   {
+    "intent": "The zigzag beside 'on below 19, off above 21'",
+    "narration": "It never sits still at twenty; it swings gently inside the band.",
+    "code": "stage.caption(\"Heating on below 19°C, off above 21°C\")"
+   }
+  ]
+ },
+ {
+  "request": "how far does a bike wheel roll in one turn?",
+  "beats": [
+   {
+    "intent": "A wheel of radius 0.35 m on the ground with a red mark at the bottom",
+    "narration": "A bicycle wheel with a radius of thirty five centimetres, a mark at the bottom.",
+    "code": "stage.title(\"One turn of a wheel\")\nground = draw_line(stage, (-6, -1.5), (6, -1.5))\nt = ValueTracker(0)\nr = 0.9\ncx = lambda: -4 + r * t.get_value()\nwheel = always_redraw(lambda: Circle(radius=r, color=BLUE).move_to([cx(), -1.5 + r, 0]))\nmark = always_redraw(lambda: Dot([cx() - r * np.sin(t.get_value()), -1.5 + r - r * np.cos(t.get_value()), 0], color=RED))\nstage.play(FadeIn(wheel), FadeIn(mark))\nstage.add(wheel, mark)"
+   },
+   {
+    "intent": "The wheel rolling one full turn, the mark returning to the ground",
+    "narration": "Roll it one full turn until the mark touches the ground again.",
+    "code": "stage.play(t.animate.set_value(TAU), run_time=3, rate_func=linear)"
+   },
+   {
+    "intent": "A brace along the ground for the distance travelled beside 2π × 0.35 ≈ 2.2 m",
+    "narration": "It has rolled exactly one circumference: two pi times point three five, about two point two metres.",
+    "code": "br = Brace(Line([-4, -1.5, 0], [-4 + TAU * r, -1.5, 0]), DOWN)\nstage.play(GrowFromCenter(br))\nstage.add(br)\nstage.label(br, \"one circumference\", direction=DOWN)\nstage.caption(\"2π × 0.35 ≈ 2.2 m per turn\")"
+   }
+  ]
+ }
+]
