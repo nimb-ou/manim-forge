@@ -1,0 +1,82 @@
+[
+ {
+  "request": "why is the median sometimes better than the mean?",
+  "beats": [
+   {
+    "intent": "Five house prices as dots on a number line: 3, 4, 5, 6 and 50 (hundred thousand)",
+    "narration": "Five houses on a street sell for three, four, five and six hundred thousand, and one mansion for five million.",
+    "code": "stage.title(\"Mean or median?\")\nnl = draw_number_line(stage, x_range=(0, 50))\nfor v in (3, 4, 5, 6, 50):\n    mark_point(stage, nl, v, color=YELLOW)\nstage.caption(\"prices in £100 000s\")"
+   },
+   {
+    "intent": "The mean 13.6 marked, far from every ordinary house",
+    "narration": "The mean adds them and divides by five: thirteen point six. That's more than twice any ordinary house.",
+    "code": "mean = mark_point(stage, nl, 13.6, color=RED, label=\"mean 13.6\", direction=UR)"
+   },
+   {
+    "intent": "The median 5 marked in the middle of the four close dots",
+    "narration": "The median is the middle price when they're in order: five. It ignores how extreme the mansion is, so it describes a typical house better.",
+    "code": "med = mark_point(stage, nl, 5, color=GREEN, label=\"median 5\", direction=UL)\nstage.caption(\"mean = 68 ÷ 5 = 13.6, median = 5\")"
+   }
+  ]
+ },
+ {
+  "request": "if you double the sides of a square, what happens to its area?",
+  "beats": [
+   {
+    "intent": "A 1 by 1 square next to a 2 by 2 square split into four unit squares",
+    "narration": "Take a square with side one. Double the side to two.",
+    "code": "stage.title(\"Double the side\")\nsmall = Square(1.0, color=BLUE, fill_opacity=0.5).move_to([-4, -0.8, 0])\nbig = VGroup(*[Square(1.0, color=GREEN, fill_opacity=0.5) for _ in range(4)]).arrange_in_grid(rows=2, cols=2, buff=0).move_to([-1, -0.3, 0])\nstage.play(FadeIn(small), FadeIn(big))\nstage.add(small, big)\nstage.label(small, \"1\", direction=DOWN, color=BLUE)\nstage.label(big, \"2\", direction=DOWN, color=GREEN)"
+   },
+   {
+    "intent": "A 3 by 3 square of nine unit squares beside them",
+    "narration": "The doubled square holds four of the small ones, not two. Triple the side and it holds nine.",
+    "code": "bigger = VGroup(*[Square(1.0, color=ORANGE, fill_opacity=0.5) for _ in range(9)]).arrange_in_grid(rows=3, cols=3, buff=0).move_to([3.2, 0.2, 0])\nstage.play(LaggedStart(*[FadeIn(s) for s in bigger], lag_ratio=0.1))\nstage.add(bigger)\nstage.label(bigger, \"3\", direction=DOWN, color=ORANGE)\nstage.caption(\"areas 1, 4, 9\")"
+   },
+   {
+    "intent": "The squares beside area × k² when sides × k",
+    "narration": "Scale the sides by k and the area scales by k squared. That's true of any shape, not just squares.",
+    "code": "stage.equation(r\"\\text{sides} \\times k \\Rightarrow \\text{area} \\times k^2\")"
+   }
+  ]
+ },
+ {
+  "request": "how many ways can 4 people sit in a row?",
+  "beats": [
+   {
+    "intent": "Four empty seats and four people A, B, C, D",
+    "narration": "Four people, four seats in a row.",
+    "code": "stage.title(\"Arranging 4 people\")\nseats = VGroup(*[Square(1.1, color=GREY_B) for _ in range(4)]).arrange(RIGHT, buff=0.3).move_to([0, 0.8, 0])\nstage.play(Create(seats))\nstage.add(seats)\npeople = VGroup(*[Circle(radius=0.3, color=c, fill_opacity=0.8) for c in (BLUE, GREEN, ORANGE, RED)]).arrange(RIGHT, buff=0.5).move_to([0, -1.2, 0])\nstage.play(FadeIn(people))\nstage.add(people)\nfor p, n in zip(people, \"ABCD\"):\n    stage.label(p, n, direction=DOWN)"
+   },
+   {
+    "intent": "The number of choices written under each seat: 4, 3, 2, 1",
+    "narration": "The first seat can take any of four people. Then three are left for the second, two for the third, one for the last.",
+    "code": "for s, n in zip(seats, \"4321\"):\n    t = Text(n, font_size=40, color=YELLOW).move_to(s)\n    stage.play(FadeIn(t), run_time=0.3)\n    stage.add(t)"
+   },
+   {
+    "intent": "The seats beside 4 × 3 × 2 × 1 = 24",
+    "narration": "Multiply the choices: twenty four different orders. That product is called four factorial.",
+    "code": "stage.equation(r\"4! = 4 \\times 3 \\times 2 \\times 1\", r\"= 24\")"
+   }
+  ]
+ },
+ {
+  "request": "how does an arch bridge hold up heavy loads?",
+  "beats": [
+   {
+    "intent": "A stone arch spanning a river between two banks",
+    "narration": "An arch bridge curves over the river, resting on the banks at each end.",
+    "code": "stage.title(\"An arch bridge\")\nriver = Rectangle(width=8, height=0.6, stroke_width=0, fill_color=BLUE, fill_opacity=0.5).move_to([0, -2.4, 0])\nbank_l = Rectangle(width=2, height=1.2, color=GREY_B, fill_opacity=0.6).move_to([-5, -2.1, 0])\nbank_r = Rectangle(width=2, height=1.2, color=GREY_B, fill_opacity=0.6).move_to([5, -2.1, 0])\narch = ArcBetweenPoints([-4, -1.5, 0], [4, -1.5, 0], angle=-PI * 0.7, color=ORANGE, stroke_width=14)\ndeck = Line([-6, 0.9, 0], [6, 0.9, 0], color=GREY_B, stroke_width=8)\nstage.play(FadeIn(river), FadeIn(bank_l), FadeIn(bank_r), Create(arch), Create(deck))\nstage.add(river, bank_l, bank_r, arch, deck)"
+   },
+   {
+    "intent": "A heavy load pressing down in the middle and arrows following the curve of the arch down to both banks",
+    "narration": "A lorry presses down in the middle. The arch turns that downward push into squeezing along its curve, out to both ends.",
+    "code": "load = Square(0.8, color=RED, fill_opacity=0.8).move_to([0, 1.4, 0])\nstage.play(FadeIn(load, shift=DOWN))\nstage.add(load)\ndown = Arrow([0, 1.0, 0], [0, 0.0, 0], buff=0, color=RED)\nstage.play(GrowArrow(down))\nstage.add(down)\nfor t0, t1 in ((0.5, 0.15), (0.5, 0.85)):\n    a = Arrow(arch.point_from_proportion(t0), arch.point_from_proportion(t1), buff=0, color=YELLOW, path_arc=-0.6 if t1 < t0 else 0.6)\n    stage.play(GrowArrow(a))\n    stage.add(a)\nstage.caption(\"the load becomes squeeze along the arch\")"
+   },
+   {
+    "intent": "The banks pushing back inward and upward at the feet of the arch",
+    "narration": "At the ends, the banks push back, inward and up. Stone is very strong when squeezed, so arches have stood for two thousand years.",
+    "code": "for x, d in ((-4, np.array([0.8, 1.0, 0])), (4, np.array([-0.8, 1.0, 0]))):\n    a = Arrow([x, -1.5, 0] - d, [x, -1.5, 0], buff=0, color=GREEN)\n    stage.play(GrowArrow(a))\n    stage.add(a)\nstage.caption(\"the banks push back: stone loves squeezing\")"
+   }
+  ]
+ }
+]
