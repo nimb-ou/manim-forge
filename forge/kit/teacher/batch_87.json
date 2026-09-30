@@ -1,0 +1,82 @@
+[
+ {
+  "request": "why does my birthday land one day later in the week each year?",
+  "beats": [
+   {
+    "intent": "A row of the seven weekdays with Monday lit as this year's birthday",
+    "narration": "This year your birthday is on a Monday.",
+    "code": "stage.title(\"Birthday weekdays\")\ndays = [\"Mon\", \"Tue\", \"Wed\", \"Thu\", \"Fri\", \"Sat\", \"Sun\"]\nrow = VGroup(*[Rectangle(width=1.3, height=0.9, color=GREY_B) for _ in days]).arrange(RIGHT, buff=0.1).move_to([0, 1.0, 0])\nnames = VGroup(*[Text(d, font_size=26).move_to(r) for d, r in zip(days, row)])\nstage.play(Create(row), FadeIn(names))\nstage.add(row, names)\nstage.play(row[0].animate.set_fill(YELLOW, opacity=0.6))"
+   },
+   {
+    "intent": "A bar of 365 days split into 52 full weeks and 1 day left over",
+    "narration": "A year has three hundred and sixty five days: fifty two full weeks and one day more.",
+    "code": "weeks = Rectangle(width=8.2, height=0.7, color=BLUE, fill_opacity=0.4).move_to([-0.5, -0.8, 0])\nextra = Rectangle(width=0.4, height=0.7, color=RED, fill_opacity=0.7).next_to(weeks, RIGHT, buff=0)\nstage.play(FadeIn(weeks), FadeIn(extra))\nstage.add(weeks, extra)\nstage.label(weeks, \"52 weeks = 364 days\", direction=DOWN, color=BLUE)\nstage.label(extra, \"+1\", direction=DOWN, color=RED)"
+   },
+   {
+    "intent": "Tuesday lit as next year's birthday, beside 365 = 52 × 7 + 1",
+    "narration": "That spare day pushes your birthday one weekday later: Tuesday next year. After a leap day, it jumps two.",
+    "code": "stage.play(row[1].animate.set_fill(GREEN, opacity=0.6))\nstage.equation(r\"365 = 52 \\times 7 + 1\")"
+   }
+  ]
+ },
+ {
+  "request": "why is a kilobyte sometimes 1024 bytes?",
+  "beats": [
+   {
+    "intent": "Bars of powers of two from 2 to 1024",
+    "narration": "Computers count in twos: two, four, eight, doubling each time.",
+    "code": "stage.title(\"Why 1024?\")\nb = draw_bars(stage, [2 ** k for k in range(1, 11)], labels=[str(k) for k in range(1, 11)], color=GREEN)\nstage.caption(\"2 to the power 1 ... 10\")"
+   },
+   {
+    "intent": "The tenth bar lit and labelled 1024, close to 1000",
+    "narration": "The tenth doubling lands on one thousand and twenty four, very close to a thousand.",
+    "code": "bars = b[0] if len(b) == 2 else b\nhighlight(stage, bars[9], color=YELLOW)\nstage.label(bars[9], \"1024\", direction=UP, color=YELLOW)"
+   },
+   {
+    "intent": "The bars beside 2¹⁰ = 1024 ≈ 1000",
+    "narration": "So a kilobyte, meant to be a thousand bytes, was often taken as two to the ten, the nearest power of two.",
+    "code": "stage.equation(r\"2^{10} = 1024 \\approx 1000\")"
+   }
+  ]
+ },
+ {
+  "request": "what does a 70% chance of rain actually mean?",
+  "beats": [
+   {
+    "intent": "Ten boxes for ten days with the same weather pattern",
+    "narration": "Imagine ten days with exactly this kind of weather.",
+    "code": "stage.title(\"A 70% chance of rain\")\nboxes = VGroup(*[RoundedRectangle(width=1.0, height=1.0, corner_radius=0.15, color=GREY_B) for _ in range(10)]).arrange(RIGHT, buff=0.15).move_to([0, 0.6, 0])\nstage.play(LaggedStart(*[Create(b) for b in boxes], lag_ratio=0.08))\nstage.add(boxes)"
+   },
+   {
+    "intent": "Seven boxes filled blue with raindrops and three yellow for dry",
+    "narration": "On about seven of them it rains somewhere in the forecast area; on three it stays dry.",
+    "code": "stage.play(*[b.animate.set_fill(BLUE if k < 7 else YELLOW, opacity=0.6) for k, b in enumerate(boxes)])\nfor k, b in enumerate(boxes):\n    stage.add(Text(\"rain\" if k < 7 else \"dry\", font_size=18).move_to(b))\nstage.caption(\"7 of 10 such days: rain\")"
+   },
+   {
+    "intent": "The boxes beside 7 / 10 = 70%",
+    "narration": "It doesn't mean it will rain for seventy percent of the day, or over seventy percent of the area.",
+    "code": "stage.equation(r\"\\frac{7}{10} = 70\\%\")"
+   }
+  ]
+ },
+ {
+  "request": "if I drive there at 60 km/h and back at 40 km/h, is my average 50?",
+  "beats": [
+   {
+    "intent": "A road of 60 km with a car going there at 60 km/h taking 1 hour",
+    "narration": "The town is sixty kilometres away. Going there at sixty takes one hour.",
+    "code": "stage.title(\"Average speed of a round trip\")\nroad = Line([-5, 0.6, 0], [5, 0.6, 0], color=GREY_B)\nstage.play(Create(road))\nstage.add(road)\nstage.label(road, \"60 km\", direction=UP)\ncar = Rectangle(width=0.7, height=0.35, color=BLUE, fill_opacity=0.9).move_to([-5, 0.85, 0])\nstage.play(FadeIn(car))\nstage.play(car.animate.move_to([5, 0.85, 0]), run_time=1.0, rate_func=linear)\nstage.add(car)\nstage.caption(\"there: 60 km at 60 km/h = 1 hour\")"
+   },
+   {
+    "intent": "The car coming back more slowly, taking 1.5 hours",
+    "narration": "Coming back at forty takes an hour and a half.",
+    "code": "stage.play(car.animate.move_to([-5, 0.35, 0]), run_time=1.5, rate_func=linear)\nstage.caption(\"back: 60 km at 40 km/h = 1.5 hours\")"
+   },
+   {
+    "intent": "Bars of time: 1 h there and 1.5 h back, beside 120 km ÷ 2.5 h = 48 km/h",
+    "narration": "In all, a hundred and twenty kilometres in two and a half hours: forty eight, not fifty. You spend longer at the slow speed.",
+    "code": "stage.clear()\nb = draw_bars(stage, [1, 1.5], labels=[\"there\", \"back\"], color=ORANGE)\nstage.equation(r\"\\frac{120}{2.5} = 48\\ \\text{km/h}\")\nstage.caption(\"hours: 1 there, 1.5 back\")"
+   }
+  ]
+ }
+]
