@@ -1,0 +1,197 @@
+[
+ {
+  "request": "find the area of a circle of radius 3 by cutting it into slices",
+  "beats": [
+   {
+    "intent": "A circle cut into 20 slices",
+    "narration": "Cut a circle of radius three into twenty thin slices.",
+    "code": "stage.title(\"Area of a circle, r = 3\")\nsecs = slice_circle(stage, n=20)"
+   },
+   {
+    "intent": "The slices laid alternately into a near-rectangle",
+    "narration": "Lay them head to tail: nearly a rectangle.",
+    "code": "unroll_slices(stage, secs)"
+   },
+   {
+    "intent": "The rectangle beside width πr = 3π, height r = 3, area 9π ≈ 28.3",
+    "narration": "Its width is half the circumference, three pi, and its height the radius, three: nine pi, about twenty eight point three.",
+    "code": "stage.equation(r\"3\\pi \\times 3 = 9\\pi \\approx 28.3\")"
+   }
+  ]
+ },
+ {
+  "request": "what is the slope of 1/x at x = 1?",
+  "beats": [
+   {
+    "intent": "Axes with y = 1/x from 0.3 to 4",
+    "narration": "Here is the curve one over x.",
+    "code": "stage.title(\"The slope of 1/x\")\nax = draw_axes(stage, x_range=(0, 4), y_range=(0, 3.5))\nf = lambda x: 1 / x\ng = plot_graph(stage, ax, f, x_range=(0.3, 4), label=\"1/x\")"
+   },
+   {
+    "intent": "A secant from x = 1 shrinking to the tangent, its slope settling at -1",
+    "narration": "Shrink a secant from one towards the point: its slope settles at minus one.",
+    "code": "secant_to_tangent(stage, ax, f, 1, h=1.5)"
+   },
+   {
+    "intent": "The point (1, 1) beside d/dx (1/x) = -1/x^2 = -1",
+    "narration": "The derivative is minus one over x squared, minus one at x equals one.",
+    "code": "p = mark_point(stage, ax, 1, 1, color=RED, label=\"(1, 1)\")\nstage.equation(r\"\\frac{d}{dx}\\frac1x = -\\frac{1}{x^2} = -1\")"
+   }
+  ]
+ },
+ {
+  "request": "which vectors does the matrix [[3, 1], [0, 2]] only stretch?",
+  "beats": [
+   {
+    "intent": "A grid with the matrix applied, two eigen-directions staying on their lines",
+    "narration": "Apply the matrix three, one, zero, two. Two directions keep their line: one is stretched by three, the other by two.",
+    "code": "stage.title(\"Eigenvectors of [[3, 1], [0, 2]]\")\np = draw_plane(stage)\nshow_eigenvectors(stage, p, [[3, 1], [0, 2]])"
+   },
+   {
+    "intent": "The grid beside the eigenvalues 3 and 2 on the diagonal",
+    "narration": "For a triangular matrix the stretch factors are the numbers on the diagonal: three and two.",
+    "code": "stage.equation(r\"\\lambda = 3,\\ 2\")"
+   }
+  ]
+ },
+ {
+  "request": "what are the coordinates of (3, 1) in the basis (2, 0) and (1, 1)?",
+  "beats": [
+   {
+    "intent": "The grid of the basis b1 = (2, 0), b2 = (1, 1) drawn over the plane",
+    "narration": "Take two new basis vectors, two, zero and one, one. They make a slanted grid.",
+    "code": "stage.title(\"Coordinates in another basis\")\np = draw_plane(stage)\nbasis_grid(stage, p, (2, 0), (1, 1))"
+   },
+   {
+    "intent": "The point (3, 1) reached by one b1 then one b2",
+    "narration": "The point three, one is one step of b1 and one step of b2.",
+    "code": "b1 = draw_vector(stage, p, (2, 0), color=GREEN, label=\"b1\")\nstep = draw_arrow(stage, p.c2p(2, 0), p.c2p(3, 1))\npt = mark_point(stage, p, (3, 1), color=RED, label=\"(3, 1)\")"
+   },
+   {
+    "intent": "The point beside its new coordinates (1, 1)",
+    "narration": "So in the new basis its coordinates are one, one.",
+    "code": "stage.equation(r\"(3, 1) = 1 \\cdot (2, 0) + 1 \\cdot (1, 1)\")"
+   }
+  ]
+ },
+ {
+  "request": "why is a pendulum's swing a cosine curve?",
+  "beats": [
+   {
+    "intent": "A pendulum swinging with its angle traced over time",
+    "narration": "Pull a pendulum aside and let go. Plot its angle against time as it swings.",
+    "code": "stage.title(\"A pendulum's swing\")\nax, trace = swing_pendulum(stage, amplitude=0.5, swings=2, period=2)"
+   },
+   {
+    "intent": "The trace beside θ(t) = θ0 cos(2πt / T)",
+    "narration": "For small swings the trace is a cosine: it starts at the full angle and repeats every period.",
+    "code": "stage.equation(r\"\\theta(t) = \\theta_0 \\cos\\frac{2\\pi t}{T}\")"
+   }
+  ]
+ },
+ {
+  "request": "what does 1 + 1/4 + 1/9 + 1/16 + ... add up to?",
+  "beats": [
+   {
+    "intent": "Bars of 1/k^2 stacking into a running total that levels off",
+    "narration": "Add the reciprocals of the squares: one, a quarter, a ninth, a sixteenth...",
+    "code": "stage.title(\"The Basel sum\")\nbars, total = show_partial_sums(stage, lambda k: 1 / k ** 2, n=12)"
+   },
+   {
+    "intent": "The total beside π^2/6 ≈ 1.645",
+    "narration": "The total creeps up to pi squared over six, about one point six four five, a famous surprise.",
+    "code": "stage.equation(r\"\\sum_{k=1}^{\\infty} \\frac{1}{k^2} = \\frac{\\pi^2}{6} \\approx 1.645\")"
+   }
+  ]
+ },
+ {
+  "request": "what does multiplying a vector by -2 do?",
+  "beats": [
+   {
+    "intent": "A grid with the vector v = (1, 1)",
+    "narration": "Here is the vector one, one.",
+    "code": "stage.title(\"Scaling by -2\")\np = draw_plane(stage)\nv = draw_vector(stage, p, (1, 1), label=\"v\")"
+   },
+   {
+    "intent": "The vector scaled by -2, flipping to point the other way twice as long",
+    "narration": "Multiply by minus two: it doubles in length and turns round to point the opposite way.",
+    "code": "scale_vector(stage, p, v, -2)"
+   },
+   {
+    "intent": "The new vector ending at (-2, -2) beside -2v = (-2, -2)",
+    "narration": "It ends at minus two, minus two.",
+    "code": "e = mark_point(stage, p, (-2, -2), color=RED, label=\"(-2, -2)\")\nstage.equation(r\"-2 \\begin{bmatrix} 1 \\\\ 1 \\end{bmatrix} = \\begin{bmatrix} -2 \\\\ -2 \\end{bmatrix}\")"
+   }
+  ]
+ },
+ {
+  "request": "how does blurring work on a row of pixels?",
+  "beats": [
+   {
+    "intent": "Bars of a row of pixels with one bright pixel, and the kernel 1/4, 1/2, 1/4 sliding across",
+    "narration": "A row of pixels, dark except one bright one. Slide a small kernel across and mix each pixel with its neighbours.",
+    "code": "stage.title(\"Blurring pixels\")\nconvolve_bars(stage, [0, 0, 0, 4, 0, 0, 0], [0.25, 0.5, 0.25])"
+   },
+   {
+    "intent": "The output row: the bright pixel spread over three",
+    "narration": "The bright pixel spreads into its neighbours: that is a blur.",
+    "code": "stage.caption(\"One bright pixel becomes three dimmer ones\")"
+   }
+  ]
+ },
+ {
+  "request": "what is the determinant of [[3, 1], [1, 2]]?",
+  "beats": [
+   {
+    "intent": "A grid with the unit square carried by the matrix into a parallelogram, its area read out",
+    "narration": "Carry the unit square through the matrix: it becomes a parallelogram.",
+    "code": "stage.title(\"A determinant of 5\")\np = draw_plane(stage)\nshow_determinant(stage, p, [[3, 1], [1, 2]])"
+   },
+   {
+    "intent": "The parallelogram beside det = 3·2 - 1·1 = 5",
+    "narration": "Its area is three times two minus one times one: five. Every area in the plane grows five times.",
+    "code": "stage.equation(r\"\\det = 3 \\cdot 2 - 1 \\cdot 1 = 5\")"
+   }
+  ]
+ },
+ {
+  "request": "what does it mean for a function to approach a limit as x gets large?",
+  "beats": [
+   {
+    "intent": "Axes with y = 2 + sin(x)/x wobbling closer to 2",
+    "narration": "This function wobbles around two, and the wobbles shrink as x grows.",
+    "code": "stage.title(\"A limit at infinity\")\nax = draw_axes(stage, x_range=(1, 30), y_range=(1, 3))\ng = plot_graph(stage, ax, lambda x: 2 + np.sin(x) / x, x_range=(1, 30))"
+   },
+   {
+    "intent": "A band around 2 narrowing while the curve stays inside it far enough out",
+    "narration": "Draw a band around two, as thin as you like: far enough out, the curve stays inside it.",
+    "code": "narrow_epsilon_band(stage, ax, g, 2, eps=0.4, shrink_to=0.05)"
+   },
+   {
+    "intent": "The band beside lim (2 + sin x / x) = 2",
+    "narration": "That is what it means for the limit to be two.",
+    "code": "stage.equation(r\"\\lim_{x \\to \\infty} \\left(2 + \\frac{\\sin x}{x}\\right) = 2\")"
+   }
+  ]
+ },
+ {
+  "request": "what are the side ratios of a 30-60-90 triangle?",
+  "beats": [
+   {
+    "intent": "A right triangle with legs 1 and √3",
+    "narration": "Take a right triangle with legs one and root three.",
+    "code": "stage.title(\"The 30-60-90 triangle\")\ntri = draw_right_triangle(stage, a=1.2, b=1.2 * np.sqrt(3))"
+   },
+   {
+    "intent": "The hypotenuse 2 and the angles 30° and 60° labelled",
+    "narration": "Its hypotenuse is two, and its angles are thirty and sixty degrees.",
+    "code": "stage.caption(\"Sides 1 : √3 : 2, angles 30° and 60°\")"
+   },
+   {
+    "intent": "The triangle beside sin 30° = 1/2, cos 30° = √3/2",
+    "narration": "So sine thirty is a half and cos thirty is root three over two.",
+    "code": "stage.equation(r\"\\sin 30^\\circ = \\tfrac12,\\ \\cos 30^\\circ = \\tfrac{\\sqrt3}{2}\")"
+   }
+  ]
+ }
+]
