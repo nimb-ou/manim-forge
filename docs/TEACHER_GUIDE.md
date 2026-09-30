@@ -86,6 +86,11 @@ Added 2026-09-30:
   so lines and arrows at the same coordinates meet it; pass `where="left"` to move it.
 - `gradient_descent` draws its curve if nothing is plotted yet.
 - Labels like `r"\pi r"` (maths, no words) render as LaTeX.
+- Curve labels follow the axis-label rule: `label="more demand"` is text,
+  `label=r"\cos x"` is maths.
+- A step starting with `\Rightarrow`, `\implies` or `\iff` extends the line too.
+- One `stage.equation` line per idea: two steps that don't start with an
+  operator show only the second.
 - A beat that draws only axes / a grid / a number line is a background,
   never a beat's picture: always put something on it.
 
