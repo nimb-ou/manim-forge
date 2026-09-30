@@ -1,0 +1,82 @@
+[
+ {
+  "request": "why is a longer password so much harder to guess?",
+  "beats": [
+   {
+    "intent": "Four boxes for a 4-letter password, each with 26 choices",
+    "narration": "A password of four lowercase letters: each box can hold any of twenty six letters.",
+    "code": "stage.title(\"Password length\")\nboxes = VGroup(*[Square(1.0, color=BLUE) for _ in range(4)]).arrange(RIGHT, buff=0.15).move_to([0, 0.6, 0])\nstage.play(LaggedStart(*[Create(b) for b in boxes], lag_ratio=0.2))\nstage.add(boxes)\nfor b in boxes:\n    t = Text(\"26\", font_size=28, color=YELLOW).move_to(b)\n    stage.add(t)\n    stage.play(FadeIn(t), run_time=0.3)"
+   },
+   {
+    "intent": "The boxes beside 26⁴ = 456 976 possible passwords",
+    "narration": "Multiply the choices: twenty six to the fourth, under half a million. A computer tries that in a blink.",
+    "code": "stage.equation(r\"26^4 = 456\\,976\")"
+   },
+   {
+    "intent": "Bars of the number of digits in the count for 4, 8 and 12 letters: 6, 12 and 17",
+    "narration": "Each extra letter multiplies the count by twenty six. Eight letters give a twelve digit number; twelve letters, seventeen digits.",
+    "code": "stage.clear()\nb = draw_bars(stage, [6, 12, 17], labels=[\"4 letters\", \"8 letters\", \"12 letters\"], color=GREEN)\nstage.caption(\"digits in the number of possible passwords\")"
+   }
+  ]
+ },
+ {
+  "request": "how does a map scale work?",
+  "beats": [
+   {
+    "intent": "A map rectangle with two towns 4 cm apart and a scale bar 1 : 50 000",
+    "narration": "On this map two towns are four centimetres apart. The scale says one to fifty thousand.",
+    "code": "stage.title(\"Reading a map scale\")\nm = draw_rectangle(stage, width=7, height=4, color=GREEN, fill=0.15)\na = Dot([-2, 0, 0], color=RED, radius=0.12)\nb = Dot([2, 0, 0], color=RED, radius=0.12)\nstage.play(GrowFromCenter(a), GrowFromCenter(b))\nstage.add(a, b)\nstage.label(a, \"Ashby\", direction=UP, color=RED)\nstage.label(b, \"Brook\", direction=UP, color=RED)\nd = draw_arrow(stage, (-2, -0.5), (2, -0.5), color=YELLOW, label=\"4 cm\")\nstage.caption(\"scale 1 : 50 000\")"
+   },
+   {
+    "intent": "The map beside 4 cm × 50 000 = 200 000 cm = 2 km",
+    "narration": "Every centimetre on the map is fifty thousand centimetres on the ground. Four centimetres is two hundred thousand centimetres: two kilometres.",
+    "code": "stage.equation(r\"4 \\times 50\\,000 = 200\\,000\\ \\text{cm}\", r\"= 2\\ \\text{km}\")"
+   },
+   {
+    "intent": "A winding 6 cm road on the map beside 6 cm → 3 km",
+    "narration": "The road between them winds, and measures six centimetres on the map: three kilometres to drive.",
+    "code": "A, B = a.get_center(), b.get_center()\nk = (B - A)[0] / 4\nroad = VMobject(color=ORANGE, stroke_width=5).set_points_smoothly([A, A + k * np.array([1, 1.2, 0]), A + k * np.array([2.5, -1.0, 0]), B])\nstage.play(Create(road))\nstage.add(road)\nstage.equation(r\"6\\ \\text{cm} \\to 6 \\times 0.5\\ \\text{km} = 3\\ \\text{km}\")"
+   }
+  ]
+ },
+ {
+  "request": "how does a hash table find things so fast?",
+  "beats": [
+   {
+    "intent": "Seven numbered bucket boxes in a row, 0 to 6",
+    "narration": "A hash table is a row of buckets, here seven of them.",
+    "code": "stage.title(\"A hash table\")\nbuckets = VGroup(*[Rectangle(width=1.2, height=0.9, color=GREY_B) for _ in range(7)]).arrange(RIGHT, buff=0.1).move_to([0, -0.8, 0])\nstage.play(Create(buckets))\nstage.add(buckets)\nnums = VGroup(*[Text(str(k), font_size=22, color=GREY_B).next_to(bk, DOWN, buff=0.1) for k, bk in enumerate(buckets)])\nstage.play(FadeIn(nums))\nstage.add(nums)"
+   },
+   {
+    "intent": "The keys 15, 23 and 40 each dropped into bucket key mod 7: 1, 2 and 5",
+    "narration": "To store a number, divide by seven and keep the remainder. Fifteen goes in bucket one, twenty three in bucket two, forty in bucket five.",
+    "code": "for key, slot in ((15, 1), (23, 2), (40, 5)):\n    t = Text(str(key), font_size=30, color=YELLOW).move_to([buckets[slot].get_x(), 1.6, 0])\n    stage.play(FadeIn(t))\n    stage.play(t.animate.move_to(buckets[slot]), run_time=0.6)\n    stage.add(t)\nstage.caption(\"bucket = key mod 7\")"
+   },
+   {
+    "intent": "A search for 23 jumping straight to bucket 2, which is lit",
+    "narration": "To find twenty three later, don't search: work out the bucket, two, and look only there.",
+    "code": "highlight(stage, buckets[2], color=GREEN)\nstage.equation(r\"23 \\bmod 7 = 2\")"
+   }
+  ]
+ },
+ {
+  "request": "how high does a ball go if I throw it up at 20 m/s?",
+  "beats": [
+   {
+    "intent": "Axes of time and height with the curve h = 20t - 5t² from 0 to 4 seconds",
+    "narration": "Throw a ball straight up at twenty metres a second. Gravity slows it by ten metres a second, every second.",
+    "code": "stage.title(\"A ball thrown up\")\nax = draw_axes(stage, x_range=(0, 4), y_range=(0, 25), labels=(\"seconds\", \"metres\"))\nh = lambda t: 20 * t - 5 * t ** 2\ng = plot_graph(stage, ax, h, x_range=(0, 4), color=ORANGE)"
+   },
+   {
+    "intent": "A dot riding the curve up to the top at (2, 20) and back down",
+    "narration": "It rises, slows, stops for an instant at the top, and falls back.",
+    "code": "trace_graph(stage, ax, h, 0, 4)\ntop = mark_point(stage, ax, (2, 20), color=YELLOW, label=\"(2, 20)\")"
+   },
+   {
+    "intent": "The curve beside: speed 0 at t = 2, so h = 20·2 - 5·2² = 20 m",
+    "narration": "It stops when its speed, twenty minus ten t, reaches zero: at two seconds. The height then is twenty metres.",
+    "code": "stage.equation(r\"20 - 10t = 0 \\Rightarrow t = 2\", r\"\\Rightarrow h = 40 - 20 = 20\\ \\text{m}\")"
+   }
+  ]
+ }
+]
