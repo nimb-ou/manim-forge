@@ -1,0 +1,187 @@
+[
+ {
+  "request": "why does the product rule have two terms?",
+  "beats": [
+   {
+    "intent": "A rectangle with sides f and g",
+    "narration": "Think of f times g as the area of a rectangle with sides f and g.",
+    "code": "stage.title(\"The product rule\")\nR = Rectangle(width=3.5, height=2.2, color=BLUE, fill_opacity=0.5).shift(LEFT * 0.6 + DOWN * 0.3)\nstage.play(Create(R))\nstage.add(R)\nstage.label(R, \"f\", direction=DOWN)\nstage.label(R, \"g\", direction=LEFT)"
+   },
+   {
+    "intent": "Thin strips added along the right side (g·df) and the top (f·dg)",
+    "narration": "Nudge x a little. f grows by d f and g by d g: new strips appear along the right and along the top.",
+    "code": "right = Rectangle(width=0.4, height=2.2, color=GREEN, fill_opacity=0.7).next_to(R, RIGHT, buff=0)\ntop = Rectangle(width=3.5, height=0.35, color=YELLOW, fill_opacity=0.7).next_to(R, UP, buff=0)\ncorner = Rectangle(width=0.4, height=0.35, color=GREY, fill_opacity=0.5).next_to(top, RIGHT, buff=0)\nstage.play(FadeIn(right), FadeIn(top), FadeIn(corner))\nstage.add(right, top, corner)\nstage.label(right, \"g df\", direction=RIGHT, color=GREEN)\nstage.label(top, \"f dg\", direction=UP, color=YELLOW)"
+   },
+   {
+    "intent": "The tiny grey corner dimmed as negligible, beside d(fg) = f dg + g df",
+    "narration": "The corner is tiny times tiny and vanishes. The change in area is f d g plus g d f.",
+    "code": "stage.play(corner.animate.set_opacity(0.1))\nstage.equation(r\"d(fg) = f\\,dg + g\\,df\")"
+   }
+  ]
+ },
+ {
+  "request": "what does the fundamental theorem of calculus say?",
+  "beats": [
+   {
+    "intent": "Axes with the curve f(t) = 1 + t/2 and the area under it from 0 to 1 shaded",
+    "narration": "Shade the area under a curve from zero up to some x.",
+    "code": "stage.title(\"Area and slope\")\nax = draw_axes(stage, x_range=(0, 4), y_range=(0, 4))\nf = lambda t: 1 + t / 2\ng = plot_graph(stage, ax, f, label=\"f\")\na1 = shade_area(stage, ax, g, 0, 1)"
+   },
+   {
+    "intent": "The shaded area growing as x slides from 1 to 3",
+    "narration": "Slide x to the right and the area grows.",
+    "code": "a3 = shade_area(stage, ax, g, 0, 3, color=TEAL)\nstage.caption(\"A(x): the area up to x\")"
+   },
+   {
+    "intent": "A thin strip at x = 3 of height f(3) = 2.5 lit",
+    "narration": "Each small step adds a thin strip whose height is f of x. So the area grows at rate f of x.",
+    "code": "strip = Rectangle(width=ax.c2p(3.15, 0)[0] - ax.c2p(3, 0)[0], height=ax.c2p(0, 2.5)[1] - ax.c2p(0, 0)[1], color=YELLOW, fill_opacity=0.9).move_to(ax.c2p(3.075, 1.25))\nstage.play(FadeIn(strip))\nstage.add(strip)\nstage.equation(r\"\\frac{d}{dx}\\int_0^x f(t)\\,dt = f(x)\")"
+   }
+  ]
+ },
+ {
+  "request": "how do you find the slope of a circle at a point?",
+  "beats": [
+   {
+    "intent": "A grid with the circle x^2 + y^2 = 25",
+    "narration": "Here is the circle x squared plus y squared equals twenty five.",
+    "code": "stage.title(\"Slope on a circle\")\nax = draw_plane(stage, x_extent=6, y_extent=6)\ncirc = ParametricFunction(lambda t: ax.c2p(5 * np.cos(t), 5 * np.sin(t)), t_range=[0, TAU], color=BLUE)\nstage.play(Create(circ))\nstage.add(circ)"
+   },
+   {
+    "intent": "The point (3, 4) marked with its radius drawn from the centre",
+    "narration": "Take the point three, four on it.",
+    "code": "p = mark_point(stage, ax, 3, 4, color=RED, label=\"(3, 4)\")\nrad = draw_line(stage, ax.c2p(0, 0), ax.c2p(3, 4), color=YELLOW)"
+   },
+   {
+    "intent": "The tangent at (3, 4) with slope -3/4, beside dy/dx = -x/y",
+    "narration": "Differentiating both sides gives d y d x equals minus x over y: minus three quarters at that point, square to the radius.",
+    "code": "tan = draw_line(stage, ax.c2p(0, 6.25), ax.c2p(6, 1.75), color=GREEN)\nstage.equation(r\"2x + 2y\\frac{dy}{dx} = 0\", r\"\\frac{dy}{dx} = -\\frac{x}{y} = -\\frac34\")"
+   }
+  ]
+ },
+ {
+  "request": "why is anything to the power zero equal to 1?",
+  "beats": [
+   {
+    "intent": "Bars of 2^3, 2^2, 2^1: 8, 4, 2",
+    "narration": "Two cubed is eight, two squared is four, two to the one is two.",
+    "code": "stage.title(\"Why x^0 = 1\")\nbars = draw_bars(stage, [8, 4, 2], labels=[\"2^3\", \"2^2\", \"2^1\"])\nstage.caption(\"Each step down halves\")"
+   },
+   {
+    "intent": "A fourth bar of height 1 for 2^0 continuing the halving",
+    "narration": "Each step down the power divides by two. One more step: two divided by two is one.",
+    "code": "stage.clear()\nbars2 = draw_bars(stage, [8, 4, 2, 1], labels=[\"2^3\", \"2^2\", \"2^1\", \"2^0\"])\nhighlight(stage, bars2[3])"
+   },
+   {
+    "intent": "The bars beside 2^0 = 2^1 ÷ 2 = 1",
+    "narration": "So two to the zero has to be one, and the same holds for any base.",
+    "code": "stage.equation(r\"2^0 = \\frac{2^1}{2} = 1\")"
+   }
+  ]
+ },
+ {
+  "request": "what does a negative power mean?",
+  "beats": [
+   {
+    "intent": "Bars of 4, 2, 1 for 2^2, 2^1, 2^0",
+    "narration": "Keep halving as the power goes down: four, two, one.",
+    "code": "stage.title(\"Negative powers\")\nbars = draw_bars(stage, [4, 2, 1], labels=[\"2^2\", \"2^1\", \"2^0\"])"
+   },
+   {
+    "intent": "The halving continued to 1/2 and 1/4 for 2^-1 and 2^-2",
+    "narration": "Go past zero: a half, then a quarter.",
+    "code": "stage.clear()\nbars2 = draw_bars(stage, [4, 2, 1, 0.5, 0.25], labels=[\"2^2\", \"2^1\", \"2^0\", \"2^{-1}\", \"2^{-2}\"])\nhighlight(stage, VGroup(bars2[3], bars2[4]), color=GREEN)"
+   },
+   {
+    "intent": "The bars beside 2^-n = 1/2^n",
+    "narration": "A negative power means one over the positive power.",
+    "code": "stage.equation(r\"2^{-n} = \\frac{1}{2^n}\", r\"2^{-2} = \\tfrac14\")"
+   }
+  ]
+ },
+ {
+  "request": "what does the polar curve r = 1 + cos θ look like?",
+  "beats": [
+   {
+    "intent": "A plane with a radius arm sweeping round as θ grows, its length 1 + cos θ",
+    "narration": "In polar coordinates, sweep an arm round and let its length be one plus cos theta.",
+    "code": "stage.title(\"A cardioid\")\np = draw_plane(stage)\ncurve = ParametricFunction(lambda t: p.c2p((1 + np.cos(t)) * np.cos(t) * 1.4, (1 + np.cos(t)) * np.sin(t) * 1.4), t_range=[0, TAU], color=YELLOW)\nstage.play(Create(curve), run_time=3)\nstage.add(curve)"
+   },
+   {
+    "intent": "The heart-shaped cardioid with the points θ = 0 (r = 2) and θ = π (r = 0) marked",
+    "narration": "At theta zero the arm is two long; at pi it shrinks to nothing. The tip makes a heart shape: a cardioid.",
+    "code": "a = mark_point(stage, p, (2.8, 0), color=RED, label=\"θ = 0, r = 2\")\nb = mark_point(stage, p, (0, 0), color=GREEN, label=\"θ = π, r = 0\")"
+   }
+  ]
+ },
+ {
+  "request": "what is the expected value of a game?",
+  "beats": [
+   {
+    "intent": "Bars of the three prizes: 10 with chance 1/10, 2 with chance 3/10, 0 with chance 6/10",
+    "narration": "A game pays ten pounds one time in ten, two pounds three times in ten, and nothing otherwise.",
+    "code": "stage.title(\"Expected value\")\nbars = draw_bars(stage, [0.1, 0.3, 0.6], labels=[\"10\", \"2\", \"0\"])\nstage.caption(\"Chances of winning 10, 2 or 0 pounds\")"
+   },
+   {
+    "intent": "Bars of each prize times its chance: 1.0, 0.6, 0",
+    "narration": "Weigh each prize by its chance: one pound, sixty pence, nothing.",
+    "code": "stage.clear()\nw = draw_bars(stage, [1.0, 0.6, 0.001], labels=[r\"10 \\times 0.1\", r\"2 \\times 0.3\", r\"0 \\times 0.6\"])"
+   },
+   {
+    "intent": "The weighted bars beside E = 1.00 + 0.60 + 0 = £1.60",
+    "narration": "Add them: on average the game pays one pound sixty a play. Worth playing only if it costs less.",
+    "code": "stage.equation(r\"E = 1.00 + 0.60 + 0 = \\pounds 1.60\")"
+   }
+  ]
+ },
+ {
+  "request": "how many heads do you get in 10 coin flips?",
+  "beats": [
+   {
+    "intent": "Bars of the number of ways to get 0 to 10 heads: 1, 10, 45, 120, 210, 252, 210, ...",
+    "narration": "Count the ways to get each number of heads in ten flips: one way for none, ten for one, up to two hundred and fifty two for five.",
+    "code": "stage.title(\"Heads in 10 flips\")\nfrom math import comb\nways = [comb(10, k) for k in range(11)]\nbars = draw_bars(stage, ways, labels=list(range(11)))"
+   },
+   {
+    "intent": "The middle bar, 5 heads, lit as the most likely",
+    "narration": "Five heads is the most likely, but it happens only about a quarter of the time.",
+    "code": "highlight(stage, bars[5])\nstage.equation(r\"P(5) = \\frac{252}{1024} \\approx 0.25\")"
+   }
+  ]
+ },
+ {
+  "request": "what happens to sin(1/x) as x approaches 0?",
+  "beats": [
+   {
+    "intent": "Axes with sin(1/x) for x from 0.05 to 1, oscillating faster near 0",
+    "narration": "Plot sine of one over x. Towards zero, one over x shoots up and the wave wiggles faster and faster.",
+    "code": "stage.title(\"sin(1/x)\")\nax = draw_axes(stage, x_range=(0, 1), y_range=(-1.2, 1.2))\ng = plot_graph(stage, ax, lambda x: np.sin(1 / x), x_range=(0.03, 1), color=YELLOW)"
+   },
+   {
+    "intent": "The strip near x = 0 highlighted, the curve filling it between -1 and 1",
+    "narration": "Near zero it swings between minus one and one infinitely often, so it never settles on one value: no limit.",
+    "code": "box = Rectangle(width=ax.c2p(0.1, 0)[0] - ax.c2p(0, 0)[0], height=ax.c2p(0, 2.2)[1] - ax.c2p(0, 0)[1], color=RED).move_to(ax.c2p(0.05, 0))\nstage.play(Create(box))\nstage.add(box)\nstage.caption(\"No single value near 0: no limit\")"
+   }
+  ]
+ },
+ {
+  "request": "why does 1/x get closer to 0 as x gets big?",
+  "beats": [
+   {
+    "intent": "Axes with y = 1/x from 1 to 20",
+    "narration": "The curve one over x falls as x grows.",
+    "code": "stage.title(\"1/x at infinity\")\nax = draw_axes(stage, x_range=(0, 20), y_range=(0, 1.2))\ng = plot_graph(stage, ax, lambda x: 1 / x, x_range=(0.9, 20), label=\"1/x\")"
+   },
+   {
+    "intent": "Points at x = 2, 10 and 20 marked with values 0.5, 0.1, 0.05",
+    "narration": "At two it is a half, at ten a tenth, at twenty a twentieth.",
+    "code": "for x in (2, 10, 20):\n    mark_point(stage, ax, x, 1 / x, color=RED, label=f\"{1 / x:g}\")"
+   },
+   {
+    "intent": "A narrow band around 0 that the curve stays inside from some x on",
+    "narration": "However thin a band you draw around zero, the curve eventually stays inside it: the limit is zero.",
+    "code": "narrow_epsilon_band(stage, ax, g, 0, eps=0.3, shrink_to=0.1)"
+   }
+  ]
+ }
+]
