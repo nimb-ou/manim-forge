@@ -1,0 +1,187 @@
+[
+ {
+  "request": "why do prime numbers make spirals?",
+  "beats": [
+   {
+    "intent": "The primes up to 2000 plotted as points at angle p and distance p, showing spiral arms",
+    "narration": "Plot each prime p at distance p from the centre and angle p radians. The primes line up in spiral arms.",
+    "code": "stage.title(\"Prime spirals\")\nprime_spiral(stage, n=2000)"
+   },
+   {
+    "intent": "The spiral beside 2π ≈ 44/7, the reason for the arms",
+    "narration": "A full turn is two pi radians, very close to forty four sevenths, so numbers forty four apart land in almost the same direction. The arms come from that, not from anything special about primes.",
+    "code": "stage.caption(\"The arms come from 2π ≈ 44/7\")\nstage.equation(r\"2\\pi \\approx \\frac{44}{7}\")"
+   }
+  ]
+ },
+ {
+  "request": "how does a parity bit catch an error?",
+  "beats": [
+   {
+    "intent": "A 4 by 4 grid of bits with an even number of 1s in every row and column",
+    "narration": "Arrange sixteen bits in a grid, chosen so every row and column has an even number of ones.",
+    "code": "stage.title(\"Catching a flipped bit\")\ngrid = bit_grid(stage, [1, 0, 1, 0, 0, 1, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0])"
+   },
+   {
+    "intent": "One bit flipped by noise, lit in red",
+    "narration": "Noise flips one bit on the way.",
+    "code": "g2 = bit_grid(stage, [1, 0, 1, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0], highlight_rows=[1], highlight_cols=[2])\nstage.caption(\"Row 2 and column 3 now have an odd count\")"
+   },
+   {
+    "intent": "The odd row and odd column crossing at the flipped bit",
+    "narration": "Exactly one row and one column now have an odd number of ones: where they cross is the bad bit, so we can flip it back.",
+    "code": "stage.equation(r\"\\text{odd row} \\cap \\text{odd column} = \\text{the error}\")"
+   }
+  ]
+ },
+ {
+  "request": "why does 1/2 + 1/4 + 1/8 + ... add to exactly 1?",
+  "beats": [
+   {
+    "intent": "A unit square filled by a half, then a quarter, then an eighth, and so on",
+    "narration": "Fill a square: half of it, then half of what is left, then half again.",
+    "code": "stage.title(\"Halving forever\")\nfill_halving_squares(stage, n=8)"
+   },
+   {
+    "intent": "The tiny unfilled corner beside 1 - 1/256 after 8 steps",
+    "narration": "After eight steps only one two hundred and fifty sixth is left, and every step halves the gap.",
+    "code": "stage.equation(r\"\\tfrac12 + \\tfrac14 + \\cdots + \\tfrac{1}{256} = 1 - \\tfrac{1}{256}\")"
+   },
+   {
+    "intent": "The square fully shaded beside the sum = 1",
+    "narration": "The gap shrinks to nothing, so the infinite sum fills the square exactly: one.",
+    "code": "stage.caption(\"The gap halves forever: the sum is 1\")\nstage.equation(r\"\\sum_{k=1}^{\\infty} \\frac{1}{2^k} = 1\")"
+   }
+  ]
+ },
+ {
+  "request": "find all the primes up to 100",
+  "beats": [
+   {
+    "intent": "The sieve of Eratosthenes on 1 to 100, multiples of 2, 3, 5, 7 fading out",
+    "narration": "Write out one to a hundred. Cross out the multiples of two, then three, then five, then seven.",
+    "code": "stage.title(\"Primes up to 100\")\ncells = sieve_primes(stage, n=100)"
+   },
+   {
+    "intent": "The remaining 25 primes lit, beside why stopping at 7 is enough",
+    "narration": "Twenty five numbers survive: the primes. We could stop at seven because any composite below a hundred has a factor of at most ten.",
+    "code": "stage.equation(r\"\\sqrt{100} = 10 \\Rightarrow \\text{check } 2, 3, 5, 7\")"
+   }
+  ]
+ },
+ {
+  "request": "how do sine waves add up to a square wave?",
+  "beats": [
+   {
+    "intent": "Axes with odd sines added one at a time building a square wave",
+    "narration": "Add sine x, a third of sine three x, a fifth of sine five x, and so on.",
+    "code": "stage.title(\"A square wave from sines\")\nax = draw_axes(stage, x_range=(0, 6.3), y_range=(-1.5, 1.5))\nbuild_fourier_series(stage, ax, n_terms=7)"
+   },
+   {
+    "intent": "The overshoot near each jump lit",
+    "narration": "The sum gets flatter and steeper with every term, but it always overshoots near a jump by about nine percent.",
+    "code": "peak = mark_point(stage, ax, 0.2, 1.08, color=RED, label=\"overshoot\")"
+   },
+   {
+    "intent": "The wave beside its series (4/π)(sin x + sin 3x/3 + sin 5x/5 + ...)",
+    "narration": "Only odd frequencies, each with strength one over its number.",
+    "code": "stage.equation(r\"\\frac{4}{\\pi}\\left(\\sin x + \\frac{\\sin 3x}{3} + \\frac{\\sin 5x}{5} + \\cdots\\right)\")"
+   }
+  ]
+ },
+ {
+  "request": "how do polynomials approximate cos x?",
+  "beats": [
+   {
+    "intent": "Axes with cos x from -4 to 4",
+    "narration": "Here is cos x.",
+    "code": "stage.title(\"Polynomials hugging cos x\")\nax = draw_axes(stage, x_range=(-4, 4), y_range=(-1.5, 1.5))\ng = plot_graph(stage, ax, np.cos, color=BLUE, label=\"cos x\")"
+   },
+   {
+    "intent": "Taylor polynomials 1, 1 - x^2/2, 1 - x^2/2 + x^4/24, ... closing in",
+    "narration": "Start with one, then one minus x squared over two, then add x to the fourth over twenty four. Each hugs the curve further out.",
+    "code": "taylor_approximate(stage, ax, np.cos, 0, [1, 0, -1, 0, 1, 0, -1])"
+   },
+   {
+    "intent": "The curves beside cos x = 1 - x^2/2! + x^4/4! - ...",
+    "narration": "The derivatives of cos at zero cycle one, zero, minus one, zero, so only even powers appear.",
+    "code": "stage.equation(r\"\\cos x = 1 - \\frac{x^2}{2!} + \\frac{x^4}{4!} - \\cdots\")"
+   }
+  ]
+ },
+ {
+  "request": "does Pythagoras work for a 6-8-10 triangle?",
+  "beats": [
+   {
+    "intent": "A right triangle with legs 6 and 8 and squares on all three sides",
+    "narration": "Put squares on the sides of a right triangle with legs six and eight.",
+    "code": "stage.title(\"A 6-8-10 triangle\")\nsquares_on_sides(stage, a=6, b=8)"
+   },
+   {
+    "intent": "The squares beside 36 + 64 = 100 = 10^2",
+    "narration": "Thirty six plus sixty four is a hundred, the square on the hypotenuse of ten.",
+    "code": "stage.equation(r\"6^2 + 8^2 = 36 + 64 = 100 = 10^2\")"
+   },
+   {
+    "intent": "A caption noting 6-8-10 is the 3-4-5 triangle doubled",
+    "narration": "It is the three four five triangle scaled by two, and every area scales by four.",
+    "code": "stage.caption(\"3-4-5 doubled: every square 4 times bigger\")"
+   }
+  ]
+ },
+ {
+  "request": "where does the sine wave come from on the unit circle?",
+  "beats": [
+   {
+    "intent": "A radius turning on a circle, its height traced out as a wave over one turn",
+    "narration": "Turn a radius round the unit circle and record its height as it goes.",
+    "code": "stage.title(\"Circle to sine\")\ncircle_to_sine(stage, turns=1.0)"
+   },
+   {
+    "intent": "The traced wave beside sin θ = height of the point",
+    "narration": "The height of the point is the sine of the angle, so the trace is the sine wave.",
+    "code": "stage.equation(r\"\\sin\\theta = \\text{height on the unit circle}\")"
+   },
+   {
+    "intent": "A second full turn continuing the same wave",
+    "narration": "Keep turning: the wave repeats every full turn, every two pi.",
+    "code": "circle_to_sine(stage, turns=2.0, run_time=5)"
+   }
+  ]
+ },
+ {
+  "request": "why do a triangle's angles add up to 180 — show me by tearing off the corners",
+  "beats": [
+   {
+    "intent": "A scalene triangle whose three angles are torn off and laid along a straight line",
+    "narration": "Tear the three corners off a triangle and lay them side by side.",
+    "code": "stage.title(\"Tearing off the corners\")\nangle_sum(stage, points=((-3, -1.5), (2.2, -1.5), (-0.6, 1.8)))"
+   },
+   {
+    "intent": "The angles on the line beside a + b + c = 180°",
+    "narration": "They fit exactly along a straight line: half a turn, a hundred and eighty degrees.",
+    "code": "stage.equation(r\"a + b + c = 180^\\circ\")"
+   }
+  ]
+ },
+ {
+  "request": "how does e^{it} trace a circle?",
+  "beats": [
+   {
+    "intent": "The complex plane with the point e^{it} walking once round the unit circle",
+    "narration": "As t grows, e to the i t walks round the unit circle, one radian of arc for each unit of t.",
+    "code": "stage.title(\"Walking the unit circle\")\ncp = draw_complex_plane(stage)\neuler_circle(stage, cp, t_end=TAU)"
+   },
+   {
+    "intent": "The quarter points 1, i, -1, -i marked at t = 0, π/2, π, 3π/2",
+    "narration": "At a quarter turn it is at i, at half a turn minus one, at three quarters minus i.",
+    "code": "for (x, y), lab in (((1, 0), \"t = 0\"), ((0, 1), \"π/2\"), ((-1, 0), \"π\"), ((0, -1), \"3π/2\")):\n    mark_point(stage, cp, (x, y), color=YELLOW, label=lab)"
+   },
+   {
+    "intent": "The circle beside e^{it} = cos t + i sin t",
+    "narration": "Its real part is cos t and its imaginary part is sin t.",
+    "code": "stage.equation(r\"e^{it} = \\cos t + i \\sin t\")"
+   }
+  ]
+ }
+]
