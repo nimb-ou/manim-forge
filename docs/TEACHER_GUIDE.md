@@ -21,7 +21,8 @@ hand, to get escaping right):
     ...]}]
 ```
 
-- 3 to 6 beats per scene. 20-60 seconds of animation in total.
+- 4 to 6 beats per scene (the short scenes aim for 4-8; three-beat arcs count
+  once in the planner data, longer ones three times). 20-60 seconds in total.
 - `request`: how a person would ask — short, plain English, one idea.
 - `intent`: one line that **names the picture** of the beat ("A ball stepping
   down the parabola", not "Understanding gradient descent"). The planner is
