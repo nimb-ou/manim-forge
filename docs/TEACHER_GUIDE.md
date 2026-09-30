@@ -72,6 +72,18 @@ Blocks take `stage` first, draw *and animate*, and return what they made.
 - `draw_polygon(stage, pts, where=None)` keeps the points' own coordinates.
 - A plotted graph is callable: `g = plot_graph(...)`, then `g(1.5)`.
 
+Added 2026-09-30:
+
+- `plot_points(stage, ax, [(x, y), ...])` for data on axes;
+  `mark_point(stage, ax, x, y, color=RED)` for one point.
+- `highlight(stage, m)` leaves `m` lit in its colour.
+- `stage.equation("A = \\tfrac12 \\cdot 4 \\cdot 6", "= 12")`: a step that starts
+  with =, <, \\approx, \\to ... extends the line; any other step replaces it.
+- Bar and node labels that are words render as plain text ("3 for £2");
+  bars are spaced to fit their labels.
+- A beat that draws only axes / a grid / a number line is a background,
+  never a beat's picture: always put something on it.
+
 ## Check your work
 
 ```bash

@@ -240,8 +240,17 @@ class Stage:
         cur = MathTex(tex[0], font_size=40).move_to([cx, cy + h / 4, 0])
         cur.scale_to_fit_width(min(cur.width, w))
         self.scene.play(Write(cur), run_time=run_time)
+        line = str(tex[0])
         for t in tex[1:]:
-            nxt = MathTex(t, font_size=40).move_to(cur)
+            # A step that continues the line ("= 12", "\\approx 0.64",
+            # "\\to 1") extends it; replacing the line with it left frames
+            # showing a bare "= 12". Any other step is a new form of the
+            # equation and transforms the line into it.
+            if _re.match(r"\s*(=|<|>|\\approx|\\to|\\le|\\ge|\\equiv|\\neq|\\sim)", str(t)):
+                line = f"{line} {t}"
+            else:
+                line = str(t)
+            nxt = MathTex(line, font_size=40).move_to(cur)
             nxt.scale_to_fit_width(min(nxt.width, w))
             self.scene.play(TransformMatchingTex(cur, nxt), run_time=run_time)
             cur = nxt
