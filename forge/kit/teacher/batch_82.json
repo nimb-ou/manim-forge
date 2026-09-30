@@ -1,0 +1,82 @@
+[
+ {
+  "request": "how do you turn 3/8 into a decimal?",
+  "beats": [
+   {
+    "intent": "A bar cut into 8 equal parts with 3 shaded",
+    "narration": "Three eighths: cut a bar into eight equal parts and shade three.",
+    "code": "stage.title(\"3/8 as a decimal\")\nbar = VGroup(*[Rectangle(width=1.1, height=0.8, color=WHITE, fill_opacity=0.6 if k < 3 else 0.1, fill_color=BLUE) for k in range(8)]).arrange(RIGHT, buff=0).move_to([0, 1.2, 0])\nstage.play(Create(bar))\nstage.add(bar)\nstage.label(bar, \"3 of 8 parts\", direction=UP)"
+   },
+   {
+    "intent": "A number line from 0 to 1 below it with 0.375 marked under the end of the shading",
+    "narration": "Each eighth is one divided by eight, nought point one two five. Three of them reach nought point three seven five.",
+    "code": "nl = NumberLine(x_range=[0, 1, 0.125], length=8.8, include_numbers=False).move_to([0, -0.6, 0])\nstage.play(Create(nl))\nstage.add(nl)\nfor v in (0, 0.5, 1):\n    stage.add(Text(str(v), font_size=24).next_to(nl.n2p(v), DOWN, buff=0.2))\np = mark_point(stage, nl, 0.375, color=YELLOW, label=\"0.375\")"
+   },
+   {
+    "intent": "The picture beside 3 ÷ 8 = 0.375",
+    "narration": "So three eighths is three divided by eight: nought point three seven five.",
+    "code": "stage.equation(r\"3 \\div 8 = 0.375\")"
+   }
+  ]
+ },
+ {
+  "request": "round 2.47 to one decimal place",
+  "beats": [
+   {
+    "intent": "A number line from 2.4 to 2.5 with 2.47 marked",
+    "narration": "Two point four seven sits between two point four and two point five.",
+    "code": "stage.title(\"Rounding 2.47\")\nnl = draw_number_line(stage, x_range=(2.4, 2.5))\nx = mark_point(stage, nl, 2.47, color=YELLOW, label=\"2.47\")"
+   },
+   {
+    "intent": "The halfway point 2.45 marked and the distances to each end: 0.07 back, 0.03 forward",
+    "narration": "The halfway point is two point four five. Two point four seven is past it: only three hundredths from two point five.",
+    "code": "half = mark_point(stage, nl, 2.45, color=GREY_B, label=\"halfway\")\nfwd = Line(nl.n2p(2.47) + 0.5 * UP, nl.n2p(2.5) + 0.5 * UP, color=GREEN, stroke_width=6)\nstage.play(Create(fwd))\nstage.add(fwd)\nstage.label(fwd, \"0.03\", direction=UP, color=GREEN)"
+   },
+   {
+    "intent": "An arrow from 2.47 to 2.5, beside 2.47 ≈ 2.5",
+    "narration": "So it rounds up, to two point five.",
+    "code": "arr = Arrow(nl.n2p(2.47) + 1.1 * UP, nl.n2p(2.5) + 1.1 * UP, buff=0, color=YELLOW)\nstage.play(GrowArrow(arr))\nstage.add(arr)\nstage.equation(r\"2.47 \\approx 2.5\")"
+   }
+  ]
+ },
+ {
+  "request": "if it's 3 degrees and the temperature drops 8 degrees, what is it?",
+  "beats": [
+   {
+    "intent": "A vertical thermometer scale from -10 to 10 with a marker at 3",
+    "narration": "A thermometer is a number line standing up. It reads three degrees.",
+    "code": "stage.title(\"Below zero\")\nscale = NumberLine(x_range=[-10, 10, 1], length=5.6, rotation=PI / 2, include_numbers=False).move_to([-1, -0.3, 0])\nstage.play(Create(scale))\nstage.add(scale)\nfor v in (-10, -5, 0, 5, 10):\n    stage.add(Text(str(v), font_size=22).next_to(scale.n2p(v), LEFT, buff=0.25))\nzero = Line(scale.n2p(0) + 0.4 * LEFT, scale.n2p(0) + 0.4 * RIGHT, color=BLUE, stroke_width=5)\nstage.add(zero)\nlevel = Dot(scale.n2p(3), color=RED, radius=0.14)\nstage.play(GrowFromCenter(level))\nstage.add(level)\nstage.label(scale.n2p(3) + 0.15 * RIGHT, \"3°\", direction=RIGHT, color=RED)"
+   },
+   {
+    "intent": "The marker sliding down 8 steps, past 0, to -5",
+    "narration": "Drop eight degrees: three steps to zero, then five more below it.",
+    "code": "stage.play(level.animate.move_to(scale.n2p(-5)), run_time=2)\ndrop = Arrow(scale.n2p(3) + 0.9 * RIGHT, scale.n2p(-5) + 0.9 * RIGHT, buff=0, color=YELLOW)\nstage.play(GrowArrow(drop))\nstage.add(drop)\nstage.label(drop, \"−8\", direction=RIGHT, color=YELLOW)\nstage.label(scale.n2p(-5) + 0.2 * DOWN, \"−5°\", direction=DOWN, color=RED)"
+   },
+   {
+    "intent": "The scale beside 3 - 8 = -5",
+    "narration": "Three minus eight is minus five: five degrees below zero.",
+    "code": "stage.equation(r\"3 - 8 = -5\")"
+   }
+  ]
+ },
+ {
+  "request": "what makes a number prime?",
+  "beats": [
+   {
+    "intent": "12 dots arranged as a 3 by 4 rectangle and as a 2 by 6 rectangle",
+    "narration": "Twelve dots can be arranged into rectangles: three by four, or two by six.",
+    "code": "stage.title(\"What makes a prime\")\nr1 = VGroup(*[Dot(radius=0.12, color=BLUE) for _ in range(12)]).arrange_in_grid(rows=3, cols=4, buff=0.3).move_to([-3.2, 0.3, 0])\nr2 = VGroup(*[Dot(radius=0.12, color=BLUE) for _ in range(12)]).arrange_in_grid(rows=2, cols=6, buff=0.3).move_to([2.4, 0.3, 0])\nstage.play(FadeIn(r1), FadeIn(r2))\nstage.add(r1, r2)\nstage.label(r1, \"3 × 4\", direction=DOWN, color=BLUE)\nstage.label(r2, \"2 × 6\", direction=DOWN, color=BLUE)"
+   },
+   {
+    "intent": "7 dots that only make a single row",
+    "narration": "Seven dots won't make any rectangle except one long row.",
+    "code": "stage.clear()\nrow = VGroup(*[Dot(radius=0.12, color=YELLOW) for _ in range(7)]).arrange(RIGHT, buff=0.3).move_to([0, 0.3, 0])\nstage.play(FadeIn(row))\nstage.add(row)\nstage.label(row, \"only 1 × 7\", direction=DOWN, color=YELLOW)"
+   },
+   {
+    "intent": "The row beside: 7 = 1 × 7 only, so 7 is prime",
+    "narration": "A number whose only rectangle is a single row, with exactly two factors, one and itself, is prime.",
+    "code": "stage.equation(r\"7 = 1 \\times 7\\ \\text{only}\")\nstage.caption(\"prime: exactly two factors\")"
+   }
+  ]
+ }
+]
