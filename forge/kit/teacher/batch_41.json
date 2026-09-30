@@ -1,0 +1,142 @@
+[
+ {
+  "request": "why do the exterior angles of any polygon add up to 360 degrees?",
+  "beats": [
+   {
+    "intent": "A regular pentagon with an arrow walking along its first side",
+    "narration": "Walk round a pentagon, starting along one side.",
+    "code": "stage.title(\"Walking round a polygon\")\npts = [2 * np.array([np.cos(TAU * k / 5 + PI / 2), np.sin(TAU * k / 5 + PI / 2), 0]) for k in range(5)]\npenta = Polygon(*pts, color=BLUE)\nstage.play(Create(penta))\nstage.add(penta)\nwalker = Arrow(pts[0], pts[1], buff=0, color=YELLOW)\nstage.play(GrowArrow(walker))\nstage.add(walker)"
+   },
+   {
+    "intent": "At each corner the extension of the side and the turn of 72 degrees marked",
+    "narration": "At every corner you turn by the exterior angle: seventy two degrees for a regular pentagon.",
+    "code": "for k in range(5):\n    a, b, c = pts[k], pts[(k + 1) % 5], pts[(k + 2) % 5]\n    ext = DashedLine(b, b + (b - a) * 0.5, color=GREY)\n    ang = Angle(Line(b, b + (b - a)), Line(b, c), radius=0.4, color=RED)\n    stage.play(Create(ext), Create(ang), run_time=0.4)\n    stage.add(ext, ang)"
+   },
+   {
+    "intent": "The five turns beside 5 × 72° = 360°",
+    "narration": "By the time you are back at the start you have turned exactly once round: three hundred and sixty degrees, for any polygon.",
+    "code": "stage.equation(r\"5 \\times 72^\\circ = 360^\\circ\")"
+   }
+  ]
+ },
+ {
+  "request": "what is the law of cosines?",
+  "beats": [
+   {
+    "intent": "A triangle with sides a = 4, b = 5 and the angle C = 60° between them",
+    "narration": "Two sides, four and five, with sixty degrees between them. How long is the third side?",
+    "code": "stage.title(\"The law of cosines\")\nC = np.array([-2.5, -1.5, 0])\nA = C + 5 * 0.8 * RIGHT\nB = C + 4 * 0.8 * np.array([np.cos(PI / 3), np.sin(PI / 3), 0])\ntri = Polygon(C, A, B, color=BLUE, fill_opacity=0.3)\nstage.play(Create(tri))\nstage.add(tri)\nang = Angle(Line(C, A), Line(C, B), radius=0.6, color=YELLOW)\nstage.play(Create(ang))\nstage.add(ang)\nstage.label(ang, \"60°\", direction=RIGHT, color=YELLOW)"
+   },
+   {
+    "intent": "The unknown side c between A and B lit in red",
+    "narration": "The unknown side c joins the two ends.",
+    "code": "cside = draw_line(stage, A, B, color=RED)\nstage.label(cside, \"c\", direction=RIGHT, color=RED)"
+   },
+   {
+    "intent": "The triangle beside c^2 = 16 + 25 - 2·4·5·cos 60° = 21, c ≈ 4.58",
+    "narration": "Pythagoras with a correction: sixteen plus twenty five minus forty times cos sixty, which is twenty one. So c is about four point five eight.",
+    "code": "stage.equation(r\"c^2 = 16 + 25 - 2 \\cdot 4 \\cdot 5 \\cos 60^\\circ = 21\")\nstage.caption(\"c ≈ 4.58\")"
+   }
+  ]
+ },
+ {
+  "request": "how long is an arc of a circle?",
+  "beats": [
+   {
+    "intent": "A circle of radius 2 with an arc of angle 1.5 radians lit",
+    "narration": "Take a circle of radius two and an angle of one and a half radians at the centre.",
+    "code": "stage.title(\"Arc length\")\nc = draw_circle(stage, radius=2)\nO = c.get_center()\narc = Arc(radius=2, start_angle=0, angle=1.5, color=YELLOW, stroke_width=8).move_arc_center_to(O)\nr1 = Line(O, O + 2 * RIGHT, color=WHITE)\nr2 = Line(O, O + 2 * np.array([np.cos(1.5), np.sin(1.5), 0]), color=WHITE)\nstage.play(Create(r1), Create(r2), Create(arc))\nstage.add(r1, r2, arc)"
+   },
+   {
+    "intent": "The angle θ = 1.5 marked at the centre and the radius r = 2 labelled",
+    "narration": "The angle is theta, one point five, and the radius is two.",
+    "code": "ang = Angle(r1, r2, radius=0.5, color=GREEN)\nstage.play(Create(ang))\nstage.add(ang)\nstage.label(ang, \"θ = 1.5\", direction=RIGHT, color=GREEN)\nstage.label(r1, \"r = 2\", direction=DOWN)"
+   },
+   {
+    "intent": "The arc beside s = rθ = 2 × 1.5 = 3",
+    "narration": "In radians the arc length is simply the radius times the angle: three.",
+    "code": "stage.equation(r\"s = r\\theta = 2 \\times 1.5 = 3\")"
+   }
+  ]
+ },
+ {
+  "request": "if you double a shape's size, what happens to its area?",
+  "beats": [
+   {
+    "intent": "A small triangle with base 2 and height 1.5",
+    "narration": "A small triangle, base two and height one and a half.",
+    "code": "stage.title(\"Scaling and area\")\nsmall = Polygon([-5, -1.5, 0], [-3, -1.5, 0], [-4, 0, 0], color=BLUE, fill_opacity=0.5)\nstage.play(Create(small))\nstage.add(small)\nstage.label(small, \"area 1.5\", direction=DOWN, color=BLUE)"
+   },
+   {
+    "intent": "A similar triangle twice as big, with four copies of the small one fitting inside",
+    "narration": "Double every length. Four copies of the small triangle fit inside the big one.",
+    "code": "big = Polygon([-1, -1.5, 0], [3, -1.5, 0], [1, 1.5, 0], color=GREEN, fill_opacity=0.3)\nmids = VGroup(Line([1, -1.5, 0], [0, 0, 0]), Line([0, 0, 0], [2, 0, 0]), Line([2, 0, 0], [1, -1.5, 0])).set_color(GREEN)\nstage.play(Create(big), Create(mids))\nstage.add(big, mids)\nstage.label(big, \"area 6\", direction=DOWN, color=GREEN)"
+   },
+   {
+    "intent": "The triangles beside: lengths × 2, area × 4",
+    "narration": "Lengths double, area goes up four times: the scale factor squared.",
+    "code": "stage.equation(r\"k = 2 \\Rightarrow \\text{area} \\times k^2 = 4\")"
+   }
+  ]
+ },
+ {
+  "request": "how do you find the volume of a cylinder?",
+  "beats": [
+   {
+    "intent": "A circle of radius 1.5 as the base, its area shaded",
+    "narration": "Start with the circular base, radius one and a half: its area is pi r squared.",
+    "code": "stage.title(\"Volume of a cylinder\")\nbase = Ellipse(width=3, height=1, color=BLUE, fill_opacity=0.5).shift(DOWN * 1.5)\nstage.play(FadeIn(base))\nstage.add(base)\nstage.label(base, \"πr²\", direction=DOWN, color=BLUE)"
+   },
+   {
+    "intent": "Copies of the base stacked up to a height of 3 forming a cylinder",
+    "narration": "Stack copies of that base up to a height of three.",
+    "code": "layers = VGroup(*[Ellipse(width=3, height=1, color=BLUE, fill_opacity=0.15).shift(DOWN * 1.5 + UP * 0.3 * k) for k in range(1, 11)])\nsides = VGroup(Line([-1.5, -1.5, 0], [-1.5, 1.5, 0]), Line([1.5, -1.5, 0], [1.5, 1.5, 0])).set_color(BLUE)\nstage.play(LaggedStart(*[FadeIn(l) for l in layers], lag_ratio=0.1), Create(sides))\nstage.add(layers, sides)\nstage.label(sides, \"h = 3\", direction=RIGHT)"
+   },
+   {
+    "intent": "The cylinder beside V = πr²h = π × 2.25 × 3 ≈ 21.2",
+    "narration": "Base area times height: pi times two point two five times three, about twenty one point two.",
+    "code": "stage.equation(r\"V = \\pi r^2 h = \\pi \\times 2.25 \\times 3 \\approx 21.2\")"
+   }
+  ]
+ },
+ {
+  "request": "how did Eratosthenes measure the Earth?",
+  "beats": [
+   {
+    "intent": "A big circle for the Earth with two cities 800 km apart on its surface",
+    "narration": "Two cities eight hundred kilometres apart on the curved Earth.",
+    "code": "stage.title(\"Measuring the Earth\")\nearth = Circle(radius=2.2, color=BLUE)\nO = earth.get_center()\np1 = O + 2.2 * np.array([np.cos(PI / 2), np.sin(PI / 2), 0])\np2 = O + 2.2 * np.array([np.cos(PI / 2 - 0.35), np.sin(PI / 2 - 0.35), 0])\nstage.play(Create(earth), FadeIn(Dot(p1, color=RED)), FadeIn(Dot(p2, color=RED)))\nstage.add(earth)"
+   },
+   {
+    "intent": "Parallel sun rays arriving, straight down at one city and at 7.2° to a stick at the other",
+    "narration": "At noon the sun is straight overhead in one city; in the other a stick casts a shadow at seven point two degrees.",
+    "code": "rays = VGroup(*[Arrow(np.array([x, 3.8, 0]), np.array([x, 2.3, 0]), buff=0, color=YELLOW) for x in (p1[0], p2[0])])\nstage.play(LaggedStart(*[GrowArrow(r) for r in rays], lag_ratio=0.3))\nstage.add(rays)\nr1 = DashedLine(O, p1, color=GREY)\nr2 = DashedLine(O, p2, color=GREY)\nstage.play(Create(r1), Create(r2))\nstage.add(r1, r2)"
+   },
+   {
+    "intent": "The 7.2° angle at the centre beside 800 × 360 / 7.2 = 40 000 km",
+    "narration": "The same angle sits at the Earth's centre. Seven point two degrees is a fiftieth of a circle, so the Earth is fifty times eight hundred: forty thousand kilometres round.",
+    "code": "ang = Angle(r2, r1, radius=0.6, color=RED)\nstage.play(Create(ang))\nstage.add(ang)\nstage.equation(r\"800 \\times \\frac{360}{7.2} = 40\\,000\\ \\text{km}\")"
+   }
+  ]
+ },
+ {
+  "request": "why is the slope of a line equal to tan of its angle?",
+  "beats": [
+   {
+    "intent": "Axes with the line y = 0.75x and the angle θ it makes with the x-axis",
+    "narration": "A line rising three for every four across makes an angle theta with the x axis.",
+    "code": "stage.title(\"Slope = tan θ\")\nax = draw_axes(stage, x_range=(0, 5), y_range=(0, 4))\nln = plot_graph(stage, ax, lambda x: 0.75 * x, color=BLUE)\nang = Angle(Line(ax.c2p(0, 0), ax.c2p(1, 0)), Line(ax.c2p(0, 0), ax.c2p(4, 3)), radius=0.8, color=YELLOW)\nstage.play(Create(ang))\nstage.add(ang)\nstage.label(ang, \"θ\", direction=RIGHT, color=YELLOW)"
+   },
+   {
+    "intent": "A right triangle under the line: 4 across and 3 up",
+    "narration": "Under the line, draw a triangle four across and three up.",
+    "code": "run = draw_line(stage, ax.c2p(0, 0), ax.c2p(4, 0), color=GREEN)\nrise = draw_line(stage, ax.c2p(4, 0), ax.c2p(4, 3), color=RED)\nstage.label(run, \"4\", direction=DOWN, color=GREEN)\nstage.label(rise, \"3\", direction=RIGHT, color=RED)"
+   },
+   {
+    "intent": "The triangle beside slope = 3/4 = tan θ, θ ≈ 36.9°",
+    "narration": "Opposite over adjacent is three over four: the slope is the tangent of the angle, about thirty seven degrees.",
+    "code": "stage.equation(r\"\\text{slope} = \\frac34 = \\tan\\theta,\\ \\theta \\approx 36.9^\\circ\")"
+   }
+  ]
+ }
+]
