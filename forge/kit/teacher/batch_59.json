@@ -1,0 +1,82 @@
+[
+ {
+  "request": "a test catches 90% of a disease 1% of people have, with 9% false positives. if I test positive, how worried should I be?",
+  "beats": [
+   {
+    "intent": "A square of 1000 people split into a thin 1% sick strip, each part split by the test result, positives lit",
+    "narration": "Picture a thousand people. Ten are sick; the test catches nine of them. Of the nine hundred and ninety healthy people, about eighty nine test positive anyway.",
+    "code": "stage.title(\"What a positive test means\")\nbayes_square(stage, prior=0.01, sensitivity=0.9, false_pos=0.09)"
+   },
+   {
+    "intent": "Bars comparing 9 true positives with 89 false positives",
+    "narration": "So among the positives, the false alarms far outnumber the real cases.",
+    "code": "stage.clear()\nb = draw_bars(stage, [9, 89], labels=[\"sick and positive\", \"healthy but positive\"], color=ORANGE)"
+   },
+   {
+    "intent": "The bars beside P(sick | positive) = 9 / 98 ≈ 9%",
+    "narration": "Only nine of the ninety eight positives are sick: about a nine percent chance. A second test is the next step.",
+    "code": "stage.equation(r\"P(\\text{sick} \\mid +) = \\frac{9}{9 + 89}\", r\"\\approx 9\\%\")"
+   }
+  ]
+ },
+ {
+  "request": "what's the average roll of a die?",
+  "beats": [
+   {
+    "intent": "Six equal bars for the faces 1 to 6, each with chance 1/6",
+    "narration": "Each face of a fair die comes up one time in six.",
+    "code": "stage.title(\"The average roll\")\nb = draw_bars(stage, [1, 1, 1, 1, 1, 1], labels=[\"1\", \"2\", \"3\", \"4\", \"5\", \"6\"])\nstage.caption(\"each face: chance 1/6\")"
+   },
+   {
+    "intent": "The bars beside the sum (1+2+3+4+5+6)/6 = 3.5",
+    "narration": "Weight each face by its chance and add: twenty one over six, three and a half.",
+    "code": "stage.equation(r\"\\frac{1+2+3+4+5+6}{6} = \\frac{21}{6}\", r\"= 3.5\")"
+   },
+   {
+    "intent": "A number line from 1 to 6 with 3.5 marked between 3 and 4",
+    "narration": "No roll ever shows three and a half, but it is the balance point of the six faces.",
+    "code": "stage.clear()\nnl = draw_number_line(stage, x_range=(1, 6))\nfor k in range(1, 7):\n    mark_point(stage, nl, k, color=BLUE)\navg = mark_point(stage, nl, 3.5, color=YELLOW, label=\"3.5\")"
+   }
+  ]
+ },
+ {
+  "request": "how many moves does the tower of Hanoi take?",
+  "beats": [
+   {
+    "intent": "Three pegs with three discs moved one by one from the left peg to the right",
+    "narration": "Move the tower to the right peg, one disc at a time, never a big disc on a small one.",
+    "code": "stage.title(\"The tower of Hanoi\")\nhanoi_moves(stage, n=3)"
+   },
+   {
+    "intent": "The finished tower beside 2³ - 1 = 7 moves",
+    "narration": "Three discs take seven moves.",
+    "code": "stage.equation(r\"2^3 - 1 = 7\")"
+   },
+   {
+    "intent": "Bars of moves for 1 to 5 discs: 1, 3, 7, 15, 31",
+    "narration": "Each extra disc doubles the work and adds one: one, three, seven, fifteen, thirty one.",
+    "code": "stage.clear()\nb = draw_bars(stage, [1, 3, 7, 15, 31], labels=[\"1\", \"2\", \"3\", \"4\", \"5\"])\nstage.caption(\"moves for 1 to 5 discs: 2ⁿ - 1\")"
+   }
+  ]
+ },
+ {
+  "request": "find the area under y = x² from 0 to 2",
+  "beats": [
+   {
+    "intent": "Axes with y = x² from 0 to 2",
+    "narration": "Here is the curve y equals x squared, from zero to two.",
+    "code": "stage.title(\"Area under x²\")\nax = draw_axes(stage, x_range=(0, 2.5), y_range=(0, 5))\nf = lambda x: x ** 2\ng = plot_graph(stage, ax, f, label=\"x^2\")"
+   },
+   {
+    "intent": "Rectangles under the curve, 4 then 8, 16 and 32, fitting closer",
+    "narration": "Fill the area with rectangles. The thinner they get, the closer they fit.",
+    "code": "riemann_refine(stage, ax, g, 0, 2)"
+   },
+   {
+    "intent": "The exact area shaded beside ∫₀² x² dx = 8/3",
+    "narration": "In the limit the rectangles give the exact area: eight thirds, about two point six seven.",
+    "code": "shade_area(stage, ax, g, 0, 2)\nstage.equation(r\"\\int_0^2 x^2\\,dx = \\frac{2^3}{3}\", r\"= \\frac{8}{3} \\approx 2.67\")"
+   }
+  ]
+ }
+]
