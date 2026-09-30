@@ -1,0 +1,102 @@
+[
+ {
+  "request": "how does a seatbelt protect you in a crash?",
+  "beats": [
+   {
+    "intent": "A car and a passenger moving at 15 m/s towards a wall",
+    "narration": "A car hits a wall at fifteen metres a second, about thirty miles an hour. The passenger has to stop too.",
+    "code": "stage.title(\"Seatbelts\")\nwall = Rectangle(width=0.4, height=3, color=GREY_B, fill_opacity=0.9).move_to([5, -0.5, 0])\ncar = RoundedRectangle(width=2.4, height=1.0, corner_radius=0.2, color=BLUE, fill_opacity=0.6).move_to([-4, -1.3, 0])\nperson = Circle(radius=0.25, color=YELLOW, fill_opacity=0.9).move_to([-4.2, -0.5, 0])\nstage.play(FadeIn(wall), FadeIn(car), FadeIn(person))\nstage.play(car.animate.move_to([3.6, -1.3, 0]), person.animate.move_to([3.4, -0.5, 0]), run_time=1.5, rate_func=linear)\nstage.add(wall, car, person)\nstage.caption(\"15 m/s to 0\")"
+   },
+   {
+    "intent": "Without a belt: the person hitting the dashboard and stopping in 0.01 s",
+    "narration": "Without a belt, you keep going until you hit something hard, which stops you in about a hundredth of a second.",
+    "code": "hit = Star(6, outer_radius=0.35, color=RED, fill_opacity=0.9).move_to([4.2, -0.5, 0])\nstage.play(person.animate.move_to([4.2, -0.5, 0]), run_time=0.3)\nstage.play(FadeIn(hit))\nstage.add(hit)\nstage.caption(\"no belt: stopped in 0.01 s\")"
+   },
+   {
+    "intent": "Bars of force: 105 000 N without a belt, 5 250 N with a belt stretching over 0.2 s",
+    "narration": "A belt stretches slightly and stops you over about a fifth of a second: twenty times longer, so twenty times less force.",
+    "code": "stage.clear()\nb = draw_bars(stage, [105000, 5250], labels=[\"no belt (0.01 s)\", \"belt (0.2 s)\"], color=RED)\nstage.caption(\"force on a 70 kg person, newtons\")"
+   },
+   {
+    "intent": "The bars beside F = m Δv / Δt = 70 × 15 / Δt",
+    "narration": "The same change of speed spread over more time needs less force. That's also why airbags and crumple zones help.",
+    "code": "stage.equation(r\"F = \\frac{m\\,\\Delta v}{\\Delta t} = \\frac{70 \\times 15}{\\Delta t}\")"
+   }
+  ]
+ },
+ {
+  "request": "what's the lowest common multiple of 4 and 6?",
+  "beats": [
+   {
+    "intent": "A number line to 24 with the multiples of 4 marked in blue",
+    "narration": "Mark the multiples of four: four, eight, twelve, sixteen, twenty, twenty four.",
+    "code": "stage.title(\"Lowest common multiple\")\nnl = draw_number_line(stage, x_range=(0, 24))\nfor v in range(4, 25, 4):\n    mark_point(stage, nl, v, color=BLUE)\nstage.caption(\"multiples of 4\")"
+   },
+   {
+    "intent": "The multiples of 6 marked above in orange",
+    "narration": "Now the multiples of six: six, twelve, eighteen, twenty four.",
+    "code": "for v in range(6, 25, 6):\n    d = Dot(nl.n2p(v) + 0.45 * UP, color=ORANGE, radius=0.1)\n    stage.play(GrowFromCenter(d), run_time=0.25)\n    stage.add(d)\nstage.caption(\"multiples of 6 above\")"
+   },
+   {
+    "intent": "12 ringed as the first number in both lists",
+    "narration": "The first number on both lists is twelve.",
+    "code": "ring = Circle(radius=0.45, color=GREEN).move_to(nl.n2p(12) + 0.2 * UP)\nstage.play(Create(ring))\nstage.add(ring)\nstage.label(ring, \"12\", direction=UP, color=GREEN)"
+   },
+   {
+    "intent": "The line beside LCM(4, 6) = 12, from 4 = 2², 6 = 2 × 3",
+    "narration": "It is the smallest number both divide into: from their primes, two squared times three is twelve.",
+    "code": "stage.equation(r\"4 = 2^2,\\ 6 = 2 \\times 3\", r\"\\text{LCM} = 2^2 \\times 3 = 12\")"
+   }
+  ]
+ },
+ {
+  "request": "what's the chance of drawing two aces in a row from a deck?",
+  "beats": [
+   {
+    "intent": "A deck of 52 cards with the 4 aces highlighted",
+    "narration": "A deck has fifty two cards, four of them aces.",
+    "code": "stage.title(\"Two aces in a row\")\ndeck = VGroup(*[RoundedRectangle(width=0.35, height=0.5, corner_radius=0.05, color=GREY_B, fill_opacity=0.3) for _ in range(52)]).arrange_in_grid(rows=4, cols=13, buff=0.08).move_to([0, 0.8, 0])\nstage.play(FadeIn(deck))\nstage.add(deck)\nfor k in (0, 13, 26, 39):\n    deck[k].set_fill(RED, opacity=0.9)\nstage.play(*[Indicate(deck[k]) for k in (0, 13, 26, 39)])\nstage.caption(\"4 aces in 52\")"
+   },
+   {
+    "intent": "The first draw: an ace with chance 4/52",
+    "narration": "The chance the first card is an ace is four in fifty two.",
+    "code": "first = deck[0]\nstage.play(first.animate.move_to([-2.5, -1.8, 0]).scale(1.6))\nstage.label(first, \"4/52\", direction=DOWN, color=RED)"
+   },
+   {
+    "intent": "The second draw from 51 cards with 3 aces left: 3/51",
+    "narration": "That leaves fifty one cards with three aces, so the second is an ace with chance three in fifty one.",
+    "code": "second = deck[13]\nstage.play(second.animate.move_to([-0.8, -1.8, 0]).scale(1.6))\nstage.label(second, \"3/51\", direction=DOWN, color=RED)"
+   },
+   {
+    "intent": "The cards beside 4/52 × 3/51 = 1/221",
+    "narration": "Multiply: one in two hundred and twenty one.",
+    "code": "stage.equation(r\"\\frac{4}{52} \\times \\frac{3}{51} = \\frac{12}{2652}\", r\"= \\frac{1}{221}\")"
+   }
+  ]
+ },
+ {
+  "request": "why is it harder to stop a lorry than a car at the same speed?",
+  "beats": [
+   {
+    "intent": "A car and a lorry side by side, both moving at 20 m/s",
+    "narration": "A car and a lorry drive side by side at twenty metres a second.",
+    "code": "stage.title(\"Momentum\")\ncar = RoundedRectangle(width=1.6, height=0.7, corner_radius=0.15, color=BLUE, fill_opacity=0.6).move_to([-4, 1.0, 0])\nlorry = Rectangle(width=3.4, height=1.3, color=ORANGE, fill_opacity=0.6).move_to([-3.2, -1.2, 0])\nstage.play(FadeIn(car), FadeIn(lorry))\nstage.play(car.animate.shift(2 * RIGHT), lorry.animate.shift(2 * RIGHT), run_time=1, rate_func=linear)\nstage.add(car, lorry)\nstage.label(car, \"1 000 kg\", direction=UP, color=BLUE)\nstage.label(lorry, \"10 000 kg\", direction=UP, color=ORANGE)"
+   },
+   {
+    "intent": "Momentum arrows: a short one for the car, ten times longer for the lorry",
+    "narration": "Momentum is mass times speed. The lorry has ten times the mass, so ten times the momentum.",
+    "code": "a1 = Arrow(car.get_right(), car.get_right() + 0.5 * RIGHT, buff=0, color=YELLOW)\na2 = Arrow(lorry.get_right(), lorry.get_right() + 5.0 * RIGHT, buff=0, color=YELLOW)\nstage.play(GrowArrow(a1), GrowArrow(a2))\nstage.add(a1, a2)"
+   },
+   {
+    "intent": "Bars of stopping distance with the same braking force: car 20 m, lorry 200 m",
+    "narration": "With the same braking force, it takes ten times as long to stop and ten times as far.",
+    "code": "stage.clear()\nb = draw_bars(stage, [20, 200], labels=[\"car\", \"lorry\"], color=ORANGE)\nstage.caption(\"metres to stop, same braking force\")"
+   },
+   {
+    "intent": "The bars beside p = m v: 20 000 vs 200 000 kg m/s",
+    "narration": "Twenty thousand against two hundred thousand kilogram metres per second.",
+    "code": "stage.equation(r\"p = m v\", r\"1000 \\times 20 = 20\\,000,\\ 10\\,000 \\times 20 = 200\\,000\")"
+   }
+  ]
+ }
+]
