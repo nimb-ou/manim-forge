@@ -1,0 +1,102 @@
+[
+ {
+  "request": "what price gives a shop the most profit?",
+  "beats": [
+   {
+    "intent": "Axes of price against profit with the parabola P = (p - 2)(20 - 2p) for p from 2 to 10",
+    "narration": "Sell at price p: each sale earns p minus two, and you sell twenty minus two p a day. Profit is their product.",
+    "code": "stage.title(\"The best price\")\nax = draw_axes(stage, x_range=(0, 11), y_range=(0, 35), labels=(\"price\", \"profit\"))\nP = lambda p: (p - 2) * (20 - 2 * p)\ng = plot_graph(stage, ax, P, x_range=(2, 10), color=YELLOW)"
+   },
+   {
+    "intent": "A tangent sliding along the curve, slope positive then zero then negative",
+    "narration": "Raise the price and profit climbs at first, then levels, then falls.",
+    "code": "slide_tangent(stage, ax, P, 3, 9)"
+   },
+   {
+    "intent": "The peak at p = 6, profit 32, marked with a flat tangent",
+    "narration": "The peak is at a price of six, where the slope is zero: thirty two a day.",
+    "code": "m = mark_point(stage, ax, 6, 32, color=RED, label=\"p = 6, profit 32\")\nflat = draw_line(stage, ax.c2p(4.5, 32), ax.c2p(7.5, 32), color=RED, dashed=True)\nstage.equation(r\"P'(p) = 24 - 4p = 0 \\Rightarrow p = 6\")"
+   }
+  ]
+ },
+ {
+  "request": "how long does it take two pipes together to fill a pool?",
+  "beats": [
+   {
+    "intent": "Two bars: pipe A fills the pool in 6 hours, pipe B in 3 hours",
+    "narration": "Pipe A fills a pool in six hours on its own; pipe B in three.",
+    "code": "stage.title(\"Two pipes\")\nbars = draw_bars(stage, [6, 3], labels=[\"pipe A\", \"pipe B\"])\nstage.caption(\"Hours to fill alone\")"
+   },
+   {
+    "intent": "A pool rectangle filling, with A adding 1/6 and B adding 1/3 each hour",
+    "narration": "In one hour A fills a sixth and B a third: together, half the pool.",
+    "code": "stage.clear()\npool = Rectangle(width=5, height=3, color=WHITE)\na = Rectangle(width=5, height=0.5, color=BLUE, fill_opacity=0.7).align_to(pool, DOWN)\nb = Rectangle(width=5, height=1.0, color=GREEN, fill_opacity=0.7).next_to(a, UP, buff=0)\nstage.play(Create(pool))\nstage.play(FadeIn(a), FadeIn(b))\nstage.add(pool, a, b)\nstage.label(a, \"A: 1/6\", direction=RIGHT, color=BLUE)\nstage.label(b, \"B: 1/3\", direction=RIGHT, color=GREEN)"
+   },
+   {
+    "intent": "A second hour filling the other half, beside 1/6 + 1/3 = 1/2 per hour, 2 hours",
+    "narration": "Half a pool an hour means the pool is full in two hours.",
+    "code": "a2 = Rectangle(width=5, height=0.5, color=BLUE, fill_opacity=0.7).next_to(b, UP, buff=0)\nb2 = Rectangle(width=5, height=1.0, color=GREEN, fill_opacity=0.7).next_to(a2, UP, buff=0)\nstage.play(FadeIn(a2), FadeIn(b2))\nstage.add(a2, b2)\nstage.equation(r\"\\tfrac16 + \\tfrac13 = \\tfrac12 \\text{ per hour} \\Rightarrow 2 \\text{ hours}\")"
+   }
+  ]
+ },
+ {
+  "request": "how do x, x^2 and 2^x grow compared with each other?",
+  "beats": [
+   {
+    "intent": "Axes with y = x, y = x^2 and y = 2^x from 0 to 3, the three close together",
+    "narration": "Near zero the three curves stay close: x, x squared and two to the x.",
+    "code": "stage.title(\"Who grows fastest?\")\nax = draw_axes(stage, x_range=(0, 3), y_range=(0, 9))\nl = plot_graph(stage, ax, lambda x: x, color=GREEN, label=\"x\")\nq = plot_graph(stage, ax, lambda x: x ** 2, color=BLUE, label=\"x^2\")\ne = plot_graph(stage, ax, lambda x: 2 ** x, color=RED, label=\"2^x\")"
+   },
+   {
+    "intent": "Fresh axes from 0 to 8 where 2^x has pulled far ahead",
+    "narration": "Zoom out to eight: two to the x has shot past both.",
+    "code": "ax2 = draw_axes(stage, x_range=(0, 8), y_range=(0, 260))\nl2 = plot_graph(stage, ax2, lambda x: x, color=GREEN, label=\"x\")\nq2 = plot_graph(stage, ax2, lambda x: x ** 2, color=BLUE, label=\"x^2\")\ne2 = plot_graph(stage, ax2, lambda x: 2 ** x, color=RED, label=\"2^x\")"
+   },
+   {
+    "intent": "The crossing at x = 4 where 2^x overtakes x^2 marked",
+    "narration": "It overtakes x squared at four, where both are sixteen, and never looks back.",
+    "code": "m = mark_point(stage, ax2, 4, 16, color=YELLOW, label=\"(4, 16)\")\nstage.caption(\"Exponential beats any power in the end\")"
+   }
+  ]
+ },
+ {
+  "request": "how can one graph show when a faster runner catches up?",
+  "beats": [
+   {
+    "intent": "Axes of seconds against metres with runner A's line starting at 20 m, 5 m/s",
+    "narration": "Runner A gets a twenty metre head start and runs five metres per second.",
+    "code": "stage.title(\"Catching up\")\nax = draw_axes(stage, x_range=(0, 12), y_range=(0, 90), labels=(\"s\", \"m\"))\nA = plot_graph(stage, ax, lambda t: 20 + 5 * t, color=BLUE, label=\"A\")"
+   },
+   {
+    "intent": "Runner B's steeper line from 0 at 7 m/s",
+    "narration": "Runner B starts at the line and runs seven metres per second.",
+    "code": "B = plot_graph(stage, ax, lambda t: 7 * t, color=RED, label=\"B\")"
+   },
+   {
+    "intent": "The crossing at t = 10 s, 70 m marked beside 20 + 5t = 7t",
+    "narration": "B catches A where the lines cross: after ten seconds, seventy metres along.",
+    "code": "m = mark_point(stage, ax, 10, 70, color=YELLOW, label=\"10 s, 70 m\")\nstage.equation(r\"20 + 5t = 7t \\Rightarrow t = 10\")"
+   }
+  ]
+ },
+ {
+  "request": "what is the marginal cost of making one more item?",
+  "beats": [
+   {
+    "intent": "Axes of items against total cost with the curve C = 100 + 2q + 0.05q^2",
+    "narration": "The cost of making q items: a hundred to set up, two each, plus a bit more as the factory gets busy.",
+    "code": "stage.title(\"Marginal cost\")\nax = draw_axes(stage, x_range=(0, 60), y_range=(0, 400), labels=(\"items\", \"£\"))\nCq = lambda q: 100 + 2 * q + 0.05 * q ** 2\ng = plot_graph(stage, ax, Cq, color=YELLOW)"
+   },
+   {
+    "intent": "The tangent at q = 40 with its slope 6 read out",
+    "narration": "The slope of the cost curve is the marginal cost: what one more item adds. At forty items it is six pounds.",
+    "code": "p = mark_point(stage, ax, 40, Cq(40), color=RED, label=\"q = 40\")\ntan = plot_graph(stage, ax, lambda q: Cq(40) + 6 * (q - 40), x_range=(25, 55), color=RED)"
+   },
+   {
+    "intent": "The curve beside C'(q) = 2 + 0.1q = 6 at q = 40",
+    "narration": "Differentiate: two plus a tenth of q, which is six at forty.",
+    "code": "stage.equation(r\"C'(q) = 2 + 0.1q = 6\")"
+   }
+  ]
+ }
+]
