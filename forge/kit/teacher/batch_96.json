@@ -1,0 +1,102 @@
+[
+ {
+  "request": "why is the sea salty but rivers aren't?",
+  "beats": [
+   {
+    "intent": "Rain falling on land and a river flowing to the sea, carrying tiny salt dots",
+    "narration": "Rain falling on rocks dissolves a tiny bit of salt. Rivers carry it, too little to taste, down to the sea.",
+    "code": "stage.title(\"Why the sea is salty\")\nland = Polygon([-6, -2.6, 0], [-1, -2.6, 0], [-3.5, 0.5, 0], color=GREEN, fill_opacity=0.4)\nsea = Rectangle(width=6, height=1.2, stroke_width=0, fill_color=BLUE, fill_opacity=0.5).move_to([2.5, -2.0, 0])\nriver = VMobject(color=BLUE, stroke_width=6).set_points_smoothly([[-3.4, 0.2, 0], [-2.5, -1.2, 0], [-1.0, -2.2, 0], [0.0, -2.0, 0]])\nstage.play(FadeIn(land), FadeIn(sea), Create(river))\nstage.add(land, sea, river)\nsalt = VGroup(*[Dot(river.point_from_proportion(t), color=WHITE, radius=0.05) for t in np.linspace(0.1, 0.9, 6)])\nstage.play(FadeIn(salt))\nstage.add(salt)\nstage.label(river, \"a little salt\", direction=LEFT)"
+   },
+   {
+    "intent": "The salt dots joining the sea, which fills with more of them",
+    "narration": "In the sea the salt stays, and more arrives every year.",
+    "code": "rng = np.random.default_rng(6)\nsea_salt = VGroup(*[Dot([x, y, 0], color=WHITE, radius=0.05) for x, y in rng.uniform([0, -2.5], [5.4, -1.5], (40, 2))])\nstage.play(salt.animate.move_to([1.0, -2.0, 0]).set_opacity(0), FadeIn(sea_salt))\nstage.add(sea_salt)"
+   },
+   {
+    "intent": "Arrows of water vapour rising off the sea, the salt dots left behind",
+    "narration": "The Sun evaporates sea water, but only the water rises: the salt is left behind.",
+    "code": "vap = VGroup(*[Arrow([x, -1.3, 0], [x, 1.0, 0], buff=0, color=GREY_A, stroke_width=3) for x in (1.2, 2.5, 3.8)])\nstage.play(LaggedStart(*[GrowArrow(a) for a in vap], lag_ratio=0.2))\nstage.add(vap)\nstage.caption(\"water leaves, salt stays\")"
+   },
+   {
+    "intent": "Bars of saltiness: river water 0.01%, sea water 3.5%",
+    "narration": "Over millions of years that concentrated the sea to about three and a half percent salt, hundreds of times saltier than a river.",
+    "code": "stage.clear()\nb = draw_bars(stage, [0.01, 3.5], labels=[\"river\", \"sea\"], color=BLUE)\nstage.caption(\"salt, % by weight\")"
+   }
+  ]
+ },
+ {
+  "request": "how does a card number check catch typing mistakes?",
+  "beats": [
+   {
+    "intent": "The 11 digits 7 9 9 2 7 3 9 8 7 1 3 as tiles",
+    "narration": "Here is an account number: seven nine nine two seven three nine eight seven one three.",
+    "code": "stage.title(\"The Luhn check\")\ndigits = \"79927398713\"\ntiles = VGroup(*[Square(0.75, color=GREY_B) for _ in digits]).arrange(RIGHT, buff=0.08).move_to([0, 1.3, 0])\nnums = VGroup(*[Text(d, font_size=30).move_to(t) for d, t in zip(digits, tiles)])\nstage.play(FadeIn(tiles), FadeIn(nums))\nstage.add(tiles, nums)"
+   },
+   {
+    "intent": "Every second digit from the right lit and doubled, subtracting 9 if over 9: 9 4 6 7 2",
+    "narration": "From the right, double every second digit. If that makes more than nine, take away nine.",
+    "code": "new = [7, 9, 9, 4, 7, 6, 9, 7, 7, 2, 3]\nrow = VGroup()\nfor k, (t, v) in enumerate(zip(tiles, new)):\n    doubled = (len(digits) - 1 - k) % 2 == 1\n    if doubled:\n        t.set_fill(YELLOW, opacity=0.3)\n    row.add(Text(str(v), font_size=30, color=YELLOW if doubled else WHITE).next_to(t, DOWN, buff=0.45))\nstage.play(*[FadeIn(r) for r in row])\nstage.add(row)\nstage.caption(\"doubled digits in yellow\")"
+   },
+   {
+    "intent": "The new row added up to 70, beside 70 ends in 0: valid",
+    "narration": "Add the new row: seventy. It ends in zero, so the number passes the check.",
+    "code": "stage.equation(r\"7+9+9+4+7+6+9+7+7+2+3 = 70\", r\"70 \\bmod 10 = 0\\ \\checkmark\")"
+   },
+   {
+    "intent": "One digit changed from 8 to 3, its doubled value becoming 6 and the total 69, the check failing",
+    "narration": "Mistype one digit, an eight as a three: doubled it gives six instead of seven, and the total becomes sixty nine. It no longer ends in zero: the mistake is caught.",
+    "code": "bad = Text(\"3\", font_size=30, color=RED).move_to(tiles[7])\nstage.play(Transform(nums[7], bad))\nstage.play(Transform(row[7], Text(\"6\", font_size=30, color=RED).move_to(row[7])))\nstage.caption(\"one wrong digit: total 69, check fails\")\nstage.equation(r\"7+9+9+4+7+6+9+6+7+2+3 = 69\", r\"69 \\bmod 10 = 9 \\ne 0\")"
+   }
+  ]
+ },
+ {
+  "request": "how big is the solar system if the Sun were a football?",
+  "beats": [
+   {
+    "intent": "A football-sized Sun and a peppercorn-sized Earth",
+    "narration": "Shrink the Sun to a football, twenty two centimetres across. The Earth becomes a peppercorn, two millimetres wide.",
+    "code": "stage.title(\"A pocket solar system\")\nsun = Circle(radius=1.1, color=YELLOW, fill_opacity=0.9).move_to([-4.5, 0.3, 0])\nearth = Dot([-1.5, 0.3, 0], color=BLUE, radius=0.06)\nstage.play(FadeIn(sun), FadeIn(earth))\nstage.add(sun, earth)\nstage.label(sun, \"Sun: 22 cm\", direction=DOWN, color=YELLOW)\nstage.label(earth, \"Earth: 2 mm\", direction=DOWN, color=BLUE)"
+   },
+   {
+    "intent": "A dashed line from the Sun to the Earth labelled 24 m",
+    "narration": "And the peppercorn would sit twenty four metres away, across a playground.",
+    "code": "d = DashedLine(sun.get_right(), earth.get_center(), color=GREY_B)\nstage.play(Create(d))\nstage.add(d)\nstage.label(d, \"24 m\", direction=UP)"
+   },
+   {
+    "intent": "Bars of distance from the Sun on this scale: Earth 24 m, Jupiter 124 m, Neptune 710 m",
+    "narration": "Jupiter would be a hundred and twenty four metres away, Neptune over seven hundred.",
+    "code": "stage.clear()\nb = draw_bars(stage, [24, 124, 710], labels=[\"Earth\", \"Jupiter\", \"Neptune\"], color=BLUE)\nstage.caption(\"metres from a football-sized Sun\")"
+   },
+   {
+    "intent": "The bars beside the scale 1 : 6.3 billion",
+    "narration": "The scale is about one to six billion: space is almost entirely empty.",
+    "code": "stage.equation(r\"\\frac{1.39 \\times 10^9\\ \\text{m}}{0.22\\ \\text{m}} \\approx 6.3 \\times 10^9\")"
+   }
+  ]
+ },
+ {
+  "request": "how are the frequency and wavelength of a wave related?",
+  "beats": [
+   {
+    "intent": "A long wave travelling along a line with one wavelength marked",
+    "narration": "A wave has a wavelength: the distance from one crest to the next.",
+    "code": "stage.title(\"Frequency and wavelength\")\nax = draw_axes(stage, x_range=(0, 8), y_range=(-1.5, 1.5), labels=(\"x\", \"y\"))\nlong_w = plot_graph(stage, ax, lambda x: np.sin(2 * PI * x / 4), color=BLUE)\nlam = DoubleArrow(ax.c2p(1, 1.25), ax.c2p(5, 1.25), buff=0, color=YELLOW)\nstage.play(GrowArrow(lam))\nstage.add(lam)\nstage.label(lam, \"wavelength 4\", direction=UP, color=YELLOW)"
+   },
+   {
+    "intent": "A second, shorter wave with wavelength 2 drawn on the same axes",
+    "narration": "Here is a wave with half the wavelength.",
+    "code": "short_w = plot_graph(stage, ax, lambda x: np.sin(2 * PI * x / 2), color=ORANGE)"
+   },
+   {
+    "intent": "Both waves sliding right at the same speed, the short one bobbing twice as often at a fixed point",
+    "narration": "Both travel at the same speed. At a fixed point, the short wave's crests pass twice as often: double the frequency.",
+    "code": "probe = DashedLine(ax.c2p(6, -1.5), ax.c2p(6, 1.5), color=GREY_B)\nstage.play(Create(probe))\nstage.add(probe)\nstage.caption(\"same speed: half the wavelength, twice the frequency\")"
+   },
+   {
+    "intent": "The waves beside speed = frequency × wavelength",
+    "narration": "Speed equals frequency times wavelength. For light and sound, that one rule links colour or pitch to wavelength.",
+    "code": "stage.equation(r\"v = f \\lambda\")"
+   }
+  ]
+ }
+]
