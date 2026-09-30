@@ -1,0 +1,102 @@
+[
+ {
+  "request": "how is a photo stored as numbers?",
+  "beats": [
+   {
+    "intent": "A small smiley picture drawn as an 8 by 8 grid of coloured squares",
+    "narration": "Zoom right into a digital photo and it is a grid of tiny coloured squares: pixels.",
+    "code": "stage.title(\"Pixels\")\nface = [\"..YYYY..\", \".YYYYYY.\", \"YYKYYKYY\", \"YYYYYYYY\", \"YKYYYYKY\", \"YYKKKKYY\", \".YYYYYY.\", \"..YYYY..\"]\ncolours = {\".\": GREY_E, \"Y\": YELLOW, \"K\": BLACK}\ngrid = VGroup(*[Square(0.45, stroke_width=1, stroke_color=GREY_D, fill_color=colours[ch], fill_opacity=1)\n                for row in face for ch in row]).arrange_in_grid(rows=8, cols=8, buff=0).move_to([-3, -0.3, 0])\nstage.play(FadeIn(grid))\nstage.add(grid)"
+   },
+   {
+    "intent": "One pixel picked out and enlarged, showing three amounts: red 255, green 220, blue 0",
+    "narration": "Each pixel stores three numbers: how much red, green and blue light to mix. This yellow one is red two five five, green two twenty, blue nought.",
+    "code": "pick = grid[2]\nring = Square(0.5, color=RED, stroke_width=4).move_to(pick)\nstage.play(Create(ring))\nstage.add(ring)\nbig = Square(1.6, stroke_width=2, fill_color=YELLOW, fill_opacity=1).move_to([1.5, 0.8, 0])\nlink = DashedLine(ring.get_right(), big.get_left(), color=GREY_B)\nstage.play(Create(link), FadeIn(big))\nstage.add(link, big)"
+   },
+   {
+    "intent": "Bars of the three channel values: 255, 220, 0",
+    "narration": "Each amount runs from nought to two hundred and fifty five, which fits in one byte.",
+    "code": "rgb = VGroup(*[Rectangle(width=0.6, height=h * 2.0 / 255 + 0.02, color=c, fill_opacity=0.9) for h, c in ((255, RED), (220, GREEN), (0, BLUE))]).arrange(RIGHT, buff=0.3, aligned_edge=DOWN).move_to([4.3, 0.3, 0])\nstage.play(LaggedStart(*[GrowFromEdge(r, DOWN) for r in rgb], lag_ratio=0.2))\nstage.add(rgb)\nfor r, v in zip(rgb, (\"255\", \"220\", \"0\")):\n    stage.label(r, v, direction=DOWN)"
+   },
+   {
+    "intent": "The picture beside 1920 × 1080 ≈ 2 million pixels × 3 bytes ≈ 6 MB",
+    "narration": "A full HD photo is nineteen twenty by ten eighty: about two million pixels, three bytes each, six megabytes before compression.",
+    "code": "stage.equation(r\"1920 \\times 1080 \\approx 2.07\\ \\text{million}\", r\"\\times 3 \\approx 6.2\\ \\text{MB}\")"
+   }
+  ]
+ },
+ {
+  "request": "why do we have day and night?",
+  "beats": [
+   {
+    "intent": "The Sun on the left shining on the Earth, the Earth's right half in shadow",
+    "narration": "The Sun lights up only the half of the Earth facing it. The other half is in darkness.",
+    "code": "stage.title(\"Day and night\")\nsun = Circle(radius=0.8, color=YELLOW, fill_opacity=0.9).move_to([-5.3, 0, 0])\nrays = VGroup(*[Arrow([-4.3, y, 0], [-1.9, y, 0], buff=0, color=YELLOW, stroke_width=3) for y in (-1.2, -0.4, 0.4, 1.2)])\nearth = Circle(radius=1.5, color=BLUE, fill_opacity=0.7).move_to([0.5, 0, 0])\nnight = Sector(radius=1.5, start_angle=-PI / 2, angle=PI, color=BLACK, fill_opacity=0.65, stroke_width=0).move_arc_center_to([0.5, 0, 0])\nstage.play(FadeIn(sun), LaggedStart(*[GrowArrow(r) for r in rays], lag_ratio=0.2), FadeIn(earth))\nstage.play(FadeIn(night))\nstage.add(sun, rays, earth, night)\nstage.label(earth, \"day side | night side\", direction=DOWN)"
+   },
+   {
+    "intent": "A town dot on the Earth's edge, turning from the lit side into the dark side",
+    "narration": "The Earth spins. A town on its surface is carried from the lit side into the dark: that is sunset.",
+    "code": "c = np.array([0.5, 0, 0])\ntown = Dot(c + 1.5 * np.array([np.cos(PI * 0.75), np.sin(PI * 0.75), 0]), color=RED, radius=0.12)\nstage.play(GrowFromCenter(town))\nstage.add(town)\nstage.play(Rotate(town, -PI * 0.75 + 0.2, about_point=c), run_time=2.5)\nstage.caption(\"the town turns into the night\")"
+   },
+   {
+    "intent": "A full turn marked 24 hours around the Earth",
+    "narration": "One full turn takes twenty four hours, so every town gets a day and a night each turn.",
+    "code": "turn = Arc(radius=1.8, start_angle=0, angle=TAU * 0.95, color=GREEN).move_arc_center_to(c).add_tip()\nstage.play(Create(turn))\nstage.add(turn)\nstage.label(turn, \"1 turn = 24 h\", direction=RIGHT, color=GREEN)"
+   },
+   {
+    "intent": "The picture beside 360° ÷ 24 = 15° per hour",
+    "narration": "It turns fifteen degrees every hour: that's why the Sun seems to cross the sky.",
+    "code": "stage.equation(r\"360^\\circ \\div 24 = 15^\\circ\\ \\text{per hour}\")"
+   }
+  ]
+ },
+ {
+  "request": "how does a hot air balloon float?",
+  "beats": [
+   {
+    "intent": "A balloon envelope and basket, the air inside and outside drawn as dots",
+    "narration": "A hot air balloon is a big bag of air with a burner underneath.",
+    "code": "stage.title(\"Hot air balloons\")\nenv = Ellipse(width=3.2, height=3.6, color=ORANGE).move_to([0, 0.6, 0])\nbasket = Rectangle(width=0.8, height=0.5, color=GREY_B, fill_opacity=0.6).move_to([0, -1.9, 0])\nropes = VGroup(Line(env.point_from_proportion(0.7), basket.get_corner(UL), color=GREY_B), Line(env.point_from_proportion(0.8), basket.get_corner(UR), color=GREY_B))\nstage.play(Create(env), FadeIn(basket), Create(ropes))\nstage.add(env, basket, ropes)\nrng = np.random.default_rng(4)\noutside = VGroup(*[Dot([x, y, 0], radius=0.05, color=BLUE) for x, y in rng.uniform([-6, -3], [6, 3], (160, 2)) if (x / 1.7) ** 2 + ((y - 0.6) / 1.9) ** 2 > 1.1])\nstage.play(FadeIn(outside))\nstage.add(outside)"
+   },
+   {
+    "intent": "The burner flame and the dots inside spreading out, fewer of them",
+    "narration": "The burner heats the air inside. Hot air spreads out, so the bag holds fewer air particles than the same space outside.",
+    "code": "flame = Triangle(color=RED, fill_opacity=0.9).scale(0.3).rotate(PI).move_to([0, -1.35, 0])\nstage.play(FadeIn(flame))\nstage.add(flame)\ninside = VGroup(*[Dot(env.get_center() + np.array([x, y, 0]), radius=0.05, color=RED) for x, y in rng.uniform([-1.2, -1.4], [1.2, 1.4], (25, 2))])\nstage.play(FadeIn(inside))\nstage.add(inside)\nstage.caption(\"hot air inside: fewer particles in the same space\")"
+   },
+   {
+    "intent": "Bars comparing the weight of air inside, 25, to the same volume outside, 30",
+    "narration": "So the air inside weighs less than the air it pushes aside.",
+    "code": "stage.clear()\nb = draw_bars(stage, [25, 30], labels=[\"hot air inside\", \"cool air outside\"], color=ORANGE)\nstage.caption(\"weight of the same volume\")"
+   },
+   {
+    "intent": "An up arrow for the lift, the difference in weight",
+    "narration": "The difference is an upward push. If it is bigger than the weight of the balloon and basket, up it goes.",
+    "code": "up = Arrow([3.5, -1.5, 0], [3.5, 1.5, 0], buff=0, color=GREEN)\nstage.play(GrowArrow(up))\nstage.add(up)\nstage.label(up, \"lift = 30 - 25\", direction=RIGHT, color=GREEN)"
+   }
+  ]
+ },
+ {
+  "request": "why do water towers stand so tall?",
+  "beats": [
+   {
+    "intent": "A tall water tower with its tank 10 m above a house tap",
+    "narration": "A water tower holds a tank of water high above the houses: here ten metres up.",
+    "code": "stage.title(\"Water towers\")\ntank = Rectangle(width=2.0, height=1.2, color=BLUE, fill_opacity=0.6).move_to([-3.5, 1.8, 0])\nlegs = VGroup(Line([-4.3, 1.2, 0], [-4.3, -2.4, 0], color=GREY_B), Line([-2.7, 1.2, 0], [-2.7, -2.4, 0], color=GREY_B))\nground = Line([-6, -2.4, 0], [6, -2.4, 0], color=GREY_B)\nhouse = Polygon([2.5, -2.4, 0], [4.5, -2.4, 0], [4.5, -1.2, 0], [3.5, -0.4, 0], [2.5, -1.2, 0], color=ORANGE, fill_opacity=0.3)\npipe = VMobject(color=BLUE, stroke_width=5).set_points_as_corners([[-3.5, 1.2, 0], [-3.5, -2.2, 0], [2.8, -2.2, 0], [2.8, -1.6, 0]])\nstage.play(FadeIn(tank), Create(legs), Create(ground), FadeIn(house), Create(pipe))\nstage.add(tank, legs, ground, house, pipe)\nh = DoubleArrow([-1.8, 1.8, 0], [-1.8, -1.6, 0], buff=0, color=YELLOW)\nstage.play(GrowArrow(h))\nstage.add(h)\nstage.label(h, \"10 m\", direction=RIGHT, color=YELLOW)"
+   },
+   {
+    "intent": "The weight of the column of water pressing down into the pipe",
+    "narration": "The weight of all that water above pushes down on the water in the pipe.",
+    "code": "col = Rectangle(width=0.3, height=3.2, stroke_width=0, fill_color=BLUE, fill_opacity=0.45).move_to([-3.5, -0.4, 0])\npush = Arrow([-3.5, 2.6, 0], [-3.5, 1.3, 0], buff=0, color=RED)\nstage.play(FadeIn(col), GrowArrow(push))\nstage.add(col, push)"
+   },
+   {
+    "intent": "Water spurting out of the tap at the house",
+    "narration": "Open the tap and that pressure drives water out, with no pump needed.",
+    "code": "jet = ArcBetweenPoints([2.8, -1.6, 0], [1.9, -2.3, 0], angle=PI / 2, color=BLUE, stroke_width=6)\nstage.play(Create(jet))\nstage.add(jet)\nstage.caption(\"height gives pressure\")"
+   },
+   {
+    "intent": "The picture beside every 10 m of height gives about 1 bar of pressure",
+    "narration": "Every ten metres of water adds about one bar of pressure, the same as the whole atmosphere pressing down.",
+    "code": "stage.equation(r\"p = \\rho g h = 1000 \\times 9.8 \\times 10\", r\"\\approx 1\\ \\text{bar}\")"
+   }
+  ]
+ }
+]
