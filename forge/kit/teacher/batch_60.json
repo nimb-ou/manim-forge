@@ -1,0 +1,87 @@
+[
+ {
+  "request": "why are there so few top predators in a food chain?",
+  "beats": [
+   {
+    "intent": "A pyramid of four stacked bars: plants, rabbits, foxes, eagles, narrowing upward",
+    "narration": "Stack a food chain as a pyramid: plants at the bottom, then rabbits, foxes and eagles.",
+    "code": "stage.title(\"The energy pyramid\")\nnames = [\"plants\", \"rabbits\", \"foxes\", \"eagles\"]\ncols = [GREEN, TEAL, ORANGE, RED]\nlevels = VGroup(*[Rectangle(width=w, height=0.8, color=c, fill_opacity=0.6)\n                  for w, c in zip([8, 4.5, 2.4, 1.2], cols)]).arrange(UP, buff=0.05).move_to([0, -0.4, 0])\nstage.play(LaggedStart(*[GrowFromEdge(r, DOWN) for r in levels], lag_ratio=0.3))\nstage.add(levels)\nfor r, n in zip(levels, names):\n    stage.label(r, n, direction=RIGHT, color=WHITE)"
+   },
+   {
+    "intent": "Each level labelled with its energy: 10000, 1000, 100, 10 units",
+    "narration": "Only about a tenth of the energy passes up each step. The rest is used for living, or lost as heat.",
+    "code": "for r, e in zip(levels, [\"10000\", \"1000\", \"100\", \"10\"]):\n    t = Text(e, font_size=26).move_to(r)\n    stage.play(FadeIn(t), run_time=0.4)\n    stage.add(t)\nstage.caption(\"about 10% passes up each level\")"
+   },
+   {
+    "intent": "The pyramid beside 10000 × 0.1³ = 10",
+    "narration": "Three steps up, ten thousand units have shrunk to ten: only enough for a few eagles.",
+    "code": "stage.equation(r\"10000 \\times 0.1^3 = 10\")"
+   }
+  ]
+ },
+ {
+  "request": "why does ice float on water?",
+  "beats": [
+   {
+    "intent": "A tank of blue water with an ice block, 92% of it under the surface",
+    "narration": "Drop a block of ice in water. It floats, with most of it under the surface.",
+    "code": "stage.title(\"Why ice floats\")\nwater = draw_rectangle(stage, width=8, height=3, color=BLUE, fill=0.35)\nwater.move_to([0, -1.6, 0])\nice = Rectangle(width=1.6, height=2.0, color=WHITE, fill_color=GREY_A, fill_opacity=0.8)\nice.move_to([0, water.get_top()[1] - 2.0 * 0.92 + 1.0, 0])\nstage.play(FadeIn(ice, shift=DOWN))\nstage.add(ice)"
+   },
+   {
+    "intent": "The part above the water marked 8% and the part below 92%",
+    "narration": "About eight percent sticks out above the water; ninety two percent is below.",
+    "code": "top = water.get_top()[1]\nabove = Brace(Line([0.8, top, 0], [0.8, ice.get_top()[1], 0]), RIGHT, color=YELLOW)\nbelow = Brace(Line([0.8, ice.get_bottom()[1], 0], [0.8, top, 0]), RIGHT, color=TEAL)\nstage.play(GrowFromCenter(above), GrowFromCenter(below))\nstage.add(above, below)\nstage.label(above, \"8%\", direction=RIGHT, color=YELLOW)\nstage.label(below, \"92%\", direction=RIGHT, color=TEAL)"
+   },
+   {
+    "intent": "Bars of density: water 1.00, ice 0.92 g/cm³",
+    "narration": "Ice is less dense than water: when water freezes, its molecules lock into an open pattern that takes more room.",
+    "code": "stage.clear()\nb = draw_bars(stage, [1.0, 0.92], labels=[\"water\", \"ice\"], color=TEAL)\nstage.caption(\"density in g per cm³\")"
+   },
+   {
+    "intent": "The bars beside 0.92 / 1.00 = 92% under water",
+    "narration": "The share under water is the ratio of the densities: ninety two percent.",
+    "code": "stage.equation(r\"\\frac{0.92}{1.00} = 92\\%\")"
+   }
+  ]
+ },
+ {
+  "request": "how does a prism make a rainbow?",
+  "beats": [
+   {
+    "intent": "A glass triangle with a white beam of light entering from the left",
+    "narration": "A beam of white light hits a glass prism.",
+    "code": "stage.title(\"Splitting white light\")\nprism = draw_polygon(stage, [(-1.5, -1.8), (1.5, -1.8), (0, 1.6)], color=WHITE, fill=0.15)\nbeam = draw_line(stage, (-6, -0.3), (-0.75, -0.1), color=WHITE)"
+   },
+   {
+    "intent": "The beam fanning out inside the glass and leaving as seven coloured rays",
+    "narration": "Glass bends each colour by a different amount, so they fan out: red bends least, violet most.",
+    "code": "cols = [RED, ORANGE, YELLOW, GREEN, BLUE, PURPLE, PINK]\nstart = np.array([-0.75, -0.1, 0])\nmids = [np.array([0.8, 0.0 - 0.12 * k, 0]) for k in range(7)]\nends = [np.array([6, -0.4 - 0.45 * k, 0]) for k in range(7)]\ninner = [Line(start, m, color=c, stroke_width=3) for m, c in zip(mids, cols)]\nouter = [Line(m, e, color=c, stroke_width=4) for m, e, c in zip(mids, ends, cols)]\nstage.play(*[Create(l) for l in inner])\nstage.play(*[Create(l) for l in outer])\nstage.add(*inner, *outer)"
+   },
+   {
+    "intent": "The fan labelled red at the top and violet at the bottom",
+    "narration": "Out comes a spread of colours, red at one edge and violet at the other.",
+    "code": "stage.label(outer[0], \"red\", direction=UP, color=RED)\nstage.label(outer[5], \"violet\", direction=DOWN, color=PURPLE)\nstage.caption(\"each colour bends by a different angle\")"
+   }
+  ]
+ },
+ {
+  "request": "what is the angle between the clock hands at 3:30?",
+  "beats": [
+   {
+    "intent": "A clock face with 12 hour ticks and hands at 3:30",
+    "narration": "Here is a clock at half past three.",
+    "code": "stage.title(\"The hands at 3:30\")\nface = Circle(radius=2.2, color=WHITE).move_to([-2.5, -0.3, 0])\nc = face.get_center()\nticks = VGroup(*[Line(c + 2.0 * np.array([np.sin(k * PI / 6), np.cos(k * PI / 6), 0]),\n                      c + 2.2 * np.array([np.sin(k * PI / 6), np.cos(k * PI / 6), 0]), color=GREY_B)\n                 for k in range(12)])\nnums = VGroup(*[Text(str(k if k else 12), font_size=24).move_to(c + 1.7 * np.array([np.sin(k * PI / 6), np.cos(k * PI / 6), 0]))\n                for k in range(12)])\nhour_ang, min_ang = 105 * DEGREES, 180 * DEGREES\nhour = Line(c, c + 1.1 * np.array([np.sin(hour_ang), np.cos(hour_ang), 0]), color=ORANGE, stroke_width=8)\nminute = Line(c, c + 1.8 * np.array([np.sin(min_ang), np.cos(min_ang), 0]), color=BLUE, stroke_width=5)\nstage.play(Create(face), Create(ticks), FadeIn(nums))\nstage.play(Create(hour), Create(minute))\nstage.add(face, ticks, nums, hour, minute)"
+   },
+   {
+    "intent": "The minute hand at 180° and the hour hand halfway between 3 and 4, at 105°",
+    "narration": "The minute hand points straight down, at one hundred and eighty degrees. The hour hand has moved half way from three to four: one hundred and five degrees.",
+    "code": "stage.label(minute, \"180°\", direction=LEFT, color=BLUE)\nstage.label(hour, \"105°\", direction=UP, color=ORANGE)\nstage.caption(\"each hour is 30°, and the hour hand creeps 0.5° a minute\")"
+   },
+   {
+    "intent": "The 75° angle between the hands shaded, beside 180 - 105 = 75°",
+    "narration": "The gap between them is seventy five degrees.",
+    "code": "gap = Sector(radius=0.9, start_angle=PI / 2 - min_ang, angle=min_ang - hour_ang, color=YELLOW, fill_opacity=0.5).move_arc_center_to(c)\nstage.play(FadeIn(gap))\nstage.add(gap)\nstage.equation(r\"180^\\circ - (3 \\times 30^\\circ + 15^\\circ)\", r\"= 75^\\circ\")"
+   }
+  ]
+ }
+]
