@@ -1730,8 +1730,17 @@ def euler_circle(stage: Stage, cp, t_end: float = TAU, run_time: float = 4.0):
 def highlight(stage: Stage, m, color=YELLOW):
     """Draw the eye to one thing, and leave it lit in that colour (a flash
     alone left beat-end frames showing nothing highlighted)."""
-    stage.scene.play(Circumscribe(m, color=color), m.animate.set_color(color),
-                     run_time=1.0)
+    # The shape takes the colour, its text keeps its own: a labelled box
+    # filled yellow swallowed its yellow label (2026-09-30).
+    texts = {id(x) for t in m.get_family() if isinstance(t, (Text, MarkupText, _ManimMathTex, _ManimTex))
+             for x in t.get_family()}
+    shapes = [x for x in m.get_family() if id(x) not in texts and x.has_points()]
+    if not texts or not shapes:
+        stage.scene.play(Circumscribe(m, color=color), m.animate.set_color(color),
+                         run_time=1.0)
+        return m
+    stage.scene.play(Circumscribe(m, color=color),
+                     *[x.animate.set_color(color, family=False) for x in shapes], run_time=1.0)
     return m
 
 
