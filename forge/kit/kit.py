@@ -819,19 +819,32 @@ def mark_point(stage: Stage, nl, x: float, y=None, color=YELLOW, label: str | No
     return d
 
 
+def _tag(label, font_size: int = 24):
+    """A short label: LaTeX when it is maths (2^3, x_1, 10 \\times 0.1) or a
+    bare number, plain text otherwise -- MathTex drops spaces and symbols,
+    so "3 for £2" came out as "3for2" and "day 0" as "day0"."""
+    s = str(label)
+    if _re.search(r"[\\^_{}=]", s) or not _re.search(r"[A-Za-z£$%€ ]", s):
+        return MathTex(s, font_size=font_size)
+    return Text(s, font_size=round(font_size * 0.8))
+
+
 def draw_bars(stage: Stage, values, labels=None, where: str = "center", color=BLUE,
          max_height: float = 4.0):
     """A bar chart, bars growing in one after another."""
     top = max(max(values), 1e-9)
+    # Labels made first: bars are spaced so the widest label fits under its
+    # bar ("3 for £2" under two 0.6-wide bars ran into its neighbour).
+    raw = [_tag(l, 24) for l in labels] if labels else []
+    gap = max([0.15] + [t.width - 0.6 + 0.15 for t in raw])
     group = VGroup(*[Rectangle(width=0.6, height=max(v / top * max_height, 0.02),
                                fill_opacity=0.8, color=color, stroke_width=1)
-                     for v in values]).arrange(RIGHT, buff=0.15, aligned_edge=DOWN)
+                     for v in values]).arrange(RIGHT, buff=gap, aligned_edge=DOWN)
     stage.place(group, where)
     stage.scene.play(LaggedStart(*[GrowFromCenter(b) for b in group],
                                  lag_ratio=0.15), run_time=1.5)
     if labels:
-        tags = VGroup(*[MathTex(str(l), font_size=24).next_to(b, DOWN, buff=0.1)
-                        for l, b in zip(labels, group)])
+        tags = VGroup(*[t.next_to(b, DOWN, buff=0.1) for t, b in zip(raw, group)])
         stage.scene.play(FadeIn(tags), run_time=0.5)
         group.add(tags)
         group.tags = tags
@@ -1112,7 +1125,7 @@ def draw_network(stage: Stage, nodes=None, edges=(), where: str = "center"):
     pos = {k: np.array([cx + x * w * 0.42, cy + y * h * 0.4, 0])
            for k, (x, y) in nodes.items()}
     dots = {k: Dot(p, radius=0.12, color=BLUE) for k, p in pos.items()}
-    tags = VGroup(*[MathTex(str(k), font_size=28).next_to(d, UP, buff=0.1)
+    tags = VGroup(*[_tag(k, 28).next_to(d, UP, buff=0.1)
                     for k, d in dots.items()])
     lines = VGroup(*[Line(pos[a], pos[b], color=GREY_B) for a, b in edges])
     stage.scene.play(Create(lines), *[GrowFromCenter(d) for d in dots.values()],
