@@ -589,7 +589,11 @@ def draw_vector(stage: Stage, plane_, xy, color=YELLOW, label: str | None = None
         t = stage.label(a, label, direction=side, color=color)
         # The label rides the tip: apply_matrix moves the arrow, and a label
         # left behind pointed the wrong way after a reflection.
-        t.add_updater(lambda m, a=a, side=side: m.next_to(a.get_end(), side, buff=0.15))
+        # The side follows the tip too: flipped to point left, a "v" kept on
+        # the right sat on its own shaft (scale_vector by -1, 2026-09-30).
+        o = plane_.c2p(0, 0)
+        t.add_updater(lambda m, a=a, o=o: m.next_to(
+            a.get_end(), RIGHT if a.get_end()[0] >= o[0] - 1e-6 else LEFT, buff=0.15))
     return a
 
 
