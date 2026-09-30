@@ -1,0 +1,82 @@
+[
+ {
+  "request": "why does a sound get quieter as you walk away?",
+  "beats": [
+   {
+    "intent": "A speaker dot with sound spreading as circles of radius 1, 2 and 3",
+    "narration": "Sound spreads out from a speaker in every direction, like growing spheres.",
+    "code": "stage.title(\"Quieter with distance\")\nsrc = Dot([-4, -0.6, 0], color=YELLOW, radius=0.15)\nstage.play(GrowFromCenter(src))\nstage.add(src)\nrings = VGroup(*[Circle(radius=r, color=BLUE, stroke_opacity=0.8).move_to(src) for r in (0.8, 1.6, 2.4)])\nstage.play(LaggedStart(*[Create(r) for r in rings], lag_ratio=0.4))\nstage.add(rings)\nfor r, t in zip(rings, [\"1 m\", \"2 m\", \"3 m\"]):\n    stage.label(r, t, direction=UP, color=BLUE)"
+   },
+   {
+    "intent": "A small patch on each ring, the same sound spread over 4 and then 9 times the area",
+    "narration": "The same energy is spread over the whole sphere. Twice as far, the sphere has four times the area; three times as far, nine times.",
+    "code": "patch = [Square(0.25, color=ORANGE, fill_opacity=0.9).move_to(src.get_center() + r * RIGHT) for r in (0.8, 1.6, 2.4)]\nstage.play(*[FadeIn(p) for p in patch])\nstage.add(*patch)\nstage.caption(\"same sound, 1×, 4×, 9× the area\")"
+   },
+   {
+    "intent": "Bars of loudness at 1, 2 and 3 m: 1, 1/4, 1/9",
+    "narration": "So the intensity falls to a quarter at twice the distance, and a ninth at three times.",
+    "code": "stage.clear()\nb = draw_bars(stage, [1, 0.25, 0.111], labels=[\"1 m\", \"2 m\", \"3 m\"], color=ORANGE)\nstage.equation(r\"I \\propto \\frac{1}{r^2}\")"
+   }
+  ]
+ },
+ {
+  "request": "how high up a wall does a 5 m ladder reach if its foot is 3 m out?",
+  "beats": [
+   {
+    "intent": "A wall, the ground and a ladder leaning from 3 m out",
+    "narration": "A five metre ladder leans against a wall, its foot three metres out.",
+    "code": "stage.title(\"A ladder against a wall\")\nwall = Line([1.5, -2.5, 0], [1.5, 2.3, 0], color=GREY_B, stroke_width=8)\nground = Line([-3.5, -2.5, 0], [2.5, -2.5, 0], color=GREY_B, stroke_width=4)\nstage.play(Create(wall), Create(ground))\nstage.add(wall, ground)\nu = 0.9\nfoot = np.array([1.5 - 3 * u, -2.5, 0])\ntop = np.array([1.5, -2.5 + 4 * u, 0])\nladder = Line(foot, top, color=ORANGE, stroke_width=8)\nstage.play(Create(ladder))\nstage.add(ladder)\nstage.label(ladder, \"5 m\", direction=LEFT, color=ORANGE)\nbase = Line(foot, [1.5, -2.5, 0], color=GREEN)\nstage.add(base)\nstage.label(base, \"3 m\", direction=DOWN, color=GREEN)"
+   },
+   {
+    "intent": "The height up the wall marked h with a right angle at the foot of the wall",
+    "narration": "The ladder, the wall and the ground make a right triangle. The height up the wall is the unknown side.",
+    "code": "hline = Line([1.5, -2.5, 0], top, color=YELLOW, stroke_width=6)\nstage.play(Create(hline))\nstage.add(hline)\nstage.label(hline, \"h\", direction=RIGHT, color=YELLOW)\nra = RightAngle(Line([1.5, -2.5, 0], foot), Line([1.5, -2.5, 0], top), length=0.3, color=WHITE)\nstage.play(Create(ra))\nstage.add(ra)"
+   },
+   {
+    "intent": "The picture beside h² = 5² - 3² = 16, h = 4 m",
+    "narration": "Five squared is three squared plus h squared, so h squared is sixteen: the ladder reaches four metres up.",
+    "code": "stage.equation(r\"h^2 = 5^2 - 3^2 = 16\", r\"\\Rightarrow h = 4\\ \\text{m}\")"
+   }
+  ]
+ },
+ {
+  "request": "if a bus comes every 12 minutes, how long do I wait on average?",
+  "beats": [
+   {
+    "intent": "A number line of an hour with buses at 0, 12, 24, 36, 48, 60 minutes",
+    "narration": "Buses come every twelve minutes: at zero, twelve, twenty four and so on.",
+    "code": "stage.title(\"Waiting for the bus\")\nnl = draw_number_line(stage, x_range=(0, 60))\nfor t in (0, 12, 24, 36, 48, 60):\n    mark_point(stage, nl, t, color=GREEN, label=\"bus\" if t == 12 else None)"
+   },
+   {
+    "intent": "Three arrival times in one gap with their waits: arrive at 13 wait 11, at 18 wait 6, at 23 wait 1",
+    "narration": "You turn up at a random time. Just after a bus you wait nearly twelve minutes; just before one, hardly at all.",
+    "code": "for k, (arrive, col) in enumerate(((13, RED), (18, YELLOW), (23, BLUE))):\n    y = (0.6 + 0.5 * k) * DOWN\n    d = Dot(nl.n2p(arrive) + y, color=col)\n    w = Line(nl.n2p(arrive) + y, nl.n2p(24) + y, color=col, stroke_width=6)\n    stage.play(FadeIn(d), Create(w), run_time=0.6)\n    stage.add(d, w)\n    stage.label(w, f\"wait {24 - arrive}\", direction=RIGHT if arrive > 20 else LEFT, color=col)\nstage.caption(\"waits of 11, 6 and 1 minutes\")"
+   },
+   {
+    "intent": "The line beside average wait = 12 / 2 = 6 minutes",
+    "narration": "Every wait from zero to twelve is equally likely, so on average you wait half the gap: six minutes.",
+    "code": "stage.equation(r\"\\frac{12}{2} = 6\\ \\text{min}\")"
+   }
+  ]
+ },
+ {
+  "request": "how do tax bands work? Does earning more ever lose you money?",
+  "beats": [
+   {
+    "intent": "A bar of a £50 000 income split into a £12 500 tax-free part and a £37 500 part",
+    "narration": "Take a simple system: the first twelve thousand five hundred pounds is tax free, and the rest is taxed at twenty percent.",
+    "code": "stage.title(\"Tax bands\")\nk = 0.16\nfree = Rectangle(width=12.5 * k, height=0.9, color=GREEN, fill_opacity=0.6).move_to([-5.5 + 12.5 * k / 2, 0.5, 0])\nrest = Rectangle(width=37.5 * k, height=0.9, color=BLUE, fill_opacity=0.6).next_to(free, RIGHT, buff=0)\nstage.play(GrowFromEdge(free, LEFT))\nstage.play(GrowFromEdge(rest, LEFT))\nstage.add(free, rest)\nstage.label(free, \"£12 500 at 0%\", direction=UP, color=GREEN)\nstage.label(rest, \"£37 500 at 20%\", direction=UP, color=BLUE)"
+   },
+   {
+    "intent": "A thin slice of the blue part lit as the £7 500 of tax",
+    "narration": "Only the part above the threshold is taxed: twenty percent of thirty seven thousand five hundred is seven thousand five hundred.",
+    "code": "tax = Rectangle(width=7.5 * k, height=0.9, stroke_width=0, fill_color=RED, fill_opacity=0.8).align_to(rest, RIGHT).align_to(rest, DOWN)\nstage.play(FadeIn(tax))\nstage.add(tax)\nstage.label(tax, \"tax £7 500\", direction=DOWN, color=RED)\nstage.equation(r\"0.2 \\times 37\\,500 = 7\\,500\")"
+   },
+   {
+    "intent": "A raise of £1 000 adding a slice of which only £200 is tax",
+    "narration": "Earn a thousand more and only that extra thousand is taxed at the higher rate: you keep eight hundred. A raise never lowers your take-home pay.",
+    "code": "extra = Rectangle(width=1.0 * k * 1.0, height=0.9, color=YELLOW, fill_opacity=0.8).next_to(rest, RIGHT, buff=0)\nstage.play(GrowFromEdge(extra, LEFT))\nstage.add(extra)\nstage.caption(\"+£1 000 earned: +£800 kept\")"
+   }
+  ]
+ }
+]
