@@ -1,0 +1,102 @@
+[
+ {
+  "request": "why can a magnifying glass burn paper in sunlight?",
+  "beats": [
+   {
+    "intent": "Parallel sunbeams falling on a lens held above a sheet of paper",
+    "narration": "Sunlight falls on a magnifying glass held above a sheet of paper.",
+    "code": "stage.title(\"Focusing sunlight\")\nlens = Ellipse(width=5.0, height=0.5, color=BLUE, fill_opacity=0.3).move_to([0, 1.0, 0])\npaper = Rectangle(width=6, height=0.15, color=WHITE, fill_opacity=0.9).move_to([0, -2.5, 0])\nbeams = VGroup(*[Arrow([x, 2.8, 0], [x, 1.25, 0], buff=0, color=YELLOW, stroke_width=3) for x in np.linspace(-2.2, 2.2, 6)])\nstage.play(FadeIn(lens), FadeIn(paper), LaggedStart(*[GrowArrow(b) for b in beams], lag_ratio=0.1))\nstage.add(lens, paper, beams)"
+   },
+   {
+    "intent": "The beams bending through the lens and meeting at a small bright spot on the paper",
+    "narration": "The lens bends every beam towards one small spot on the paper.",
+    "code": "spot = np.array([0, -2.4, 0])\nrays = VGroup(*[Line([x, 0.9, 0], spot, color=YELLOW, stroke_width=3) for x in np.linspace(-2.2, 2.2, 6)])\nstage.play(Create(rays))\ndot = Dot(spot, color=WHITE, radius=0.1)\nstage.play(GrowFromCenter(dot))\nstage.add(rays, dot)"
+   },
+   {
+    "intent": "Two squares compared: the 5 cm wide patch of light caught by the lens and the 0.5 cm spot it lands on",
+    "narration": "Light collected over a lens five centimetres wide lands on a spot half a centimetre wide.",
+    "code": "big = Square(2.5, color=YELLOW, fill_opacity=0.15).move_to([4.5, 1.2, 0])\nsmall = Square(0.25, color=YELLOW, fill_opacity=0.9).move_to([4.5, -1.6, 0])\nstage.play(FadeIn(big), FadeIn(small))\nstage.add(big, small)\nstage.label(big, \"5 cm\", direction=UP, color=YELLOW)\nstage.label(small, \"0.5 cm\", direction=DOWN, color=YELLOW)"
+   },
+   {
+    "intent": "The squares beside (5 / 0.5)² = 100 times as much light per square centimetre",
+    "narration": "The width shrinks ten times, so the area shrinks a hundred times: a hundred times the sunlight on each bit of paper, enough to scorch it.",
+    "code": "stage.equation(r\"\\left(\\frac{5}{0.5}\\right)^2 = 100\")"
+   }
+  ]
+ },
+ {
+  "request": "which is better value: 500 g for £2.00 or 750 g for £2.70?",
+  "beats": [
+   {
+    "intent": "Two packs drawn as boxes: 500 g at £2.00 and 750 g at £2.70",
+    "narration": "One pack is five hundred grams for two pounds. The bigger one is seven fifty for two seventy.",
+    "code": "stage.title(\"Better value?\")\nsmall = Rectangle(width=1.6, height=2.0, color=BLUE, fill_opacity=0.4).move_to([-3, -0.3, 0])\nbig = Rectangle(width=2.2, height=2.6, color=GREEN, fill_opacity=0.4).move_to([0.5, 0, 0])\nstage.play(FadeIn(small), FadeIn(big))\nstage.add(small, big)\nstage.label(small, \"500 g, £2.00\", direction=DOWN, color=BLUE)\nstage.label(big, \"750 g, £2.70\", direction=DOWN, color=GREEN)"
+   },
+   {
+    "intent": "Each pack split into 100 g pieces: 5 pieces and 7.5 pieces",
+    "narration": "Compare the price of the same amount: a hundred grams. The small pack has five of those, the big one seven and a half.",
+    "code": "for box, n in ((small, 5), (big, 7.5)):\n    for k in range(1, int(n) + 1):\n        y = box.get_bottom()[1] + box.height * k / n\n        if k < n:\n            stage.add(Line([box.get_left()[0], y, 0], [box.get_right()[0], y, 0], color=WHITE, stroke_width=1.5))\nstage.play(Indicate(small), Indicate(big))\nstage.caption(\"count the 100 g pieces\")"
+   },
+   {
+    "intent": "Bars of price per 100 g: 40p and 36p",
+    "narration": "Two pounds over five is forty pence per hundred grams; two seventy over seven and a half is thirty six.",
+    "code": "stage.clear()\nb = draw_bars(stage, [40, 36], labels=[\"small\", \"big\"], color=ORANGE)\nstage.caption(\"pence per 100 g\")"
+   },
+   {
+    "intent": "The bars beside 200 ÷ 5 = 40 and 270 ÷ 7.5 = 36",
+    "narration": "The big pack is better value, by four pence every hundred grams.",
+    "code": "stage.equation(r\"200 \\div 5 = 40\", r\"270 \\div 7.5 = 36\")"
+   }
+  ]
+ },
+ {
+  "request": "why is the angle in a semicircle always 90 degrees?",
+  "beats": [
+   {
+    "intent": "A semicircle on a diameter AB with a point C on the arc and the triangle ABC",
+    "narration": "Draw a semicircle on a diameter A B, and pick any point C on the curve.",
+    "code": "stage.title(\"The angle in a semicircle\")\nO = np.array([0, -1.5, 0])\nR = 3.0\narc = Arc(radius=R, start_angle=0, angle=PI, color=GREY_B).move_arc_center_to(O)\nA, B = O + R * LEFT, O + R * RIGHT\nt = ValueTracker(2.0)\nC = lambda: O + R * np.array([np.cos(t.get_value()), np.sin(t.get_value()), 0])\ntri = always_redraw(lambda: Polygon(A, B, C(), color=BLUE, fill_opacity=0.2))\ndotC = always_redraw(lambda: Dot(C(), color=YELLOW))\nstage.play(Create(arc))\nstage.add(tri, dotC)\nstage.play(FadeIn(Dot(A)), FadeIn(Dot(B)))\nstage.label(A, \"A\", direction=LEFT)\nstage.label(B, \"B\", direction=RIGHT)"
+   },
+   {
+    "intent": "A right-angle mark at C",
+    "narration": "The angle at C is always a right angle.",
+    "code": "mark = always_redraw(lambda: RightAngle(Line(C(), A), Line(C(), B), length=0.3, color=YELLOW, quadrant=(1, 1)))\nstage.add(mark)\nstage.play(Create(mark))"
+   },
+   {
+    "intent": "C sliding along the arc, the right-angle mark staying",
+    "narration": "Slide C anywhere along the curve, and it stays ninety degrees.",
+    "code": "stage.play(t.animate.set_value(0.6), run_time=2)\nstage.play(t.animate.set_value(2.6), run_time=2)\nstage.caption(\"C moves; the angle stays 90°\")"
+   },
+   {
+    "intent": "The centre O joined to C, splitting the triangle into two isosceles triangles",
+    "narration": "Why: join the centre to C. O A, O B and O C are all radii, so both small triangles are isosceles. Their angles add to make the angle at C exactly half of a hundred and eighty.",
+    "code": "oc = always_redraw(lambda: Line(O, C(), color=GREEN))\nstage.add(oc)\nstage.play(Create(oc))\nstage.equation(r\"2a + 2b = 180^\\circ\", r\"\\Rightarrow a + b = 90^\\circ\")"
+   }
+  ]
+ },
+ {
+  "request": "how do batteries add up in a torch?",
+  "beats": [
+   {
+    "intent": "One 1.5 V battery drawn as a cell",
+    "narration": "One battery gives one and a half volts.",
+    "code": "stage.title(\"Batteries in series\")\ncell = lambda: VGroup(Rectangle(width=1.6, height=0.7, color=YELLOW, fill_opacity=0.5), Rectangle(width=0.15, height=0.3, color=YELLOW, fill_opacity=0.9).shift(0.875 * RIGHT))\none = cell().move_to([-4, 1.2, 0])\nstage.play(FadeIn(one))\nstage.add(one)\nstage.label(one, \"1.5 V\", direction=UP, color=YELLOW)"
+   },
+   {
+    "intent": "Four batteries end to end, plus to minus",
+    "narration": "Put four end to end, the plus of each touching the minus of the next.",
+    "code": "four = VGroup(*[cell() for _ in range(4)]).arrange(RIGHT, buff=0.05).move_to([0, -0.6, 0])\nstage.play(LaggedStart(*[FadeIn(c) for c in four], lag_ratio=0.2))\nstage.add(four)"
+   },
+   {
+    "intent": "A brace over the row labelled 6 V",
+    "narration": "Their pushes add up: four times one and a half is six volts.",
+    "code": "br = Brace(four, UP, color=GREEN)\nstage.play(GrowFromCenter(br))\nstage.add(br)\nstage.label(br, \"6 V\", direction=UP, color=GREEN)"
+   },
+   {
+    "intent": "The row beside 4 × 1.5 V = 6 V, and a bulb glowing brighter",
+    "narration": "Twice the voltage of three cells, so a bulb made for six volts glows properly.",
+    "code": "stage.equation(r\"4 \\times 1.5 = 6\\ \\text{V}\")\nbulb = Circle(radius=0.4, color=YELLOW, fill_opacity=0.9).next_to(four, DOWN, buff=0.5)\nstage.play(FadeIn(bulb))\nstage.add(bulb)"
+   }
+  ]
+ }
+]
