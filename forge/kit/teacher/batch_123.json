@@ -1,0 +1,102 @@
+[
+ {
+  "request": "why is a² − b² equal to (a + b)(a − b)?",
+  "beats": [
+   {
+    "intent": "A square with side a = 5",
+    "narration": "Start with a square of side a, here five. Its area is a squared.",
+    "code": "stage.title(\"Difference of two squares\")\nu = 0.7\no = np.array([-5.5, -2.0, 0])\nbig = Square(5 * u, color=BLUE, fill_opacity=0.4).move_to(o + np.array([2.5 * u, 2.5 * u, 0]))\nstage.play(Create(big))\nstage.add(big)\nla1 = stage.label(Line(o, o + 5 * u * RIGHT), \"a\", direction=DOWN)\nla2 = stage.label(Line(o, o + 5 * u * UP), \"a\", direction=LEFT)"
+   },
+   {
+    "intent": "A b by b square, b = 2, cut from the top right corner, leaving an L shape of area a² − b²",
+    "narration": "Cut a smaller square of side b, here two, out of the corner. What's left has area a squared minus b squared.",
+    "code": "small = Square(2 * u, color=RED, fill_opacity=0.6).move_to(o + np.array([4 * u, 4 * u, 0]))\nstage.play(FadeIn(small))\nbottom = Rectangle(width=5 * u, height=3 * u, color=BLUE, fill_opacity=0.4).move_to(o + np.array([2.5 * u, 1.5 * u, 0]))\nstrip = Rectangle(width=3 * u, height=2 * u, color=GREEN, fill_opacity=0.5).move_to(o + np.array([1.5 * u, 4 * u, 0]))\nstage.play(FadeOut(small, shift=UR), FadeOut(big), FadeIn(bottom), FadeIn(strip))\nstage.add(bottom, strip)\nlab = stage.label(Line(o + 5 * u * RIGHT, o + 5 * u * RIGHT + 3 * u * UP), \"a − b\", direction=RIGHT)"
+   },
+   {
+    "intent": "The top strip turned and slid to the right end, making one rectangle a + b long and a − b tall",
+    "narration": "Turn the top strip on its side and slide it to the end. Now it's one rectangle: a plus b long and a minus b tall.",
+    "code": "stage.play(FadeOut(la1), FadeOut(la2), FadeOut(lab))\nstage.play(strip.animate.rotate(-PI / 2).move_to(o + np.array([6 * u, 1.5 * u, 0])), run_time=1.5)\nstage.add(strip)\nstage.label(Line(o + 7 * u * RIGHT, o + 7 * u * RIGHT + 3 * u * UP), \"a − b\", direction=RIGHT, color=YELLOW)\nstage.label(Line(o, o + 7 * u * RIGHT), \"a + b\", direction=DOWN, color=YELLOW)"
+   },
+   {
+    "intent": "The rectangle beside a² − b² = (a + b)(a − b), and 25 − 4 = 7 × 3 = 21",
+    "narration": "Same area, rearranged: a squared minus b squared is a plus b times a minus b. With five and two, twenty five minus four is seven times three, twenty one.",
+    "code": "stage.equation(r\"a^2 - b^2 = (a + b)(a - b)\", r\"25 - 4 = 7 \\times 3 = 21\")"
+   }
+  ]
+ },
+ {
+  "request": "how many euros do you get for £50 at 1.15 euros to the pound?",
+  "beats": [
+   {
+    "intent": "Two lined-up number lines, pounds above and euros below, £1 matched to €1.15",
+    "narration": "Put pounds on one line and euros on another, lined up so that one pound sits above one euro fifteen.",
+    "code": "stage.title(\"Changing pounds to euros\")\ngbp = NumberLine(x_range=[0, 50, 10], length=10).move_to([0, 0.8, 0])\neur = NumberLine(x_range=[0, 57.5, 11.5], length=10).move_to([0, -0.8, 0])\nstage.play(Create(gbp), Create(eur))\nstage.add(gbp, eur)\nstage.play(FadeIn(Text(\"£\", font_size=30).next_to(gbp, LEFT)), FadeIn(Text(\"€\", font_size=30).next_to(eur, LEFT)))\none = DashedLine(gbp.n2p(1), eur.n2p(1.15), color=YELLOW)\nstage.play(Create(one), FadeIn(Text(\"1\", font_size=24, color=YELLOW).next_to(gbp.n2p(1), UP)), FadeIn(Text(\"1.15\", font_size=24, color=YELLOW).next_to(eur.n2p(1.15), DOWN)))\nstage.add(one)"
+   },
+   {
+    "intent": "£10 matched to €11.50",
+    "narration": "Ten pounds is ten lots of one fifteen: eleven euros fifty.",
+    "code": "ten = DashedLine(gbp.n2p(10), eur.n2p(11.5), color=GREEN)\nstage.play(Create(ten), FadeIn(Text(\"10\", font_size=24, color=GREEN).next_to(gbp.n2p(10), UP)), FadeIn(Text(\"11.50\", font_size=24, color=GREEN).next_to(eur.n2p(11.5), DOWN)))\nstage.add(ten)"
+   },
+   {
+    "intent": "£50 matched to €57.50 at the far end",
+    "narration": "Fifty pounds is five lots of that: fifty seven euros fifty.",
+    "code": "fifty = DashedLine(gbp.n2p(50), eur.n2p(57.5), color=ORANGE)\nstage.play(Create(fifty), FadeIn(Text(\"50\", font_size=24, color=ORANGE).next_to(gbp.n2p(50), UP)), FadeIn(Text(\"57.50\", font_size=24, color=ORANGE).next_to(eur.n2p(57.5), DOWN)))\nstage.add(fifty)"
+   },
+   {
+    "intent": "The lines beside 50 × 1.15 = 57.50 and 57.50 ÷ 1.15 = 50",
+    "narration": "Going to euros, multiply by one point one five. Coming back, divide by it.",
+    "code": "stage.equation(r\"50 \\times 1.15 = 57.50\", r\"57.50 \\div 1.15 = 50\")"
+   }
+  ]
+ },
+ {
+  "request": "how does the height of a seat on a Ferris wheel change as it turns?",
+  "beats": [
+   {
+    "intent": "A Ferris wheel of radius 10 m with its centre 12 m up, a seat at the bottom 2 m above the ground",
+    "narration": "A Ferris wheel has radius ten metres, its centre twelve metres up. You get on at the bottom, two metres above the ground.",
+    "code": "stage.title(\"Riding a Ferris wheel\")\nk = 0.2\nground_y = -2.6\nc = np.array([-4.4, ground_y + 12 * k, 0])\nwheel = VGroup(Circle(radius=10 * k, color=WHITE).move_to(c), *[Line(c, c + 10 * k * np.array([np.cos(a), np.sin(a), 0]), color=GREY_B, stroke_width=2) for a in np.arange(0, TAU, TAU / 8)])\nground = Line([-6.8, ground_y, 0], [3.4, ground_y, 0], color=GREY_B)\nseat = Dot(c + 10 * k * DOWN, color=YELLOW, radius=0.14)\nstage.play(Create(ground), Create(wheel), FadeIn(seat))\nstage.add(ground, wheel, seat)\nstage.label(seat, \"2 m\", direction=RIGHT, color=YELLOW)"
+   },
+   {
+    "intent": "The seat going once round in 60 s while its height is drawn against time on axes beside the wheel",
+    "narration": "The wheel turns once a minute. Plot the seat's height against time as it goes round: up to the top, and back down.",
+    "code": "ax = Axes(x_range=[0, 60, 15], y_range=[0, 24, 6], x_length=4.2, y_length=24 * k, axis_config={\"include_numbers\": True, \"font_size\": 20}, tips=False)\nax.shift(np.array([-1.2, ground_y, 0]) - ax.c2p(0, 0))\nstage.play(Create(ax))\nstage.add(ax)\ncurve = ax.plot(lambda t: 12 - 10 * np.cos(TAU * t / 60), x_range=[0, 60], color=YELLOW)\nstage.play(Rotate(seat, angle=TAU, about_point=c, rate_func=linear), Create(curve, rate_func=linear), run_time=4)\nstage.add(seat, curve)"
+   },
+   {
+    "intent": "Dashed lines from the top of the wheel to the graph's peak: 22 m at 30 s",
+    "narration": "Halfway round, at thirty seconds, you're at the top: twelve plus ten, twenty two metres.",
+    "code": "top = DashedLine(c + 10 * k * UP, ax.c2p(30, 22), color=ORANGE)\nstage.play(Create(top))\nstage.add(top)\npeak = Dot(ax.c2p(30, 22), color=ORANGE)\nstage.play(FadeIn(peak))\nstage.add(peak)\nstage.label(peak, \"22 m at 30 s\", direction=UP, color=ORANGE)"
+   },
+   {
+    "intent": "The picture beside h = 12 − 10 cos(6t°) and h(30) = 22",
+    "narration": "The height is twelve minus ten times the cosine of six t degrees, since the wheel turns six degrees each second.",
+    "code": "stage.equation(r\"h = 12 - 10\\cos(6t^\\circ)\", r\"h(30) = 12 - 10\\cos 180^\\circ = 22\")"
+   }
+  ]
+ },
+ {
+  "request": "what is the area of a 90° sector of a circle with radius 4?",
+  "beats": [
+   {
+    "intent": "A circle of radius 4 with its area, π × 4² ≈ 50.3",
+    "narration": "A circle of radius four has area pi times four squared, about fifty square units.",
+    "code": "stage.title(\"Area of a sector\")\nc = np.array([-3, -0.3, 0])\ncircle = Circle(radius=2.2, color=WHITE, fill_color=BLUE, fill_opacity=0.15).move_to(c)\nrad = Line(c, c + 2.2 * RIGHT, color=BLUE)\nstage.play(Create(circle), Create(rad))\nstage.add(circle, rad)\nstage.label(rad, \"4\", direction=DOWN, color=BLUE)\nstage.label(circle, \"π × 4² ≈ 50.3\", direction=UP)"
+   },
+   {
+    "intent": "A 90° sector shaded, its right angle marked",
+    "narration": "Shade a ninety degree slice: a quarter turn.",
+    "code": "sector = AnnularSector(inner_radius=0, outer_radius=2.2, angle=PI / 2, start_angle=0, color=ORANGE, fill_opacity=0.6).move_arc_center_to(c)\nstage.play(FadeIn(sector))\nstage.add(sector)\nmark = VGroup(Line(c + 0.3 * RIGHT, c + 0.3 * RIGHT + 0.3 * UP), Line(c + 0.3 * UP, c + 0.3 * RIGHT + 0.3 * UP)).set_stroke(WHITE, 2)\nstage.play(Create(mark))\nstage.add(mark)"
+   },
+   {
+    "intent": "Four such sectors filling the circle, the others outlined",
+    "narration": "Four of these fill the whole circle, so the slice is a quarter of the area.",
+    "code": "quarters = VGroup(*[AnnularSector(inner_radius=0, outer_radius=2.2, angle=PI / 2, start_angle=q * PI / 2, color=WHITE, fill_opacity=0, stroke_width=2).move_arc_center_to(c) for q in range(1, 4)])\nstage.play(Create(quarters))\nstage.add(quarters)\nstage.label(sector, \"1/4 of 50.3 ≈ 12.6\", direction=RIGHT, color=ORANGE)"
+   },
+   {
+    "intent": "The circle beside 90/360 × π × 4² = 4π ≈ 12.6",
+    "narration": "Sector area is the fraction of the turn times the circle's area: a quarter of sixteen pi is four pi, about twelve point six.",
+    "code": "stage.equation(r\"\\frac{90}{360} \\times \\pi \\times 4^2\", r\"= 4\\pi \\approx 12.6\")"
+   }
+  ]
+ }
+]
