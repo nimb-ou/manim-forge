@@ -207,6 +207,14 @@ Ship the best configuration measured on held-out, not the newest.
    judges the frames (`collect_selfgen.py`); then the v9 SFT, after a look.
    *Oct 6:* release.
 
+**Update 2026-10-01 13:10Z — the judge.** gemini-flash-latest's free
+quota now covers about 5 scenes a day, so the headline judge is pinned to
+gemini-flash-lite-latest (`judge_sheets.py --model gemini-flash-lite-latest`,
+every compared run re-judged together). On it, today's best configuration
+(planner v3, kit v6, scaffolding) scores 42% held-out and 53% short. The
+v1.0 bar stays at ≥ 50% held-out on this judge; v8 is judged alongside a
+re-judge of ab_held_scaf.
+
 **Update 2026-09-30.** The diagnostic answered "coder": oracle plans did
 not raise kit v6's held-out score. So the data effort went to coder rows:
 Claude batches 12–21 (~115 scenes aimed at the observed failures, every

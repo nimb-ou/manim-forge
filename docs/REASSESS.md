@@ -632,3 +632,33 @@ scenes); Oct 3 00:30Z trains kit v8 and planner v5; round 2 follows.
 **Spiralling?** No new risk since 04:45Z: the activity is the same, the
 check on it is the same Oct 3 measurement, and nothing measured today
 contradicts the plan.
+
+## Log · 2026-10-01 13:10Z
+
+**Since 07:10Z.** Teacher batches 110-114 (830 → 850 scenes, 4 beats each,
+every sheet looked at; caught before commit: a price label missing from
+its beat's end frame because it was added without an animation, labels
+over a ruler's numbers and inside a cube grid, sound rings running below
+the ground). Gemma arcs 595 → 643 (its writer had stopped at 602 and was
+restarted; Gemma's API still returns 500s); kit-gemma rows 632 → 700;
+local critic verdicts 906.
+
+**What the numbers say.** The Oct 1 Gemini judge ran out of
+gemini-flash-latest quota after 5 of 100 scenes: the free tier now allows
+a few dozen calls a day on that model, not hundreds. Re-judged with
+gemini-flash-lite-latest, all 100 scenes, one model:
+held-out 36% (planner v3 + kit v6) → 42% with scaffolding and today's kit;
+short 48% → 53%; oracle plans 35%. The ranking agrees with the local
+judge. The absolute numbers are a different judge's and sit at the low end
+of the old 37–40% range.
+
+**What changed in the plan.** The v1.0 bar ("held-out Gemini share
+≥ 50%") was set against a judge that can no longer judge a full run in a
+day. It is now pinned to gemini-flash-lite-latest, with today's 42% as the
+baseline to beat: v8 must clear 50% on that judge, every compared run
+re-judged by the same model. Nothing automated depends on the Gemini judge
+(round2 uses the local judge), so no queued script changes.
+
+**Spiralling?** No. One problem (judge quota) took one fix and produced a
+complete measurement. The teacher batches remain the only data work; their
+check is still the Oct 3 v8 score.
