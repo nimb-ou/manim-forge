@@ -1,0 +1,102 @@
+[
+ {
+  "request": "what is 1 + 2 + 3 + ... + 100, and how can you add it quickly?",
+  "beats": [
+   {
+    "intent": "A smaller version first: the numbers 1 to 10 in a row",
+    "narration": "Try the trick on one to ten first. Here they are in a row.",
+    "code": "stage.title(\"Adding 1 to 100 quickly\")\nstep = 0.62\nx0 = -6.0\ntop = VGroup(*[Text(str(k), font_size=30).move_to([x0 + (k - 1) * step, 1.6, 0]) for k in range(1, 11)])\nstage.play(FadeIn(top))\nstage.add(top)"
+   },
+   {
+    "intent": "The same numbers written backwards underneath; every column adds to 11",
+    "narration": "Write them again backwards underneath. Now every column adds to eleven: one and ten, two and nine, and so on.",
+    "code": "bottom = VGroup(*[Text(str(11 - k), font_size=30, color=BLUE).move_to([x0 + (k - 1) * step, 0.9, 0]) for k in range(1, 11)])\nstage.play(FadeIn(bottom))\nstage.add(bottom)\nsums = VGroup(*[Text(\"11\", font_size=26, color=YELLOW).move_to([x0 + (k - 1) * step, 0.1, 0]) for k in range(1, 11)])\nline = Line([x0 - 0.3, 0.5, 0], [x0 + 9 * step + 0.3, 0.5, 0], color=GREY_B)\nstage.play(Create(line), LaggedStart(*[FadeIn(s) for s in sums], lag_ratio=0.08))\nstage.add(line, sums)"
+   },
+   {
+    "intent": "Ten columns of 11 make 110, which is the sum twice, so the sum is 55",
+    "narration": "Ten columns of eleven is a hundred and ten. But that's two copies of the sum, so one to ten adds to fifty five.",
+    "code": "box = SurroundingRectangle(sums, color=YELLOW, buff=0.12)\nstage.play(Create(box))\nstage.add(box)\nstage.label(box, \"10 × 11 = 110, half is 55\", direction=DOWN, color=YELLOW)"
+   },
+   {
+    "intent": "The rows beside 100 × 101 ÷ 2 = 5050",
+    "narration": "Same trick for one to a hundred: a hundred columns, each adding to a hundred and one, halved. Five thousand and fifty.",
+    "code": "stage.equation(r\"1 + 2 + \\dots + 10 = \\frac{10 \\times 11}{2} = 55\", r\"1 + 2 + \\dots + 100 = \\frac{100 \\times 101}{2} = 5050\")"
+   }
+  ]
+ },
+ {
+  "request": "how do you read the scale on a measuring jug?",
+  "beats": [
+   {
+    "intent": "A jug with a scale marked every 100 ml up to 500 ml, and small unlabelled marks between",
+    "narration": "A measuring jug is marked every hundred millilitres, with smaller marks in between.",
+    "code": "stage.title(\"Reading a measuring jug\")\nk = 0.8\nbase = -2.4\njug = Rectangle(width=1.8, height=5 * k + 0.3, color=WHITE).move_to([-4.0, base + (5 * k + 0.3) / 2, 0])\nticks = VGroup(*[Line([-3.1, base + m * k / 5, 0], [-3.1 - (0.35 if m % 5 == 0 else 0.18), base + m * k / 5, 0], color=WHITE) for m in range(0, 26)])\nnums = VGroup(*[Text(str(100 * m), font_size=22).move_to([-2.55, base + m * k, 0]) for m in range(0, 6)])\nstage.play(Create(jug), Create(ticks), FadeIn(nums))\nstage.add(jug, ticks, nums)\nstage.label(nums, \"ml\", direction=RIGHT)"
+   },
+   {
+    "intent": "One 100 ml gap highlighted, split into 5 small steps of 20 ml",
+    "narration": "Look at one gap of a hundred: it's split into five small steps, so each small mark is twenty millilitres.",
+    "code": "gap = Rectangle(width=0.5, height=k, color=YELLOW).move_to([-3.25, base + 3.5 * k, 0])\nstage.play(Create(gap))\nstage.add(gap)\nstage.play(FadeIn(Text(\"← 100 ÷ 5 = 20 ml\", font_size=26, color=YELLOW).move_to([-0.6, base + 3.5 * k, 0])))"
+   },
+   {
+    "intent": "Water filled to three big marks and two small ones: 340 ml",
+    "narration": "The water reaches three hundred and two small marks more: three hundred and forty millilitres.",
+    "code": "water = Rectangle(width=1.7, height=3.4 * k, color=BLUE, fill_opacity=0.5, stroke_width=0).move_to([-4.0, base + 1.7 * k, 0])\nstage.play(GrowFromEdge(water, DOWN))\nstage.add(water)\nlvl = Arrow([-5.5, base + 3.4 * k, 0], [-4.95, base + 3.4 * k, 0], buff=0, color=GREEN)\nstage.play(GrowArrow(lvl))\nstage.add(lvl)\nstage.label(lvl, \"340 ml\", direction=LEFT, color=GREEN)"
+   },
+   {
+    "intent": "The jug beside 100 ÷ 5 = 20 and 300 + 2 × 20 = 340",
+    "narration": "Always work out what one small mark is worth before you read the level.",
+    "code": "stage.equation(r\"100 \\div 5 = 20\", r\"300 + 2 \\times 20 = 340\")"
+   }
+  ]
+ },
+ {
+  "request": "how do you estimate 49 × 21 without a calculator?",
+  "beats": [
+   {
+    "intent": "A rectangle 49 by 21, its area the product",
+    "narration": "Forty nine times twenty one is the area of a rectangle forty nine by twenty one.",
+    "code": "stage.title(\"Estimating 49 × 21\")\nk = 0.1\no = np.array([-6.0, -1.6, 0])\nrect = Rectangle(width=49 * k, height=21 * k, color=BLUE, fill_opacity=0.35).move_to(o + np.array([24.5 * k, 10.5 * k, 0]))\nstage.play(Create(rect))\nstage.add(rect)\nstage.label(Line(o, o + 49 * k * RIGHT), \"49\", direction=DOWN, color=BLUE)\nstage.label(Line(o, o + 21 * k * UP), \"21\", direction=LEFT, color=BLUE)"
+   },
+   {
+    "intent": "Each side rounded to a friendly number: 49 to 50, 21 to 20",
+    "narration": "Round each number to something easy: forty nine is nearly fifty, and twenty one is nearly twenty.",
+    "code": "stage.play(FadeIn(Text(\"49 ≈ 50\", font_size=30, color=YELLOW).move_to([-3.0, 1.8, 0])), FadeIn(Text(\"21 ≈ 20\", font_size=30, color=YELLOW).move_to([-0.6, 1.8, 0])))"
+   },
+   {
+    "intent": "A dashed 50 by 20 rectangle drawn over the first: almost the same area",
+    "narration": "The fifty by twenty rectangle is a little wider and a little shorter: almost the same area.",
+    "code": "est = DashedVMobject(Rectangle(width=50 * k, height=20 * k, color=YELLOW), num_dashes=60).move_to(o + np.array([25 * k, 10 * k, 0]))\nstage.play(Create(est))\nstage.add(est)\nstage.label(est, \"50 × 20 = 1000\", direction=RIGHT, color=YELLOW)"
+   },
+   {
+    "intent": "The rectangles beside 50 × 20 = 1000 against the exact 49 × 21 = 1029",
+    "narration": "The estimate is a thousand. The exact answer is one thousand and twenty nine: close enough to check a calculator.",
+    "code": "stage.equation(r\"50 \\times 20 = 1000\", r\"49 \\times 21 = 1029\")"
+   }
+  ]
+ },
+ {
+  "request": "how far apart are the points (1, 1) and (5, 4)?",
+  "beats": [
+   {
+    "intent": "Axes with the points A(1, 1) and B(5, 4) marked",
+    "narration": "Two points: A at one, one and B at five, four. How far apart are they in a straight line?",
+    "code": "stage.title(\"Distance between two points\")\nax = Axes(x_range=[0, 6, 1], y_range=[0, 5, 1], x_length=6, y_length=5, axis_config={\"include_numbers\": True}).move_to([-3.0, -0.4, 0])\nstage.play(Create(ax))\nstage.add(ax)\nA, B = ax.c2p(1, 1), ax.c2p(5, 4)\nda, db = Dot(A, color=YELLOW), Dot(B, color=YELLOW)\nstage.play(FadeIn(da), FadeIn(db))\nstage.add(da, db)\nstage.label(da, \"A(1, 1)\", direction=DL, color=YELLOW)\nstage.label(db, \"B(5, 4)\", direction=UR, color=YELLOW)"
+   },
+   {
+    "intent": "A right triangle under the gap: 4 across and 3 up",
+    "narration": "Go across from A, then up to B. Across is five minus one, four. Up is four minus one, three.",
+    "code": "C = ax.c2p(5, 1)\nacross = Line(A, C, color=BLUE, stroke_width=5)\nup = Line(C, B, color=GREEN, stroke_width=5)\nstage.play(Create(across))\nstage.play(Create(up))\nstage.add(across, up)\nstage.label(across, \"4\", direction=DOWN, color=BLUE)\nstage.label(up, \"3\", direction=RIGHT, color=GREEN)"
+   },
+   {
+    "intent": "The straight line from A to B as the hypotenuse, length 5",
+    "narration": "The straight line from A to B is the hypotenuse of that right triangle.",
+    "code": "hyp = Line(A, B, color=ORANGE, stroke_width=6)\nstage.play(Create(hyp))\nstage.add(hyp)\nstage.play(FadeIn(Text(\"5\", font_size=30, color=ORANGE).move_to((A + B) / 2 + 0.35 * np.array([-0.6, 0.8, 0]))))"
+   },
+   {
+    "intent": "The grid beside √(4² + 3²) = √25 = 5",
+    "narration": "Pythagoras: four squared plus three squared is twenty five, so the distance is five.",
+    "code": "stage.equation(r\"\\sqrt{4^2 + 3^2} = \\sqrt{25}\", r\"= 5\")"
+   }
+  ]
+ }
+]
