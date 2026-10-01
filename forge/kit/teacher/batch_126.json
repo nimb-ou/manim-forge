@@ -1,0 +1,102 @@
+[
+ {
+  "request": "how much do you earn for 45 hours if overtime after 40 hours is paid at time and a half of £12?",
+  "beats": [
+   {
+    "intent": "A bar of 40 normal hours at £12 an hour",
+    "narration": "You're paid twelve pounds an hour for the first forty hours of the week.",
+    "code": "stage.title(\"Pay with overtime\")\nk = 0.12\nx0 = -6\nnormal = Rectangle(width=40 * k, height=0.6, color=BLUE, fill_opacity=0.5).move_to([x0 + 20 * k, 1.4, 0])\nstage.play(GrowFromEdge(normal, LEFT))\nstage.add(normal)\nstage.play(FadeIn(Text(\"40 h × £12\", font_size=26).move_to(normal)))"
+   },
+   {
+    "intent": "Five more hours in orange, each paid £12 × 1.5 = £18",
+    "narration": "You work five more hours. Overtime is time and a half: twelve pounds plus half of twelve, eighteen pounds an hour.",
+    "code": "extra = Rectangle(width=5 * k, height=0.6, color=ORANGE, fill_opacity=0.6).next_to(normal, RIGHT, buff=0)\nstage.play(GrowFromEdge(extra, LEFT))\nstage.add(extra)\nstage.label(extra, \"5 h × £18\", direction=UP, color=ORANGE)"
+   },
+   {
+    "intent": "Pay bars underneath: £480 for the normal hours and £90 for overtime, £570 in all",
+    "narration": "In money: forty times twelve is four hundred and eighty pounds, and five times eighteen is ninety.",
+    "code": "m = 0.01\npay1 = Rectangle(width=480 * m, height=0.6, color=BLUE, fill_opacity=0.8).move_to([x0 + 240 * m, 0.0, 0])\npay2 = Rectangle(width=90 * m, height=0.6, color=ORANGE, fill_opacity=0.8).next_to(pay1, RIGHT, buff=0)\nstage.play(GrowFromEdge(pay1, LEFT))\nstage.play(GrowFromEdge(pay2, LEFT))\nstage.add(pay1, pay2)\nstage.play(FadeIn(Text(\"£480\", font_size=26).move_to(pay1)), FadeIn(Text(\"£90\", font_size=22).move_to(pay2)))\nstage.label(VGroup(pay1, pay2), \"£570\", direction=DOWN, color=GREEN)"
+   },
+   {
+    "intent": "The bars beside 40 × 12 = 480, 5 × 18 = 90, total £570",
+    "narration": "Four hundred and eighty plus ninety: five hundred and seventy pounds for the week.",
+    "code": "stage.equation(r\"40 \\times 12 = 480\", r\"5 \\times 18 = 90\", r\"480 + 90 = 570\")"
+   }
+  ]
+ },
+ {
+  "request": "how much fuel does a 350 km trip need if the car uses 6 litres per 100 km?",
+  "beats": [
+   {
+    "intent": "A 350 km route as a line from home to the destination",
+    "narration": "A trip of three hundred and fifty kilometres.",
+    "code": "stage.title(\"Fuel for a trip\")\nroute = NumberLine(x_range=[0, 350, 50], length=10.5, include_numbers=True, font_size=22).move_to([0, 0.8, 0])\nstage.play(Create(route))\nstage.add(route)\nstage.label(route, \"km\", direction=RIGHT)"
+   },
+   {
+    "intent": "Each 100 km stretch bracketed with a 6 L fuel can, and a half stretch with 3 L",
+    "narration": "The car uses six litres for every hundred kilometres: three full stretches, and half a stretch at the end.",
+    "code": "cans = VGroup()\nfor a, b, lab in ((0, 100, \"6 L\"), (100, 200, \"6 L\"), (200, 300, \"6 L\"), (300, 350, \"3 L\")):\n    seg = Line(route.n2p(a), route.n2p(b), color=ORANGE if b - a == 100 else YELLOW, stroke_width=8).shift(0.5 * DOWN)\n    can = Text(lab, font_size=26, color=seg.get_color()).next_to(seg, DOWN, buff=0.15)\n    cans.add(seg, can)\nstage.play(LaggedStart(*[FadeIn(m) for m in cans], lag_ratio=0.15))\nstage.add(cans)"
+   },
+   {
+    "intent": "A fuel gauge bar filling to 21 litres",
+    "narration": "Add them up: six, twelve, eighteen, and three more, twenty one litres.",
+    "code": "tank = Rectangle(width=21 * 0.2, height=0.5, color=ORANGE, fill_opacity=0.6).move_to([-5.3 + 2.1, -1.8, 0])\nstage.play(GrowFromEdge(tank, LEFT))\nstage.add(tank)\nstage.label(tank, \"21 litres\", direction=RIGHT, color=ORANGE)"
+   },
+   {
+    "intent": "The route beside 3.5 × 6 = 21 L and 21 × £1.50 = £31.50",
+    "narration": "Three and a half lots of six is twenty one litres. At one pound fifty a litre, the fuel costs thirty one pounds fifty.",
+    "code": "stage.equation(r\"3.5 \\times 6 = 21 \\, \\mathrm{L}\", r\"21 \\times 1.50 = \\pounds 31.50\")"
+   }
+  ]
+ },
+ {
+  "request": "if a dart lands at a random spot on a square board, what's the chance it hits the circle in the middle?",
+  "beats": [
+   {
+    "intent": "A 4 by 4 square board with a circle of radius 1 in the middle",
+    "narration": "A square board four units wide has a circle of radius one in the middle. A dart lands anywhere on the board, every spot equally likely.",
+    "code": "stage.title(\"Darts and area\")\ns = 0.85\nc = np.array([-3, -0.3, 0])\nboard = Square(4 * s, color=WHITE).move_to(c)\nbull = Circle(radius=s, color=YELLOW, fill_opacity=0.2).move_to(c)\nstage.play(Create(board), Create(bull))\nstage.add(board, bull)\nlb = stage.label(board, \"4 × 4\", direction=DOWN)\nlr = stage.label(bull, \"r = 1\", direction=UP, color=YELLOW)"
+   },
+   {
+    "intent": "200 random darts: those inside the circle yellow, the rest grey, with a count",
+    "narration": "Throw two hundred darts at random. Only some land in the circle: about one in five.",
+    "code": "stage.play(FadeOut(lr))\nrng = np.random.default_rng(26)\npts = rng.uniform(-2, 2, size=(200, 2))\ninside = (pts ** 2).sum(axis=1) < 1\ndarts = VGroup(*[Dot(c + s * np.array([x, y, 0]), radius=0.04, color=YELLOW if hit else GREY_B) for (x, y), hit in zip(pts, inside)])\nstage.play(FadeIn(darts, lag_ratio=0.01), run_time=1.5)\nstage.add(darts)\nstage.label(board, f\"{int(inside.sum())} of 200 hit\", direction=RIGHT, color=YELLOW)"
+   },
+   {
+    "intent": "The circle's area π compared with the square's area 16",
+    "narration": "The chance is just the fraction of the board the circle covers: its area, pi, out of the square's sixteen.",
+    "code": "stage.play(bull.animate.set_fill(YELLOW, opacity=0.5))\nstage.play(FadeOut(lb))\nstage.label(board, \"circle π ≈ 3.14 of square 16\", direction=DOWN, color=YELLOW)"
+   },
+   {
+    "intent": "The board beside P = π/16 ≈ 0.196",
+    "narration": "Pi over sixteen is about nought point one nine six, close to the darts' one in five.",
+    "code": "stage.equation(r\"P = \\frac{\\pi \\times 1^2}{4 \\times 4}\", r\"= \\frac{\\pi}{16} \\approx 0.196\")"
+   }
+  ]
+ },
+ {
+  "request": "if today is Monday, what day is it in 100 days?",
+  "beats": [
+   {
+    "intent": "The seven days of the week round a circle, Monday highlighted",
+    "narration": "Today is Monday. Put the seven days round a circle.",
+    "code": "stage.title(\"100 days from Monday\")\nc = np.array([-3, -0.3, 0])\nnames = [\"Mon\", \"Tue\", \"Wed\", \"Thu\", \"Fri\", \"Sat\", \"Sun\"]\npos = [c + 2.0 * np.array([np.cos(PI / 2 - k * TAU / 7), np.sin(PI / 2 - k * TAU / 7), 0]) for k in range(7)]\ndays = VGroup(*[Text(n, font_size=28).move_to(p) for n, p in zip(names, pos)])\nring = Circle(radius=2.0, color=GREY_B).move_to(c)\nstage.play(Create(ring), FadeIn(days))\nstage.add(ring, days)\nmon = Circle(radius=0.42, color=YELLOW).move_to(pos[0])\nstage.play(Create(mon))\nstage.add(mon)"
+   },
+   {
+    "intent": "A loop arrow round the circle marked × 14: 98 days brings you back to Monday",
+    "narration": "Every seven days you come back to Monday. Fourteen weeks is ninety eight days: back to Monday again.",
+    "code": "stage.play(ring.animate.set_stroke(BLUE, width=6))\nstage.play(FadeIn(Text(\"14 laps = 98 days\", font_size=26, color=BLUE).move_to(c)))"
+   },
+   {
+    "intent": "Two more steps from Monday to Wednesday, highlighted",
+    "narration": "That leaves two more days: Tuesday, then Wednesday.",
+    "code": "tue = Circle(radius=0.42, color=GREEN_B).move_to(pos[1])\nstage.play(Create(tue))\nstage.add(tue)\nwed = Circle(radius=0.42, color=GREEN).move_to(pos[2])\nstage.play(Create(wed))\nstage.add(wed)\nstage.label(wed, \"Wednesday\", direction=RIGHT, color=GREEN)"
+   },
+   {
+    "intent": "The circle beside 100 = 14 × 7 + 2, so 2 days on from Monday",
+    "narration": "Only the remainder after dividing by seven matters: a hundred is fourteen sevens and two, so it's Wednesday.",
+    "code": "stage.equation(r\"100 = 14 \\times 7 + 2\", r\"100 \\div 7 = 14 \\ \\mathrm{r} \\ 2\")"
+   }
+  ]
+ }
+]
