@@ -1,0 +1,102 @@
+[
+ {
+  "request": "does a 10-minute shower use more water than a bath?",
+  "beats": [
+   {
+    "intent": "A bath drawn as a tank holding 150 litres",
+    "narration": "A full bath holds about a hundred and fifty litres of water.",
+    "code": "stage.title(\"Shower or bath?\")\nk = 0.02\nbase = -2.3\nbath = Rectangle(width=1.4, height=150 * k, color=BLUE, fill_opacity=0.5).move_to([-4.6, base + 75 * k, 0])\nstage.play(GrowFromEdge(bath, DOWN))\nstage.add(bath)\nstage.label(bath, \"bath: 150 L\", direction=UP, color=BLUE)\nlevel = DashedLine([-5.5, base + 150 * k, 0], [-0.6, base + 150 * k, 0], color=BLUE)\nstage.play(Create(level))\nstage.add(level)"
+   },
+   {
+    "intent": "A shower tank filling 8 litres a minute, a minute counter reaching 10 at 80 litres",
+    "narration": "A shower pours out about eight litres a minute. Collect it: after ten minutes, eighty litres.",
+    "code": "water = Rectangle(width=1.4, height=0.01, color=GREEN, fill_opacity=0.6).move_to([-2.2, base, 0], aligned_edge=DOWN)\nstage.add(water)\ncounter = Text(\"0 min\", font_size=30, color=GREEN).move_to([-2.2, 1.6, 0])\nstage.add(counter)\nfor m in range(1, 11):\n    stage.play(water.animate.stretch_to_fit_height(8 * m * k).move_to([-2.2, base, 0], aligned_edge=DOWN), Transform(counter, Text(f\"{m} min\", font_size=30, color=GREEN).move_to(counter)), run_time=0.25)\nstage.add(water)\nl80 = stage.label(water, \"80 L\", direction=RIGHT, color=GREEN)"
+   },
+   {
+    "intent": "The shower kept running until it reaches the bath line, at about 19 minutes",
+    "narration": "Keep the shower running and it only matches the bath at about nineteen minutes.",
+    "code": "stage.play(FadeOut(l80))\nstage.play(water.animate.stretch_to_fit_height(150 * k).move_to([-2.2, base, 0], aligned_edge=DOWN), Transform(counter, Text(\"about 19 min\", font_size=30, color=GREEN).move_to(counter)), run_time=1.5)\nstage.add(water)\nstage.label(water, \"150 L\", direction=RIGHT, color=GREEN)"
+   },
+   {
+    "intent": "The tanks beside 8 × 10 = 80 L and 150 ÷ 8 ≈ 19 min",
+    "narration": "Eight times ten is eighty litres, about half a bath. A hundred and fifty divided by eight is about nineteen minutes, so a shower under nineteen minutes uses less.",
+    "code": "stage.equation(r\"8 \\times 10 = 80 \\, \\mathrm{L}\", r\"150 \\div 8 \\approx 19 \\, \\mathrm{min}\")"
+   }
+  ]
+ },
+ {
+  "request": "how do you write 7/3 as a mixed number?",
+  "beats": [
+   {
+    "intent": "Seven pieces, each a third of a bar",
+    "narration": "Seven thirds means seven pieces, each one third of a whole.",
+    "code": "stage.title(\"7/3 as a mixed number\")\nw = 1.0\npieces = VGroup(*[Rectangle(width=w, height=0.6, color=WHITE, fill_color=BLUE, fill_opacity=0.6) for _ in range(7)]).arrange(RIGHT, buff=0.15).move_to([-2.6, 1.4, 0])\nstage.play(LaggedStart(*[FadeIn(p) for p in pieces], lag_ratio=0.15))\nstage.add(pieces)\nstage.play(*[FadeIn(Text(\"1/3\", font_size=22).move_to(p)) for p in pieces])"
+   },
+   {
+    "intent": "Pieces fitted together in threes into two whole bars",
+    "narration": "Three thirds make a whole. Fit them together: the first six pieces make two whole bars.",
+    "code": "wholes = VGroup(*[VGroup(*[Rectangle(width=w, height=0.6, color=WHITE, fill_color=GREEN, fill_opacity=0.6) for _ in range(3)]).arrange(RIGHT, buff=0) for _ in range(2)]).arrange(DOWN, buff=0.3).move_to([-3.6, -0.6, 0])\nstage.play(TransformFromCopy(VGroup(*pieces[:6]), VGroup(*[p for wh in wholes for p in wh])), run_time=1.5)\nstage.add(wholes)\nstage.label(wholes, \"2 wholes\", direction=LEFT, color=GREEN)"
+   },
+   {
+    "intent": "One third left over beside the two wholes",
+    "narration": "One piece is left over: one third.",
+    "code": "left = Rectangle(width=w, height=0.6, color=WHITE, fill_color=BLUE, fill_opacity=0.6).next_to(wholes, RIGHT, buff=0.6)\nstage.play(TransformFromCopy(pieces[6], left))\nstage.add(left)\nstage.label(left, \"1/3\", direction=RIGHT, color=BLUE)"
+   },
+   {
+    "intent": "The bars beside 7 ÷ 3 = 2 remainder 1, so 7/3 = 2⅓",
+    "narration": "Seven divided by three is two remainder one: two whole ones and one third. Seven thirds is two and a third.",
+    "code": "stage.equation(r\"7 \\div 3 = 2 \\ \\mathrm{r} \\ 1\", r\"\\frac{7}{3} = 2\\tfrac{1}{3}\")"
+   }
+  ]
+ },
+ {
+  "request": "how fast is the Earth spinning at the equator?",
+  "beats": [
+   {
+    "intent": "The Earth as a circle with a point on the equator",
+    "narration": "Stand on the equator. The Earth turns once a day, carrying you with it.",
+    "code": "stage.title(\"How fast does the Earth spin?\")\nc = np.array([-3, -0.3, 0])\nearth = Circle(radius=2.2, color=BLUE, fill_opacity=0.2).move_to(c)\nyou = Dot(c + 2.2 * RIGHT, color=YELLOW, radius=0.12)\nstage.play(Create(earth), FadeIn(you))\nstage.add(earth, you)\nstage.label(you, \"you\", direction=RIGHT, color=YELLOW)"
+   },
+   {
+    "intent": "The point carried once round the circle, tracing the full 40 000 km equator",
+    "narration": "In one turn you travel the whole way round the equator: about forty thousand kilometres.",
+    "code": "trail = TracedPath(you.get_center, stroke_color=YELLOW, stroke_width=4)\nstage.add(trail)\nstage.play(Rotate(you, angle=TAU, about_point=c), run_time=2.5, rate_func=linear)\nstage.add(you)\nstage.label(earth, \"40 000 km in one turn\", direction=DOWN, color=YELLOW)"
+   },
+   {
+    "intent": "A 24-hour clock face beside the Earth: one turn takes 24 hours",
+    "narration": "And one turn takes twenty four hours.",
+    "code": "clock = Circle(radius=0.8, color=WHITE).move_to([1.2, 1.2, 0])\nhand = Line(clock.get_center(), clock.get_center() + 0.7 * UP, color=WHITE)\nstage.play(Create(clock), Create(hand))\nstage.play(Rotate(hand, angle=-TAU, about_point=clock.get_center()), run_time=1.5)\nstage.add(clock, hand)\nstage.label(clock, \"24 hours\", direction=DOWN)"
+   },
+   {
+    "intent": "The picture beside 40 000 ÷ 24 ≈ 1667 km/h ≈ 463 m/s",
+    "narration": "Forty thousand kilometres in twenty four hours is about one thousand six hundred and sixty seven kilometres an hour: four hundred and sixty metres every second.",
+    "code": "stage.equation(r\"40\\,000 \\div 24 \\approx 1667 \\, \\mathrm{km/h}\", r\"1667 \\div 3.6 \\approx 463 \\, \\mathrm{m/s}\")"
+   }
+  ]
+ },
+ {
+  "request": "how far away is the horizon when you stand on a beach?",
+  "beats": [
+   {
+    "intent": "The curved Earth with a person standing on top, their height exaggerated",
+    "narration": "The Earth curves away beneath you. Stand on a beach with your eyes about one point seven metres up, drawn much taller here.",
+    "code": "stage.title(\"How far is the horizon?\")\nO = np.array([-2.5, -3.7, 0])\nR = 4.0\nground = Arc(radius=R, start_angle=15 * DEGREES, angle=150 * DEGREES, arc_center=O, color=BLUE)\nE = O + (R + 1.0) * UP\neye = Line(O + R * UP, E, color=WHITE, stroke_width=6)\nstage.play(Create(ground), Create(eye))\nstage.add(ground, eye)\nstage.label(eye, \"h\", direction=LEFT)"
+   },
+   {
+    "intent": "A line of sight from the eye just touching the Earth at the horizon H",
+    "narration": "Your line of sight just grazes the Earth at the horizon. Beyond that point the ground curves out of view.",
+    "code": "th = np.arccos(R / (R + 1.0))\nH = O + R * np.array([np.sin(th), np.cos(th), 0])\nsight = Line(E, H, color=YELLOW)\nstage.play(Create(sight))\nstage.add(sight)\ndot_h = Dot(H, color=YELLOW)\nstage.play(FadeIn(dot_h))\nstage.add(dot_h)\nstage.label(dot_h, \"horizon\", direction=RIGHT, color=YELLOW)"
+   },
+   {
+    "intent": "Radii to H and to the eye forming a right triangle: R, R + h and the distance d, right angle at H",
+    "narration": "Join the centre of the Earth to the horizon and to you. The sight line meets the radius at a right angle, so it's a right angled triangle.",
+    "code": "r_h = Line(O, H, color=GREEN)\nr_e = Line(O, E, color=GREEN)\nstage.play(Create(r_h), Create(r_e))\nstage.add(r_h, r_e)\nra = RightAngle(Line(H, O), Line(H, E), length=0.25, color=WHITE)\nstage.play(Create(ra))\nstage.add(ra)\nstage.label(r_h, \"R\", direction=RIGHT, color=GREEN)\nstage.play(FadeIn(Text(\"d\", font_size=30, color=YELLOW).move_to((E + H) / 2 + 0.35 * np.array([0.6, 0.8, 0]))))"
+   },
+   {
+    "intent": "The triangle beside d² = (R + h)² − R² ≈ 2Rh, d ≈ √(2 × 6371 × 0.0017) ≈ 4.7 km",
+    "narration": "Pythagoras: d squared is R plus h, squared, minus R squared, which is about two R h. With the Earth's radius, six thousand three hundred and seventy one kilometres, the horizon is only about four point seven kilometres away.",
+    "code": "stage.equation(r\"d^2 = (R + h)^2 - R^2 \\approx 2Rh\", r\"d \\approx \\sqrt{2 \\times 6371 \\times 0.0017} \\approx 4.7 \\, \\mathrm{km}\")"
+   }
+  ]
+ }
+]
