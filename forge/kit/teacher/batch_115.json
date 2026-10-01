@@ -1,0 +1,107 @@
+[
+ {
+  "request": "taxi A charges £3 plus £1 a km, taxi B charges £2 a km: which is cheaper?",
+  "beats": [
+   {
+    "intent": "Axes of distance against cost with taxi A's line, £3 + £1 per km",
+    "narration": "Taxi A charges three pounds to get in, then a pound a kilometre.",
+    "code": "stage.title(\"Which taxi is cheaper?\")\nax = Axes(x_range=[0, 6, 1], y_range=[0, 12, 2], x_length=6, y_length=4.5, axis_config={\"include_numbers\": True}).move_to([-2.5, -0.5, 0])\nstage.play(Create(ax))\nstage.add(ax)\nstage.play(FadeIn(Text(\"km\", font_size=26).next_to(ax.x_axis, RIGHT)), FadeIn(Text(\"£\", font_size=26).next_to(ax.y_axis, UP)))\nline_a = ax.plot(lambda x: 3 + x, x_range=[0, 6], color=YELLOW)\nstage.play(Create(line_a))\nstage.add(line_a)\nstage.play(FadeIn(Text(\"A: £3 + £1/km\", font_size=26, color=YELLOW).next_to(ax.c2p(6, 9), RIGHT)))"
+   },
+   {
+    "intent": "Taxi B's line, £2 per km, starting at zero and rising faster",
+    "narration": "Taxi B has no fixed charge, but two pounds a kilometre. It starts cheaper and climbs faster.",
+    "code": "line_b = ax.plot(lambda x: 2 * x, x_range=[0, 6], color=BLUE)\nstage.play(Create(line_b))\nstage.add(line_b)\nstage.play(FadeIn(Text(\"B: £2/km\", font_size=26, color=BLUE).next_to(ax.c2p(6, 12), RIGHT)))"
+   },
+   {
+    "intent": "The crossing point at 3 km and £6 marked, dashed lines to both axes",
+    "narration": "The lines cross at three kilometres, where both cost six pounds.",
+    "code": "cross = Dot(ax.c2p(3, 6), color=GREEN, radius=0.1)\nguides = ax.get_lines_to_point(ax.c2p(3, 6), color=GREEN)\nstage.play(FadeIn(cross), Create(guides))\nstage.add(cross, guides)\nstage.label(cross, \"3 km, £6\", direction=UL, color=GREEN)"
+   },
+   {
+    "intent": "The graph beside 3 + x = 2x, x = 3",
+    "narration": "Set the prices equal: three plus x equals two x, so x is three. Shorter than three kilometres, take B; longer, take A.",
+    "code": "stage.equation(r\"3 + x = 2x\", r\"x = 3\")"
+   }
+  ]
+ },
+ {
+  "request": "if you sleep 8 hours a night, how much of your life is spent asleep?",
+  "beats": [
+   {
+    "intent": "A 24-hour clock ring for one day",
+    "narration": "A day has twenty four hours. Draw them round a ring, midnight at the top.",
+    "code": "stage.title(\"How much of life is sleep?\")\nc = np.array([-3, 0.2, 0])\nring = Annulus(inner_radius=1.2, outer_radius=1.8, color=GREY_B, fill_opacity=0.25).move_to(c)\nticks = VGroup(*[Line(c + 1.8 * np.array([np.cos(PI / 2 - h * TAU / 24), np.sin(PI / 2 - h * TAU / 24), 0]), c + 1.95 * np.array([np.cos(PI / 2 - h * TAU / 24), np.sin(PI / 2 - h * TAU / 24), 0]), color=GREY_B) for h in range(24)])\nhours = VGroup(*[Text(str(h), font_size=22).move_to(c + 2.25 * np.array([np.cos(PI / 2 - h * TAU / 24), np.sin(PI / 2 - h * TAU / 24), 0])) for h in (0, 6, 12, 18)])\nstage.play(FadeIn(ring), Create(ticks), FadeIn(hours))\nstage.add(ring, ticks, hours)"
+   },
+   {
+    "intent": "Eight hours from 22:00 to 06:00 shaded as sleep",
+    "narration": "Shade the eight hours from ten at night to six in the morning: that's sleep.",
+    "code": "sleep = AnnularSector(inner_radius=1.2, outer_radius=1.8, angle=TAU / 3, start_angle=0, color=BLUE, fill_opacity=0.8).move_arc_center_to(c)\nstage.play(FadeIn(sleep))\nstage.add(sleep)\nstage.play(FadeIn(Text(\"8 h asleep\", font_size=22, color=BLUE).move_to(c + 0.6 * np.array([np.cos(PI / 3), np.sin(PI / 3), 0]))))"
+   },
+   {
+    "intent": "The ring split into three equal 8-hour parts, one of them sleep",
+    "narration": "Eight hours is a third of twenty four. The day splits into three equal parts, and one of them is sleep.",
+    "code": "dividers = VGroup(*[Line(c + 1.2 * np.array([np.cos(a), np.sin(a), 0]), c + 1.8 * np.array([np.cos(a), np.sin(a), 0]), color=WHITE, stroke_width=4) for a in (0, TAU / 3, 2 * TAU / 3)])\nstage.play(Create(dividers))\nstage.add(dividers)\nstage.play(*[FadeIn(Text(\"8 h\", font_size=24).move_to(c + 0.7 * np.array([np.cos(a), np.sin(a), 0]))) for a in (PI, 5 * PI / 3)])"
+   },
+   {
+    "intent": "A 75-year life as a bar with a third of it shaded: 25 years asleep",
+    "narration": "Over a seventy five year life, a third is twenty five years asleep.",
+    "code": "u = 0.08\nlife = Rectangle(width=75 * u, height=0.5, color=GREY_B, fill_opacity=0.3).move_to([-6 + 37.5 * u, -2.6, 0])\nslept = Rectangle(width=25 * u, height=0.5, color=BLUE, fill_opacity=0.8).move_to([-6 + 12.5 * u, -2.6, 0])\nstage.play(GrowFromEdge(life, LEFT))\nstage.play(GrowFromEdge(slept, LEFT))\nstage.add(life, slept)\nstage.play(FadeIn(Text(\"25 years\", font_size=22).move_to(slept)), FadeIn(Text(\"75 years\", font_size=22).next_to(life, RIGHT)))"
+   },
+   {
+    "intent": "The picture beside 8/24 = 1/3 and 1/3 × 75 = 25",
+    "narration": "Eight twenty fourths is a third, and a third of seventy five is twenty five.",
+    "code": "stage.equation(r\"\\frac{8}{24} = \\frac{1}{3}\", r\"\\frac{1}{3} \\times 75 = 25\")"
+   }
+  ]
+ },
+ {
+  "request": "how much water does 1 mm of rain put on a square metre?",
+  "beats": [
+   {
+    "intent": "A side view of a 1 m wide patch of ground with a thin 1 mm layer of rain, drawn thicker",
+    "narration": "Rain is measured in millimetres: how deep it would lie if none soaked away. Picture a one millimetre layer on a square metre of ground.",
+    "code": "stage.title(\"A millimetre of rain\")\nground = Rectangle(width=4, height=0.4, color=GREEN_E, fill_opacity=0.6).move_to([-3, -1.5, 0])\nlayer = Rectangle(width=4, height=0.15, color=BLUE, fill_opacity=0.9).next_to(ground, UP, buff=0)\nstage.play(FadeIn(ground))\nstage.play(GrowFromEdge(layer, DOWN))\nstage.add(ground, layer)\nstage.label(ground, \"1 m × 1 m\", direction=DOWN)\nstage.label(layer, \"1 mm of rain (drawn thicker)\", direction=UP, color=BLUE)"
+   },
+   {
+    "intent": "The thin layer gathered into a 10 cm cube: 1 litre",
+    "narration": "Gather that water up. A metre by a metre by a millimetre is a thousandth of a cubic metre: one litre, a cube ten centimetres on each side.",
+    "code": "cube = Square(1.0, color=BLUE, fill_opacity=0.9).move_to([1.5, -0.7, 0])\nstage.play(TransformFromCopy(layer, cube))\nstage.add(cube)\nstage.label(cube, \"1 litre\", direction=RIGHT, color=BLUE)"
+   },
+   {
+    "intent": "A 50 m² roof as a 10 by 5 grid, each square catching 10 litres in 10 mm of rain",
+    "narration": "A roof of fifty square metres in a ten millimetre shower: every square metre catches ten litres.",
+    "code": "roof = VGroup(*[Square(0.4, color=GREY_B, fill_opacity=0.3, stroke_width=1) for _ in range(50)]).arrange_in_grid(rows=5, cols=10, buff=0).move_to([-3, 1.4, 0])\nstage.play(FadeIn(roof))\nstage.add(roof)\nstage.play(LaggedStart(*[sq.animate.set_fill(BLUE, opacity=0.6) for sq in roof], lag_ratio=0.02))\nstage.label(roof, \"50 m² roof, 10 mm of rain\", direction=RIGHT, color=BLUE)"
+   },
+   {
+    "intent": "The picture beside 1 m² × 1 mm = 1 L and 50 × 10 = 500 L",
+    "narration": "So one millimetre on one square metre is one litre, and the roof collects fifty times ten: five hundred litres.",
+    "code": "stage.equation(r\"1 \\, \\mathrm{m^2} \\times 1 \\, \\mathrm{mm} = 1 \\, \\mathrm{L}\", r\"50 \\times 10 = 500 \\, \\mathrm{L}\")"
+   }
+  ]
+ },
+ {
+  "request": "how do people estimate the size of a crowd?",
+  "beats": [
+   {
+    "intent": "A 10 m by 10 m square of crowd split into a grid of 1 m squares",
+    "narration": "To estimate a crowd, mark out an area. Here's a square ten metres by ten metres, cut into one metre squares.",
+    "code": "stage.title(\"Counting a crowd\")\ns = 0.4\ngrid = VGroup(*[Square(s, color=GREY_B, stroke_width=1) for _ in range(100)]).arrange_in_grid(rows=10, cols=10, buff=0).move_to([-3, -0.5, 0])\nstage.play(FadeIn(grid))\nstage.add(grid)\nstage.label(grid, \"10 m × 10 m\", direction=DOWN)"
+   },
+   {
+    "intent": "One square metre enlarged, with 4 people standing in it",
+    "narration": "In a packed crowd, about four people stand in each square metre.",
+    "code": "stage.play(grid[0].animate.set_stroke(YELLOW, 3))\nbig = Square(2.0, color=YELLOW).move_to([2.0, 0.3, 0])\npeople = VGroup(*[Dot(big.get_center() + np.array([dx, dy, 0]), radius=0.18, color=ORANGE) for dx in (-0.5, 0.5) for dy in (-0.5, 0.5)])\nlink = DashedLine(grid[0].get_corner(UR), big.get_corner(UL), color=YELLOW)\nstage.play(Create(link), Create(big), FadeIn(people))\nstage.add(link, big, people)\nstage.label(big, \"1 m²: about 4 people\", direction=DOWN, color=YELLOW)"
+   },
+   {
+    "intent": "Every square filled with 4 dots: 400 people",
+    "narration": "Fill every square the same way and count squares instead of people.",
+    "code": "crowd = VGroup(*[Dot(sq.get_center() + np.array([dx, dy, 0]), radius=0.04, color=ORANGE) for sq in grid for dx in (-0.1, 0.1) for dy in (-0.1, 0.1)])\nstage.play(FadeIn(crowd, lag_ratio=0.01), run_time=1.5)\nstage.add(crowd)"
+   },
+   {
+    "intent": "The crowd beside 10 × 10 = 100 m² and 100 × 4 = 400 people",
+    "narration": "A hundred square metres at four people each is four hundred people. A square ten times as big would hold about four thousand.",
+    "code": "stage.equation(r\"10 \\times 10 = 100 \\, \\mathrm{m^2}\", r\"100 \\times 4 = 400\")"
+   }
+  ]
+ }
+]
