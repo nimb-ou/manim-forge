@@ -1,0 +1,102 @@
+[
+ {
+  "request": "how do you tell how far away a thunderstorm is?",
+  "beats": [
+   {
+    "intent": "A storm cloud with lightning on the left, a person on the right, the flash reaching them at once",
+    "narration": "Lightning strikes far away. Its light reaches you almost instantly.",
+    "code": "stage.title(\"How far away is the storm?\")\ncloud = VGroup(*[Circle(radius=r, color=GREY_B, fill_opacity=0.8).move_to(p) for r, p in ((0.6, [-5.4, 2.0, 0]), (0.75, [-4.7, 2.2, 0]), (0.6, [-4.0, 2.0, 0]))])\nbolt = VMobject(color=YELLOW, stroke_width=6).set_points_as_corners([[-4.7, 1.5, 0], [-5.0, 0.4, 0], [-4.5, 0.5, 0], [-4.8, -0.8, 0]])\nground = Line([-6.5, -1.6, 0], [6.5, -1.6, 0], color=GREY_B)\nyou = VGroup(Circle(radius=0.2, color=WHITE).move_to([4.8, -0.4, 0]), Line([4.8, -0.6, 0], [4.8, -1.6, 0], color=WHITE))\nstage.play(Create(ground), FadeIn(cloud), FadeIn(you))\nstage.add(ground, cloud, you)\nstage.play(Create(bolt), run_time=0.4)\nstage.add(bolt)\nflash = Line([-4.4, -0.2, 0], [4.5, -0.2, 0], color=YELLOW, stroke_width=3)\nstage.play(Create(flash), run_time=0.2)\nstage.add(flash)\nflash_lab = stage.label(flash, \"light: almost instant\", direction=UP, color=YELLOW)"
+   },
+   {
+    "intent": "Sound spreading out in rings, a counter ticking to 6 seconds as it reaches the person",
+    "narration": "The thunder travels at about three hundred and forty metres a second. Count: one, two, three, four, five, six seconds before you hear it.",
+    "code": "stage.play(FadeOut(flash), FadeOut(flash_lab))\ncounter = Text(\"0 s\", font_size=36, color=BLUE).move_to([0.5, 2.4, 0])\nstage.add(counter)\nrings = VGroup()\nfor s in range(1, 7):\n    ring = Arc(radius=1.55 * s, start_angle=-PI / 20, angle=PI / 10, arc_center=[-4.7, -0.6, 0], color=BLUE)\n    rings.add(ring)\n    stage.play(Create(ring), Transform(counter, Text(f\"{s} s\", font_size=36, color=BLUE).move_to(counter)), run_time=0.4)\nstage.add(rings)"
+   },
+   {
+    "intent": "A double arrow from the storm to the person: 6 × 340 m ≈ 2 km",
+    "narration": "Six seconds at three hundred and forty metres each second is about two thousand metres: two kilometres.",
+    "code": "dist = DoubleArrow([-4.7, -2.2, 0], [4.8, -2.2, 0], buff=0, color=GREEN)\nstage.play(GrowFromCenter(dist))\nstage.add(dist)\nstage.label(dist, \"6 × 340 m ≈ 2 km\", direction=DOWN, color=GREEN)"
+   },
+   {
+    "intent": "The picture beside 340 × 6 = 2040 m and the rule seconds ÷ 3 = km",
+    "narration": "Sound covers roughly a kilometre every three seconds, so divide the seconds by three to get kilometres.",
+    "code": "stage.equation(r\"340 \\times 6 = 2040 \\, \\mathrm{m}\", r\"6 \\div 3 = 2 \\, \\mathrm{km}\")"
+   }
+  ]
+ },
+ {
+  "request": "if 6 people all shake hands with each other, how many handshakes are there?",
+  "beats": [
+   {
+    "intent": "Six people as dots on a circle, labelled A to F",
+    "narration": "Six people meet and everyone shakes hands with everyone else once.",
+    "code": "stage.title(\"Handshakes\")\nc = np.array([-2.5, -0.4, 0])\npts = [c + 2.2 * np.array([np.cos(PI / 2 + k * TAU / 6), np.sin(PI / 2 + k * TAU / 6), 0]) for k in range(6)]\ndots = VGroup(*[Dot(p, radius=0.14, color=WHITE) for p in pts])\nnames = VGroup(*[Text(n, font_size=28).move_to(c + 1.22 * (pts[k] - c)) for k, n in enumerate(\"ABCDEF\")])\nstage.play(FadeIn(dots), FadeIn(names))\nstage.add(dots, names)"
+   },
+   {
+    "intent": "A's five handshakes drawn as yellow lines to the others",
+    "narration": "A shakes hands with the five others: five handshakes.",
+    "code": "a_lines = VGroup(*[Line(pts[0], pts[k], color=YELLOW) for k in range(1, 6)])\nstage.play(LaggedStart(*[Create(l) for l in a_lines], lag_ratio=0.2))\nstage.add(a_lines)\ntally = VGroup(Text(\"A: 5\", font_size=32, color=YELLOW).move_to([2.5, 1.6, 0]))\nstage.play(FadeIn(tally))\nstage.add(tally)"
+   },
+   {
+    "intent": "B adds 4 new lines, C 3, D 2, E 1, each in its own colour, with a tally",
+    "narration": "B has already shaken A's hand, so B adds four new ones. Then C adds three, D two, E one, and F none.",
+    "code": "cols = [ORANGE, GREEN, BLUE, PURPLE]\nfor i in range(1, 5):\n    new = VGroup(*[Line(pts[i], pts[k], color=cols[i - 1]) for k in range(i + 1, 6)])\n    t = Text(f\"{'ABCDEF'[i]}: {5 - i} new\", font_size=32, color=cols[i - 1]).next_to(tally, DOWN, aligned_edge=LEFT)\n    tally.add(t)\n    stage.play(LaggedStart(*[Create(l) for l in new], lag_ratio=0.2), FadeIn(t), run_time=0.8)\n    stage.add(new, t)"
+   },
+   {
+    "intent": "All 15 lines beside 5 + 4 + 3 + 2 + 1 = 15 and 6 × 5 ÷ 2 = 15",
+    "narration": "Five plus four plus three plus two plus one is fifteen. Or: six people each shake five hands, but every handshake involves two people, so halve thirty.",
+    "code": "stage.play(FadeOut(tally))\nstage.equation(r\"5 + 4 + 3 + 2 + 1 = 15\", r\"\\frac{6 \\times 5}{2} = 15\")"
+   }
+  ]
+ },
+ {
+  "request": "why can you do the same thing to both sides of an equation?",
+  "beats": [
+   {
+    "intent": "Balance scales: three boxes marked x and 4 unit cubes on the left, 19 unit cubes on the right, level",
+    "narration": "Think of 3x plus 4 equals 19 as a balance. Three boxes of x and four cubes on one side weigh the same as nineteen cubes on the other.",
+    "code": "stage.title(\"Keeping the balance\")\nbeam = Line([-5.3, 1.0, 0], [0.3, 1.0, 0], color=GREY_B, stroke_width=6)\npost = Line([-2.5, 1.0, 0], [-2.5, -2.6, 0], color=GREY_B, stroke_width=6)\nbase = Line([-3.3, -2.6, 0], [-1.7, -2.6, 0], color=GREY_B, stroke_width=6)\nlpan = Line([-6.5, -0.6, 0], [-4.1, -0.6, 0], color=WHITE, stroke_width=4)\nrpan = Line([-0.9, -0.6, 0], [1.5, -0.6, 0], color=WHITE, stroke_width=4)\nstrings = VGroup(Line([-5.3, 1.0, 0], [-6.5, -0.6, 0]), Line([-5.3, 1.0, 0], [-4.1, -0.6, 0]), Line([0.3, 1.0, 0], [-0.9, -0.6, 0]), Line([0.3, 1.0, 0], [1.5, -0.6, 0])).set_stroke(GREY_B, 2)\nstage.play(Create(post), Create(base), Create(beam), Create(strings), Create(lpan), Create(rpan))\nstage.add(post, base, beam, strings, lpan, rpan)\nboxes = VGroup(*[VGroup(Square(0.5, color=YELLOW, fill_opacity=0.5), Text(\"x\", font_size=26)) for _ in range(3)]).arrange(RIGHT, buff=0.08).next_to(lpan, UP, buff=0.02).shift(0.35 * LEFT)\nones = VGroup(*[Square(0.25, color=BLUE, fill_opacity=0.8) for _ in range(4)]).arrange_in_grid(rows=2, cols=2, buff=0.05).next_to(boxes, RIGHT, buff=0.12, aligned_edge=DOWN)\nright = VGroup(*[Square(0.25, color=BLUE, fill_opacity=0.8) for _ in range(19)]).arrange_in_grid(rows=4, cols=5, buff=0.05).next_to(rpan, UP, buff=0.02)\nstage.play(FadeIn(boxes), FadeIn(ones), FadeIn(right))\nstage.add(boxes, ones, right)"
+   },
+   {
+    "intent": "Four cubes lifted off each side; the scales stay level with 3 boxes against 15 cubes",
+    "narration": "Take four cubes off both sides. Each side lost the same weight, so the scales stay level: three x balances fifteen.",
+    "code": "gone = VGroup(ones, *right[15:])\nstage.play(gone.animate.shift(1.2 * UP).set_opacity(0), run_time=0.8)\nstage.remove(gone)\nstage.play(VGroup(*right[:15]).animate.shift(0.3 * DOWN))\nstage.add(*right[:15])"
+   },
+   {
+    "intent": "Each box matched in colour to one row of 5 cubes",
+    "narration": "Split both sides into three equal parts: each box balances one row of five cubes.",
+    "code": "for k, col in enumerate((YELLOW, GREEN, ORANGE)):\n    stage.play(boxes[k][0].animate.set_fill(col, opacity=0.7).set_stroke(col), *[right[5 * k + j].animate.set_color(col).set_fill(col, opacity=0.9) for j in range(5)], run_time=0.5)\nstage.label(right, \"x = 5\", direction=RIGHT, color=YELLOW)"
+   },
+   {
+    "intent": "The scales beside 3x + 4 = 19, then 3x = 15, then x = 5",
+    "narration": "Whatever you do to one side, do to the other, and the balance holds: subtract four, then divide by three, and x is five.",
+    "code": "stage.equation(r\"3x + 4 = 19\", r\"3x = 15\", r\"x = 5\")"
+   }
+  ]
+ },
+ {
+  "request": "if you drive there at 60 km/h and back at 40 km/h, is your average speed 50?",
+  "beats": [
+   {
+    "intent": "A 120 km road between two towns, a car driving there; 'there at 60 km/h: 2 h'",
+    "narration": "Two towns are a hundred and twenty kilometres apart. Driving there at sixty kilometres an hour takes two hours.",
+    "code": "stage.title(\"Average speed of a round trip\")\nroad = Line([-5, 1.0, 0], [5, 1.0, 0], color=GREY_B)\nta = Dot([-5, 1.0, 0])\ntb = Dot([5, 1.0, 0])\nstage.play(Create(road), FadeIn(ta), FadeIn(tb))\nstage.add(road, ta, tb)\nstage.label(ta, \"Town A\", direction=DOWN)\nstage.label(tb, \"Town B\", direction=DOWN)\nstage.label(Line([-1, 1.0, 0], [1, 1.0, 0]), \"120 km\", direction=DOWN)\ncar = Square(0.35, color=RED, fill_opacity=0.9).move_to([-5, 1.3, 0])\nstage.play(FadeIn(car))\nstage.play(car.animate.move_to([5, 1.3, 0]), run_time=1.2, rate_func=linear)\nstage.add(car)\nthere = Text(\"there at 60 km/h: 2 h\", font_size=30, color=RED).move_to([0, -0.4, 0])\nstage.play(FadeIn(there))\nstage.add(there)"
+   },
+   {
+    "intent": "The car driving back more slowly; 'back at 40 km/h: 3 h'",
+    "narration": "Coming back at forty kilometres an hour takes three hours.",
+    "code": "stage.play(car.animate.move_to([-5, 1.3, 0]), run_time=1.8, rate_func=linear)\nback = Text(\"back at 40 km/h: 3 h\", font_size=30, color=BLUE).next_to(there, DOWN)\nstage.play(FadeIn(back))\nstage.add(back)"
+   },
+   {
+    "intent": "A time bar: 2 h at 60 in red, 3 h at 40 in blue, longer",
+    "narration": "Lay the trip out in time: more of it is spent at the slower speed, so the average leans towards forty.",
+    "code": "u = 1.6\nbar1 = Rectangle(width=2 * u, height=0.6, color=RED, fill_opacity=0.6).move_to([-5 + u, -2.2, 0])\nbar2 = Rectangle(width=3 * u, height=0.6, color=BLUE, fill_opacity=0.6).next_to(bar1, RIGHT, buff=0)\nstage.play(GrowFromEdge(bar1, LEFT))\nstage.play(GrowFromEdge(bar2, LEFT))\nstage.add(bar1, bar2)\nstage.label(bar1, \"2 h\", direction=DOWN, color=RED)\nstage.label(bar2, \"3 h\", direction=DOWN, color=BLUE)"
+   },
+   {
+    "intent": "The picture beside 240 km ÷ 5 h = 48 km/h, not 50",
+    "narration": "Two hundred and forty kilometres in five hours is forty eight kilometres an hour, not fifty.",
+    "code": "stage.equation(r\"\\frac{120 + 120}{2 + 3} = \\frac{240}{5} = 48\", r\"48 \\ne \\frac{60 + 40}{2} = 50\")"
+   }
+  ]
+ }
+]
