@@ -1,0 +1,102 @@
+[
+ {
+  "request": "how many 50 cm tiles cover a 4 m by 3 m floor?",
+  "beats": [
+   {
+    "intent": "A 4 m by 3 m floor outline",
+    "narration": "The floor is four metres by three.",
+    "code": "stage.title(\"Tiling a floor\")\nk = 1.2\nfloor = Rectangle(width=4 * k, height=3 * k, color=WHITE).move_to([-1.0, -0.4, 0])\nstage.play(Create(floor))\nstage.add(floor)\nstage.label(floor, \"4 m\", direction=DOWN)\nstage.label(floor, \"3 m\", direction=LEFT)"
+   },
+   {
+    "intent": "One row of 8 tiles along the 4 m side",
+    "narration": "A tile is half a metre, so eight fit along the four metre side.",
+    "code": "t = 0.5 * k\nrow = VGroup(*[Square(t, color=GREY_B, fill_color=ORANGE, fill_opacity=0.6) for _ in range(8)]).arrange(RIGHT, buff=0).align_to(floor, DL)\nstage.play(LaggedStart(*[FadeIn(s) for s in row], lag_ratio=0.1))\nstage.add(row)\nstage.caption(\"8 along\")"
+   },
+   {
+    "intent": "Six rows filling the floor, 48 tiles",
+    "narration": "Six rows fit up the three metre side.",
+    "code": "rows = VGroup(*[row.copy().shift(r * t * UP) for r in range(1, 6)])\nstage.play(LaggedStart(*[FadeIn(r) for r in rows], lag_ratio=0.2))\nstage.add(rows)\nstage.caption(\"6 rows\")"
+   },
+   {
+    "intent": "The floor beside 8 × 6 = 48 tiles",
+    "narration": "Eight times six: forty eight tiles. Buy a few extra for the cuts.",
+    "code": "stage.equation(r\"\\frac{4}{0.5} \\times \\frac{3}{0.5} = 8 \\times 6\", r\"= 48\")"
+   }
+  ]
+ },
+ {
+  "request": "what's the difference between speed and acceleration?",
+  "beats": [
+   {
+    "intent": "A car on a road with a speedometer reading 0",
+    "narration": "A car pulls away from a traffic light.",
+    "code": "stage.title(\"Acceleration\")\nroad = Line([-6, -0.6, 0], [6, -0.6, 0], color=GREY_B)\ncar = RoundedRectangle(width=1.4, height=0.6, corner_radius=0.15, color=BLUE, fill_opacity=0.7).move_to([-5, -0.2, 0])\nstage.play(Create(road), FadeIn(car))\nstage.add(road, car)"
+   },
+   {
+    "intent": "The car at four moments one second apart, getting further apart each time, with speeds 0, 3, 6, 9 m/s",
+    "narration": "Each second it goes three metres a second faster: zero, three, six, nine.",
+    "code": "xs = [-5 + 0.65 * d for d in (0, 1.5, 6, 13.5)]\nghosts = VGroup(*[car.copy().set_opacity(0.35 + 0.2 * k).move_to([x, -0.2, 0]) for k, x in enumerate(xs[1:])])\nstage.play(LaggedStart(*[FadeIn(g) for g in ghosts], lag_ratio=0.4))\nstage.add(ghosts)\nfor x, v in zip(xs, (0, 3, 6, 9)):\n    stage.add(Text(f\"{v} m/s\", font_size=22, color=YELLOW).move_to([x, 0.6, 0]))\nstage.caption(\"speed: how fast; acceleration: how fast the speed changes\")"
+   },
+   {
+    "intent": "Axes of time and speed with the line v = 3t",
+    "narration": "Plot speed against time: a straight line rising three every second.",
+    "code": "stage.clear()\nax = draw_axes(stage, x_range=(0, 4), y_range=(0, 12), labels=(\"seconds\", \"m/s\"))\ng = plot_graph(stage, ax, lambda t: 3 * t, color=ORANGE)\npts = plot_points(stage, ax, [(0, 0), (1, 3), (2, 6), (3, 9)])"
+   },
+   {
+    "intent": "The slope marked as a rise of 3 for each 1 across, beside a = 3 m/s²",
+    "narration": "That slope is the acceleration: three metres per second, every second.",
+    "code": "run = draw_line(stage, ax.c2p(1, 3), ax.c2p(2, 3), color=GREEN)\nrise = draw_line(stage, ax.c2p(2, 3), ax.c2p(2, 6), color=YELLOW)\nstage.label(rise, \"3\", direction=RIGHT, color=YELLOW)\nstage.equation(r\"a = \\frac{\\Delta v}{\\Delta t} = 3\\ \\text{m/s}^2\")"
+   }
+  ]
+ },
+ {
+  "request": "how do you add 5 and 3 in binary?",
+  "beats": [
+   {
+    "intent": "The numbers 101 and 011 lined up under place values 8 4 2 1",
+    "narration": "Five is one-zero-one in binary, three is zero-one-one. Line them up under the place values.",
+    "code": "stage.title(\"5 + 3 in binary\")\ncols = [-1.5, -0.5, 0.5, 1.5]\nfor x, v in zip(cols, (8, 4, 2, 1)):\n    stage.add(Text(str(v), font_size=24, color=GREY_B).move_to([x, 2.0, 0]))\na = VGroup(*[Text(d, font_size=40).move_to([x, 1.1, 0]) for x, d in zip(cols, \"0101\")])\nb = VGroup(*[Text(d, font_size=40).move_to([x, 0.3, 0]) for x, d in zip(cols, \"0011\")])\nplus = Text(\"+\", font_size=40).move_to([-2.4, 0.3, 0])\nline = Line([-2.2, -0.2, 0], [2.0, -0.2, 0], color=WHITE)\nstage.play(FadeIn(a), FadeIn(b), FadeIn(plus), Create(line))\nstage.add(a, b, plus, line)"
+   },
+   {
+    "intent": "The ones column: 1 + 1 = 10, writing 0 and carrying 1",
+    "narration": "Ones column: one plus one is two, which in binary is one-zero. Write nought, carry one.",
+    "code": "r1 = Text(\"0\", font_size=40, color=YELLOW).move_to([1.5, -0.8, 0])\nc1 = Text(\"1\", font_size=24, color=RED).move_to([0.5, 1.7, 0])\nstage.play(FadeIn(r1), FadeIn(c1))\nstage.add(r1, c1)"
+   },
+   {
+    "intent": "The carries rippling left: twos column 1 + 1 = 10, fours column 1 + 1 = 10, giving 1000",
+    "narration": "Twos: the carry plus one is two again: nought, carry one. Fours: the same. The last carry lands in the eights.",
+    "code": "r2 = Text(\"0\", font_size=40, color=YELLOW).move_to([0.5, -0.8, 0])\nc2 = Text(\"1\", font_size=24, color=RED).move_to([-0.5, 1.7, 0])\nstage.play(FadeIn(r2), FadeIn(c2))\nr3 = Text(\"0\", font_size=40, color=YELLOW).move_to([-0.5, -0.8, 0])\nr4 = Text(\"1\", font_size=40, color=YELLOW).move_to([-1.5, -0.8, 0])\nstage.play(FadeIn(r3), FadeIn(r4))\nstage.add(r2, c2, r3, r4)"
+   },
+   {
+    "intent": "The result 1000 beside 101 + 011 = 1000 = 8",
+    "narration": "One-zero-zero-zero: eight. Five plus three is eight, as it should be.",
+    "code": "stage.equation(r\"101_2 + 011_2 = 1000_2\", r\"= 8\")"
+   }
+  ]
+ },
+ {
+  "request": "how much CO2 does a 100 km car trip make?",
+  "beats": [
+   {
+    "intent": "A car with a 100 km trip arrow",
+    "narration": "A car drives a hundred kilometres.",
+    "code": "stage.title(\"CO₂ from a car trip\")\ncar = RoundedRectangle(width=1.4, height=0.6, corner_radius=0.15, color=BLUE, fill_opacity=0.7).move_to([-4.5, 0.5, 0])\ntrip = Arrow([-3.6, 0.5, 0], [4.5, 0.5, 0], buff=0, color=GREY_B)\nstage.play(FadeIn(car), GrowArrow(trip))\nstage.add(car, trip)\nstage.label(trip, \"100 km\", direction=UP)"
+   },
+   {
+    "intent": "Small puffs along the route, one per km, each labelled 120 g",
+    "narration": "A typical petrol car emits about a hundred and twenty grams of carbon dioxide each kilometre.",
+    "code": "puffs = VGroup(*[Circle(radius=0.12, color=GREY_B, fill_opacity=0.5).move_to([x, 0.0, 0]) for x in np.linspace(-3.4, 4.2, 20)])\nstage.play(LaggedStart(*[FadeIn(p) for p in puffs], lag_ratio=0.05))\nstage.add(puffs)\nstage.caption(\"about 120 g of CO₂ every km\")"
+   },
+   {
+    "intent": "Bars of CO2 for the trip: car 12 kg, train 3.5 kg, bike 0",
+    "narration": "Over a hundred kilometres that's twelve kilograms. The same trip by train is about three and a half; by bike, almost nothing.",
+    "code": "stage.clear()\nb = draw_bars(stage, [12, 3.5, 0.05], labels=[\"car\", \"train\", \"bike\"], color=GREY_B)\nstage.caption(\"kg of CO₂ for 100 km\")"
+   },
+   {
+    "intent": "The bars beside 100 × 120 g = 12 000 g = 12 kg",
+    "narration": "A hundred times a hundred and twenty grams is twelve thousand grams: twelve kilograms.",
+    "code": "stage.equation(r\"100 \\times 120\\ \\text{g} = 12\\,000\\ \\text{g}\", r\"= 12\\ \\text{kg}\")"
+   }
+  ]
+ }
+]
