@@ -1,0 +1,102 @@
+[
+ {
+  "request": "what is the chance of getting heads and a six when you flip a coin and roll a dice?",
+  "beats": [
+   {
+    "intent": "Coin outcomes H and T down the side, dice outcomes 1 to 6 along the top",
+    "narration": "Flip a coin and roll a dice. The coin gives heads or tails; the dice gives one to six.",
+    "code": "stage.title(\"Heads and a six\")\nw, h = 0.8, 0.7\ntl = np.array([-5.6, 1.6, 0])\ncell = lambda r, c: tl + np.array([(c + 0.5) * w, -(r + 0.5) * h, 0])\ntops = VGroup(*[Text(str(c), font_size=28, color=BLUE).move_to(cell(0, c)) for c in range(1, 7)])\nsides = VGroup(*[Text(t, font_size=28, color=ORANGE).move_to(cell(r, 0)) for r, t in ((1, \"H\"), (2, \"T\"))])\nstage.play(FadeIn(tops), FadeIn(sides))\nstage.add(tops, sides)"
+   },
+   {
+    "intent": "A 2 by 6 grid of all 12 equally likely outcomes, H1 to T6",
+    "narration": "Every pairing is equally likely: two times six, twelve outcomes.",
+    "code": "grid = VGroup(*[VGroup(Rectangle(width=w, height=h, color=GREY_B, stroke_width=2), Text(f\"{'HT'[r - 1]}{c}\", font_size=22)).move_to(cell(r, c)) for r in (1, 2) for c in range(1, 7)])\nstage.play(LaggedStart(*[FadeIn(g) for g in grid], lag_ratio=0.05))\nstage.add(grid)\nstage.label(grid, \"12 outcomes\", direction=DOWN)"
+   },
+   {
+    "intent": "The single H6 cell highlighted",
+    "narration": "Only one of them is heads and a six.",
+    "code": "hit = grid[5]\nstage.play(hit[0].animate.set_fill(GREEN, opacity=0.6).set_stroke(GREEN))\nstage.label(hit, \"1 of 12\", direction=RIGHT, color=GREEN)"
+   },
+   {
+    "intent": "The grid beside P(H and 6) = 1/2 × 1/6 = 1/12",
+    "narration": "The coin doesn't affect the dice, so multiply the chances: a half times a sixth, one twelfth.",
+    "code": "stage.equation(r\"P(H \\text{ and } 6) = \\frac{1}{2} \\times \\frac{1}{6}\", r\"= \\frac{1}{12}\")"
+   }
+  ]
+ },
+ {
+  "request": "how does a frequency tree sort 200 people?",
+  "beats": [
+   {
+    "intent": "A top box for all 200 people",
+    "narration": "Two hundred people are surveyed.",
+    "code": "stage.title(\"A frequency tree\")\nnode = lambda t, p, col=WHITE: VGroup(RoundedRectangle(width=1.5, height=0.6, corner_radius=0.12, color=col), Text(t, font_size=24, color=col)).move_to(p)\nroot = node(\"200\", [-3.2, 2.0, 0])\nstage.play(FadeIn(root))\nstage.add(root)\nstage.label(root, \"people\", direction=RIGHT)"
+   },
+   {
+    "intent": "Branches to 120 adults and 80 children",
+    "narration": "A hundred and twenty are adults and eighty are children.",
+    "code": "ad = node(\"120\", [-5.0, 0.4, 0], BLUE)\nch = node(\"80\", [-1.4, 0.4, 0], ORANGE)\nstage.play(Create(Line(root.get_bottom(), ad.get_top())), Create(Line(root.get_bottom(), ch.get_top())), FadeIn(ad), FadeIn(ch))\nstage.add(ad, ch)\nstage.label(ad, \"adults\", direction=LEFT, color=BLUE)\nstage.label(ch, \"children\", direction=RIGHT, color=ORANGE)"
+   },
+   {
+    "intent": "Each splits again by glasses: adults 45 yes, 75 no; children 20 yes, 60 no",
+    "narration": "Of the adults, forty five wear glasses and seventy five don't. Of the children, twenty do and sixty don't.",
+    "code": "leaves = VGroup()\nfor parent, vals, x in ((ad, (\"45\", \"75\"), (-5.9, -4.1)), (ch, (\"20\", \"60\"), (-2.3, -0.5))):\n    for v, xx, col in zip(vals, x, (GREEN, GREY_B)):\n        leaf = node(v, [xx, -1.3, 0], col)\n        stage.play(Create(Line(parent.get_bottom(), leaf.get_top())), FadeIn(leaf), run_time=0.5)\n        stage.add(leaf)\n        leaves.add(leaf)\nstage.play(FadeIn(Text(\"glasses\", font_size=22, color=GREEN).move_to([-5.9, -1.95, 0])), FadeIn(Text(\"glasses\", font_size=22, color=GREEN).move_to([-2.3, -1.95, 0])))"
+   },
+   {
+    "intent": "The tree beside P(glasses) = (45 + 20)/200 = 0.325",
+    "narration": "Add the two glasses ends: sixty five of the two hundred, so the chance a random person wears glasses is nought point three two five.",
+    "code": "stage.equation(r\"\\frac{45 + 20}{200} = \\frac{65}{200}\", r\"= 0.325\")"
+   }
+  ]
+ },
+ {
+  "request": "how do you read a pictogram where each cup stands for 4 drinks?",
+  "beats": [
+   {
+    "intent": "A pictogram of drinks sold Monday to Thursday, with a key: one cup = 4 drinks",
+    "narration": "A café draws a pictogram of drinks sold. The key says each cup stands for four drinks.",
+    "code": "stage.title(\"Reading a pictogram\")\ncup = lambda p: Circle(radius=0.22, color=ORANGE, fill_opacity=0.8).move_to(p)\nhalf = lambda p: AnnularSector(inner_radius=0, outer_radius=0.22, angle=PI, start_angle=PI / 2, color=ORANGE, fill_opacity=0.8).move_arc_center_to(p)\ndata = ((\"Mon\", 3), (\"Tue\", 4.5), (\"Wed\", 2), (\"Thu\", 3.5))\nrows = VGroup()\nfor r, (day, n) in enumerate(data):\n    y = 1.6 - 0.75 * r\n    icons = VGroup(Text(day, font_size=26).move_to([-5.8, y, 0]), *[cup([-4.9 + 0.6 * i, y, 0]) for i in range(int(n))])\n    if n % 1:\n        icons.add(half([-4.9 + 0.6 * int(n), y, 0]))\n    rows.add(icons)\nstage.play(LaggedStart(*[FadeIn(r) for r in rows], lag_ratio=0.2))\nstage.add(rows)\nkey = VGroup(cup([-4.9, -1.6, 0]), Text(\"= 4 drinks\", font_size=26).move_to([-3.8, -1.6, 0]))\nstage.play(FadeIn(key))\nstage.add(key)"
+   },
+   {
+    "intent": "A half cup picked out: half an icon means 2 drinks",
+    "narration": "A half cup means half of four: two drinks.",
+    "code": "hc = rows[1][-1]\nring = Circle(radius=0.35, color=YELLOW).move_to([-4.9 + 0.6 * 4, 1.6 - 0.75, 0])\nstage.play(Create(ring))\nstage.add(ring)\nlh = stage.label(ring, \"half = 2\", direction=RIGHT, color=YELLOW)"
+   },
+   {
+    "intent": "Tuesday's row read off: 4½ cups = 18 drinks",
+    "narration": "So Tuesday is four and a half cups: four times four plus two, eighteen drinks.",
+    "code": "stage.play(FadeOut(lh))\nbox = SurroundingRectangle(VGroup(rows[1], ring), color=GREEN, buff=0.08)\nstage.play(Create(box))\nstage.add(box)\nstage.label(box, \"Tue: 18\", direction=RIGHT, color=GREEN)"
+   },
+   {
+    "intent": "The pictogram beside 12 + 18 + 8 + 14 = 52 drinks",
+    "narration": "Read every row the same way: twelve, eighteen, eight and fourteen. Fifty two drinks in four days.",
+    "code": "stage.equation(r\"4.5 \\times 4 = 18\", r\"12 + 18 + 8 + 14 = 52\")"
+   }
+  ]
+ },
+ {
+  "request": "a bag has 3 red, 5 blue and 2 green balls: what's the chance of red or blue?",
+  "beats": [
+   {
+    "intent": "A bag with 10 balls: 3 red, 5 blue, 2 green",
+    "narration": "A bag holds ten balls: three red, five blue and two green. Pick one without looking.",
+    "code": "stage.title(\"Red or blue?\")\nbag = RoundedRectangle(width=4.2, height=2.6, corner_radius=0.4, color=GREY_B).move_to([-3.5, 0.0, 0])\ncols = [RED] * 3 + [BLUE] * 5 + [GREEN] * 2\nballs = VGroup(*[Circle(radius=0.28, color=col, fill_opacity=0.85).move_to([-5.0 + 0.7 * (i - (0 if i < 3 else 3 if i < 8 else 8)), 0.75 - 0.75 * (0 if i < 3 else 1 if i < 8 else 2), 0]) for i, col in enumerate(cols)])\nstage.play(Create(bag), FadeIn(balls))\nstage.add(bag, balls)"
+   },
+   {
+    "intent": "The 3 red balls ringed: 3 out of 10",
+    "narration": "Three of the ten are red: a chance of three tenths.",
+    "code": "reds = SurroundingRectangle(VGroup(*balls[:3]), color=RED, buff=0.08)\nstage.play(Create(reds))\nstage.add(reds)\nstage.label(bag, \"red: 3/10\", direction=UP, color=RED)"
+   },
+   {
+    "intent": "The 5 blue balls ringed separately: 5 out of 10, no ball in both rings",
+    "narration": "Five are blue: five tenths. No ball is both red and blue, so the two groups never overlap.",
+    "code": "blues = SurroundingRectangle(VGroup(*balls[3:8]), color=BLUE, buff=0.08)\nstage.play(Create(blues))\nstage.add(blues)\nstage.label(bag, \"blue: 5/10\", direction=DOWN, color=BLUE)"
+   },
+   {
+    "intent": "The bag beside P(red or blue) = 3/10 + 5/10 = 8/10",
+    "narration": "When two things can't both happen, add their chances: eight tenths. Check: only the two green balls are left out.",
+    "code": "stage.equation(r\"\\frac{3}{10} + \\frac{5}{10} = \\frac{8}{10}\", r\"1 - \\frac{2}{10} = \\frac{8}{10}\")"
+   }
+  ]
+ }
+]
