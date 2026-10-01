@@ -1,0 +1,102 @@
+[
+ {
+  "request": "how long is the arc of a 60° slice of a circle with radius 6 cm?",
+  "beats": [
+   {
+    "intent": "A circle of radius 6 cm, its whole circumference 2π × 6 ≈ 37.7 cm",
+    "narration": "A circle has radius six centimetres. All the way round is two pi times six, about thirty seven point seven centimetres.",
+    "code": "stage.title(\"Arc length\")\nc = np.array([-3, -0.3, 0])\ncircle = Circle(radius=2, color=WHITE).move_to(c)\nrad = Line(c, c + 2 * RIGHT, color=BLUE)\nstage.play(Create(circle), Create(rad))\nstage.add(circle, rad)\nstage.label(rad, \"6 cm\", direction=DOWN, color=BLUE)\nstage.label(circle, \"all the way round: 2π × 6 ≈ 37.7 cm\", direction=UP)"
+   },
+   {
+    "intent": "A 60° slice shaded, its angle marked",
+    "narration": "Cut a slice with a sixty degree angle at the centre.",
+    "code": "slice_ = AnnularSector(inner_radius=0, outer_radius=2, angle=PI / 3, start_angle=0, color=YELLOW, fill_opacity=0.35).move_arc_center_to(c)\nang = Arc(radius=0.5, start_angle=0, angle=PI / 3, arc_center=c, color=YELLOW)\nstage.play(FadeIn(slice_), Create(ang))\nstage.add(slice_, ang)\nstage.label(ang, \"60°\", direction=RIGHT, color=YELLOW)"
+   },
+   {
+    "intent": "Six equal 60° slices around the circle, the first one's arc thick and bright",
+    "narration": "Sixty degrees is a sixth of three hundred and sixty, so six of these slices go round the circle. The slice's curved edge is a sixth of the way round.",
+    "code": "spokes = VGroup(*[Line(c, c + 2 * np.array([np.cos(k * PI / 3), np.sin(k * PI / 3), 0]), color=GREY_B) for k in range(1, 6)])\nstage.play(Create(spokes))\nstage.add(spokes)\narc = Arc(radius=2, start_angle=0, angle=PI / 3, arc_center=c, color=ORANGE, stroke_width=10)\nstage.play(Create(arc))\nstage.add(arc)\nstage.label(arc, \"1/6 of 37.7 ≈ 6.28 cm\", direction=RIGHT, color=ORANGE)"
+   },
+   {
+    "intent": "The circle beside 60/360 × 2π × 6 = 2π ≈ 6.28 cm",
+    "narration": "Arc length is the fraction of the turn times the circumference: a sixth of twelve pi is two pi, about six point two eight centimetres.",
+    "code": "stage.equation(r\"\\frac{60}{360} \\times 2\\pi \\times 6\", r\"= 2\\pi \\approx 6.28 \\, \\mathrm{cm}\")"
+   }
+  ]
+ },
+ {
+  "request": "how do you add 1/3 and 1/4?",
+  "beats": [
+   {
+    "intent": "Two bars: one cut in thirds with one third shaded, one cut in quarters with one quarter shaded",
+    "narration": "One third and one quarter. The pieces are different sizes, so you can't just add tops and bottoms.",
+    "code": "stage.title(\"Adding fractions\")\nw = 6\nx0 = -6\nthirds = VGroup(*[Rectangle(width=w / 3, height=0.6, color=WHITE, fill_color=BLUE, fill_opacity=0.7 if i == 0 else 0) for i in range(3)]).arrange(RIGHT, buff=0).move_to([x0 + w / 2, 1.6, 0])\nquarters = VGroup(*[Rectangle(width=w / 4, height=0.6, color=WHITE, fill_color=ORANGE, fill_opacity=0.7 if i == 0 else 0) for i in range(4)]).arrange(RIGHT, buff=0).move_to([x0 + w / 2, 0.4, 0])\nstage.play(FadeIn(thirds), FadeIn(quarters))\nstage.add(thirds, quarters)\nstage.label(thirds, \"1/3\", direction=RIGHT, color=BLUE)\nstage.label(quarters, \"1/4\", direction=RIGHT, color=ORANGE)"
+   },
+   {
+    "intent": "Both bars re-cut into twelfths: 1/3 becomes 4/12, 1/4 becomes 3/12",
+    "narration": "Cut both into twelfths. The third becomes four twelfths and the quarter becomes three twelfths.",
+    "code": "cuts = VGroup(*[Line([x0 + k * w / 12, y - 0.3, 0], [x0 + k * w / 12, y + 0.3, 0], color=GREY_B, stroke_width=1) for k in range(1, 12) for y in (1.6, 0.4)])\nstage.play(Create(cuts))\nstage.add(cuts)\nstage.play(FadeIn(Text(\"4/12\", font_size=26, color=BLUE).move_to([x0 + w / 6, 2.2, 0])), FadeIn(Text(\"3/12\", font_size=26, color=ORANGE).move_to([x0 + w / 8, -0.2, 0])))"
+   },
+   {
+    "intent": "One bar of twelve twelfths with 4 blue and 3 orange shaded: 7/12",
+    "narration": "Now the pieces match, so put them together: four twelfths and three twelfths make seven twelfths.",
+    "code": "twelfths = VGroup(*[Rectangle(width=w / 12, height=0.6, color=WHITE, fill_color=BLUE if i < 4 else ORANGE, fill_opacity=0.7 if i < 7 else 0) for i in range(12)]).arrange(RIGHT, buff=0).move_to([x0 + w / 2, -1.6, 0])\nstage.play(FadeIn(twelfths))\nstage.add(twelfths)\nstage.label(twelfths, \"7/12\", direction=RIGHT, color=GREEN)"
+   },
+   {
+    "intent": "The bars beside 1/3 + 1/4 = 4/12 + 3/12 = 7/12",
+    "narration": "Find a common denominator, here twelve, then add the tops.",
+    "code": "stage.equation(r\"\\frac{1}{3} + \\frac{1}{4}\", r\"= \\frac{4}{12} + \\frac{3}{12}\", r\"= \\frac{7}{12}\")"
+   }
+  ]
+ },
+ {
+  "request": "why is 2 + 3 × 4 equal to 14 and not 20?",
+  "beats": [
+   {
+    "intent": "Two red dots and three rows of four blue dots, labelled 2 and 3 × 4",
+    "narration": "Two plus three times four. Picture the two as two dots, and three times four as three rows of four.",
+    "code": "stage.title(\"Order of operations\")\ntwo = VGroup(*[Dot([-5.6, 0.3 - 0.6 * i, 0], radius=0.15, color=RED) for i in range(2)])\nrows = VGroup(*[Dot([-4.4 + 0.6 * j, 0.6 - 0.6 * i, 0], radius=0.15, color=BLUE) for i in range(3) for j in range(4)])\nstage.play(FadeIn(two), FadeIn(rows))\nstage.add(two, rows)\nl2 = stage.label(two, \"2\", direction=DOWN, color=RED)\nl34 = stage.label(rows, \"3 × 4\", direction=DOWN, color=BLUE)"
+   },
+   {
+    "intent": "All the dots counted: 2 + 12 = 14",
+    "narration": "The multiplication is a block of twelve; add the two and there are fourteen dots.",
+    "code": "total = SurroundingRectangle(VGroup(two, rows, l2, l34), color=GREEN, buff=0.2)\nstage.play(Create(total))\nstage.add(total)\nstage.label(total, \"2 + 12 = 14\", direction=UP, color=GREEN)"
+   },
+   {
+    "intent": "The other reading, (2 + 3) × 4: five rows of four dots, 20",
+    "narration": "Adding first would mean two plus three, five rows of four: twenty. That's a different picture, so it needs brackets.",
+    "code": "five = VGroup(*[Dot([0.4 + 0.6 * j, 1.2 - 0.6 * i, 0], radius=0.15, color=RED if i < 2 else BLUE) for i in range(5) for j in range(4)])\nstage.play(FadeIn(five))\nstage.add(five)\nstage.label(five, \"(2 + 3) × 4 = 20\", direction=DOWN, color=GREY_B)"
+   },
+   {
+    "intent": "The pictures beside 2 + 3 × 4 = 2 + 12 = 14",
+    "narration": "Multiplication binds tighter than addition, so it's done first: two plus twelve is fourteen.",
+    "code": "stage.equation(r\"2 + 3 \\times 4\", r\"= 2 + 12\", r\"= 14\")"
+   }
+  ]
+ },
+ {
+  "request": "how does the grid method work out 23 × 14?",
+  "beats": [
+   {
+    "intent": "A rectangle 23 wide and 14 tall",
+    "narration": "Twenty three times fourteen is the area of a rectangle twenty three by fourteen.",
+    "code": "stage.title(\"23 × 14 with a grid\")\nk = 0.2\ntl = np.array([-5.3, 1.3, 0])\nrect = Rectangle(width=23 * k, height=14 * k, color=WHITE).move_to(tl + np.array([23 * k / 2, -14 * k / 2, 0]))\nstage.play(Create(rect))\nstage.add(rect)\nstage.label(rect, \"23 × 14\", direction=DOWN)"
+   },
+   {
+    "intent": "The rectangle split into 20 + 3 across and 10 + 4 down",
+    "narration": "Split twenty three into twenty and three, and fourteen into ten and four.",
+    "code": "v = Line(tl + 20 * k * RIGHT, tl + 20 * k * RIGHT + 14 * k * DOWN, color=YELLOW)\nh = Line(tl + 10 * k * DOWN, tl + 10 * k * DOWN + 23 * k * RIGHT, color=YELLOW)\nstage.play(Create(v), Create(h))\nstage.add(v, h)\nstage.play(*[FadeIn(Text(t, font_size=26, color=YELLOW).move_to(p)) for t, p in ((\"20\", tl + np.array([10 * k, 0.3, 0])), (\"3\", tl + np.array([21.5 * k, 0.3, 0])), (\"10\", tl + np.array([-0.35, -5 * k, 0])), (\"4\", tl + np.array([-0.35, -12 * k, 0])))])"
+   },
+   {
+    "intent": "The four parts filled in: 200, 30, 80 and 12",
+    "narration": "Each part is easy: twenty times ten is two hundred, three times ten is thirty, twenty times four is eighty, three times four is twelve.",
+    "code": "parts = (((0, 0), (20, 10), \"200\", BLUE), ((20, 0), (3, 10), \"30\", GREEN), ((0, 10), (20, 4), \"80\", ORANGE), ((20, 10), (3, 4), \"12\", RED))\nfor (x, y), (wd, ht), lab, col in parts:\n    box = Rectangle(width=wd * k, height=ht * k, color=col, fill_opacity=0.35, stroke_width=0).move_to(tl + np.array([(x + wd / 2) * k, -(y + ht / 2) * k, 0]))\n    stage.play(FadeIn(box), FadeIn(Text(lab, font_size=24).move_to(box)), run_time=0.5)\n    stage.add(box)"
+   },
+   {
+    "intent": "The grid beside 200 + 30 + 80 + 12 = 322",
+    "narration": "Add the four parts: two hundred, plus thirty, plus eighty, plus twelve is three hundred and twenty two.",
+    "code": "stage.equation(r\"200 + 30 + 80 + 12\", r\"= 322\")"
+   }
+  ]
+ }
+]
