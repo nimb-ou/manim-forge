@@ -1,0 +1,102 @@
+[
+ {
+  "request": "when do the clock hands next overlap after 12 o'clock?",
+  "beats": [
+   {
+    "intent": "A clock at 12:00 with both hands pointing up together",
+    "narration": "At twelve o'clock the hands lie on top of each other.",
+    "code": "stage.title(\"When do the hands meet?\")\nface = Circle(radius=2.2, color=WHITE).move_to([-2.5, -0.3, 0])\nc = face.get_center()\nticks = VGroup(*[Line(c + 2.0 * np.array([np.sin(k * PI / 6), np.cos(k * PI / 6), 0]), c + 2.2 * np.array([np.sin(k * PI / 6), np.cos(k * PI / 6), 0]), color=GREY_B) for k in range(12)])\nt = ValueTracker(0)\nhand = lambda length, per_min, col, w: always_redraw(lambda: Line(c, c + length * np.array([np.sin(per_min * t.get_value() * DEGREES), np.cos(per_min * t.get_value() * DEGREES), 0]), color=col, stroke_width=w))\nminute = hand(1.9, 6, BLUE, 5)\nhour = hand(1.2, 0.5, ORANGE, 9)\nstage.play(Create(face), Create(ticks))\nstage.add(hour, minute)"
+   },
+   {
+    "intent": "The minute hand sweeping round once while the hour hand creeps to 1",
+    "narration": "In one hour the minute hand goes all the way round, but the hour hand has moved on to one.",
+    "code": "stage.play(t.animate.set_value(60), run_time=3, rate_func=linear)\nstage.caption(\"1:00: the hour hand has moved on\")"
+   },
+   {
+    "intent": "The minute hand catching the hour hand a little after 1:05",
+    "narration": "The minute hand has to catch up a little more: they meet at about five past one, twenty seven seconds after.",
+    "code": "stage.play(t.animate.set_value(65.45), run_time=1.5, rate_func=linear)\nstage.caption(\"they meet at about 1:05:27\")"
+   },
+   {
+    "intent": "The clock beside 6t = 360 + 0.5t, so t = 65 5/11 minutes",
+    "narration": "The minute hand turns six degrees a minute, the hour hand half a degree. It gains five and a half a minute, so it needs three sixty over five and a half: sixty five and five elevenths minutes.",
+    "code": "stage.equation(r\"6t = 360 + 0.5t\", r\"\\Rightarrow t = \\frac{360}{5.5} = 65\\tfrac{5}{11}\\ \\text{min}\")"
+   }
+  ]
+ },
+ {
+  "request": "what's the mode, and how is it different from the average?",
+  "beats": [
+   {
+    "intent": "Bars of shoe sizes sold in a shop: sizes 5 to 10",
+    "narration": "A shoe shop counts the sizes it sold in a week.",
+    "code": "stage.title(\"The mode\")\nb = draw_bars(stage, [3, 8, 14, 9, 5, 2], labels=[\"5\", \"6\", \"7\", \"8\", \"9\", \"10\"], color=BLUE)\nstage.caption(\"pairs sold by size\")"
+   },
+   {
+    "intent": "The tallest bar, size 7, lit",
+    "narration": "The mode is the most common value: size seven, with fourteen pairs.",
+    "code": "bars = b[0] if len(b) == 2 else b\nhighlight(stage, bars[2], color=YELLOW)\nstage.caption(\"mode = size 7\")"
+   },
+   {
+    "intent": "The mean size 7.3 marked beside, with its calculation",
+    "narration": "The mean shoe size works out at about seven point three, a size nobody actually wears.",
+    "code": "stage.equation(r\"\\frac{5\\cdot3 + 6\\cdot8 + 7\\cdot14 + 8\\cdot9 + 9\\cdot5 + 10\\cdot2}{41} \\approx 7.3\")"
+   },
+   {
+    "intent": "The bars with the caption: the shop orders by the mode",
+    "narration": "For ordering stock, the mode is the useful number: it says which size to buy most of.",
+    "code": "stage.play(Indicate(bars[2]))\nstage.caption(\"order more size 7s\")"
+   }
+  ]
+ },
+ {
+  "request": "how fast will I be going at the bottom of a 5 m skate ramp?",
+  "beats": [
+   {
+    "intent": "A curved ramp 5 m high with a skater dot at the top",
+    "narration": "A skater starts at the top of a ramp five metres high.",
+    "code": "stage.title(\"Height into speed\")\nramp = VMobject(color=GREY_B, stroke_width=6).set_points_smoothly([[-5, 2.0, 0], [-4, 0.0, 0], [-2.5, -1.6, 0], [0, -2.2, 0], [4, -2.2, 0]])\nskater = Dot([-5, 2.25, 0], color=YELLOW, radius=0.18)\nstage.play(Create(ramp), FadeIn(skater))\nstage.add(ramp, skater)\nh = DoubleArrow([-5.6, 2.0, 0], [-5.6, -2.2, 0], buff=0, color=GREEN)\nstage.play(GrowArrow(h))\nstage.add(h)\nstage.label(h, \"5 m\", direction=LEFT, color=GREEN)"
+   },
+   {
+    "intent": "The skater rolling down the curve, a speed readout climbing",
+    "narration": "Rolling down, height turns into speed.",
+    "code": "path = ramp.copy().shift(0.25 * UP)\nstage.play(MoveAlongPath(skater, path), run_time=2, rate_func=rate_functions.ease_in_quad)\nstage.caption(\"height becomes speed\")"
+   },
+   {
+    "intent": "Bars of energy: all height energy at the top, all motion energy at the bottom",
+    "narration": "Ignoring friction, all the energy from height becomes energy of motion.",
+    "code": "stage.clear()\nb = draw_bars(stage, [1, 0, 0, 1], labels=[\"height (top)\", \"motion (top)\", \"height (bottom)\", \"motion (bottom)\"], color=ORANGE)\nstage.caption(\"energy swaps from height to motion\")"
+   },
+   {
+    "intent": "The bars beside v = √(2gh) = √(2 × 9.8 × 5) ≈ 9.9 m/s ≈ 36 km/h",
+    "narration": "So the speed at the bottom is the square root of two g h: about ten metres a second, thirty six kilometres an hour.",
+    "code": "stage.equation(r\"v = \\sqrt{2gh} = \\sqrt{2 \\times 9.8 \\times 5}\", r\"\\approx 9.9\\ \\text{m/s}\")"
+   }
+  ]
+ },
+ {
+  "request": "how can two people share a cake fairly without arguing?",
+  "beats": [
+   {
+    "intent": "A rectangular cake and two people, A with a knife",
+    "narration": "Two people want to share a cake fairly. A gets the knife.",
+    "code": "stage.title(\"I cut, you choose\")\ncake = Rectangle(width=4, height=2, color=ORANGE, fill_opacity=0.5).move_to([0, -0.3, 0])\na = Dot([-3.5, -0.3, 0], color=BLUE, radius=0.25)\nbb = Dot([3.5, -0.3, 0], color=GREEN, radius=0.25)\nstage.play(FadeIn(cake), FadeIn(a), FadeIn(bb))\nstage.add(cake, a, bb)\nstage.label(a, \"A cuts\", direction=DOWN, color=BLUE)\nstage.label(bb, \"B chooses\", direction=DOWN, color=GREEN)"
+   },
+   {
+    "intent": "A cut dividing the cake into two pieces A thinks are equal",
+    "narration": "A cuts it into two pieces that A thinks are equal, because A gets whichever piece is left.",
+    "code": "cut = DashedLine([0.1, 0.8, 0], [0.1, -1.4, 0], color=WHITE)\nstage.play(Create(cut))\nstage.add(cut)"
+   },
+   {
+    "intent": "B picking the piece B prefers, the left piece sliding to B",
+    "narration": "B picks whichever piece B prefers.",
+    "code": "left = Rectangle(width=2.1, height=2, color=ORANGE, fill_opacity=0.5).move_to([-0.95, -0.3, 0])\nright = Rectangle(width=1.9, height=2, color=ORANGE, fill_opacity=0.5).move_to([1.05, -0.3, 0])\nstage.remove(cake)\nstage.add(left, right)\nstage.play(left.animate.next_to(bb, LEFT, buff=0.3), right.animate.next_to(a, RIGHT, buff=0.3))"
+   },
+   {
+    "intent": "Both pieces labelled 'at least half' from each person's view",
+    "narration": "A made sure both halves were fine, and B got first choice: each thinks they got at least half. No arguing needed.",
+    "code": "stage.label(left, \"≥ half for B\", direction=UP, color=GREEN)\nstage.label(right, \"≥ half for A\", direction=UP, color=BLUE)\nstage.caption(\"each gets at least half, by their own judgement\")"
+   }
+  ]
+ }
+]
