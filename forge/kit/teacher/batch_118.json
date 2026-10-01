@@ -1,0 +1,102 @@
+[
+ {
+  "request": "why is 2³ × 2² equal to 2⁵?",
+  "beats": [
+   {
+    "intent": "2³ drawn as three tiles of 2 multiplied together",
+    "narration": "Two cubed means three twos multiplied together.",
+    "code": "stage.title(\"Multiplying powers\")\nrow3 = VGroup(*[VGroup(Square(0.8, color=BLUE, fill_opacity=0.5), Text(\"2\", font_size=34)) for _ in range(3)]).arrange(RIGHT, buff=0.35).move_to([-3.6, 1.4, 0])\nstage.play(FadeIn(row3))\nstage.add(row3)\nstage.play(*[FadeIn(Text(\"×\", font_size=30).move_to((row3[i].get_right() + row3[i + 1].get_left()) / 2)) for i in range(2)])\nstage.label(row3, \"2³\", direction=LEFT, color=BLUE)"
+   },
+   {
+    "intent": "2² drawn as two tiles of 2",
+    "narration": "Two squared is two twos.",
+    "code": "row2 = VGroup(*[VGroup(Square(0.8, color=ORANGE, fill_opacity=0.5), Text(\"2\", font_size=34)) for _ in range(2)]).arrange(RIGHT, buff=0.35).next_to(row3, DOWN, buff=0.6, aligned_edge=LEFT)\nstage.play(FadeIn(row2))\nstage.add(row2)\nstage.play(FadeIn(Text(\"×\", font_size=30).move_to((row2[0].get_right() + row2[1].get_left()) / 2)))\nstage.label(row2, \"2²\", direction=LEFT, color=ORANGE)"
+   },
+   {
+    "intent": "All five tiles in one row: five twos multiplied, 32",
+    "narration": "Multiply them together and you just have five twos in a row: two to the fifth, thirty two.",
+    "code": "row5 = VGroup(*[VGroup(Square(0.8, color=BLUE if i < 3 else ORANGE, fill_opacity=0.5), Text(\"2\", font_size=34)) for i in range(5)]).arrange(RIGHT, buff=0.35).move_to([-2.8, -1.6, 0])\nstage.play(TransformFromCopy(VGroup(row3, row2), row5))\nstage.add(row5)\nstage.play(*[FadeIn(Text(\"×\", font_size=30).move_to((row5[i].get_right() + row5[i + 1].get_left()) / 2)) for i in range(4)])\nstage.label(row5, \"2⁵ = 32\", direction=DOWN, color=GREEN)"
+   },
+   {
+    "intent": "The tiles beside 2³ × 2² = 2^(3+2) = 2⁵ = 32",
+    "narration": "Multiplying powers of the same number adds the counts: three plus two is five.",
+    "code": "stage.equation(r\"2^3 \\times 2^2 = 2^{3+2}\", r\"= 2^5 = 32\")"
+   }
+  ]
+ },
+ {
+  "request": "a rod is 4.5 cm to the nearest millimetre: how long could it really be?",
+  "beats": [
+   {
+    "intent": "A number line from 4.3 to 4.7 with 4.5 marked as the measurement",
+    "narration": "A rod measures four point five centimetres, to the nearest millimetre.",
+    "code": "stage.title(\"Upper and lower bounds\")\nnl = NumberLine(x_range=[4.3, 4.7, 0.05], length=10, include_numbers=False).move_to([0, -0.5, 0])\nnums = VGroup(*[Text(f\"{v:.1f}\", font_size=26).next_to(nl.n2p(v), DOWN, buff=0.25) for v in (4.3, 4.4, 4.5, 4.6, 4.7)])\nstage.play(Create(nl), FadeIn(nums))\nstage.add(nl, nums)\nm = Dot(nl.n2p(4.5), color=YELLOW, radius=0.1)\nstage.play(FadeIn(m))\nstage.add(m)\nstage.label(m, \"measured: 4.5\", direction=UP, color=YELLOW)"
+   },
+   {
+    "intent": "Lengths that round to 4.5 shaded green from 4.45 to 4.55; 4.44 and 4.56 in red outside",
+    "narration": "Anything from four point four five up to just under four point five five rounds to four point five. Four point four four rounds down to four point four; four point five six rounds up to four point six.",
+    "code": "band = Rectangle(width=nl.n2p(4.55)[0] - nl.n2p(4.45)[0], height=0.5, color=GREEN, fill_opacity=0.3, stroke_width=0).move_to((nl.n2p(4.45) + nl.n2p(4.55)) / 2)\nstage.play(FadeIn(band))\nstage.add(band)\nouts = VGroup(*[Dot(nl.n2p(v), color=RED, radius=0.08) for v in (4.44, 4.56)])\nstage.play(FadeIn(outs))\nstage.add(outs)\nstage.label(outs[0], \"4.44 → 4.4\", direction=UP + LEFT, color=RED)\nstage.label(outs[1], \"4.56 → 4.6\", direction=UP + RIGHT, color=RED)"
+   },
+   {
+    "intent": "A filled dot at 4.45 (lower bound) and an open circle at 4.55 (upper bound)",
+    "narration": "The lower bound, four point four five, is included. The upper bound, four point five five, is not: it would round up.",
+    "code": "lo = Dot(nl.n2p(4.45), color=GREEN, radius=0.1)\nhi = Circle(radius=0.1, color=GREEN, stroke_width=4).move_to(nl.n2p(4.55))\nstage.play(FadeIn(lo), Create(hi))\nstage.add(lo, hi)\nstage.play(FadeIn(Text(\"lower: 4.45\", font_size=26, color=GREEN).move_to(nl.n2p(4.45) + 1.3 * DOWN + 0.6 * LEFT)), FadeIn(Text(\"upper: 4.55\", font_size=26, color=GREEN).move_to(nl.n2p(4.55) + 1.3 * DOWN + 0.6 * RIGHT)))"
+   },
+   {
+    "intent": "The line beside 4.45 ≤ length < 4.55",
+    "narration": "So the true length is at least four point four five and less than four point five five.",
+    "code": "stage.equation(r\"4.45 \\le L < 4.55\")"
+   }
+  ]
+ },
+ {
+  "request": "why are angles in the same segment of a circle equal?",
+  "beats": [
+   {
+    "intent": "A circle with a chord AB across its lower part",
+    "narration": "Draw a circle and a chord A B.",
+    "code": "stage.title(\"Angles in the same segment\")\nc = np.array([-3, -0.3, 0])\nR = 2.2\nP = lambda deg: c + R * np.array([np.cos(deg * DEGREES), np.sin(deg * DEGREES), 0])\ncircle = Circle(radius=R, color=WHITE).move_to(c)\nA, B = P(210), P(330)\nchord = Line(A, B, color=BLUE)\nstage.play(Create(circle), Create(chord))\nstage.add(circle, chord)\nstage.play(FadeIn(Text(\"A\", font_size=28).move_to(c + 1.15 * (A - c))), FadeIn(Text(\"B\", font_size=28).move_to(c + 1.15 * (B - c))))"
+   },
+   {
+    "intent": "A point C on the upper arc joined to A and B, the angle at C marked 60°",
+    "narration": "Pick any point C on the big arc and join it to A and B. The angle at C is sixty degrees.",
+    "code": "C = P(100)\ntri_c = VGroup(Line(C, A), Line(C, B)).set_color(YELLOW)\nang_c = Angle(Line(C, A), Line(C, B), radius=0.5, color=YELLOW)\nstage.play(Create(tri_c), Create(ang_c))\nstage.add(tri_c, ang_c)\nstage.play(FadeIn(Text(\"C\", font_size=28).move_to(c + 1.12 * (C - c))))\nstage.label(ang_c, \"60°\", direction=DOWN, color=YELLOW)"
+   },
+   {
+    "intent": "A second point D on the same arc, its angle to A and B also 60°",
+    "narration": "Pick another point D on the same arc. Its angle is sixty degrees too.",
+    "code": "D = P(40)\ntri_d = VGroup(Line(D, A), Line(D, B)).set_color(GREEN)\nang_d = Angle(Line(D, A), Line(D, B), radius=0.5, color=GREEN)\nstage.play(Create(tri_d), Create(ang_d))\nstage.add(tri_d, ang_d)\nstage.play(FadeIn(Text(\"D\", font_size=28).move_to(c + 1.12 * (D - c))))\nstage.label(ang_d, \"60°\", direction=LEFT, color=GREEN)"
+   },
+   {
+    "intent": "Radii OA and OB with the 120° angle at the centre, beside ∠ACB = ∠ADB = ½ × 120° = 60°",
+    "narration": "Both are half the angle at the centre, a hundred and twenty degrees, so they must be equal.",
+    "code": "radii = VGroup(Line(c, A), Line(c, B)).set_color(ORANGE)\nang_o = Angle(Line(c, A), Line(c, B), radius=0.4, color=ORANGE)\nstage.play(Create(radii), Create(ang_o))\nstage.add(radii, ang_o)\nstage.label(ang_o, \"120°\", direction=DOWN, color=ORANGE)\nstage.equation(r\"\\angle ACB = \\angle ADB\", r\"= \\tfrac{1}{2} \\times 120^\\circ = 60^\\circ\")"
+   }
+  ]
+ },
+ {
+  "request": "how do you find the nth term of 3, 7, 11, 15, ...?",
+  "beats": [
+   {
+    "intent": "The first four terms drawn as stacks of 3, 7, 11 and 15 dots",
+    "narration": "Here's a sequence drawn as stacks of dots: three, seven, eleven, fifteen.",
+    "code": "stage.title(\"The nth term\")\nxs = [-5.0, -3.6, -2.2, -0.8]\nstacks = VGroup(*[VGroup(*[Dot([x, -2.5 + 0.28 * j, 0], radius=0.1, color=BLUE) for j in range(4 * (n + 1) - 1)]) for n, x in enumerate(xs)])\nstage.play(LaggedStart(*[FadeIn(s) for s in stacks], lag_ratio=0.3))\nstage.add(stacks)\nstage.play(*[FadeIn(Text(f\"n = {n + 1}\", font_size=22).move_to([x, -3.0, 0])) for n, x in enumerate(xs)])"
+   },
+   {
+    "intent": "+4 marked between each pair of stacks",
+    "narration": "Each stack has four more dots than the one before.",
+    "code": "hops = VGroup(*[CurvedArrow([xs[i] + 0.2, -2.5 + 0.28 * (4 * (i + 1) - 1) + 0.2, 0], [xs[i + 1] - 0.2, -2.5 + 0.28 * (4 * (i + 2) - 1) + 0.2, 0], angle=-PI / 3, color=YELLOW) for i in range(3)])\nstage.play(Create(hops))\nstage.add(hops)\nstage.play(*[FadeIn(Text(\"+4\", font_size=24, color=YELLOW).next_to(h, UP, buff=0.05)) for h in hops])"
+   },
+   {
+    "intent": "A hollow dot on top of each stack showing 4n, one more than the term",
+    "narration": "Going up in fours means it's linked to the four times table: four, eight, twelve, sixteen. Each stack is one short of that.",
+    "code": "ghosts = VGroup(*[Circle(radius=0.1, color=ORANGE).move_to([x, -2.5 + 0.28 * (4 * (n + 1) - 1), 0]) for n, x in enumerate(xs)])\nstage.play(FadeIn(ghosts))\nstage.add(ghosts)\nstage.label(ghosts, \"4n, minus 1\", direction=RIGHT, color=ORANGE)"
+   },
+   {
+    "intent": "The stacks beside nth term = 4n − 1, and the 100th term = 399",
+    "narration": "So the nth term is four n minus one. The hundredth term is four hundred minus one, three hundred and ninety nine.",
+    "code": "stage.equation(r\"T_n = 4n - 1\", r\"T_{100} = 400 - 1 = 399\")"
+   }
+  ]
+ }
+]
