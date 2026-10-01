@@ -1,0 +1,102 @@
+[
+ {
+  "request": "if 5 pens cost £3.50, how much do 8 pens cost?",
+  "beats": [
+   {
+    "intent": "Five pen blocks in a bar costing £3.50 altogether",
+    "narration": "Five pens cost three pounds fifty.",
+    "code": "stage.title(\"Finding the price of one\")\npw = 1.0\nfive = VGroup(*[Rectangle(width=pw, height=0.6, color=BLUE, fill_opacity=0.5) for _ in range(5)]).arrange(RIGHT, buff=0).move_to([-6 + 2.5 * pw, 1.4, 0])\nstage.play(FadeIn(five))\nstage.add(five)\nstage.play(*[FadeIn(Text(\"pen\", font_size=22).move_to(b)) for b in five])\nstage.label(five, \"£3.50\", direction=RIGHT, color=BLUE)"
+   },
+   {
+    "intent": "One pen block lifted out: £3.50 ÷ 5 = 70p",
+    "narration": "Find one pen first: three fifty shared between five is seventy pence.",
+    "code": "one = five[0].copy().set_color(YELLOW).set_fill(YELLOW, opacity=0.5)\nstage.play(one.animate.move_to([-5.5, 0.2, 0]))\nstage.add(one)\nstage.label(one, \"1 pen = 70p\", direction=RIGHT, color=YELLOW)"
+   },
+   {
+    "intent": "Eight pen blocks built from the single one: 8 × 70p",
+    "narration": "Then build up to eight pens: eight lots of seventy pence.",
+    "code": "eight = VGroup(*[Rectangle(width=pw * 0.7, height=0.6, color=GREEN, fill_opacity=0.5) for _ in range(8)]).arrange(RIGHT, buff=0).move_to([-6 + 4 * 0.7 * pw, -1.0, 0])\nstage.play(LaggedStart(*[TransformFromCopy(one, b) for b in eight], lag_ratio=0.1))\nstage.add(eight)\nstage.label(eight, \"£5.60\", direction=RIGHT, color=GREEN)"
+   },
+   {
+    "intent": "The bars beside 3.50 ÷ 5 = 0.70 and 8 × 0.70 = 5.60",
+    "narration": "Divide to find one, then multiply to find eight: five pounds sixty.",
+    "code": "stage.equation(r\"3.50 \\div 5 = 0.70\", r\"8 \\times 0.70 = 5.60\")"
+   }
+  ]
+ },
+ {
+  "request": "how many degrees is it from north to south-east, turning clockwise?",
+  "beats": [
+   {
+    "intent": "An eight-point compass rose: N, NE, E, SE, S, SW, W, NW",
+    "narration": "A compass has eight main points, each forty five degrees apart.",
+    "code": "stage.title(\"Compass turns\")\nc = np.array([-3, -0.3, 0])\nnames = [\"N\", \"NE\", \"E\", \"SE\", \"S\", \"SW\", \"W\", \"NW\"]\ndirs = [np.array([np.sin(k * PI / 4), np.cos(k * PI / 4), 0]) for k in range(8)]\nspokes = VGroup(*[Line(c, c + (2.0 if k % 2 == 0 else 1.4) * d, color=GREY_B) for k, d in enumerate(dirs)])\nlabels = VGroup(*[Text(n, font_size=26).move_to(c + (2.4 if k % 2 == 0 else 1.75) * d) for k, (n, d) in enumerate(zip(names, dirs))])\nstage.play(Create(spokes), FadeIn(labels))\nstage.add(spokes, labels)"
+   },
+   {
+    "intent": "A pointer facing north",
+    "narration": "Start facing north.",
+    "code": "pointer = Arrow(c, c + 1.8 * UP, buff=0, color=YELLOW, stroke_width=8)\nstage.play(GrowArrow(pointer))\nstage.add(pointer)"
+   },
+   {
+    "intent": "The pointer turning clockwise through NE and E to SE, three 45° steps, the swept angle shaded",
+    "narration": "Turn clockwise: to north east is forty five, to east is ninety, to south east is a hundred and thirty five.",
+    "code": "sweep = Arc(radius=0.9, start_angle=PI / 2, angle=-3 * PI / 4, arc_center=c, color=ORANGE, stroke_width=8)\nstage.play(Rotate(pointer, angle=-3 * PI / 4, about_point=c), Create(sweep), run_time=2)\nstage.add(pointer, sweep)\nstage.play(FadeIn(Text(\"135°\", font_size=26, color=ORANGE).move_to(c + 1.3 * np.array([np.sin(3 * PI / 8), np.cos(3 * PI / 8), 0]))))"
+   },
+   {
+    "intent": "The rose beside 3 × 45° = 135°",
+    "narration": "Three steps of forty five degrees: a hundred and thirty five degrees clockwise.",
+    "code": "stage.equation(r\"3 \\times 45^\\circ = 135^\\circ\")"
+   }
+  ]
+ },
+ {
+  "request": "why is the square root of 12 equal to 2 times the square root of 3?",
+  "beats": [
+   {
+    "intent": "A square of area 12",
+    "narration": "The square root of twelve is the side of a square with area twelve.",
+    "code": "stage.title(\"Simplifying √12\")\nk = 0.8\nside = np.sqrt(12) * k\nbig = Square(side, color=BLUE, fill_opacity=0.3).move_to([-3.2, -0.3, 0])\nstage.play(Create(big))\nstage.add(big)\na12 = Text(\"area 12\", font_size=30).move_to(big)\nstage.play(FadeIn(a12))\nstage.label(Line(big.get_corner(DL), big.get_corner(DR)), \"√12\", direction=DOWN, color=BLUE)"
+   },
+   {
+    "intent": "The square cut into four smaller squares, each of area 3",
+    "narration": "Cut it into four equal squares. Twelve shared four ways: each has area three.",
+    "code": "small = side / 2\nquarters = VGroup(*[Square(small, color=ORANGE, fill_opacity=0.25).move_to(big.get_corner(UL) + np.array([(i + 0.5) * small, -(j + 0.5) * small, 0])) for i in range(2) for j in range(2)])\nstage.play(FadeOut(a12), Create(quarters))\nstage.add(quarters)\nstage.play(*[FadeIn(Text(\"3\", font_size=28, color=ORANGE).move_to(q)) for q in quarters])"
+   },
+   {
+    "intent": "The big square's side shown as two small sides, each √3",
+    "narration": "Each small square has side root three, and two of them make the big side. So root twelve is two root three.",
+    "code": "left = Line(big.get_corner(UL), big.get_corner(UL) + small * DOWN, color=YELLOW, stroke_width=6)\nleft2 = Line(big.get_corner(UL) + small * DOWN, big.get_corner(DL), color=YELLOW, stroke_width=6)\nstage.play(Create(left), Create(left2))\nstage.add(left, left2)\nstage.label(left, \"√3\", direction=LEFT, color=YELLOW)\nstage.label(left2, \"√3\", direction=LEFT, color=YELLOW)"
+   },
+   {
+    "intent": "The squares beside √12 = √(4 × 3) = 2√3 ≈ 3.46",
+    "narration": "In symbols: twelve is four times three, and the square root of four is two.",
+    "code": "stage.equation(r\"\\sqrt{12} = \\sqrt{4 \\times 3}\", r\"= 2\\sqrt{3} \\approx 3.46\")"
+   }
+  ]
+ },
+ {
+  "request": "how do you bisect an angle with a compass?",
+  "beats": [
+   {
+    "intent": "An angle of 60° between two rays from a point A",
+    "narration": "Here's an angle at A. We want the line that cuts it exactly in half, with just a compass and a ruler.",
+    "code": "stage.title(\"Bisecting an angle\")\nA = np.array([-5.6, -2.2, 0])\nu = np.array([1, 0, 0])\nv = np.array([np.cos(PI / 3), np.sin(PI / 3), 0])\nrays = VGroup(Line(A, A + 5 * u, color=WHITE), Line(A, A + 5 * v, color=WHITE))\nstage.play(Create(rays))\nstage.add(rays)\nstage.play(FadeIn(Text(\"A\", font_size=26).next_to(A, DL, buff=0.1)))"
+   },
+   {
+    "intent": "An arc centred at A cutting both rays at P and Q",
+    "narration": "Put the compass point on A and draw an arc that crosses both arms, at P and Q.",
+    "code": "arc_a = Arc(radius=2.0, start_angle=-10 * DEGREES, angle=80 * DEGREES, arc_center=A, color=BLUE)\nstage.play(Create(arc_a))\nstage.add(arc_a)\nP, Q = A + 2 * u, A + 2 * v\nstage.play(FadeIn(Dot(P, color=BLUE)), FadeIn(Dot(Q, color=BLUE)), FadeIn(Text(\"P\", font_size=24, color=BLUE).next_to(P, DR, buff=0.15)), FadeIn(Text(\"Q\", font_size=24, color=BLUE).next_to(Q, UL, buff=0.2)))"
+   },
+   {
+    "intent": "Equal arcs from P and Q crossing at R",
+    "narration": "Now, with the same opening, draw an arc from P and another from Q. They cross at a point R.",
+    "code": "d = 2.981\nR = A + d * np.array([np.cos(PI / 6), np.sin(PI / 6), 0])\narc_p = Arc(radius=1.6, start_angle=50 * DEGREES, angle=40 * DEGREES, arc_center=P, color=GREEN)\narc_q = Arc(radius=1.6, start_angle=-30 * DEGREES, angle=40 * DEGREES, arc_center=Q, color=GREEN)\nstage.play(Create(arc_p), Create(arc_q))\nstage.add(arc_p, arc_q)\nstage.play(FadeIn(Dot(R, color=YELLOW)), FadeIn(Text(\"R\", font_size=24, color=YELLOW).next_to(R, UR, buff=0.08)))"
+   },
+   {
+    "intent": "The line from A through R splitting the angle into two 30° angles, beside 60° ÷ 2 = 30°",
+    "narration": "Join A to R and carry on. That line splits the angle into two equal halves, thirty degrees each.",
+    "code": "bis = Line(A, A + 5 * np.array([np.cos(PI / 6), np.sin(PI / 6), 0]), color=YELLOW, stroke_width=5)\nstage.play(Create(bis))\nstage.add(bis)\na1 = Angle(Line(A, A + u), Line(A, R), radius=0.9, color=ORANGE)\na2 = Angle(Line(A, R), Line(A, A + v), radius=1.1, color=ORANGE)\nstage.play(Create(a1), Create(a2))\nstage.add(a1, a2)\nstage.equation(r\"60^\\circ \\div 2 = 30^\\circ\")"
+   }
+  ]
+ }
+]
