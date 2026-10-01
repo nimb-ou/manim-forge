@@ -1,0 +1,102 @@
+[
+ {
+  "request": "how do you turn 0.272727... into a fraction?",
+  "beats": [
+   {
+    "intent": "x = 0.272727... written digit by digit, the repeating 27s boxed",
+    "narration": "Call the number x: nought point two seven two seven, repeating forever. The block two seven repeats.",
+    "code": "stage.title(\"A recurring decimal as a fraction\")\nstep = 0.42\ncol = lambda i: -2.6 + i * step\nrow = lambda chars, point, y, color=WHITE: VGroup(*[Text(ch, font_size=36, color=color).move_to([col(i - point), y - (0.13 if ch == \".\" else 0), 0]) for i, ch in enumerate(chars)])\nr1 = row(\"0.272727…\", 1, 1.2)\nstage.play(FadeIn(Text(\"x =\", font_size=36).move_to([col(-3.5), 1.2, 0])), FadeIn(r1))\nstage.add(r1)\nboxes = VGroup(*[SurroundingRectangle(VGroup(r1[k], r1[k + 1]), color=YELLOW, buff=0.06) for k in (2, 4, 6)])\nstage.play(Create(boxes))\nstage.add(boxes)"
+   },
+   {
+    "intent": "100x = 27.2727... written underneath, decimal points lined up, the two tails boxed as identical",
+    "narration": "The block is two digits long, so multiply by a hundred: every digit moves two places left. A hundred x is twenty seven point two seven two seven, and after the point the two numbers have exactly the same tail.",
+    "code": "stage.play(FadeOut(boxes))\nr2 = row(\"27.2727…\", 2, 0.2, color=BLUE)\nstage.play(FadeIn(Text(\"100x =\", font_size=36, color=BLUE).move_to([col(-4.6), 0.2, 0])), FadeIn(r2))\nstage.add(r2)\nt1 = SurroundingRectangle(VGroup(*r1[2:]), color=GREEN, buff=0.08)\nt2 = SurroundingRectangle(VGroup(*r2[3:]), color=GREEN, buff=0.08)\nstage.play(Create(t1), Create(t2))\nstage.add(t1, t2)\nsame = stage.label(t2, \"same tail\", direction=RIGHT, color=GREEN)"
+   },
+   {
+    "intent": "Subtracting: the tails cancel, leaving 99x = 27",
+    "narration": "Subtract x from a hundred x. The endless tails cancel exactly, and what's left is ninety nine x equals twenty seven.",
+    "code": "line = Line([col(-5), -0.4, 0], [col(7), -0.4, 0], color=GREY_B)\nstage.play(Create(line))\nstage.add(line)\nstage.play(FadeOut(VGroup(*r1[2:]), t1), FadeOut(VGroup(*r2[3:]), t2), FadeOut(same))\nres = Text(\"99x = 27\", font_size=40, color=YELLOW).move_to([col(-0.5), -1.1, 0])\nstage.play(FadeIn(res))\nstage.add(res)"
+   },
+   {
+    "intent": "The working beside x = 27/99 = 3/11",
+    "narration": "So x is twenty seven ninety ninths, which simplifies to three elevenths. Check: three divided by eleven is nought point two seven two seven.",
+    "code": "stage.equation(r\"99x = 27\", r\"x = \\frac{27}{99} = \\frac{3}{11}\")"
+   }
+  ]
+ },
+ {
+  "request": "what is the cube root of 64?",
+  "beats": [
+   {
+    "intent": "64 unit cubes laid out flat in an 8 by 8 square",
+    "narration": "Sixty four little cubes. What's the side of the bigger cube they'd build?",
+    "code": "stage.title(\"The cube root of 64\")\ns = 0.35\nflat = VGroup(*[Square(s, color=BLUE, fill_opacity=0.5, stroke_width=1) for _ in range(64)]).arrange_in_grid(rows=8, cols=8, buff=0).move_to([-3.2, -0.3, 0])\nstage.play(FadeIn(flat))\nstage.add(flat)\nn64 = stage.label(flat, \"64 cubes\", direction=DOWN, color=BLUE)"
+   },
+   {
+    "intent": "The 64 cubes regrouped into four 4 by 4 layers of 16",
+    "narration": "Group them into layers of four by four: sixteen in a layer, and exactly four layers.",
+    "code": "stage.play(FadeOut(n64))\ntargets = []\nfor L in range(4):\n    for j in range(4):\n        for i in range(4):\n            targets.append(np.array([-6.0 + L * 1.75 + i * s, 0.9 - j * s, 0]))\nstage.play(*[sq.animate.move_to(t) for sq, t in zip(flat, targets)], run_time=1.8)\nstage.add(flat)\nstage.play(*[FadeIn(Text(\"16\", font_size=24).move_to([-6.0 + L * 1.75 + 1.5 * s, 0.9 - 4.3 * s, 0])) for L in range(4)])"
+   },
+   {
+    "intent": "The four layers stacked into one cube 4 cubes along each edge",
+    "narration": "Stack the four layers and you get a cube four along each edge.",
+    "code": "stage.clear()\ne = 0.45\noff = np.array([0.22, 0.22, 0])\no = np.array([-4.2, -1.6, 0])\nfront = VGroup(*[Square(e, color=BLUE, fill_opacity=0.5, stroke_width=1).move_to(o + np.array([(i + 0.5) * e, (j + 0.5) * e, 0])) for i in range(4) for j in range(4)])\ntop = VGroup(*[Polygon(*[o + np.array([(i + a) * e, 4 * e, 0]) + (d + b) * off for a, b in ((0, 0), (1, 0), (1, 1), (0, 1))], color=BLUE_B, fill_opacity=0.35, stroke_width=1) for i in range(4) for d in range(4)])\nside = VGroup(*[Polygon(*[o + np.array([4 * e, (j + a) * e, 0]) + (d + b) * off for a, b in ((0, 0), (1, 0), (1, 1), (0, 1))][:1] + [o + np.array([4 * e, j * e, 0]) + (d + 1) * off, o + np.array([4 * e, (j + 1) * e, 0]) + (d + 1) * off, o + np.array([4 * e, (j + 1) * e, 0]) + d * off], color=BLUE_D, fill_opacity=0.35, stroke_width=1) for j in range(4) for d in range(4)])\ncube = VGroup(front, top, side)\nstage.play(FadeIn(cube, lag_ratio=0.02), run_time=1.5)\nstage.add(cube)\nstage.label(Line(o, o + 4 * e * RIGHT), \"4\", direction=DOWN, color=YELLOW)\nstage.label(Line(o, o + 4 * e * UP), \"4\", direction=LEFT, color=YELLOW)"
+   },
+   {
+    "intent": "The cube beside 4 × 4 × 4 = 64, so ∛64 = 4",
+    "narration": "Four times four times four is sixty four, so the cube root of sixty four is four.",
+    "code": "stage.equation(r\"4 \\times 4 \\times 4 = 64\", r\"\\sqrt[3]{64} = 4\")"
+   }
+  ]
+ },
+ {
+  "request": "how do you construct a perpendicular bisector with a compass?",
+  "beats": [
+   {
+    "intent": "A line segment AB",
+    "narration": "Here's a segment from A to B. We want the line that cuts it in half at right angles, with just a compass and a ruler.",
+    "code": "stage.title(\"Perpendicular bisector\")\nA = np.array([-5, -0.5, 0])\nB = np.array([-1, -0.5, 0])\nseg = Line(A, B, color=WHITE, stroke_width=5)\nstage.play(Create(seg))\nstage.add(seg)\nstage.play(FadeIn(Dot(A)), FadeIn(Dot(B)), FadeIn(Text(\"A\", font_size=28).next_to(A, LEFT)), FadeIn(Text(\"B\", font_size=28).next_to(B, RIGHT)))"
+   },
+   {
+    "intent": "A compass arc drawn from A with a radius more than half of AB",
+    "narration": "Open the compass to more than half the length, put the point on A, and draw an arc.",
+    "code": "R = 2.8\narc_a = Arc(radius=R, start_angle=-60 * DEGREES, angle=120 * DEGREES, arc_center=A, color=BLUE)\nradius = DashedLine(A, A + R * np.array([np.cos(30 * DEGREES), np.sin(30 * DEGREES), 0]), color=BLUE)\nstage.play(Create(radius))\nstage.play(Create(arc_a))\nstage.add(radius, arc_a)"
+   },
+   {
+    "intent": "The same arc from B, crossing the first at P above and Q below",
+    "narration": "Keep the same opening and draw an arc from B. The two arcs cross at two points, P and Q.",
+    "code": "arc_b = Arc(radius=R, start_angle=120 * DEGREES, angle=120 * DEGREES, arc_center=B, color=GREEN)\nstage.play(FadeOut(radius))\nstage.play(Create(arc_b))\nstage.add(arc_b)\nh = np.sqrt(R ** 2 - 2 ** 2)\nP = np.array([-3, -0.5 + h, 0])\nQ = np.array([-3, -0.5 - h, 0])\nstage.play(FadeIn(Dot(P, color=YELLOW)), FadeIn(Dot(Q, color=YELLOW)), FadeIn(Text(\"P\", font_size=28, color=YELLOW).next_to(P, UP)), FadeIn(Text(\"Q\", font_size=28, color=YELLOW).next_to(Q, DOWN)))"
+   },
+   {
+    "intent": "The line PQ through the middle M of AB, a right-angle mark at M, beside AM = MB",
+    "narration": "Join P and Q. That line passes through the exact middle of A B, and crosses it at a right angle: every point on it is the same distance from A as from B.",
+    "code": "pq = Line(P, Q, color=YELLOW, stroke_width=5)\nstage.play(Create(pq))\nstage.add(pq)\nM = np.array([-3, -0.5, 0])\ncorner = VGroup(Line(M + 0.25 * RIGHT, M + 0.25 * RIGHT + 0.25 * UP), Line(M + 0.25 * UP, M + 0.25 * RIGHT + 0.25 * UP)).set_stroke(WHITE, 2)\nstage.play(Create(corner), FadeIn(Text(\"M\", font_size=26).next_to(M, DL, buff=0.1)))\nstage.add(corner)\nstage.equation(r\"AM = MB\", r\"PQ \\perp AB\")"
+   }
+  ]
+ },
+ {
+  "request": "how many kilometres is one degree around the equator?",
+  "beats": [
+   {
+    "intent": "A circle for the Earth with its equator, 40 000 km around",
+    "narration": "The Earth's equator is about forty thousand kilometres around.",
+    "code": "stage.title(\"One degree of the equator\")\nc = np.array([-3, -0.3, 0])\nearth = Circle(radius=2.2, color=BLUE, fill_opacity=0.15).move_to(c)\nstage.play(Create(earth))\nstage.add(earth)\nstage.label(earth, \"40 000 km around\", direction=UP, color=BLUE)"
+   },
+   {
+    "intent": "A 30° slice from the centre, one twelfth of the way round: about 3333 km",
+    "narration": "A full turn is three hundred and sixty degrees. A thirty degree slice is a twelfth of that: about three thousand three hundred kilometres of equator.",
+    "code": "wedge = AnnularSector(inner_radius=0, outer_radius=2.2, angle=PI / 6, start_angle=0, color=YELLOW, fill_opacity=0.4).move_arc_center_to(c)\nstage.play(FadeIn(wedge))\nstage.add(wedge)\nedge = Arc(radius=2.2, start_angle=0, angle=PI / 6, arc_center=c, color=ORANGE, stroke_width=8)\nstage.play(Create(edge))\nstage.add(edge)\nstage.label(edge, \"30°: about 3333 km\", direction=RIGHT, color=ORANGE)"
+   },
+   {
+    "intent": "Tick marks every 10° around the circle, each gap about 1111 km",
+    "narration": "Mark every ten degrees: thirty six gaps, each about one thousand one hundred kilometres. Each degree is a tenth of a gap.",
+    "code": "ticks = VGroup(*[Line(c + 1.9 * np.array([np.cos(a), np.sin(a), 0]), c + 2.2 * np.array([np.cos(a), np.sin(a), 0]), color=WHITE) for a in np.arange(0, TAU, TAU / 36)])\nstage.play(Create(ticks, lag_ratio=0.05))\nstage.add(ticks)\nstage.label(earth, \"every 10° ≈ 1111 km\", direction=DOWN, color=WHITE)"
+   },
+   {
+    "intent": "The circle beside 40 000 ÷ 360 ≈ 111 km per degree",
+    "narration": "Forty thousand divided by three hundred and sixty is about a hundred and eleven kilometres for every degree.",
+    "code": "stage.equation(r\"40\\,000 \\div 360 \\approx 111 \\, \\mathrm{km}\", r\"40\\,000 \\div 12 \\approx 3333 \\, \\mathrm{km}\")"
+   }
+  ]
+ }
+]
