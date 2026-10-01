@@ -1,0 +1,102 @@
+[
+ {
+  "request": "how do you simplify the ratio 12:18?",
+  "beats": [
+   {
+    "intent": "12 red counters in two rows and 18 blue counters in three rows",
+    "narration": "A bag has twelve red counters and eighteen blue: a ratio of twelve to eighteen.",
+    "code": "stage.title(\"Simplifying 12 : 18\")\nred = VGroup(*[Dot([-5.8 + 0.45 * i, 1.6 - 0.5 * j, 0], radius=0.15, color=RED) for j in range(2) for i in range(6)])\nblue = VGroup(*[Dot([-5.8 + 0.45 * i, -0.2 - 0.5 * j, 0], radius=0.15, color=BLUE) for j in range(3) for i in range(6)])\nstage.play(FadeIn(red), FadeIn(blue))\nstage.add(red, blue)\nstage.label(red, \"12\", direction=LEFT, color=RED)\nstage.label(blue, \"18\", direction=LEFT, color=BLUE)"
+   },
+   {
+    "intent": "Each row of 6 boxed: 2 groups of red, 3 groups of blue",
+    "narration": "Both numbers split into groups of six: twelve is two sixes and eighteen is three sixes.",
+    "code": "rows = VGroup(*[SurroundingRectangle(VGroup(*red[6 * j:6 * j + 6]), color=YELLOW, buff=0.08) for j in range(2)], *[SurroundingRectangle(VGroup(*blue[6 * j:6 * j + 6]), color=YELLOW, buff=0.08) for j in range(3)])\nstage.play(Create(rows))\nstage.add(rows)\nstage.label(rows, \"groups of 6\", direction=RIGHT, color=YELLOW)"
+   },
+   {
+    "intent": "Each group of six shrunk to one block: 2 red blocks and 3 blue blocks",
+    "narration": "Replace each group of six by a single block: two red blocks and three blue. The proportions haven't changed.",
+    "code": "rb = VGroup(*[Square(0.45, color=RED, fill_opacity=0.7) for _ in range(2)]).arrange(DOWN, buff=0.05).move_to([-0.6, 1.35, 0])\nbb = VGroup(*[Square(0.45, color=BLUE, fill_opacity=0.7) for _ in range(3)]).arrange(DOWN, buff=0.05).move_to([-0.6, -0.7, 0])\nstage.play(TransformFromCopy(VGroup(*rows[:2]), rb), TransformFromCopy(VGroup(*rows[2:]), bb), run_time=1.3)\nstage.add(rb, bb)\nstage.label(bb, \"2 : 3\", direction=DOWN, color=GREEN)"
+   },
+   {
+    "intent": "The counters beside 12 : 18 = 2 : 3, dividing both by 6",
+    "narration": "Divide both sides by six, their highest common factor: twelve to eighteen simplifies to two to three.",
+    "code": "stage.equation(r\"12 : 18\", r\"= 2 : 3\")"
+   }
+  ]
+ },
+ {
+  "request": "why are 2/3, 4/6 and 8/12 the same fraction?",
+  "beats": [
+   {
+    "intent": "A bar cut into thirds with two shaded: 2/3",
+    "narration": "Shade two thirds of a bar.",
+    "code": "stage.title(\"Equivalent fractions\")\nw = 6\nx0 = -6\nbar = lambda n, k, y: VGroup(*[Rectangle(width=w / n, height=0.6, color=WHITE, fill_color=BLUE, fill_opacity=0.7 if i < k else 0) for i in range(n)]).arrange(RIGHT, buff=0).move_to([x0 + w / 2, y, 0])\nb3 = bar(3, 2, 1.6)\nstage.play(FadeIn(b3))\nstage.add(b3)\nstage.label(b3, \"2/3\", direction=RIGHT, color=BLUE)"
+   },
+   {
+    "intent": "The same bar with each third cut in half: 4 of 6 shaded",
+    "narration": "Cut every third in half. There are now six pieces and four are shaded, but the shaded length is the same.",
+    "code": "b6 = bar(6, 4, 0.4)\nstage.play(TransformFromCopy(b3, b6))\nstage.add(b6)\nstage.label(b6, \"4/6\", direction=RIGHT, color=BLUE)"
+   },
+   {
+    "intent": "Cut again into twelfths: 8 of 12 shaded, the shaded edge lined up across all three bars",
+    "narration": "Cut each piece in half again: eight of twelve. A dashed line shows the shaded part ends in the same place every time.",
+    "code": "b12 = bar(12, 8, -0.8)\nstage.play(TransformFromCopy(b6, b12))\nstage.add(b12)\nstage.label(b12, \"8/12\", direction=RIGHT, color=BLUE)\nedge = DashedLine([x0 + w * 2 / 3, 2.1, 0], [x0 + w * 2 / 3, -1.3, 0], color=YELLOW)\nstage.play(Create(edge))\nstage.add(edge)"
+   },
+   {
+    "intent": "The bars beside 2/3 = 4/6 = 8/12, top and bottom multiplied by the same number",
+    "narration": "Doubling the pieces doubles both the top and the bottom. Multiply top and bottom by the same number and the fraction doesn't change.",
+    "code": "stage.equation(r\"\\frac{2}{3} = \\frac{2 \\times 2}{3 \\times 2} = \\frac{4}{6}\", r\"\\frac{4}{6} = \\frac{8}{12}\")"
+   }
+  ]
+ },
+ {
+  "request": "why do a heavy ball and a light ball hit the ground at the same time?",
+  "beats": [
+   {
+    "intent": "A 20 m tower with a 10 kg ball and a 1 kg ball side by side at the top",
+    "narration": "Drop a ten kilogram ball and a one kilogram ball from a twenty metre tower, with no air to slow them.",
+    "code": "stage.title(\"Heavy and light, falling\")\nk = 0.25\nground = Line([-6.5, -2.5, 0], [0.5, -2.5, 0], color=GREY_B)\ntower = Rectangle(width=1.0, height=20 * k, color=GREY_B, fill_opacity=0.3).move_to([-5.9, -2.5 + 10 * k, 0])\nheavy = Circle(radius=0.35, color=ORANGE, fill_opacity=0.9).move_to([-3.8, 2.5, 0])\nlight = Circle(radius=0.15, color=YELLOW, fill_opacity=0.9).move_to([-2.6, 2.5, 0])\nstage.play(Create(ground), FadeIn(tower), FadeIn(heavy), FadeIn(light))\nstage.add(ground, tower, heavy, light)\nstage.label(heavy, \"10 kg\", direction=LEFT, color=ORANGE)\nstage.label(light, \"1 kg\", direction=RIGHT, color=YELLOW)"
+   },
+   {
+    "intent": "Both balls falling, ghost images at 1 s and 2 s at the same heights; both land at 2 s",
+    "narration": "Let go. After one second both have fallen five metres; after two seconds both hit the ground together.",
+    "code": "marks = VGroup()\nfor t in (1, 2):\n    y = 2.5 - 5 * t * t * k\n    marks.add(DashedLine([-4.5, y, 0], [-1.6, y, 0], color=GREY_B), Text(f\"{t} s\", font_size=24).move_to([-0.8, y + (0.25 if t == 2 else 0), 0]))\n    stage.add(heavy.copy().set_opacity(0.3).move_to([-3.8, y if t == 1 else -2.15, 0]), light.copy().set_opacity(0.3).move_to([-2.6, y if t == 1 else -2.35, 0]))\nstage.play(heavy.animate.move_to([-3.8, -2.15, 0]), light.animate.move_to([-2.6, -2.35, 0]), rate_func=rate_functions.ease_in_quad, run_time=1.6)\nstage.play(Create(marks))\nstage.add(heavy, light, marks)"
+   },
+   {
+    "intent": "Gravity arrows: 100 N on the heavy ball, 10 N on the light one; each mass is that much harder to speed up",
+    "narration": "Gravity pulls the heavy ball ten times as hard, a hundred newtons against ten. But it also takes ten times the force to speed it up, so both speed up at the same rate.",
+    "code": "fh = Arrow(heavy.get_center() + 0.4 * UP + 1.4 * UP, heavy.get_center() + 0.4 * UP, buff=0, color=RED)\nfl = Arrow(light.get_center() + 0.2 * UP + 0.6 * UP, light.get_center() + 0.2 * UP, buff=0, color=RED)\nstage.play(GrowArrow(fh), GrowArrow(fl))\nstage.add(fh, fl)\nstage.label(fh, \"100 N\", direction=LEFT, color=RED)\nstage.label(fl, \"10 N\", direction=RIGHT, color=RED)"
+   },
+   {
+    "intent": "The picture beside a = F/m: 100/10 = 10/1 = 10 m/s², and d = 5t² = 20 m at t = 2",
+    "narration": "Acceleration is force over mass: ten metres per second squared for both. Distance fallen is five t squared, twenty metres at two seconds.",
+    "code": "stage.equation(r\"\\frac{100}{10} = \\frac{10}{1} = 10 \\, \\mathrm{m/s^2}\", r\"5 \\times 2^2 = 20 \\, \\mathrm{m}\")"
+   }
+  ]
+ },
+ {
+  "request": "why can't you divide by zero?",
+  "beats": [
+   {
+    "intent": "12 dots split into groups of 3: four groups",
+    "narration": "Twelve divided by three asks: how many threes make twelve? Four.",
+    "code": "stage.title(\"Dividing by zero\")\ndots = VGroup(*[Dot([-5.6 + 0.5 * i, 1.0, 0], radius=0.12, color=BLUE) for i in range(12)])\nstage.play(FadeIn(dots))\nstage.add(dots)\ngroups = VGroup(*[SurroundingRectangle(VGroup(*dots[3 * g:3 * g + 3]), color=YELLOW, buff=0.1) for g in range(4)])\nstage.play(Create(groups))\nstage.add(groups)\nstage.label(groups, \"12 ÷ 3 = 4 groups\", direction=DOWN, color=YELLOW)"
+   },
+   {
+    "intent": "Axes of group size against number of groups: 12 ÷ 3 = 4, 12 ÷ 2 = 6, 12 ÷ 1 = 12, 12 ÷ 0.5 = 24",
+    "narration": "Make the groups smaller and you need more of them: groups of two, six; groups of one, twelve; groups of a half, twenty four.",
+    "code": "stage.clear()\nax = Axes(x_range=[0, 6, 1], y_range=[0, 30, 6], x_length=6, y_length=4.4, axis_config={\"include_numbers\": True}).move_to([-2.8, -0.6, 0])\nstage.play(Create(ax))\nstage.add(ax)\npts = VGroup(*[Dot(ax.c2p(x, 12 / x), color=YELLOW) for x in (3, 2, 1, 0.5)])\nstage.play(LaggedStart(*[FadeIn(p) for p in pts], lag_ratio=0.3))\nstage.add(pts)\nstage.play(FadeIn(Text(\"group size\", font_size=24).next_to(ax.x_axis, DOWN, buff=0.45)), FadeIn(Text(\"groups\", font_size=24).next_to(ax.y_axis, UP)))"
+   },
+   {
+    "intent": "The curve 12 ÷ x shooting up without bound as the group size shrinks to 0",
+    "narration": "As the group size shrinks towards zero, the number of groups grows without end. Groups of zero never add up to twelve, however many you take.",
+    "code": "curve = ax.plot(lambda x: 12 / x, x_range=[0.42, 6], color=ORANGE)\nstage.play(Create(curve))\nstage.add(curve)\nup = Arrow(ax.c2p(0.6, 22), ax.c2p(0.6, 30), buff=0, color=RED)\nstage.play(GrowArrow(up))\nstage.add(up)\nstage.label(up, \"no end\", direction=RIGHT, color=RED)"
+   },
+   {
+    "intent": "The graph beside 3 × 4 = 12 but 0 × ? = 12 has no answer",
+    "narration": "Division undoes multiplication: twelve divided by three is four because three times four is twelve. Twelve divided by zero would need zero times something to be twelve, and nothing works.",
+    "code": "stage.equation(r\"12 \\div 3 = 4 \\iff 3 \\times 4 = 12\", r\"0 \\times ? = 12\")"
+   }
+  ]
+ }
+]
