@@ -707,3 +707,25 @@ of 20 sheets changed, all in captions (a caption no longer cut short); no
 picture changed. Same conclusion: kit fixes help the teacher scenes they
 were found in and whatever v8 learns from them, not v6.
 
+
+**Gemini re-judge, Oct 1 (one model for every run).** The pinned
+gemini-flash-latest run (judge_1001) ran out of the free-tier daily quota
+after 5 of 100 scenes, so all five runs were judged fresh by
+gemini-flash-lite-latest (`scripts/queue/judge_1001b.sh`; each verdict now
+records its model). Every scene judged, no incomplete replies:
+
+| run | plans | Gemini (flash-lite) share |
+|---|---|---|
+| ab_short_names | planner v3, cached | 48% (54/112) |
+| ab_short_scaf | planner v3, cached | **53%** (59/112) |
+| ab_held_names | planner v3, cached | 36% (43/120) |
+| ab_held_scaf | planner v3, cached | **42%** (51/120) |
+| oracle_held | hand-written, picture-naming | 35% (28/80) |
+
+Same order as the local judge: scaffolding and kit add about 6 points on
+held-out (36 → 42) and 5 on short prompts, and oracle plans still do not
+help. Flash-lite is a different judge from the mixed-model runs behind
+the README range (37–40% held-out, 45–51% short), and it agrees with
+flash-latest on only some scenes (held-out 01: 4/6 against 0/6 in the
+five scenes flash-latest finished), so compare runs within this table,
+not across judges.

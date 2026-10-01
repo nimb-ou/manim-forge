@@ -129,7 +129,7 @@ def judge(tag: str, key: str) -> dict:
         if len(verdicts) != len(intents):
             print(f"    {tag} {k}: incomplete reply, not recorded", flush=True)
             continue
-        done[k] = {"title": r["title"], "intents": intents,
+        done[k] = {"title": r["title"], "intents": intents, "models": list(MODELS),
                    "verdicts": {str(a): b for a, b in sorted(verdicts.items())}}
         out_path.write_text(json.dumps(done, indent=1))
         yes = sum(v == "YES" for v in verdicts.values())
