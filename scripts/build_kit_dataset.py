@@ -21,7 +21,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from forge.app.pipeline import CODE_SYSTEM_KIT_TRAINED  # noqa: E402
-from forge.evaluate.heldout_guard import row_touches_heldout  # noqa: E402
+from forge.evaluate.heldout_guard import kit_row_touches_heldout  # noqa: E402
 from forge.kit.families import hint  # noqa: E402
 
 SRC = ROOT / "data" / "kit" / "kit_beats_clean.jsonl"
@@ -42,8 +42,8 @@ def main() -> int:
     train, valid = [], []
     dropped = held_topic = 0
     for r in rows:
-        # A scene about a held-out topic never trains (heldout_guard.py).
-        if row_touches_heldout(r):
+        # A scene or beat on a held-out topic never trains (heldout_guard.py).
+        if kit_row_touches_heldout(r):
             held_topic += 1
             continue
         # The subject hint write_beat(relevance=True) adds at inference.

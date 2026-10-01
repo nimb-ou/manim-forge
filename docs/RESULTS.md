@@ -747,3 +747,11 @@ scores (37–42%) are somewhat optimistic; by how much is not measured. The
 builders now drop these rows (309 planner rows, 199 kit rows on today's
 data), so kit v8 and planner v5 are the first clean models. If v8 beats v6
 on held-out, the contamination worked against v8, not for it.
+
+Kit coder rows are single beats, so they are also dropped when the beat's
+own intent is a held-out topic, whatever the scene's request: "u + v drawn
+tip to tail" inside a linear-combination scene is the held-out skill
+itself. That adds 56 rows (255 of 5,609 dropped). Planner arcs are still
+judged by their request alone: their beats mention held-out words in
+passing (a bell curve inside a normal-distribution arc), and dropping
+every such arc would remove 15% more of the 3Blue1Brown narration.

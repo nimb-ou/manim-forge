@@ -53,3 +53,19 @@ def row_touches_heldout(row: dict) -> bool:
     is read: long narration histories mention "logarithm" in passing, and
     matching those would drop half the 3Blue1Brown arcs for no reason."""
     return touches_heldout(request_of(row))
+
+
+def beat_intent_of(row: dict) -> str:
+    """The intent of the one beat a kit coder row writes."""
+    user = next((m["content"] for m in row.get("messages", [])
+                 if m.get("role") == "user"), "")
+    m = re.search(r"WRITE THIS BEAT.*?\n\s*intent:\s*(.*)", user, re.S)
+    return m.group(1).split("\n")[0] if m else ""
+
+
+def kit_row_touches_heldout(row: dict) -> bool:
+    """A kit coder row is one beat, so its own intent counts as well as the
+    scene's request: a beat drawing two vectors "tip to tail" inside a
+    linear-combination scene teaches exactly the held-out skill. (The
+    planner learns whole arcs, so for it the request is the topic.)"""
+    return row_touches_heldout(row) or touches_heldout(beat_intent_of(row))
