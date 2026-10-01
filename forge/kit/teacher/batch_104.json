@@ -1,0 +1,102 @@
+[
+ {
+  "request": "why does a balloon stick to the wall after you rub it on your hair?",
+  "beats": [
+   {
+    "intent": "A balloon and a head of hair, both with even mixes of + and - charges",
+    "narration": "A balloon and your hair both hold equal amounts of positive and negative charge.",
+    "code": "stage.title(\"The sticky balloon\")\nballoon = Ellipse(width=1.8, height=2.2, color=RED, fill_opacity=0.3).move_to([-3.5, 0.3, 0])\nhair = Rectangle(width=1.8, height=1.4, color=ORANGE, fill_opacity=0.3).move_to([-0.8, 0.3, 0])\nstage.play(FadeIn(balloon), FadeIn(hair))\nstage.add(balloon, hair)\nsigns = VGroup()\nfor obj in (balloon, hair):\n    for k in range(4):\n        s = \"+\" if k % 2 else \"−\"\n        signs.add(Text(s, font_size=30, color=YELLOW if s == \"+\" else BLUE).move_to(obj.get_center() + np.array([(k % 2 - 0.5) * 0.7, (k // 2 - 0.5) * 0.6, 0])))\nstage.play(FadeIn(signs))\nstage.add(signs)"
+   },
+   {
+    "intent": "Rubbing moving minus charges from the hair onto the balloon",
+    "narration": "Rubbing drags some electrons, the negative charges, off your hair and onto the balloon.",
+    "code": "moved = VGroup(*[Text(\"−\", font_size=30, color=BLUE).move_to(balloon.get_center() + np.array([0.0, 0.7 - 0.45 * k, 0])) for k in range(3)])\nstage.play(FadeIn(moved, shift=LEFT), FadeOut(signs[4]), FadeOut(signs[6]))\nstage.add(moved)\nstage.caption(\"the balloon gains extra negative charge\")"
+   },
+   {
+    "intent": "The balloon near a wall, the wall's minus charges pushed back so its surface is slightly +",
+    "narration": "Bring it near a wall. Its extra negative charge pushes the wall's electrons back a little, leaving the surface slightly positive.",
+    "code": "wall = Rectangle(width=1.2, height=4.0, color=GREY_B, fill_opacity=0.3).move_to([4.5, 0, 0])\nstage.play(FadeIn(wall), VGroup(balloon, moved, *signs[:4]).animate.move_to([3.0, 0.3, 0]))\nplus = VGroup(*[Text(\"+\", font_size=26, color=YELLOW).move_to([4.05, y, 0]) for y in (-0.6, 0.0, 0.6)])\nminus = VGroup(*[Text(\"−\", font_size=26, color=BLUE).move_to([4.85, y, 0]) for y in (-0.6, 0.0, 0.6)])\nstage.play(FadeIn(plus), FadeIn(minus))\nstage.add(wall, plus, minus)"
+   },
+   {
+    "intent": "An attraction arrow pulling the balloon to the wall",
+    "narration": "Opposites attract, and the nearby positive surface pulls harder than the farther negatives push. The balloon sticks.",
+    "code": "pull = Arrow([2.2, -1.6, 0], [3.9, -1.6, 0], buff=0, color=GREEN)\nstage.play(GrowArrow(pull))\nstage.add(pull)\nstage.caption(\"near + attracts the balloon's −: it sticks\")"
+   }
+  ]
+ },
+ {
+  "request": "what do the angles of a pentagon add up to?",
+  "beats": [
+   {
+    "intent": "A pentagon with its five corners",
+    "narration": "Here is a pentagon, five corners.",
+    "code": "stage.title(\"Angles of a pentagon\")\npent = RegularPolygon(5, color=BLUE, fill_opacity=0.2).scale(2.0).move_to([-1.5, -0.3, 0])\nstage.play(Create(pent))\nstage.add(pent)"
+   },
+   {
+    "intent": "Two diagonals from one corner splitting it into 3 triangles",
+    "narration": "From one corner, draw the two diagonals. They cut it into three triangles.",
+    "code": "V = pent.get_vertices()\nd1 = Line(V[0], V[2], color=YELLOW)\nd2 = Line(V[0], V[3], color=YELLOW)\nstage.play(Create(d1), Create(d2))\nstage.add(d1, d2)\ntris = [Polygon(V[0], V[k], V[k + 1], stroke_width=0, fill_color=c, fill_opacity=0.4) for k, c in zip((1, 2, 3), (RED, GREEN, ORANGE))]\nstage.play(*[FadeIn(t) for t in tris])\nstage.add(*tris)"
+   },
+   {
+    "intent": "Each triangle labelled 180°",
+    "narration": "Each triangle's angles add to a hundred and eighty degrees, and together they make up exactly the pentagon's corners.",
+    "code": "for t in tris:\n    stage.add(Text(\"180°\", font_size=22).move_to(t.get_center()))\nstage.play(*[Indicate(t) for t in tris])"
+   },
+   {
+    "intent": "The pentagon beside 3 × 180° = 540°, and (n - 2) × 180°",
+    "narration": "Three triangles: five hundred and forty degrees. Any polygon with n sides splits into n minus two triangles.",
+    "code": "stage.equation(r\"3 \\times 180^\\circ = 540^\\circ\", r\"(n - 2) \\times 180^\\circ\")"
+   }
+  ]
+ },
+ {
+  "request": "how does a car engine work?",
+  "beats": [
+   {
+    "intent": "A cylinder with a piston at the top and two valves, the inlet opening as the piston moves down drawing in fuel and air",
+    "narration": "One: intake. The piston moves down and sucks in a mix of fuel and air through the open inlet valve.",
+    "code": "stage.title(\"The four-stroke engine\")\ncyl = Rectangle(width=2.0, height=3.4, color=WHITE).move_to([0, -0.3, 0])\npiston = Rectangle(width=1.9, height=0.5, color=GREY_B, fill_opacity=0.9).move_to([0, 0.9, 0])\ninlet = Line([-0.8, 1.4, 0], [-0.4, 1.4, 0], color=BLUE, stroke_width=8)\noutlet = Line([0.4, 1.4, 0], [0.8, 1.4, 0], color=RED, stroke_width=8)\nstage.play(Create(cyl), FadeIn(piston), Create(inlet), Create(outlet))\nstage.add(cyl, piston, inlet, outlet)\nmix = Rectangle(width=1.9, height=0.1, stroke_width=0, fill_color=BLUE, fill_opacity=0.4).move_to([0, 1.35, 0])\nstage.add(mix)\nstage.play(piston.animate.move_to([0, -1.6, 0]), mix.animate.stretch_to_fit_height(2.8).move_to([0, -0.05, 0]), inlet.animate.shift(0.3 * DOWN), run_time=1.5)\nstage.caption(\"1 intake: fuel and air in\")"
+   },
+   {
+    "intent": "The piston moving up with both valves shut, squeezing the mixture small",
+    "narration": "Two: compression. Both valves close and the piston rises, squeezing the mixture into a small space.",
+    "code": "stage.play(inlet.animate.shift(0.3 * UP), piston.animate.move_to([0, 0.9, 0]), mix.animate.stretch_to_fit_height(0.3).move_to([0, 1.3, 0]).set_fill(ORANGE, opacity=0.7), run_time=1.5)\nstage.caption(\"2 compression: squeezed\")"
+   },
+   {
+    "intent": "A spark at the top, the mixture burning and driving the piston down hard",
+    "narration": "Three: power. A spark ignites it. The hot gas expands and drives the piston down: this stroke turns the wheels.",
+    "code": "spark = Star(6, outer_radius=0.3, color=YELLOW, fill_opacity=1).move_to([0, 1.3, 0])\nstage.play(FadeIn(spark))\nstage.play(piston.animate.move_to([0, -1.6, 0]), mix.animate.stretch_to_fit_height(2.8).move_to([0, -0.05, 0]).set_fill(RED, opacity=0.6), FadeOut(spark), run_time=0.8)\npush = Arrow([1.5, 0.8, 0], [1.5, -1.4, 0], buff=0, color=RED)\nstage.play(GrowArrow(push))\nstage.add(push)\nstage.caption(\"3 power: the push that drives the car\")"
+   },
+   {
+    "intent": "The outlet valve open and the piston rising, pushing the burnt gas out",
+    "narration": "Four: exhaust. The outlet valve opens and the rising piston pushes the burnt gas out. Then it starts again.",
+    "code": "stage.play(FadeOut(push), outlet.animate.shift(0.3 * DOWN))\nstage.play(piston.animate.move_to([0, 0.9, 0]), mix.animate.stretch_to_fit_height(0.1).move_to([0, 1.35, 0]).set_fill(GREY_B, opacity=0.4), run_time=1.5)\nsmoke = VGroup(*[Circle(radius=0.15 + 0.05 * k, color=GREY_B, fill_opacity=0.4).move_to([0.6 + 0.3 * k, 1.8 + 0.35 * k, 0]) for k in range(3)])\nstage.play(FadeIn(smoke))\nstage.add(smoke)\nstage.caption(\"4 exhaust: burnt gas out\")"
+   }
+  ]
+ },
+ {
+  "request": "how long does it take to fill a pool with a garden hose?",
+  "beats": [
+   {
+    "intent": "A pool drawn as a 10 m by 5 m rectangle, 1 m deep",
+    "narration": "A pool ten metres long, five wide and one deep holds fifty cubic metres: fifty thousand litres.",
+    "code": "stage.title(\"Filling a pool\")\npool = Rectangle(width=6, height=3, color=BLUE).move_to([-1.0, -0.5, 0])\nstage.play(Create(pool))\nstage.add(pool)\nstage.label(pool, \"10 m\", direction=DOWN)\nstage.label(pool, \"5 m\", direction=LEFT)\nstage.caption(\"10 × 5 × 1 = 50 m³ = 50 000 litres\")"
+   },
+   {
+    "intent": "A hose pouring in at 20 litres a minute",
+    "narration": "A garden hose gives about twenty litres a minute.",
+    "code": "hose = VMobject(color=GREEN, stroke_width=8).set_points_smoothly([[5.5, 2.5, 0], [4.0, 2.0, 0], [2.6, 1.5, 0], [2.0, 0.8, 0]])\nstage.play(Create(hose))\nstage.add(hose)\nstage.label(hose, \"20 L/min\", direction=UP, color=GREEN)"
+   },
+   {
+    "intent": "The pool slowly filling, a water level rising from the bottom",
+    "narration": "The water creeps up the sides, painfully slowly.",
+    "code": "water = Rectangle(width=6, height=0.05, stroke_width=0, fill_color=BLUE, fill_opacity=0.6).align_to(pool, DOWN).align_to(pool, LEFT)\nstage.add(water)\nstage.play(water.animate.stretch_to_fit_height(2.9, about_edge=DOWN), run_time=3)"
+   },
+   {
+    "intent": "The pool beside 50 000 ÷ 20 = 2500 minutes ≈ 42 hours",
+    "narration": "Fifty thousand over twenty is two thousand five hundred minutes: about forty two hours, nearly two days.",
+    "code": "stage.equation(r\"\\frac{50\\,000}{20} = 2500\\ \\text{min}\", r\"\\approx 42\\ \\text{hours}\")"
+   }
+  ]
+ }
+]
