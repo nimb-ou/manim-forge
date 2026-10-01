@@ -1,0 +1,102 @@
+[
+ {
+  "request": "how does a two-way table help you find a probability?",
+  "beats": [
+   {
+    "intent": "An empty two-way table: rows boys, girls, total; columns walk, bus, total",
+    "narration": "Thirty students say how they get to school. A two way table sorts them two ways at once: boy or girl, walk or bus.",
+    "code": "stage.title(\"A two-way table\")\nw, h = 1.5, 0.65\ntl = np.array([-6.2, 1.9, 0])\ncell = lambda r, c: tl + np.array([(c + 0.5) * w, -(r + 0.5) * h, 0])\ngrid = VGroup(*[Rectangle(width=w, height=h, color=GREY_B, stroke_width=2).move_to(cell(r, c)) for r in range(4) for c in range(4)])\nheads = VGroup(*[Text(t, font_size=24).move_to(cell(0, c)) for c, t in ((1, \"walk\"), (2, \"bus\"), (3, \"total\"))], *[Text(t, font_size=24).move_to(cell(r, 0)) for r, t in ((1, \"boys\"), (2, \"girls\"), (3, \"total\"))])\nstage.play(Create(grid), FadeIn(heads))\nstage.add(grid, heads)"
+   },
+   {
+    "intent": "The table filled in: boys 8 walk, 6 bus; girls 5 walk, 11 bus; totals 13, 17, 30",
+    "narration": "Eight boys walk and six take the bus; five girls walk and eleven take the bus. The totals are thirteen walkers, seventeen on the bus, thirty in all.",
+    "code": "vals = {(1, 1): 8, (1, 2): 6, (1, 3): 14, (2, 1): 5, (2, 2): 11, (2, 3): 16, (3, 1): 13, (3, 2): 17, (3, 3): 30}\nnums = VGroup(*[Text(str(v), font_size=28, color=YELLOW if 3 in rc else WHITE).move_to(cell(*rc)) for rc, v in vals.items()])\nstage.play(LaggedStart(*[FadeIn(n) for n in nums], lag_ratio=0.1))\nstage.add(nums)"
+   },
+   {
+    "intent": "The bus column boxed, 17 out of 30, and the girls-on-the-bus cell 11 picked out",
+    "narration": "Pick a student at random. Seventeen of the thirty take the bus. And of those seventeen on the bus, eleven are girls.",
+    "code": "bus = SurroundingRectangle(VGroup(grid[6], grid[10], grid[14]), color=ORANGE, buff=0.04)\ngb = SurroundingRectangle(grid[10], color=GREEN, buff=0.08)\nstage.play(Create(bus))\nstage.play(Create(gb))\nstage.add(bus, gb)\nstage.label(bus, \"17 of 30\", direction=DOWN, color=ORANGE)"
+   },
+   {
+    "intent": "The table beside P(bus) = 17/30 and P(girl, given bus) = 11/17",
+    "narration": "So the chance a random student takes the bus is seventeen thirtieths. The chance a bus rider is a girl is eleven out of seventeen.",
+    "code": "stage.equation(r\"P(\\mathrm{bus}) = \\frac{17}{30} \\approx 0.57\", r\"P(\\mathrm{girl} \\mid \\mathrm{bus}) = \\frac{11}{17}\")"
+   }
+  ]
+ },
+ {
+  "request": "where do impossible, unlikely, even and certain go on a probability scale?",
+  "beats": [
+   {
+    "intent": "A line from 0 to 1 marked impossible, even chance and certain",
+    "narration": "Probabilities go on a scale from nought to one. Nought is impossible, one is certain, and a half is an even chance.",
+    "code": "stage.title(\"The probability scale\")\nnl = NumberLine(x_range=[0, 1, 0.25], length=10).move_to([0, -0.2, 0])\nstage.play(Create(nl))\nstage.add(nl)\nstage.play(*[FadeIn(Text(t, font_size=24).next_to(nl.n2p(v), DOWN, buff=0.3)) for v, t in ((0, \"0 impossible\"), (0.5, \"1/2 even\"), (1, \"1 certain\"))])"
+   },
+   {
+    "intent": "Rolling a 7 on a dice placed at 0, rolling a number from 1 to 6 placed at 1",
+    "narration": "Rolling a seven on an ordinary dice can't happen: nought. Rolling a number from one to six always happens: one.",
+    "code": "e0 = Dot(nl.n2p(0), color=RED)\ne1 = Dot(nl.n2p(1), color=GREEN)\nstage.play(FadeIn(e0), FadeIn(e1))\nstage.add(e0, e1)\nstage.label(e0, \"roll a 7\", direction=UP, color=RED)\nstage.label(e1, \"roll 1 to 6\", direction=UP, color=GREEN)"
+   },
+   {
+    "intent": "A six at 1/6, heads at 1/2 and not a six at 5/6 placed on the line",
+    "narration": "A six is unlikely, one in six. Heads on a coin is even, a half. Not rolling a six is likely, five in six.",
+    "code": "evs = ((1 / 6, \"a six\", ORANGE), (0.5, \"heads\", BLUE), (5 / 6, \"not a six\", YELLOW))\nfor v, t, col in evs:\n    d = Dot(nl.n2p(v), color=col)\n    stage.play(FadeIn(d), run_time=0.4)\n    stage.add(d)\n    stage.label(d, t, direction=UP, color=col)"
+   },
+   {
+    "intent": "The scale beside P(six) + P(not six) = 1/6 + 5/6 = 1",
+    "narration": "Something either happens or it doesn't, so the two chances add up to one.",
+    "code": "stage.equation(r\"\\frac{1}{6} + \\frac{5}{6} = 1\")"
+   }
+  ]
+ },
+ {
+  "request": "if you roll a dice 60 times, how many sixes should you expect?",
+  "beats": [
+   {
+    "intent": "Dashed outline bars for faces 1 to 6, each at the expected 10",
+    "narration": "Roll a dice sixty times. Each face has a one in six chance, so you'd expect each about ten times.",
+    "code": "stage.title(\"Expected number of sixes\")\nax = Axes(x_range=[0, 7, 1], y_range=[0, 16, 4], x_length=6, y_length=4, axis_config={\"include_numbers\": True}).move_to([-2.8, -0.5, 0])\nstage.play(Create(ax))\nstage.add(ax)\nexp_bars = VGroup(*[DashedVMobject(Rectangle(width=0.6, height=ax.c2p(0, 10)[1] - ax.c2p(0, 0)[1], color=GREY_B), num_dashes=24).move_to(ax.c2p(f, 5)) for f in range(1, 7)])\nstage.play(Create(exp_bars))\nstage.add(exp_bars)\nstage.play(FadeIn(Text(\"expected: 10 each\", font_size=24, color=GREY_B).move_to(ax.c2p(3.5, 15))))"
+   },
+   {
+    "intent": "Bars for 60 real rolls filling in, each near 10 but not exactly",
+    "narration": "Now actually roll sixty times. The counts come out near ten, but not exactly: chance wobbles.",
+    "code": "rolls = np.random.default_rng(1).integers(1, 7, size=60)\ncounts = [int((rolls == f).sum()) for f in range(1, 7)]\nbars = VGroup(*[Rectangle(width=0.5, height=ax.c2p(0, n)[1] - ax.c2p(0, 0)[1], color=BLUE, fill_opacity=0.7).move_to(ax.c2p(f, n / 2)) for f, n in zip(range(1, 7), counts)])\nstage.play(LaggedStart(*[GrowFromEdge(b, DOWN) for b in bars], lag_ratio=0.2))\nstage.add(bars)"
+   },
+   {
+    "intent": "The six bar highlighted: 11 sixes this time against the expected 10",
+    "narration": "This time there were eleven sixes, against the ten expected.",
+    "code": "stage.play(bars[5].animate.set_fill(ORANGE, opacity=0.9).set_stroke(ORANGE))\nstage.label(bars[5], f\"{counts[5]} sixes\", direction=RIGHT, color=ORANGE)"
+   },
+   {
+    "intent": "The chart beside 60 × 1/6 = 10",
+    "narration": "Expected frequency is the number of tries times the probability: sixty times a sixth, ten.",
+    "code": "stage.equation(r\"60 \\times \\frac{1}{6} = 10\")"
+   }
+  ]
+ },
+ {
+  "request": "how do you estimate the mean from a grouped frequency table?",
+  "beats": [
+   {
+    "intent": "Bars for the heights of 20 students: 5 in 140-150 cm, 8 in 150-160, 7 in 160-170",
+    "narration": "Twenty students' heights are grouped: five between a hundred and forty and a hundred and fifty centimetres, eight between a hundred and fifty and a hundred and sixty, seven between a hundred and sixty and a hundred and seventy.",
+    "code": "stage.title(\"Mean from grouped data\")\nax = Axes(x_range=[140, 175, 10], y_range=[0, 10, 2], x_length=7, y_length=3.6, axis_config={\"include_numbers\": True}).move_to([-2.8, -0.6, 0])\nstage.play(Create(ax))\nstage.add(ax)\ngroups = ((145, 5, BLUE), (155, 8, GREEN), (165, 7, ORANGE))\nbars = VGroup(*[Rectangle(width=ax.c2p(150, 0)[0] - ax.c2p(140, 0)[0], height=ax.c2p(0, n)[1] - ax.c2p(0, 0)[1], color=col, fill_opacity=0.5).move_to(ax.c2p(m, n / 2)) for m, n, col in groups])\nstage.play(LaggedStart(*[GrowFromEdge(b, DOWN) for b in bars], lag_ratio=0.3))\nstage.add(bars)\nstage.label(ax, \"height (cm)\", direction=DOWN)"
+   },
+   {
+    "intent": "A dot at the middle of each group: 145, 155, 165",
+    "narration": "We don't know each exact height, so treat everyone in a group as standing at its midpoint.",
+    "code": "mids = VGroup(*[Dot(ax.c2p(m, n), color=YELLOW) for m, n, _ in groups])\nstage.play(FadeIn(mids))\nstage.add(mids)\nstage.play(*[FadeIn(Text(str(m), font_size=22, color=YELLOW).next_to(d, UP, buff=0.1)) for (m, n, _), d in zip(groups, mids)])"
+   },
+   {
+    "intent": "Each bar labelled with frequency × midpoint: 5 × 145, 8 × 155, 7 × 165",
+    "narration": "Five people at a hundred and forty five, eight at a hundred and fifty five, seven at a hundred and sixty five. That's three thousand one hundred and twenty centimetres altogether.",
+    "code": "stage.play(*[FadeIn(Text(f\"{n} × {m}\", font_size=20).move_to(b)) for (m, n, _), b in zip(groups, bars)])\nstage.label(bars, \"total ≈ 3120 cm\", direction=RIGHT, color=YELLOW)"
+   },
+   {
+    "intent": "The chart beside 3120 ÷ 20 = 156 cm",
+    "narration": "Divide by the twenty students: an estimated mean of a hundred and fifty six centimetres.",
+    "code": "stage.equation(r\"5 \\times 145 + 8 \\times 155 + 7 \\times 165 = 3120\", r\"3120 \\div 20 = 156\")"
+   }
+  ]
+ }
+]
