@@ -662,3 +662,35 @@ re-judged by the same model. Nothing automated depends on the Gemini judge
 **Spiralling?** No. One problem (judge quota) took one fix and produced a
 complete measurement. The teacher batches remain the only data work; their
 check is still the Oct 3 v8 score.
+
+## Log · 2026-10-01 19:10Z
+
+**Since 13:10Z.** Teacher batches 115-125 (850 → 894 scenes, every sheet
+looked at; caught before commit: two crashes from calling a `stage.mobjects`
+the kit doesn't have, a Ferris wheel whose rim slid off its spokes, stale
+side labels after a strip moved, a duplicate topic replaced). Gemma arcs
+643 → 817; local critic verdicts 906 → 956.
+
+**What the numbers say.** No new model number. The finding of the block is
+about the measurement: the held-out topics were in the training data
+(16 of 190 planner narration arcs, among them 3Blue1Brown's "Matrix
+multiplication as composition" and "But what is the Central Limit
+Theorem?", gold ChainRule/MontyHall/IrrationalSqrt2, ~4% of kit rows, 5 of
+my own Claude arcs). So every held-out number to date, including today's
+42% baseline, is somewhat optimistic for v6/v3.
+
+**What changed.** `forge/evaluate/heldout_guard.py` (tested: catches all 20
+held-out prompts) now filters every builder by each row's request; on
+today's data it drops 309 planner and 199 kit rows. Matching only the
+request, not the whole text, kept the cost there instead of 56% of the
+narration. README and RESULTS say so. New teacher requests are checked
+against the guard before they are written.
+
+**Plan.** Holds. The Oct 2 18:00Z rebuild has ~235 new scenes to render
+(about an hour, cached frames for the rest), well before the Oct 3 00:30Z
+launch, which runs the guarded builders. v8 vs v6 is now a clean model
+against a contaminated one; a v8 win means more than it did, a small loss
+means less.
+
+**Spiralling?** No. The leak took one fix with a test and a measured cost.
+The rest of the block is the same data work, still checked on Oct 3.
