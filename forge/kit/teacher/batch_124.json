@@ -1,0 +1,102 @@
+[
+ {
+  "request": "2 apples and a pear cost 80p, an apple and a pear cost 55p: what does each cost?",
+  "beats": [
+   {
+    "intent": "A bar of two apple blocks and a pear block, 80p altogether",
+    "narration": "Two apples and a pear cost eighty pence.",
+    "code": "stage.title(\"Apples and pears\")\nk = 0.06\nx0 = -6\nrow1 = VGroup(Rectangle(width=25 * k, height=0.7, color=RED, fill_opacity=0.5), Rectangle(width=25 * k, height=0.7, color=RED, fill_opacity=0.5), Rectangle(width=30 * k, height=0.7, color=GREEN, fill_opacity=0.5)).arrange(RIGHT, buff=0).move_to([x0 + 40 * k, 1.2, 0])\nstage.play(FadeIn(row1))\nstage.add(row1)\nstage.play(*[FadeIn(Text(t, font_size=24).move_to(b)) for b, t in zip(row1, (\"apple\", \"apple\", \"pear\"))])\nstage.label(row1, \"80p\", direction=RIGHT)"
+   },
+   {
+    "intent": "A second bar, apple and pear, 55p, lined up under the right-hand end of the first",
+    "narration": "One apple and a pear cost fifty five pence. Line it up under the first bar.",
+    "code": "row2 = VGroup(Rectangle(width=25 * k, height=0.7, color=RED, fill_opacity=0.5), Rectangle(width=30 * k, height=0.7, color=GREEN, fill_opacity=0.5)).arrange(RIGHT, buff=0)\nrow2.move_to([row1.get_right()[0] - row2.width / 2, 0.2, 0])\nstage.play(FadeIn(row2))\nstage.add(row2)\nstage.play(*[FadeIn(Text(t, font_size=24).move_to(b)) for b, t in zip(row2, (\"apple\", \"pear\"))])\nstage.label(row2, \"55p\", direction=RIGHT)"
+   },
+   {
+    "intent": "The extra apple in the first bar highlighted: 80 − 55 = 25p",
+    "narration": "The only difference between the bars is one apple. So one apple costs eighty minus fifty five: twenty five pence. Then the pear is fifty five minus twenty five, thirty.",
+    "code": "extra = SurroundingRectangle(row1[0], color=YELLOW, buff=0.06)\nstage.play(Create(extra))\nstage.add(extra)\nstage.label(extra, \"80 − 55 = 25p\", direction=UP, color=YELLOW)"
+   },
+   {
+    "intent": "The bars beside 2a + p = 80, a + p = 55, so a = 25 and p = 30",
+    "narration": "Subtracting one equation from the other removes the pear: a is twenty five and p is thirty.",
+    "code": "stage.equation(r\"2a + p = 80\", r\"a + p = 55\", r\"a = 25, \\ p = 30\")"
+   }
+  ]
+ },
+ {
+  "request": "why does a line from the centre at right angles to a chord cut it in half?",
+  "beats": [
+   {
+    "intent": "A circle of radius 5 with a chord AB across its lower part",
+    "narration": "Draw a circle of radius five and a chord A B across it.",
+    "code": "stage.title(\"The perpendicular to a chord\")\nu = 0.44\nc = np.array([-3, 0.3, 0])\ncircle = Circle(radius=5 * u, color=WHITE).move_to(c)\nA = c + np.array([-4 * u, -3 * u, 0])\nB = c + np.array([4 * u, -3 * u, 0])\nchord = Line(A, B, color=BLUE, stroke_width=5)\nstage.play(Create(circle), Create(chord))\nstage.add(circle, chord)\nstage.play(FadeIn(Text(\"A\", font_size=26).next_to(A, DL, buff=0.1)), FadeIn(Text(\"B\", font_size=26).next_to(B, DR, buff=0.1)), FadeIn(Dot(c)), FadeIn(Text(\"O\", font_size=26).next_to(c, UP, buff=0.1)))"
+   },
+   {
+    "intent": "A line from the centre O meeting the chord at M at a right angle",
+    "narration": "From the centre O, drop a line that meets the chord at right angles, at M.",
+    "code": "M = c + np.array([0, -3 * u, 0])\nom = Line(c, M, color=YELLOW)\nstage.play(Create(om))\nstage.add(om)\nra = RightAngle(Line(M, B), Line(M, c), length=0.22, color=WHITE)\nstage.play(Create(ra), FadeIn(Text(\"M\", font_size=26).next_to(M, DOWN, buff=0.12)))\nstage.add(ra)\nstage.label(om, \"3\", direction=LEFT, color=YELLOW)"
+   },
+   {
+    "intent": "Radii OA and OB, both 5, forming two right triangles shaded in two colours",
+    "narration": "Join O to A and to B. Both are radii, five each, so the two right angled triangles share O M and have equal hypotenuses.",
+    "code": "t1 = Polygon(c, A, M, color=GREEN, fill_opacity=0.3)\nt2 = Polygon(c, B, M, color=ORANGE, fill_opacity=0.3)\nstage.play(FadeIn(t1), FadeIn(t2))\nstage.add(t1, t2)\nstage.label(Line(c, A), \"5\", direction=LEFT, color=GREEN)\nstage.label(Line(c, B), \"5\", direction=RIGHT, color=ORANGE)"
+   },
+   {
+    "intent": "The picture beside AM² = 5² − 3² = 16, so AM = MB = 4",
+    "narration": "By Pythagoras, A M squared is five squared minus three squared, sixteen, and so is M B squared. Both are four: the chord is cut exactly in half.",
+    "code": "stage.equation(r\"AM^2 = 5^2 - 3^2 = 16\", r\"AM = MB = 4\")"
+   }
+  ]
+ },
+ {
+  "request": "how do you expand 3(x + 4)?",
+  "beats": [
+   {
+    "intent": "A rectangle 3 tall and x + 4 wide",
+    "narration": "Three times x plus four is the area of a rectangle three tall and x plus four wide.",
+    "code": "stage.title(\"Expanding 3(x + 4)\")\nh = 1.8\nwx, w4 = 2.6, 2.4\ntl = np.array([-5.5, 0.9, 0])\nrect = Rectangle(width=wx + w4, height=h, color=WHITE).move_to(tl + np.array([(wx + w4) / 2, -h / 2, 0]))\nstage.play(Create(rect))\nstage.add(rect)\nstage.label(Line(tl, tl + h * DOWN), \"3\", direction=LEFT)\nstage.label(Line(tl, tl + (wx + w4) * RIGHT), \"x + 4\", direction=UP)"
+   },
+   {
+    "intent": "The rectangle split into an x part and a 4 part",
+    "narration": "Split the width into its two parts, x and four.",
+    "code": "cut = DashedLine(tl + wx * RIGHT, tl + wx * RIGHT + h * DOWN, color=YELLOW)\nstage.play(Create(cut))\nstage.add(cut)\nstage.play(FadeIn(Text(\"x\", font_size=28, color=BLUE).move_to(tl + np.array([wx / 2, -h - 0.35, 0]))), FadeIn(Text(\"4\", font_size=28, color=ORANGE).move_to(tl + np.array([wx + w4 / 2, -h - 0.35, 0]))))"
+   },
+   {
+    "intent": "The two parts filled with their areas, 3x and 12",
+    "narration": "The left part is three by x, area three x. The right part is three by four, area twelve.",
+    "code": "left = Rectangle(width=wx, height=h, color=BLUE, fill_opacity=0.4, stroke_width=0).move_to(tl + np.array([wx / 2, -h / 2, 0]))\nright = Rectangle(width=w4, height=h, color=ORANGE, fill_opacity=0.4, stroke_width=0).move_to(tl + np.array([wx + w4 / 2, -h / 2, 0]))\nstage.play(FadeIn(left), FadeIn(right))\nstage.add(left, right)\nstage.play(FadeIn(Text(\"3x\", font_size=34).move_to(left)), FadeIn(Text(\"12\", font_size=34).move_to(right)))"
+   },
+   {
+    "intent": "The rectangle beside 3(x + 4) = 3x + 12, and a check with x = 2: 18 = 18",
+    "narration": "So three times x plus four is three x plus twelve: multiply each part inside the bracket. Check with x equals two: three times six is eighteen, and six plus twelve is eighteen.",
+    "code": "stage.equation(r\"3(x + 4) = 3x + 12\", r\"3 \\times 6 = 6 + 12 = 18\")"
+   }
+  ]
+ },
+ {
+  "request": "what are the cube numbers 1, 8, 27, 64?",
+  "beats": [
+   {
+    "intent": "A single unit cube and a 2 by 2 by 2 cube: 1 and 8",
+    "narration": "A cube number is how many little cubes build a bigger cube. One on its own, then two by two by two: eight.",
+    "code": "stage.title(\"Cube numbers\")\ne = 0.34\nq = np.array([0.45 * e, 0.45 * e, 0])\ncube = lambda n, o: VGroup(\n    *[Square(e, color=BLUE, fill_opacity=0.5, stroke_width=1).move_to(o + np.array([(i + 0.5) * e, (j + 0.5) * e, 0])) for i in range(n) for j in range(n)],\n    *[Polygon(o + np.array([i * e, n * e, 0]) + d * q, o + np.array([(i + 1) * e, n * e, 0]) + d * q, o + np.array([(i + 1) * e, n * e, 0]) + (d + 1) * q, o + np.array([i * e, n * e, 0]) + (d + 1) * q, color=BLUE_B, fill_opacity=0.35, stroke_width=1) for i in range(n) for d in range(n)],\n    *[Polygon(o + np.array([n * e, j * e, 0]) + d * q, o + np.array([n * e, j * e, 0]) + (d + 1) * q, o + np.array([n * e, (j + 1) * e, 0]) + (d + 1) * q, o + np.array([n * e, (j + 1) * e, 0]) + d * q, color=BLUE_D, fill_opacity=0.35, stroke_width=1) for j in range(n) for d in range(n)])\nbase = -1.6\nc1 = cube(1, np.array([-6.3, base, 0]))\nc2 = cube(2, np.array([-5.4, base, 0]))\nstage.play(FadeIn(c1), FadeIn(c2))\nstage.add(c1, c2)\nstage.play(FadeIn(Text(\"1\", font_size=28).move_to([-6.1, base - 0.4, 0])), FadeIn(Text(\"8\", font_size=28).move_to([-5.05, base - 0.4, 0])))"
+   },
+   {
+    "intent": "A 3 by 3 by 3 cube: 27",
+    "narration": "Three by three by three: twenty seven.",
+    "code": "c3 = cube(3, np.array([-4.1, base, 0]))\nstage.play(FadeIn(c3, lag_ratio=0.02))\nstage.add(c3)\nstage.play(FadeIn(Text(\"27\", font_size=28).move_to([-3.55, base - 0.4, 0])))"
+   },
+   {
+    "intent": "A 4 by 4 by 4 cube: 64",
+    "narration": "Four by four by four: sixty four. The numbers grow fast, because every edge grows at once.",
+    "code": "c4 = cube(4, np.array([-2.3, base, 0]))\nstage.play(FadeIn(c4, lag_ratio=0.02))\nstage.add(c4)\nstage.play(FadeIn(Text(\"64\", font_size=28).move_to([-1.6, base - 0.4, 0])))"
+   },
+   {
+    "intent": "The cubes beside n³: 1, 8, 27, 64, and 5³ = 125",
+    "narration": "These are n cubed: one, eight, twenty seven, sixty four. Next is five cubed, a hundred and twenty five.",
+    "code": "stage.equation(r\"n^3: 1, 8, 27, 64\", r\"5^3 = 125\")"
+   }
+  ]
+ }
+]
