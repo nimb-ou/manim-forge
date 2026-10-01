@@ -1,0 +1,102 @@
+[
+ {
+  "request": "why is a door hard to push near its hinge?",
+  "beats": [
+   {
+    "intent": "A door seen from above: a hinge dot on the left and the door as a long bar",
+    "narration": "Look down on a door from above. It turns about its hinge.",
+    "code": "stage.title(\"Pushing a door\")\nhinge = Dot([-4, 0, 0], color=YELLOW, radius=0.15)\ndoor = Rectangle(width=6, height=0.25, color=ORANGE, fill_opacity=0.7).next_to(hinge, RIGHT, buff=0)\nstage.play(FadeIn(hinge), FadeIn(door))\nstage.add(hinge, door)\nstage.label(hinge, \"hinge\", direction=UP, color=YELLOW)"
+   },
+   {
+    "intent": "A small push arrow at the far edge, 1 m from the hinge, labelled 10 N",
+    "narration": "Push at the handle side, a metre from the hinge, and ten newtons is enough.",
+    "code": "far = Arrow([1.6, -1.6, 0], [1.6, -0.15, 0], buff=0, color=GREEN)\nstage.play(GrowArrow(far))\nstage.add(far)\nstage.label(far, \"10 N at 1 m\", direction=RIGHT, color=GREEN)"
+   },
+   {
+    "intent": "A big push arrow close to the hinge, 0.1 m away, labelled 100 N",
+    "narration": "Push ten centimetres from the hinge and you need a hundred newtons for the same turn.",
+    "code": "near = Arrow([-3.4, -2.6, 0], [-3.4, -0.15, 0], buff=0, color=RED, stroke_width=10)\nstage.play(GrowArrow(near))\nstage.add(near)\nstage.label(near, \"100 N at 0.1 m\", direction=LEFT, color=RED)"
+   },
+   {
+    "intent": "The door beside turning effect = force × distance: 10 × 1 = 100 × 0.1",
+    "narration": "What turns the door is force times distance from the hinge. Handles go far from hinges for that reason.",
+    "code": "stage.equation(r\"10 \\times 1 = 100 \\times 0.1\", r\"= 10\\ \\text{N m}\")"
+   }
+  ]
+ },
+ {
+  "request": "what does a sound wave look like in the air?",
+  "beats": [
+   {
+    "intent": "A loudspeaker on the left and a field of evenly spaced air particles",
+    "narration": "A loudspeaker sits in still air: particles spread out evenly.",
+    "code": "stage.title(\"Sound in air\")\ncone = Polygon([-5.6, -0.8, 0], [-5.6, 0.8, 0], [-5.0, 1.3, 0], [-5.0, -1.3, 0], color=GREY_B, fill_opacity=0.7)\nstage.play(FadeIn(cone))\nstage.add(cone)\nxs = np.linspace(-4.6, 5.6, 36)\nys = np.linspace(-1.5, 1.5, 6)\nair = VGroup(*[Dot([x, y, 0], radius=0.05, color=BLUE) for x in xs for y in ys])\nstage.play(FadeIn(air))\nstage.add(air)"
+   },
+   {
+    "intent": "The particles bunched into dense bands and spread into thin bands as the cone pushes and pulls",
+    "narration": "As the cone pushes forward and back, it squeezes the air into crowded bands, with thinner bands between.",
+    "code": "shift = lambda x: 0.35 * np.sin(2 * np.pi * (x + 4.6) / 3.4)\nstage.play(*[d.animate.shift(shift(d.get_x()) * RIGHT) for d in air], run_time=1.5)\nstage.caption(\"crowded bands and thin bands\")"
+   },
+   {
+    "intent": "The bands labelled compression and rarefaction, with the wavelength marked between two compressions",
+    "narration": "The crowded bands are compressions, the thin ones rarefactions. The distance from one compression to the next is the wavelength.",
+    "code": "c1, c2 = -4.6 + 0.85, -4.6 + 0.85 + 3.4\nlam = DoubleArrow([c1, 2.0, 0], [c2, 2.0, 0], buff=0, color=YELLOW)\nstage.play(GrowArrow(lam))\nstage.add(lam)\nstage.label(lam, \"wavelength\", direction=UP, color=YELLOW)\nstage.add(Text(\"compression\", font_size=22, color=GREEN).move_to([c1, -2.1, 0]), Text(\"rarefaction\", font_size=22, color=RED).move_to([c1 + 1.7, -2.1, 0]))"
+   },
+   {
+    "intent": "One particle marked red, only jiggling back and forth while the bands travel right",
+    "narration": "Each particle only jiggles back and forth. It's the pattern of bands that travels to your ear.",
+    "code": "p = air[20 * 6 + 2]\np.set_color(RED).scale(1.6)\nstage.play(p.animate.shift(0.3 * RIGHT), run_time=0.4)\nstage.play(p.animate.shift(0.6 * LEFT), run_time=0.4)\nstage.play(p.animate.shift(0.3 * RIGHT), run_time=0.4)\nstage.caption(\"particles jiggle; the wave travels\")"
+   }
+  ]
+ },
+ {
+  "request": "what's the area of a ring?",
+  "beats": [
+   {
+    "intent": "A big circle of radius 6",
+    "narration": "Start with a circle of radius six: area pi times thirty six.",
+    "code": "stage.title(\"Area of a ring\")\nc = np.array([-2.5, -0.3, 0])\nk = 0.4\nbig = Circle(radius=6 * k, color=BLUE, fill_opacity=0.5).move_to(c)\nstage.play(FadeIn(big))\nstage.add(big)\nR = Line(c, c + 6 * k * RIGHT, color=YELLOW)\nstage.play(Create(R))\nstage.add(R)\nstage.label(R, \"6\", direction=DOWN, color=YELLOW)"
+   },
+   {
+    "intent": "A hole of radius 2 cut from the middle, leaving a ring",
+    "narration": "Cut out a hole of radius two from the middle.",
+    "code": "hole = Circle(radius=2 * k, color=WHITE, fill_color=BLACK, fill_opacity=1).move_to(c)\nstage.play(FadeIn(hole))\nstage.add(hole)\nr = Line(c, c + 2 * k * UP, color=ORANGE)\nstage.play(Create(r))\nstage.add(r)\nstage.label(r, \"2\", direction=LEFT, color=ORANGE)"
+   },
+   {
+    "intent": "The ring beside π × 6² - π × 2²",
+    "narration": "The ring is the big circle minus the hole.",
+    "code": "stage.equation(r\"\\pi \\times 6^2 - \\pi \\times 2^2\")"
+   },
+   {
+    "intent": "The ring beside π(36 - 4) = 32π ≈ 100.5",
+    "narration": "That's pi times thirty two, about a hundred point five.",
+    "code": "stage.equation(r\"\\pi \\times 6^2 - \\pi \\times 2^2\", r\"= \\pi(36 - 4) = 32\\pi \\approx 100.5\")"
+   }
+  ]
+ },
+ {
+  "request": "how can you make a fair decision with a biased coin?",
+  "beats": [
+   {
+    "intent": "A coin that lands heads 70% of the time, bars of 70 and 30",
+    "narration": "Suppose a coin is biased: heads seventy percent of the time.",
+    "code": "stage.title(\"Fair from unfair\")\nb = draw_bars(stage, [70, 30], labels=[\"heads\", \"tails\"], color=ORANGE)\nstage.caption(\"a biased coin: 70% heads\")"
+   },
+   {
+    "intent": "Flipping twice: the four outcomes HH, HT, TH, TT with their chances",
+    "narration": "Flip it twice. The four outcomes have different chances: heads-heads forty nine percent, tails-tails nine, and heads-tails and tails-heads twenty one each.",
+    "code": "stage.clear()\nb2 = draw_bars(stage, [49, 21, 21, 9], labels=[\"HH\", \"HT\", \"TH\", \"TT\"], color=BLUE)\nbars = b2[0] if len(b2) == 2 else b2\nstage.caption(\"chances in %\")"
+   },
+   {
+    "intent": "HT and TH lit as equally likely, 21% each",
+    "narration": "Notice heads-then-tails and tails-then-heads are equally likely: point seven times point three, either way round.",
+    "code": "highlight(stage, bars[1], color=GREEN)\nhighlight(stage, bars[2], color=GREEN)\nstage.equation(r\"0.7 \\times 0.3 = 0.3 \\times 0.7 = 0.21\")"
+   },
+   {
+    "intent": "The rule written beside: HT means A, TH means B, HH or TT flip again",
+    "narration": "So call heads-tails a win for A and tails-heads a win for B. On a double, flip again. The result is perfectly fair.",
+    "code": "stage.equation(r\"0.7 \\times 0.3 = 0.3 \\times 0.7 = 0.21\", r\"\\text{HT} \\to A,\\ \\text{TH} \\to B,\\ \\text{else again}\")"
+   }
+  ]
+ }
+]
