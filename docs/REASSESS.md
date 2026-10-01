@@ -567,3 +567,43 @@ the Oct 3 launcher does not spend hours rendering before pushing.
 coder, and everything since is coder data or measurement. One slip: a
 commit went out with a failing test (pytest piped into tail before &&);
 fixed next commit.
+
+## Log · 2026-10-01 04:45Z
+
+**Since 09-30 05:00Z.** No model trained or scored; the Kaggle GPU is spent
+until Oct 3. All work went into what the Oct 3 SFT learns from and what
+the kit draws:
+- *Teacher scenes 596 → 815* (batches 51-103), every sheet looked at, the
+  arithmetic checked, 9 mistakes caught before commit (a swapped Moon
+  phase, New York east of London, a 65 that was 69, a lever's distances,
+  a "3°" label riding down to -5, …). Later batches are everyday objects
+  drawn from shapes (levers, pumps, locks, tides, eclipses), the failure
+  the held-out sheets showed, and 4 beats each.
+- *Kit fixes found by drawing them:* equation steps stack instead of
+  replacing (183 of 226 multi-step teacher equations ended the beat on
+  the answer alone); a picture drawn mid-screen avoids an equation already
+  up; draw_polygon keeps its coordinates; spaced LaTeX labels; curve
+  labels with words; highlight keeps text readable; a flipped vector's
+  label; years without a comma; gradient_descent draws its curve. Every
+  Claude scene up to batch 58 re-rendered with them: 659/659.
+- *Planner mix:* Claude arcs of 3 beats or fewer now count once, not three
+  times, so planner v5 isn't taught to stop early.
+- *README:* the short prompts are in-distribution; held-out is the test.
+
+**What the numbers say.** Nothing new yet. The last held-out re-score
+(kit930) showed kit changes didn't move kit v6. Today's changes act on
+beat-end frames (stacked equations, layout), so a re-score of v6 on the
+same plans is running now (ab_held_kit1001); the Gemini judge reports at
+07:15Z.
+
+**Does the plan hold for Oct 6?** Yes, with less slack: the SFT is on
+Oct 3 00:30Z, round 2 needs ~2 days of unattended Kaggle and Mac time,
+so v9 may land Oct 5 at best. If v8 doesn't beat v6 on held-out, v1.0
+ships v6 + planner v3 with today's kit, which is the "ship the best
+measured" rule, not a failure of the plan. The ≥ 50% held-out target is
+unlikely from v8 alone (local judge 52% / Gemini 37-40% today).
+
+**Spiralling?** Some risk: 50 batches is a lot of one activity with no
+measurement in between. The re-score running now and the judge at 07:15Z
+are the check. If neither moves, the batches' value rests entirely on the
+Oct 3 SFT, which is where it was always going to be measured.
