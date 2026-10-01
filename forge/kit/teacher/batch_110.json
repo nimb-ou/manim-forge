@@ -1,0 +1,102 @@
+[
+ {
+  "request": "how do shopkeepers count change from £20 for a £13.45 bill?",
+  "beats": [
+   {
+    "intent": "A number line from £13.45 to £20",
+    "narration": "The bill is thirteen forty five and you pay with a twenty. Shopkeepers count up from the price.",
+    "code": "stage.title(\"Counting up the change\")\nnl = NumberLine(x_range=[13, 20, 1], length=11, include_numbers=True, decimal_number_config={\"num_decimal_places\": 0}).move_to([0, -0.5, 0])\nstage.play(Create(nl))\nstage.add(nl)\nstart = mark_point(stage, nl, 13.45, color=RED, label=\"£13.45\", direction=UL)"
+   },
+   {
+    "intent": "Hops of 5p to £13.50 and 50p to £14",
+    "narration": "Five pence makes thirteen fifty, then fifty pence makes fourteen.",
+    "code": "hops = []\nfor a, b_, lab, col in ((13.45, 13.5, \"5p\", YELLOW), (13.5, 14, \"50p\", ORANGE)):\n    arc = ArcBetweenPoints(nl.n2p(a), nl.n2p(b_), angle=-PI / 2, color=col)\n    stage.play(Create(arc), run_time=0.6)\n    stage.add(arc)\n    stage.label(arc, lab, direction=UP, color=col)"
+   },
+   {
+    "intent": "Hops of £1 to £15 and £5 to £20",
+    "narration": "A pound makes fifteen, and a five pound note makes twenty.",
+    "code": "for a, b_, lab, col in ((14, 15, \"£1\", GREEN), (15, 20, \"£5\", BLUE)):\n    arc = ArcBetweenPoints(nl.n2p(a), nl.n2p(b_), angle=-PI / 2, color=col)\n    stage.play(Create(arc), run_time=0.6)\n    stage.add(arc)\n    stage.label(arc, lab, direction=UP, color=col)"
+   },
+   {
+    "intent": "The line beside 0.05 + 0.50 + 1 + 5 = £6.55",
+    "narration": "Add the hops: six pounds fifty five in change. And 13.45 plus 6.55 is 20.",
+    "code": "stage.equation(r\"0.05 + 0.50 + 1 + 5 = 6.55\", r\"13.45 + 6.55 = 20\")"
+   }
+  ]
+ },
+ {
+  "request": "why do I feel lighter when a lift starts going down?",
+  "beats": [
+   {
+    "intent": "A person standing on bathroom scales in a lift, the scales reading 60 kg",
+    "narration": "Stand on bathroom scales in a lift. Standing still, they read sixty kilograms.",
+    "code": "stage.title(\"Scales in a lift\")\nlift = Rectangle(width=3, height=4.4, color=GREY_B).move_to([-2.5, -0.3, 0])\nscale = Rectangle(width=1.4, height=0.3, color=WHITE, fill_opacity=0.6).move_to([-2.5, -2.3, 0])\nperson = VGroup(Circle(radius=0.3, color=YELLOW, fill_opacity=0.8).move_to([-2.5, 0.4, 0]), Rectangle(width=0.6, height=1.9, color=YELLOW, fill_opacity=0.6).move_to([-2.5, -1.2, 0]))\nstage.play(Create(lift), FadeIn(scale), FadeIn(person))\nstage.add(lift, scale, person)\nread = Text(\"60 kg\", font_size=30, color=GREEN).move_to([0.5, 1.5, 0])\nstage.play(FadeIn(read))\nstage.add(read)"
+   },
+   {
+    "intent": "The lift accelerating downward, an arrow down, the reading dropping to 48 kg",
+    "narration": "As the lift speeds up going down, the floor drops away a little and pushes up on you less. The scales read about forty eight.",
+    "code": "down = Arrow([0.0, 0.2, 0], [0.0, -1.6, 0], buff=0, color=RED)\nstage.play(GrowArrow(down), VGroup(lift, scale, person).animate.shift(0.3 * DOWN))\nstage.add(down)\nstage.play(Transform(read, Text(\"48 kg\", font_size=30, color=RED).move_to(read)))\ndown_lab = stage.label(down, \"speeding up downward\", direction=RIGHT, color=RED)"
+   },
+   {
+    "intent": "The lift accelerating upward, the reading rising to 72 kg",
+    "narration": "Speeding up going up, the floor pushes harder: about seventy two.",
+    "code": "stage.play(FadeOut(down), FadeOut(down_lab))\nup = Arrow([0.0, -1.6, 0], [0.0, 0.2, 0], buff=0, color=BLUE)\nstage.play(GrowArrow(up), VGroup(lift, scale, person).animate.shift(0.3 * UP))\nstage.add(up)\nstage.play(Transform(read, Text(\"72 kg\", font_size=30, color=BLUE).move_to(read)))\nstage.label(up, \"speeding up upward\", direction=RIGHT, color=BLUE)"
+   },
+   {
+    "intent": "The picture beside reading = m(g ± a) / g, with a = 2 m/s²",
+    "narration": "Your mass never changes; the push from the floor does. With two metres per second squared of acceleration, it's sixty times nine point eight minus or plus two, over nine point eight.",
+    "code": "stage.equation(r\"60 \\times \\frac{9.8 - 2}{9.8} \\approx 48\", r\"60 \\times \\frac{9.8 + 2}{9.8} \\approx 72\")"
+   }
+  ]
+ },
+ {
+  "request": "what does a '10%' hill sign mean?",
+  "beats": [
+   {
+    "intent": "A road sign with a triangle and 10%",
+    "narration": "A road sign warns of a ten percent hill.",
+    "code": "stage.title(\"A 10% hill\")\nsign = Triangle(color=RED, stroke_width=8).scale(1.3).move_to([-4.0, 0.3, 0])\nstage.play(Create(sign))\nstage.add(sign)\nstage.add(Text(\"10%\", font_size=34).move_to(sign.get_center() + 0.25 * DOWN))"
+   },
+   {
+    "intent": "A slope rising 1 m for every 10 m across",
+    "narration": "It means the road climbs one metre for every ten metres it goes along.",
+    "code": "k = 0.6\nA = np.array([-1.5, -1.8, 0])\nslope = Polygon(A, A + 10 * k * RIGHT, A + 10 * k * RIGHT + 1 * k * UP, color=GREY_B, fill_opacity=0.3)\nstage.play(Create(slope))\nstage.add(slope)\nstage.label(Line(A, A + 10 * k * RIGHT), \"10 m along\", direction=DOWN)\nstage.label(Line(A + 10 * k * RIGHT, A + 10 * k * RIGHT + k * UP), \"1 m up\", direction=RIGHT, color=YELLOW)"
+   },
+   {
+    "intent": "The angle at the bottom marked: about 5.7°",
+    "narration": "That's a gentler angle than it sounds: under six degrees.",
+    "code": "ang = Angle(Line(A, A + RIGHT), Line(A, A + 10 * k * RIGHT + 1 * k * UP), radius=2.0, color=GREEN)\nstage.play(Create(ang))\nstage.add(ang)\nstage.label(ang, \"5.7°\", direction=RIGHT, color=GREEN)"
+   },
+   {
+    "intent": "The slope beside rise/run = 1/10 = 10%, angle = arctan 0.1 ≈ 5.7°",
+    "narration": "Rise over run is one tenth, ten percent; the angle whose tangent is a tenth is five point seven degrees.",
+    "code": "stage.equation(r\"\\frac{1}{10} = 10\\%\", r\"\\arctan 0.1 \\approx 5.7^\\circ\")"
+   }
+  ]
+ },
+ {
+  "request": "what does 'per cent' actually mean?",
+  "beats": [
+   {
+    "intent": "A 10 by 10 grid of 100 squares",
+    "narration": "Per cent means out of a hundred. Here are a hundred squares.",
+    "code": "stage.title(\"Per cent\")\ngrid = VGroup(*[Square(0.4, stroke_width=1, color=GREY_B) for _ in range(100)]).arrange_in_grid(rows=10, cols=10, buff=0).move_to([-2.5, -0.3, 0])\nstage.play(FadeIn(grid))\nstage.add(grid)"
+   },
+   {
+    "intent": "37 squares shaded, labelled 37%",
+    "narration": "Shade thirty seven of them: that's thirty seven percent.",
+    "code": "stage.play(LaggedStart(*[grid[k].animate.set_fill(BLUE, opacity=0.7) for k in range(37)], lag_ratio=0.02))\nstage.label(grid, \"37 out of 100 = 37%\", direction=DOWN, color=BLUE)"
+   },
+   {
+    "intent": "A second grid with 37% of 200 people shown as 74",
+    "narration": "Thirty seven percent of two hundred people is thirty seven for every hundred: seventy four.",
+    "code": "stage.equation(r\"37\\% \\times 200 = \\frac{37}{100} \\times 200\", r\"= 74\")"
+   },
+   {
+    "intent": "The grid with a bar beside it comparing 37 out of 100 with 0.37 and 37/100",
+    "narration": "Thirty seven percent, thirty seven hundredths and nought point three seven are three ways to write the same thing.",
+    "code": "stage.equation(r\"37\\% = \\frac{37}{100} = 0.37\")"
+   }
+  ]
+ }
+]
