@@ -573,7 +573,7 @@ fixed next commit.
 **Since 09-30 05:00Z.** No model trained or scored; the Kaggle GPU is spent
 until Oct 3. All work went into what the Oct 3 SFT learns from and what
 the kit draws:
-- *Teacher scenes 596 → 815* (batches 51-103), every sheet looked at, the
+- *Teacher scenes 596 → 806* (batches 51-103), every sheet looked at, the
   arithmetic checked, 9 mistakes caught before commit (a swapped Moon
   phase, New York east of London, a 65 that was 69, a lever's distances,
   a "3°" label riding down to -5, …). Later batches are everyday objects
