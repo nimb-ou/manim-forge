@@ -1,0 +1,77 @@
+[
+ {
+  "request": "five numbers have a mean of 6; four of them are 4, 7, 5 and 9: what is the fifth?",
+  "beats": [
+   {
+    "intent": "Four bars of heights 4, 7, 5 and 9, and an empty fifth bar with a question mark",
+    "narration": "Five numbers have a mean of six. We know four of them: four, seven, five and nine.",
+    "code": "stage.title(\"The missing number\")\nax = Axes(x_range=[0, 6, 1], y_range=[0, 10, 2], x_length=5.5, y_length=4, axis_config={\"include_numbers\": True}, tips=False).move_to([-3.2, -0.6, 0])\nstage.play(Create(ax))\nstage.add(ax)\nvals = [4, 7, 5, 9]\nbars = VGroup(*[Rectangle(width=0.6, height=ax.c2p(0, v)[1] - ax.c2p(0, 0)[1], color=BLUE, fill_opacity=0.6).move_to(ax.c2p(i + 1, v / 2)) for i, v in enumerate(vals)])\ngap = DashedVMobject(Rectangle(width=0.6, height=1.0, color=GREY_B), num_dashes=16).move_to(ax.c2p(5, 1.2))\nstage.play(LaggedStart(*[GrowFromEdge(b, DOWN) for b in bars], lag_ratio=0.2), Create(gap))\nstage.add(bars, gap)\nqm = Text(\"?\", font_size=36, color=YELLOW).move_to(gap)\nstage.play(FadeIn(qm))"
+   },
+   {
+    "intent": "A dashed line at height 6 across all five bars: the mean",
+    "narration": "A mean of six means that if the five were levelled out, each would be six. So together they must total five times six: thirty.",
+    "code": "mean = DashedLine(ax.c2p(0.4, 6), ax.c2p(5.6, 6), color=GREEN)\nstage.play(Create(mean))\nstage.add(mean)\nstage.play(FadeIn(Text(\"mean 6\\ntotal 30\", font_size=24, color=GREEN).move_to(ax.c2p(6.6, 6))))"
+   },
+   {
+    "intent": "The four known bars adding to 25, leaving 5 for the last",
+    "narration": "The four we know add to twenty five. That leaves five for the missing number.",
+    "code": "stage.play(FadeIn(Text(\"4 + 7 + 5 + 9 = 25\", font_size=26, color=BLUE).move_to(ax.c2p(2.5, 10.8))))\nlast = Rectangle(width=0.6, height=ax.c2p(0, 5)[1] - ax.c2p(0, 0)[1], color=ORANGE, fill_opacity=0.7).move_to(ax.c2p(5, 2.5))\nstage.play(FadeOut(gap), FadeOut(qm), GrowFromEdge(last, DOWN))\nstage.add(last)\nstage.label(last, \"5\", direction=UP, color=ORANGE)"
+   },
+   {
+    "intent": "The bars beside 5 × 6 = 30 and 30 − 25 = 5",
+    "narration": "Total equals mean times count: thirty, minus the twenty five we have, is five.",
+    "code": "stage.equation(r\"5 \\times 6 = 30\", r\"30 - 25 = 5\")"
+   }
+  ]
+ },
+ {
+  "request": "how can you find the volume of a stone by dropping it in water?",
+  "beats": [
+   {
+    "intent": "A measuring jug of water at 200 ml and a stone beside it",
+    "narration": "A stone is too lumpy to measure with a ruler. Put two hundred millilitres of water in a measuring jug.",
+    "code": "stage.title(\"Volume by displacement\")\nk = 0.8\nbase = -2.4\njug = Rectangle(width=1.8, height=4.3, color=WHITE).move_to([-4.0, base + 2.15, 0])\nticks = VGroup(*[Line([-3.1, base + m * k, 0], [-3.45, base + m * k, 0], color=WHITE) for m in range(6)])\nnums = VGroup(*[Text(str(100 * m), font_size=22).move_to([-2.55, base + m * k, 0]) for m in range(6)])\nwater = Rectangle(width=1.7, height=2 * k, color=BLUE, fill_opacity=0.5, stroke_width=0).move_to([-4.0, base + k, 0])\nstone = Polygon([-1.6, -1.6, 0], [-1.0, -1.4, 0], [-0.7, -1.9, 0], [-1.1, -2.3, 0], [-1.7, -2.1, 0], color=GREY_B, fill_opacity=0.9)\nstage.play(Create(jug), Create(ticks), FadeIn(nums), FadeIn(water), FadeIn(stone))\nstage.add(jug, ticks, nums, water, stone)\nl200 = stage.label(water, \"200 ml\", direction=LEFT, color=BLUE)"
+   },
+   {
+    "intent": "The stone sinking into the jug and the water level rising to 260 ml",
+    "narration": "Drop the stone in. It pushes water out of its way, and the level rises to two hundred and sixty.",
+    "code": "stage.play(FadeOut(l200))\nstage.play(stone.animate.scale(0.8).move_to([-4.0, base + 0.4, 0]), water.animate.stretch_to_fit_height(2.6 * k).move_to([-4.0, base + 1.3 * k, 0]), run_time=1.5)\nstage.add(stone, water)\nlvl = Arrow([-5.6, base + 2.6 * k, 0], [-4.95, base + 2.6 * k, 0], buff=0, color=GREEN)\nstage.play(GrowArrow(lvl))\nstage.add(lvl)\nstage.label(lvl, \"260 ml\", direction=LEFT, color=GREEN)"
+   },
+   {
+    "intent": "The 60 ml rise highlighted as the stone's volume",
+    "narration": "The rise is exactly the space the stone takes up: sixty millilitres.",
+    "code": "rise = Rectangle(width=1.7, height=0.6 * k, color=YELLOW, fill_opacity=0.5, stroke_width=0).move_to([-4.0, base + 2.3 * k, 0])\nstage.play(FadeIn(rise))\nstage.add(rise)\nstage.play(FadeIn(Text(\"rise = stone\", font_size=26, color=YELLOW).move_to([-0.9, base + 2.3 * k, 0])))"
+   },
+   {
+    "intent": "The jug beside 260 − 200 = 60 ml = 60 cm³",
+    "narration": "Sixty millilitres is sixty cubic centimetres: the volume of the stone.",
+    "code": "stage.equation(r\"260 - 200 = 60 \\, \\mathrm{ml}\", r\"60 \\, \\mathrm{ml} = 60 \\, \\mathrm{cm^3}\")"
+   }
+  ]
+ },
+ {
+  "request": "how do you find the volume of a triangular prism?",
+  "beats": [
+   {
+    "intent": "A triangular prism: a triangle 4 wide and 3 tall stretched 10 long",
+    "narration": "A tent shape: a triangle four wide and three tall at each end, ten long.",
+    "code": "stage.title(\"Volume of a prism\")\nk = 0.5\no = np.array([-5.6, -1.8, 0])\nq = 10 * k * 0.45 * np.array([1, 0.5, 0])\nf = [o, o + 4 * k * RIGHT, o + np.array([2 * k, 3 * k, 0])]\nfront = Polygon(*f, color=ORANGE, fill_opacity=0.5)\nback = Polygon(*[p + q for p in f], color=ORANGE, stroke_opacity=0.6)\nedges = VGroup(*[Line(p, p + q, color=WHITE) for p in f])\nstage.play(Create(back), Create(edges), Create(front))\nstage.add(back, edges, front)\nstage.label(Line(f[0], f[1]), \"4\", direction=DOWN)\nstage.label(Line(f[1], f[1] + q), \"10\", direction=DR)"
+   },
+   {
+    "intent": "The triangle's height 3 drawn and its area 6 marked",
+    "narration": "The end triangle has area half of four times three: six square units.",
+    "code": "h = DashedLine(o + 2 * k * RIGHT, f[2], color=YELLOW)\nstage.play(Create(h))\nstage.add(h)\nstage.label(h, \"3\", direction=RIGHT, color=YELLOW)\nstage.play(front.animate.set_fill(YELLOW, opacity=0.6))\nstage.label(front, \"area 6\", direction=LEFT, color=YELLOW)"
+   },
+   {
+    "intent": "Copies of the triangle sliding back along the prism like slices",
+    "narration": "The prism is that same triangle all the way along: ten units of slices of area six.",
+    "code": "slices = VGroup(*[front.copy().set_fill(YELLOW, opacity=0.15).set_stroke(YELLOW, 1).shift(q * t / 5) for t in range(1, 6)])\nstage.play(LaggedStart(*[FadeIn(sl) for sl in slices], lag_ratio=0.2))\nstage.add(slices)"
+   },
+   {
+    "intent": "The prism beside ½ × 4 × 3 = 6 and 6 × 10 = 60",
+    "narration": "Volume of a prism is the area of its end times its length: six times ten, sixty cubic units.",
+    "code": "stage.equation(r\"\\frac{1}{2} \\times 4 \\times 3 = 6\", r\"6 \\times 10 = 60\")"
+   }
+  ]
+ }
+]
