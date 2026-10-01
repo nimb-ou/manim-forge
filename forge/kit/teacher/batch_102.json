@@ -1,0 +1,102 @@
+[
+ {
+  "request": "why are bubbles round?",
+  "beats": [
+   {
+    "intent": "A wobbly bubble outline relaxing into a circle",
+    "narration": "Blow a bubble and, whatever shape it starts, it settles into a sphere.",
+    "code": "stage.title(\"Why bubbles are round\")\nblob = VMobject(color=BLUE, stroke_width=5).set_points_smoothly([[1.6 * np.cos(a) * (1 + 0.25 * np.sin(3 * a)), 1.6 * np.sin(a) * (1 + 0.25 * np.sin(3 * a)) - 0.3, 0] for a in np.linspace(0, TAU, 13)])\nstage.play(Create(blob))\ncircle = Circle(radius=1.6, color=BLUE, stroke_width=5).move_to([0, -0.3, 0])\nstage.play(Transform(blob, circle), run_time=1.5)\nstage.add(blob)"
+   },
+   {
+    "intent": "A cube and a sphere side by side, each holding 1 litre of air",
+    "narration": "The soap film pulls itself as tight as it can, so the bubble takes the shape with the least surface for the air inside. Compare a cube and a sphere holding the same amount.",
+    "code": "stage.clear()\ncube = Square(1.9, color=ORANGE, fill_opacity=0.3).move_to([-2.5, -0.3, 0])\ncube_top = Polygon(cube.get_corner(UL), cube.get_corner(UR), cube.get_corner(UR) + np.array([0.6, 0.5, 0]), cube.get_corner(UL) + np.array([0.6, 0.5, 0]), color=ORANGE, fill_opacity=0.2)\ncube_side = Polygon(cube.get_corner(UR), cube.get_corner(DR), cube.get_corner(DR) + np.array([0.6, 0.5, 0]), cube.get_corner(UR) + np.array([0.6, 0.5, 0]), color=ORANGE, fill_opacity=0.15)\nball = Circle(radius=1.18, color=BLUE, fill_opacity=0.3).move_to([2.5, -0.3, 0])\nstage.play(FadeIn(cube), FadeIn(cube_top), FadeIn(cube_side), FadeIn(ball))\nstage.add(cube, cube_top, cube_side, ball)\nstage.label(cube, \"same volume\", direction=DOWN, color=ORANGE)\nstage.label(ball, \"same volume\", direction=DOWN, color=BLUE)"
+   },
+   {
+    "intent": "Bars of surface area for the same volume: cube 6.0, sphere 4.84",
+    "narration": "For one unit of volume, a cube needs six units of surface; a sphere only four point eight four.",
+    "code": "stage.clear()\nb = draw_bars(stage, [6.0, 4.84], labels=[\"cube\", \"sphere\"], color=BLUE)\nstage.caption(\"surface area for volume 1\")"
+   },
+   {
+    "intent": "The bars beside: the sphere has the least surface of any shape",
+    "narration": "No shape does better than a sphere, so the tight film always pulls a free bubble round.",
+    "code": "stage.equation(r\"A_{\\text{sphere}} = 4\\pi r^2 \\approx 4.84 \\text{ for } V = 1\")"
+   }
+  ]
+ },
+ {
+  "request": "what's the quick way to add 1 to 10?",
+  "beats": [
+   {
+    "intent": "A staircase of dots: 1 dot, then 2, up to 10",
+    "narration": "Stack dots in a staircase: one, two, three, up to ten.",
+    "code": "stage.title(\"Adding 1 to 10\")\npos = lambda col, row: np.array([-4.0 + 0.36 * col, -2.6 + 0.3 * row, 0])\nstair = VGroup(*[VGroup(*[Dot(pos(k, r), radius=0.1, color=YELLOW) for r in range(k + 1)]) for k in range(10)])\nstage.play(LaggedStart(*[FadeIn(c) for c in stair], lag_ratio=0.1))\nstage.add(stair)"
+   },
+   {
+    "intent": "A second staircase, flipped upside down, fitting on top to make a rectangle",
+    "narration": "Make a copy, turn it upside down and fit it on top.",
+    "code": "copy = VGroup(*[VGroup(*[Dot(pos(k, r), radius=0.1, color=BLUE) for r in range(k + 1, 11)]) for k in range(10)])\nstage.play(FadeIn(copy, shift=DOWN))\nstage.add(copy)"
+   },
+   {
+    "intent": "The rectangle of 10 columns of 11 dots outlined",
+    "narration": "Together they make a rectangle: ten columns, each with eleven dots. One hundred and ten.",
+    "code": "box = SurroundingRectangle(VGroup(stair, copy), color=GREEN, buff=0.1)\nstage.play(Create(box))\nstage.add(box)\nstage.label(box, \"10 × 11 = 110\", direction=RIGHT, color=GREEN)"
+   },
+   {
+    "intent": "The rectangle beside 1 + 2 + ... + 10 = 10 × 11 ÷ 2 = 55",
+    "narration": "The staircase is half of that: fifty five.",
+    "code": "stage.equation(r\"1 + 2 + \\cdots + 10 = \\frac{10 \\times 11}{2}\", r\"= 55\")"
+   }
+  ]
+ },
+ {
+  "request": "how can I find a tree's diameter with a tape measure?",
+  "beats": [
+   {
+    "intent": "A tree trunk seen from above as a circle, with a tape wrapped round it",
+    "narration": "You can't measure across a living tree, but you can wrap a tape round it.",
+    "code": "stage.title(\"Diameter from a tape\")\ntrunk = Circle(radius=1.6, color=ORANGE, fill_opacity=0.3).move_to([-2.5, -0.3, 0])\ntape = Circle(radius=1.7, color=YELLOW, stroke_width=6).move_to(trunk)\nstage.play(FadeIn(trunk))\nstage.play(Create(tape), run_time=1.5)\nstage.add(trunk, tape)\nstage.label(tape, \"2.2 m round\", direction=DOWN, color=YELLOW)"
+   },
+   {
+    "intent": "The tape unrolled into a straight line 2.2 m long",
+    "narration": "The tape reads two point two metres: that's the circumference.",
+    "code": "line = Line([0.5, 1.4, 0], [0.5 + 2.2 * 2.0, 1.4, 0], color=YELLOW, stroke_width=6)\nstage.play(TransformFromCopy(tape, line))\nstage.add(line)\nstage.label(line, \"2.2 m\", direction=UP, color=YELLOW)"
+   },
+   {
+    "intent": "The line split into about 3.14 diameter lengths",
+    "narration": "Any circle's circumference is pi, about three point one four, times its diameter.",
+    "code": "d = 2.2 / np.pi * 2.0\npieces = VGroup(*[Line([0.5 + k * d, 0.7, 0], [0.5 + min((k + 1) * d, 4.4), 0.7, 0], color=[GREEN, BLUE, GREEN, BLUE][k], stroke_width=8) for k in range(4)])\nstage.play(LaggedStart(*[Create(p) for p in pieces], lag_ratio=0.3))\nstage.add(pieces)\nticks = VGroup(*[Line([0.5 + k * d, 0.55, 0], [0.5 + k * d, 0.85, 0], color=WHITE) for k in range(4)])\nstage.play(Create(ticks))\nstage.add(ticks)\nstage.label(pieces, \"3.14 diameters\", direction=DOWN, color=GREEN)"
+   },
+   {
+    "intent": "The picture beside d = 2.2 ÷ π ≈ 0.70 m",
+    "narration": "So the diameter is the circumference divided by pi: about seventy centimetres.",
+    "code": "diam = Line(trunk.get_left(), trunk.get_right(), color=GREEN, stroke_width=5)\nstage.play(Create(diam))\nstage.add(diam)\nstage.equation(r\"d = \\frac{2.2}{\\pi} \\approx 0.70\\ \\text{m}\")"
+   }
+  ]
+ },
+ {
+  "request": "how long does sunlight take to reach us?",
+  "beats": [
+   {
+    "intent": "The Sun on the left and the Earth on the right, 150 million km apart",
+    "narration": "The Earth is about a hundred and fifty million kilometres from the Sun.",
+    "code": "stage.title(\"Light from the Sun\")\nsun = Circle(radius=1.0, color=YELLOW, fill_opacity=0.9).move_to([-5.0, 0, 0])\nearth = Circle(radius=0.25, color=BLUE, fill_opacity=0.9).move_to([5.0, 0, 0])\nstage.play(FadeIn(sun), FadeIn(earth))\nstage.add(sun, earth)\ngap = DoubleArrow([-3.9, -1.0, 0], [4.7, -1.0, 0], buff=0, color=GREY_B)\nstage.play(GrowArrow(gap))\nstage.add(gap)\nstage.label(gap, \"150 000 000 km\", direction=DOWN)"
+   },
+   {
+    "intent": "A pulse of light leaving the Sun and crossing the gap",
+    "narration": "Light moves at three hundred thousand kilometres every second.",
+    "code": "pulse = Dot([-3.9, 0, 0], color=YELLOW, radius=0.12)\nstage.add(pulse)\nstage.play(pulse.animate.move_to([4.7, 0, 0]), run_time=3, rate_func=linear)\nstage.caption(\"300 000 km every second\")"
+   },
+   {
+    "intent": "A clock at the Earth reading about 8 minutes 20 seconds",
+    "narration": "It arrives about five hundred seconds later: eight minutes and twenty seconds.",
+    "code": "clock = Circle(radius=0.6, color=WHITE).move_to([4.6, 1.9, 0])\nhand = Line(clock.get_center(), clock.get_center() + 0.5 * UP, color=RED)\nstage.play(Create(clock), Create(hand))\nstage.play(Rotate(hand, -TAU * 8.3 / 60, about_point=clock.get_center()))\nstage.add(clock, hand)\nstage.label(clock, \"8 min 20 s\", direction=LEFT)"
+   },
+   {
+    "intent": "The picture beside 150 000 000 ÷ 300 000 = 500 s",
+    "narration": "So the sunlight you see left the Sun over eight minutes ago.",
+    "code": "stage.equation(r\"\\frac{1.5 \\times 10^8}{3 \\times 10^5} = 500\\ \\text{s}\")"
+   }
+  ]
+ }
+]
