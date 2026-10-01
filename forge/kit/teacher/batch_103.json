@@ -1,0 +1,102 @@
+[
+ {
+  "request": "how many different meals can I make with 3 breads, 4 fillings and 2 drinks?",
+  "beats": [
+   {
+    "intent": "Three bread boxes in a column",
+    "narration": "A sandwich shop offers three breads.",
+    "code": "stage.title(\"Counting combinations\")\nbreads = VGroup(*[RoundedRectangle(width=1.6, height=0.6, corner_radius=0.15, color=ORANGE, fill_opacity=0.4) for _ in range(3)]).arrange(DOWN, buff=0.5).move_to([-4.5, -0.3, 0])\nstage.play(LaggedStart(*[FadeIn(b) for b in breads], lag_ratio=0.2))\nstage.add(breads)\nnames = VGroup(*[Text(t, font_size=22).move_to(b) for b, t in zip(breads, [\"white\", \"brown\", \"rye\"])])\nstage.play(FadeIn(names))\nstage.add(names)"
+   },
+   {
+    "intent": "Each bread branching to 4 fillings: 12 branches",
+    "narration": "Each bread can go with any of four fillings: three times four, twelve sandwiches.",
+    "code": "fills = VGroup()\nfor b in breads:\n    for k in range(4):\n        d = Dot(b.get_right() + np.array([2.0, (k - 1.5) * 0.35, 0]), color=GREEN, radius=0.07)\n        fills.add(d)\n        stage.add(Line(b.get_right(), d.get_center(), color=GREEN, stroke_width=2))\nstage.play(FadeIn(fills))\nstage.add(fills)\nstage.caption(\"3 × 4 = 12 sandwiches\")"
+   },
+   {
+    "intent": "Each sandwich branching to 2 drinks: 24 ends",
+    "narration": "And each sandwich can come with either of two drinks: twenty four meals.",
+    "code": "ends = VGroup()\nfor f in fills:\n    for k in range(2):\n        e = Dot(f.get_center() + np.array([1.8, (k - 0.5) * 0.15, 0]), color=BLUE, radius=0.05)\n        ends.add(e)\n        stage.add(Line(f.get_center(), e.get_center(), color=BLUE, stroke_width=1))\nstage.play(FadeIn(ends))\nstage.add(ends)\nstage.caption(\"12 × 2 = 24 meals\")"
+   },
+   {
+    "intent": "The tree beside 3 × 4 × 2 = 24",
+    "narration": "When choices are independent, multiply the number of options at each step.",
+    "code": "stage.equation(r\"3 \\times 4 \\times 2 = 24\")"
+   }
+  ]
+ },
+ {
+  "request": "how does an hourglass measure a minute?",
+  "beats": [
+   {
+    "intent": "An hourglass with 300 g of sand in the top bulb",
+    "narration": "An hourglass holds three hundred grams of sand in its top bulb.",
+    "code": "stage.title(\"An hourglass\")\nglass = VMobject(color=WHITE).set_points_as_corners([[-1.2, 2.2, 0], [1.2, 2.2, 0], [0.12, 0, 0], [1.2, -2.2, 0], [-1.2, -2.2, 0], [-0.12, 0, 0], [-1.2, 2.2, 0]])\ntop_sand = Polygon([-1.0, 1.9, 0], [1.0, 1.9, 0], [0.1, 0.15, 0], [-0.1, 0.15, 0], stroke_width=0, fill_color=YELLOW, fill_opacity=0.8)\nstage.play(Create(glass), FadeIn(top_sand))\nstage.add(glass, top_sand)\nstage.label(glass, \"300 g of sand\", direction=RIGHT, color=YELLOW)"
+   },
+   {
+    "intent": "A thin stream of sand falling through the neck at 5 g per second",
+    "narration": "The narrow neck lets through a steady five grams every second.",
+    "code": "stream = Line([0, 0.1, 0], [0, -2.0, 0], color=YELLOW, stroke_width=2)\nstage.play(Create(stream))\nstage.add(stream)\nstage.caption(\"5 g every second\")"
+   },
+   {
+    "intent": "The top bulb emptying while a pile grows in the bottom",
+    "narration": "The top empties as the pile below grows.",
+    "code": "pile = Polygon([-1.0, -2.1, 0], [1.0, -2.1, 0], [0, -1.0, 0], stroke_width=0, fill_color=YELLOW, fill_opacity=0.8)\nsmall_top = Polygon([-0.25, 0.45, 0], [0.25, 0.45, 0], [0.1, 0.15, 0], [-0.1, 0.15, 0], stroke_width=0, fill_color=YELLOW, fill_opacity=0.8)\nstage.play(Transform(top_sand, small_top), FadeIn(pile), run_time=2.5)\nstage.add(pile)"
+   },
+   {
+    "intent": "The picture beside 300 g ÷ 5 g/s = 60 s",
+    "narration": "Three hundred grams at five grams a second takes sixty seconds: one minute.",
+    "code": "stage.equation(r\"\\frac{300\\ \\text{g}}{5\\ \\text{g/s}} = 60\\ \\text{s}\")"
+   }
+  ]
+ },
+ {
+  "request": "how do you find the volume of a box?",
+  "beats": [
+   {
+    "intent": "A 3 by 2 base of unit squares",
+    "narration": "Cover the floor of the box with unit cubes: three along, two deep, six cubes.",
+    "code": "stage.title(\"Volume of a box\")\nk = 0.8\noff = np.array([0.45, 0.35, 0])\ncorner = lambda x, y, z: np.array([x * k + y * off[0] - 2.0, z * k + y * off[1] - 2.0, 0])\ncube = lambda x, y, z: VGroup(\n    Polygon(corner(x, y, z), corner(x + 1, y, z), corner(x + 1, y, z + 1), corner(x, y, z + 1), color=WHITE, stroke_width=1.5, fill_color=BLUE, fill_opacity=1),\n    Polygon(corner(x, y, z + 1), corner(x + 1, y, z + 1), corner(x + 1, y + 1, z + 1), corner(x, y + 1, z + 1), color=WHITE, stroke_width=1.5, fill_color=BLUE_B, fill_opacity=1),\n    Polygon(corner(x + 1, y, z), corner(x + 1, y + 1, z), corner(x + 1, y + 1, z + 1), corner(x + 1, y, z + 1), color=WHITE, stroke_width=1.5, fill_color=BLUE_D, fill_opacity=1))\nlayer = lambda z: VGroup(*[cube(x, y, z) for y in (1, 0) for x in (0, 1, 2)])\nl0 = layer(0)\nstage.play(FadeIn(l0))\nstage.add(l0)\nstage.caption(\"one layer: 3 × 2 = 6 cubes\")"
+   },
+   {
+    "intent": "Layers stacked up to a height of 4",
+    "narration": "Stack layers until the box is four high.",
+    "code": "layers = VGroup()\nfor z in (1, 2, 3):\n    lz = layer(z)\n    stage.play(FadeIn(lz, shift=DOWN), run_time=0.5)\n    layers.add(lz)\nstage.add(layers)\nstage.caption(\"4 layers\")"
+   },
+   {
+    "intent": "The stack outlined with its edges labelled 3, 2 and 4",
+    "narration": "The box is three long, two deep and four high.",
+    "code": "everything = VGroup(l0, layers)\nstage.label(everything, \"3 long\", direction=DOWN)\nstage.label(everything, \"4 high\", direction=LEFT)\nstage.label(everything, \"2 deep\", direction=UR)"
+   },
+   {
+    "intent": "The box beside V = 3 × 2 × 4 = 24",
+    "narration": "Four layers of six cubes: twenty four. Volume is length times width times height.",
+    "code": "stage.equation(r\"V = 3 \\times 2 \\times 4 = 24\")"
+   }
+  ]
+ },
+ {
+  "request": "why do aeroplane windows have rounded corners?",
+  "beats": [
+   {
+    "intent": "A square window outline in a curved fuselage wall",
+    "narration": "The cabin is pressurised, so the skin of the plane is stretched like a balloon, and the forces flow around the windows.",
+    "code": "stage.title(\"Rounded windows\")\nwall = Rectangle(width=5, height=3.6, color=GREY_B, fill_opacity=0.15).move_to([-3.2, -0.3, 0])\nsquare = Square(1.4, color=WHITE).move_to(wall)\nstage.play(FadeIn(wall), Create(square))\nstage.add(wall, square)"
+   },
+   {
+    "intent": "Stress lines bending round the square window and crowding at its sharp corners, the corners lit red",
+    "narration": "Around a square hole, the stress crowds into the sharp corners, where cracks can start.",
+    "code": "for y in (-1.3, -0.9, 0.9, 1.3):\n    stage.add(Line([-5.6, y - 0.3, 0], [-0.8, y - 0.3, 0], color=YELLOW, stroke_width=1.5))\ncorners = VGroup(*[Dot(square.get_corner(c), color=RED, radius=0.15) for c in (UL, UR, DL, DR)])\nstage.play(FadeIn(corners))\nstage.add(corners)\nstage.label(square, \"stress piles up here\", direction=DOWN, color=RED)"
+   },
+   {
+    "intent": "A rounded window beside it with stress flowing smoothly around",
+    "narration": "Round the corners and the stress spreads out smoothly instead.",
+    "code": "wall2 = Rectangle(width=5, height=3.6, color=GREY_B, fill_opacity=0.15).move_to([3.0, -0.3, 0])\nrounded = RoundedRectangle(width=1.1, height=1.6, corner_radius=0.5, color=WHITE).move_to(wall2)\nstage.play(FadeIn(wall2), Create(rounded))\nstage.add(wall2, rounded)\nflows = VGroup(*[ArcBetweenPoints([0.6, y, 0], [5.4, y, 0], angle=-0.25 * np.sign(y + 0.3) if abs(y + 0.3) < 1.1 else 0, color=GREEN, stroke_width=1.5) for y in (-1.6, -1.2, 0.6, 1.0)])\nstage.play(Create(flows))\nstage.add(flows)\nstage.label(rounded, \"smooth: no weak spot\", direction=DOWN, color=GREEN)"
+   },
+   {
+    "intent": "Both windows side by side with the caption: sharp corners concentrate stress",
+    "narration": "Early jets with square windows suffered cracks from those corners. Every airliner since has rounded windows.",
+    "code": "stage.play(Indicate(corners), Indicate(rounded))\nstage.caption(\"sharp corners concentrate stress\")"
+   }
+  ]
+ }
+]
