@@ -1,0 +1,102 @@
+[
+ {
+  "request": "how do you read a grid reference on a map?",
+  "beats": [
+   {
+    "intent": "A map grid with eastings 30 to 35 along the bottom and northings 50 to 54 up the side",
+    "narration": "Maps are covered in a grid. The lines are numbered: eastings along the bottom, northings up the side.",
+    "code": "stage.title(\"Grid references\")\ns = 0.8\no = np.array([-5.6, -2.2, 0])\ngrid = VGroup(*[Line(o + s * np.array([i, 0, 0]), o + s * np.array([i, 4, 0]), color=GREY_B) for i in range(6)], *[Line(o + s * np.array([0, j, 0]), o + s * np.array([5, j, 0]), color=GREY_B) for j in range(5)])\nstage.play(Create(grid))\nstage.add(grid)\nstage.play(*[FadeIn(Text(str(30 + i), font_size=22).move_to(o + s * np.array([i, -0.4, 0]))) for i in range(6)], *[FadeIn(Text(str(50 + j), font_size=22).move_to(o + s * np.array([-0.5, j, 0]))) for j in range(5)])"
+   },
+   {
+    "intent": "A church symbol inside one square",
+    "narration": "There's a church in one of the squares. How do you tell someone which one?",
+    "code": "church = VGroup(Square(0.34, color=YELLOW, fill_opacity=0.6), Line(UP * 0.17, UP * 0.42, color=YELLOW), Line(UP * 0.32 + LEFT * 0.08, UP * 0.32 + RIGHT * 0.08, color=YELLOW)).move_to(o + s * np.array([2.5, 1.5, 0]))\nstage.play(FadeIn(church))\nstage.add(church)\nstage.label(church, \"church\", direction=RIGHT, color=YELLOW)"
+   },
+   {
+    "intent": "An arrow along the bottom to easting 32, then up to northing 51: the square's bottom-left corner",
+    "narration": "Go along the corridor first, then up the stairs. Along to thirty two, the line on the square's left edge; then up to fifty one, the line along its bottom.",
+    "code": "along = Arrow(o, o + s * np.array([2, 0, 0]), buff=0, color=ORANGE, stroke_width=6)\nup = Arrow(o + s * np.array([2, 0, 0]), o + s * np.array([2, 1, 0]), buff=0, color=BLUE, stroke_width=6)\nstage.play(GrowArrow(along))\nstage.play(GrowArrow(up))\nstage.add(along, up)\ncorner = Dot(o + s * np.array([2, 1, 0]), color=GREEN)\nstage.play(FadeIn(corner))\nstage.add(corner)\nstage.label(corner, \"32, 51\", direction=DL, color=GREEN)"
+   },
+   {
+    "intent": "The map beside the grid reference 3251: easting first, then northing",
+    "narration": "Write the two numbers together, easting first: the church is in square three two five one.",
+    "code": "stage.equation(r\"32 \\ \\& \\ 51 \\Rightarrow 3251\")"
+   }
+  ]
+ },
+ {
+  "request": "how do you find the highest common factor of 12 and 18?",
+  "beats": [
+   {
+    "intent": "The factors of 12 and of 18 listed in two rows",
+    "narration": "List the factors. Twelve: one, two, three, four, six, twelve. Eighteen: one, two, three, six, nine, eighteen.",
+    "code": "stage.title(\"Highest common factor\")\nf12 = [1, 2, 3, 4, 6, 12]\nf18 = [1, 2, 3, 6, 9, 18]\nr12 = VGroup(*[Text(str(v), font_size=30) for v in f12]).arrange(RIGHT, buff=0.45).move_to([-2.8, 1.6, 0])\nr18 = VGroup(*[Text(str(v), font_size=30) for v in f18]).arrange(RIGHT, buff=0.45).move_to([-2.8, 0.6, 0])\nstage.play(FadeIn(r12), FadeIn(r18))\nstage.add(r12, r18)\nstage.label(r12, \"12:\", direction=LEFT, color=BLUE)\nstage.label(r18, \"18:\", direction=LEFT, color=ORANGE)"
+   },
+   {
+    "intent": "The common factors 1, 2, 3 and 6 coloured green in both rows",
+    "narration": "The factors they share are one, two, three and six.",
+    "code": "common = {1, 2, 3, 6}\nstage.play(*[t.animate.set_color(GREEN) for row, vals in ((r12, f12), (r18, f18)) for t, v in zip(row, vals) if v in common])"
+   },
+   {
+    "intent": "The biggest shared factor, 6, boxed in both rows; 12 as two rows of 6 dots and 18 as three rows of 6",
+    "narration": "The highest is six. Twelve is two rows of six and eighteen is three rows of six: six is the biggest block both are made of.",
+    "code": "b1 = SurroundingRectangle(r12[4], color=YELLOW, buff=0.1)\nb2 = SurroundingRectangle(r18[3], color=YELLOW, buff=0.1)\nstage.play(Create(b1), Create(b2))\nstage.add(b1, b2)\nd12 = VGroup(*[Dot([-5.6 + 0.35 * i, -0.9 - 0.35 * j, 0], radius=0.1, color=BLUE) for j in range(2) for i in range(6)])\nd18 = VGroup(*[Dot([-2.6 + 0.35 * i, -0.9 - 0.35 * j, 0], radius=0.1, color=ORANGE) for j in range(3) for i in range(6)])\nstage.play(FadeIn(d12), FadeIn(d18))\nstage.add(d12, d18)\nstage.label(d12, \"2 × 6\", direction=DOWN, color=BLUE)\nstage.label(d18, \"3 × 6\", direction=DOWN, color=ORANGE)"
+   },
+   {
+    "intent": "The lists beside HCF(12, 18) = 6",
+    "narration": "So the highest common factor of twelve and eighteen is six.",
+    "code": "stage.equation(r\"12 = 6 \\times 2, \\ 18 = 6 \\times 3\", r\"\\mathrm{HCF}(12, 18) = 6\")"
+   }
+  ]
+ },
+ {
+  "request": "how do you write 3,400,000 in standard form?",
+  "beats": [
+   {
+    "intent": "3400000 written out digit by digit in place-value columns",
+    "narration": "Three million four hundred thousand, written out: a three, a four and five zeros.",
+    "code": "stage.title(\"Standard form\")\ndigits = \"3400000\"\nstep = 0.75\nx0 = -5.6\ncols = VGroup(*[Text(d, font_size=40, color=YELLOW if i < 2 else WHITE).move_to([x0 + i * step, 0.8, 0]) for i, d in enumerate(digits)])\npoint = Dot([x0 + 6 * step + 0.35, 0.6, 0], color=RED, radius=0.07)\nstage.play(FadeIn(cols), FadeIn(point))\nstage.add(cols, point)\nstage.label(cols, \"3 400 000\", direction=UP)"
+   },
+   {
+    "intent": "The decimal point hopping six places left, the hops numbered 1 to 6",
+    "narration": "Move the decimal point left until there's just one digit in front of it. That takes six hops.",
+    "code": "hops = VGroup()\nfor k in range(6):\n    a = np.array([x0 + (6 - k) * step + 0.35, 0.4, 0])\n    b = np.array([x0 + (5 - k) * step + 0.35, 0.4, 0])\n    arc = ArcBetweenPoints(a, b, angle=-PI / 2, color=RED)\n    stage.play(Create(arc), point.animate.move_to(b + 0.2 * UP), run_time=0.35)\n    hops.add(arc, Text(str(k + 1), font_size=20, color=RED).move_to((a + b) / 2 + 0.45 * DOWN))\nstage.add(hops)\nstage.play(FadeIn(VGroup(*[h for h in hops if isinstance(h, Text)])))"
+   },
+   {
+    "intent": "The result 3.4 × 10⁶ written below",
+    "narration": "That leaves three point four, and six hops means times ten to the sixth.",
+    "code": "res = MathTex(r\"3.4 \\times 10^6\", color=GREEN).scale(1.2).move_to([-3.4, -1.5, 0])\nstage.play(Write(res))\nstage.add(res)"
+   },
+   {
+    "intent": "The digits beside 3,400,000 = 3.4 × 10⁶ = 3.4 × 1,000,000",
+    "narration": "Standard form is a number from one to ten, times a power of ten: three point four times a million.",
+    "code": "stage.equation(r\"3\\,400\\,000 = 3.4 \\times 10^6\", r\"= 3.4 \\times 1\\,000\\,000\")"
+   }
+  ]
+ },
+ {
+  "request": "how do you put 0.5, 0.45, 0.405 and 0.54 in order?",
+  "beats": [
+   {
+    "intent": "The four numbers in place-value columns, padded with grey zeros to three decimal places",
+    "narration": "Line the four numbers up by their decimal points, and pad them with zeros so they all have three decimal places.",
+    "code": "stage.title(\"Ordering decimals\")\nnums = [\"0.500\", \"0.450\", \"0.405\", \"0.540\"]\norig = [\"0.5\", \"0.45\", \"0.405\", \"0.54\"]\nrows = VGroup()\nfor r, (n, o_) in enumerate(zip(nums, orig)):\n    row = VGroup(*[Text(ch, font_size=34, color=WHITE if i < len(o_) else GREY_D).move_to([-5.6 + 0.75 * i, 1.5 - 0.62 * r - (0.13 if ch == \".\" else 0), 0]) for i, ch in enumerate(n)])\n    rows.add(row)\nstage.play(LaggedStart(*[FadeIn(r) for r in rows], lag_ratio=0.2))\nstage.add(rows)\nheads = VGroup(*[Text(t, font_size=15, color=BLUE).move_to([-5.6 + 0.75 * i, 2.1, 0]) for i, t in ((2, \"1/10\"), (3, \"1/100\"), (4, \"1/1000\"))])\nstage.play(FadeIn(heads))\nstage.add(heads)"
+   },
+   {
+    "intent": "The tenths column compared: 5, 4, 4, 5; then the hundredths split the ties",
+    "narration": "Compare tenths first: two numbers have five tenths and two have four. Within each pair, the hundredths decide.",
+    "code": "tenths = SurroundingRectangle(VGroup(*[r[2] for r in rows]), color=YELLOW, buff=0.08)\nstage.play(Create(tenths))\nstage.add(tenths)\nhund = SurroundingRectangle(VGroup(*[r[3] for r in rows]), color=ORANGE, buff=0.08)\nstage.play(Create(hund))\nstage.add(hund)"
+   },
+   {
+    "intent": "The four numbers placed as dots on a number line from 0.4 to 0.6",
+    "narration": "On a number line from nought point four to nought point six they fall in order: nought point four oh five, nought point four five, nought point five, nought point five four.",
+    "code": "nl = NumberLine(x_range=[0.4, 0.6, 0.05], length=8, include_numbers=True, decimal_number_config={\"num_decimal_places\": 2}, font_size=22).move_to([-1.5, -2.2, 0])\nstage.play(Create(nl))\nstage.add(nl)\nfor v, col in ((0.405, GREEN), (0.45, BLUE), (0.5, YELLOW), (0.54, ORANGE)):\n    d = Dot(nl.n2p(v), color=col, radius=0.1)\n    stage.play(FadeIn(d), run_time=0.3)\n    stage.add(d)\n    stage.label(d, f\"{v:g}\", direction=UP, color=col)"
+   },
+   {
+    "intent": "The working beside 0.405 < 0.45 < 0.5 < 0.54",
+    "narration": "More digits doesn't mean bigger: compare place by place, from the left.",
+    "code": "stage.equation(r\"0.405 < 0.45 < 0.5 < 0.54\")"
+   }
+  ]
+ }
+]

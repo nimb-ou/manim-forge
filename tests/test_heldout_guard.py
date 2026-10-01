@@ -35,3 +35,8 @@ def test_a_kit_beat_is_judged_by_its_own_intent_too():
                               f"WRITE THIS BEAT — step 3 of 4\n  intent: {intent}\n  narration: n"}]}
     assert kit_row_touches_heldout(row("u + v drawn tip to tail"))
     assert not kit_row_touches_heldout(row("the grid with u and v"))
+
+
+def test_the_harmonic_sum_is_caught_without_its_name():
+    assert touches_heldout("how a sum like 1 + 1/2 + 1/3 + ... keeps growing")
+    assert not touches_heldout("why 1/2 + 1/4 + 1/8 + ... adds up to 1")

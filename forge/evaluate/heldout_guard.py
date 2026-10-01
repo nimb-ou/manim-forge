@@ -15,7 +15,7 @@ from __future__ import annotations
 import re
 
 HELDOUT = re.compile(
-    r"harmonic series|chain rule"
+    r"harmonic series|1 ?\+ ?1/2 ?\+ ?1/3|chain rule"
     r"|matri\w* multiplication|composition of (linear )?(transformations|maps)"
     r"|one transformation after another"
     r"|monty hall|compound(ed)? interest|continuously compound|euler'?s number|the number e\b"
