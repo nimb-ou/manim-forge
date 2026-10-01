@@ -613,3 +613,22 @@ today's kit: local judge 52% / 32.5% (was 52% / 33%), five sheets changed,
 all in captions. As at kit930: the kit fixes don't move v6; they matter
 through the teacher scenes v8 learns from. Nothing to change in the plan.
 
+
+## Log · 2026-10-01 07:10Z
+
+**Since 04:45Z.** Teacher batches 104-109 (806 → 830 scenes, 4 beats each,
+each sheet looked at; caught: a mean of 7.27 written as 7.2, a 75%
+grid shaded row by row instead of in three full quarters, accelerating
+car positions spaced evenly). Gemma arcs 395 → 595 since its writer was
+restarted; kit-gemma rows 500 → 632; local critic verdicts 886 scenes.
+
+**What the numbers say.** The only new number is from 05:15Z: today's kit
+leaves kit v6's held-out score where it was (52% / 32.5%). The Gemini judge
+on the five A/B runs starts at 07:15Z.
+
+**Plan.** Unchanged. Oct 2 18:00Z rebuilds the Claude rows (all 830
+scenes); Oct 3 00:30Z trains kit v8 and planner v5; round 2 follows.
+
+**Spiralling?** No new risk since 04:45Z: the activity is the same, the
+check on it is the same Oct 3 measurement, and nothing measured today
+contradicts the plan.
