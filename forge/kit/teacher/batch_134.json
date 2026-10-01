@@ -1,0 +1,102 @@
+[
+ {
+  "request": "why do the gradients of perpendicular lines multiply to -1?",
+  "beats": [
+   {
+    "intent": "Axes with the line y = 2x and its slope triangle: 1 across, 2 up",
+    "narration": "The line y equals two x climbs two for every one across.",
+    "code": "stage.title(\"Perpendicular gradients\")\nax = Axes(x_range=[-3, 3, 1], y_range=[-3, 3, 1], x_length=5.4, y_length=5.4, tips=False).move_to([-3.2, -0.4, 0])\nstage.play(Create(ax))\nstage.add(ax)\nl1 = Line(ax.c2p(-1.4, -2.8), ax.c2p(1.4, 2.8), color=BLUE)\ntri1 = Polygon(ax.c2p(0, 0), ax.c2p(1, 0), ax.c2p(1, 2), color=BLUE, fill_opacity=0.25)\nstage.play(Create(l1), FadeIn(tri1))\nstage.add(l1, tri1)\nstage.play(FadeIn(Text(\"gradient 2\", font_size=26, color=BLUE).move_to(ax.c2p(2.3, 2.6))))"
+   },
+   {
+    "intent": "The line and its triangle turned a quarter turn about the origin",
+    "narration": "Turn the line and its triangle a quarter turn about the origin. The new line is at right angles to the first.",
+    "code": "l2 = l1.copy().set_color(ORANGE)\ntri2 = tri1.copy().set_color(ORANGE)\nstage.add(l2, tri2)\nstage.play(Rotate(VGroup(l2, tri2), angle=PI / 2, about_point=ax.c2p(0, 0)), run_time=1.5)\nstage.add(l2, tri2)\nra = RightAngle(Line(ax.c2p(0, 0), ax.c2p(1, 2)), Line(ax.c2p(0, 0), ax.c2p(-2, 1)), length=0.25, color=WHITE)\nstage.play(Create(ra))\nstage.add(ra)"
+   },
+   {
+    "intent": "The turned triangle reads 2 across to the left and 1 up: gradient −1/2",
+    "narration": "The triangle's sides have swapped roles: now it goes two to the left for one up. That's a gradient of minus a half.",
+    "code": "stage.play(FadeIn(Text(\"2 left\", font_size=24, color=ORANGE).move_to(ax.c2p(-1, 1.35))), FadeIn(Text(\"1 up\", font_size=24, color=ORANGE).move_to(ax.c2p(-0.45, 0.4))))\nstage.play(FadeIn(Text(\"gradient −1/2\", font_size=26, color=ORANGE).move_to(ax.c2p(2.2, -1.6))))"
+   },
+   {
+    "intent": "The axes beside 2 × (−1/2) = −1",
+    "narration": "A quarter turn swaps rise and run and flips one sign, so the gradients multiply to minus one.",
+    "code": "stage.equation(r\"m_1 = 2, \\ m_2 = -\\frac{1}{2}\", r\"2 \\times \\left(-\\frac{1}{2}\\right) = -1\")"
+   }
+  ]
+ },
+ {
+  "request": "how do you make a scale drawing of an 8 m by 6 m room?",
+  "beats": [
+   {
+    "intent": "A room plan 8 m long and 6 m wide",
+    "narration": "A classroom is eight metres long and six metres wide. We want to draw it on squared paper.",
+    "code": "stage.title(\"A scale drawing\")\nk = 0.42\nroom = Rectangle(width=8 * k, height=6 * k, color=WHITE, fill_opacity=0.1).move_to([-4.6, -0.2, 0])\nstage.play(Create(room))\nstage.add(room)\nstage.label(Line(room.get_corner(DL), room.get_corner(DR)), \"8 m\", direction=DOWN)\nstage.label(Line(room.get_corner(DL), room.get_corner(UL)), \"6 m\", direction=LEFT)"
+   },
+   {
+    "intent": "A sheet of 1 cm squared paper and the scale 1 cm : 2 m",
+    "narration": "Choose a scale: one centimetre on the paper stands for two metres in the room.",
+    "code": "s = 0.55\npaper = VGroup(*[Square(s, color=GREY_D, stroke_width=1) for _ in range(30)]).arrange_in_grid(rows=5, cols=6, buff=0).move_to([-0.2, -0.2, 0])\nstage.play(FadeIn(paper))\nstage.add(paper)\nstage.label(paper, \"1 cm : 2 m\", direction=UP, color=YELLOW)"
+   },
+   {
+    "intent": "The room drawn on the paper as a 4 by 3 square rectangle",
+    "narration": "Eight metres becomes four centimetres and six metres becomes three: a four by three rectangle.",
+    "code": "corner = paper.get_corner(DL) + np.array([s, s, 0])\ndraw = Rectangle(width=4 * s, height=3 * s, color=ORANGE, stroke_width=5).move_to(corner + np.array([2 * s, 1.5 * s, 0]))\nstage.play(Create(draw))\nstage.add(draw)\nstage.label(Line(draw.get_corner(DL), draw.get_corner(DR)), \"4 cm\", direction=DOWN, color=ORANGE)\nstage.label(Line(draw.get_corner(DR), draw.get_corner(UR)), \"3 cm\", direction=RIGHT, color=ORANGE)"
+   },
+   {
+    "intent": "The drawings beside 8 ÷ 2 = 4 cm and 6 ÷ 2 = 3 cm",
+    "narration": "Divide every real length by two to get centimetres on the drawing.",
+    "code": "stage.equation(r\"8 \\div 2 = 4 \\, \\mathrm{cm}\", r\"6 \\div 2 = 3 \\, \\mathrm{cm}\")"
+   }
+  ]
+ },
+ {
+  "request": "how do you solve 2x + 1 < 7 and show it on a number line?",
+  "beats": [
+   {
+    "intent": "A number line from −1 to 6",
+    "narration": "Which numbers x make two x plus one less than seven? Draw a number line.",
+    "code": "stage.title(\"Solving an inequality\")\nnl = NumberLine(x_range=[-1, 6, 1], length=10, include_numbers=True).move_to([0, -0.6, 0])\nstage.play(FadeIn(nl))\nstage.add(nl)"
+   },
+   {
+    "intent": "Three test points: x = 2 works (5 < 7), x = 3 and x = 4 don't (7 and 9)",
+    "narration": "Try some. Two gives five, which is less than seven. Three gives exactly seven, not less. Four gives nine.",
+    "code": "for v, ok, txt in ((2, True, \"2: 5 < 7 ✓\"), (3, False, \"3: 7, not < 7\"), (4, False, \"4: 9 ✗\")):\n    d = Dot(nl.n2p(v), color=GREEN if ok else RED, radius=0.1)\n    stage.play(FadeIn(d), run_time=0.4)\n    stage.add(d)\n    stage.add(Text(txt, font_size=22, color=GREEN if ok else RED).move_to(nl.n2p(v) + (1.2 if v != 3 else 0.7) * UP))\nstage.play(FadeIn(Text(\"testing\", font_size=22, color=GREY_B).move_to([3.5, 1.6, 0])))"
+   },
+   {
+    "intent": "An open circle at 3 and a thick green ray running left from it",
+    "narration": "Every number below three works, and three itself doesn't, so draw an open circle at three and shade everything to its left.",
+    "code": "ring = Circle(radius=0.14, color=GREEN, stroke_width=5).move_to(nl.n2p(3))\nray = Arrow(nl.n2p(3) + 0.15 * LEFT, nl.n2p(-1) + 0.2 * LEFT, buff=0, color=GREEN, stroke_width=8)\nstage.play(Create(ring), GrowArrow(ray))\nstage.add(ring, ray)\nstage.play(FadeIn(Text(\"x < 3\", font_size=30, color=GREEN).move_to(nl.n2p(0.5) + 1.2 * DOWN)))"
+   },
+   {
+    "intent": "The line beside 2x + 1 < 7, 2x < 6, x < 3",
+    "narration": "Algebra gives the same: take one from both sides, then halve both sides.",
+    "code": "stage.equation(r\"2x + 1 < 7\", r\"2x < 6\", r\"x < 3\")"
+   }
+  ]
+ },
+ {
+  "request": "a 3 by 3 by 3 cube is painted and cut up: how many small cubes have paint on exactly one face?",
+  "beats": [
+   {
+    "intent": "A 3 by 3 by 3 cube drawn with its outside painted",
+    "narration": "Paint the outside of a big cube, then cut it into twenty seven small cubes.",
+    "code": "stage.title(\"The painted cube\")\ne = 0.7\nq = np.array([0.32, 0.32, 0])\no = np.array([-5.6, -1.9, 0])\nfront = VGroup(*[Square(e, color=WHITE, fill_color=RED, fill_opacity=0.35, stroke_width=2).move_to(o + np.array([(i + 0.5) * e, (j + 0.5) * e, 0])) for j in range(3) for i in range(3)])\ntop = VGroup(*[Polygon(o + np.array([i * e, 3 * e, 0]) + d * q, o + np.array([(i + 1) * e, 3 * e, 0]) + d * q, o + np.array([(i + 1) * e, 3 * e, 0]) + (d + 1) * q, o + np.array([i * e, 3 * e, 0]) + (d + 1) * q, color=WHITE, fill_color=RED, fill_opacity=0.25, stroke_width=2) for d in range(3) for i in range(3)])\nside = VGroup(*[Polygon(o + np.array([3 * e, j * e, 0]) + d * q, o + np.array([3 * e, j * e, 0]) + (d + 1) * q, o + np.array([3 * e, (j + 1) * e, 0]) + (d + 1) * q, o + np.array([3 * e, (j + 1) * e, 0]) + d * q, color=WHITE, fill_color=RED, fill_opacity=0.15, stroke_width=2) for d in range(3) for j in range(3)])\nstage.play(FadeIn(front), FadeIn(top), FadeIn(side))\nstage.add(front, top, side)"
+   },
+   {
+    "intent": "The middle square of each visible face lit yellow: one painted face each",
+    "narration": "A small cube has exactly one painted face only if it sits in the middle of a face. Each face has one, and a cube has six faces.",
+    "code": "mids = (front[4], top[4], side[4])\nstage.play(*[m.animate.set_fill(YELLOW, opacity=0.9) for m in mids])\nstage.play(FadeIn(Text(\"1 face: 6 (one per face)\", font_size=26, color=YELLOW).move_to([0.2, 1.4, 0])))"
+   },
+   {
+    "intent": "A tally beside the cube: corners 8 with 3 faces, edge middles 12 with 2, face centres 6 with 1, the hidden centre 1 with none",
+    "narration": "The rest: eight corners have three painted faces, twelve edge middles have two, and the one cube right in the centre has none.",
+    "code": "rows = VGroup(*[Text(t, font_size=26, color=col) for t, col in ((\"3 faces: corners, 8\", RED), (\"2 faces: edge middles, 12\", ORANGE), (\"0 faces: the centre, 1\", GREY_B))]).arrange(DOWN, aligned_edge=LEFT, buff=0.3).move_to([0.6, 0.0, 0])\nstage.play(LaggedStart(*[FadeIn(r) for r in rows], lag_ratio=0.3))\nstage.add(rows)\nstage.play(*[front[i].animate.set_fill(RED, opacity=0.8) for i in (0, 2, 6, 8)], *[front[i].animate.set_fill(ORANGE, opacity=0.8) for i in (1, 3, 5, 7)])"
+   },
+   {
+    "intent": "The cube beside 8 + 12 + 6 + 1 = 27",
+    "narration": "Check: eight plus twelve plus six plus one is twenty seven, every small cube counted once.",
+    "code": "stage.equation(r\"8 + 12 + 6 + 1 = 27\")"
+   }
+  ]
+ }
+]
