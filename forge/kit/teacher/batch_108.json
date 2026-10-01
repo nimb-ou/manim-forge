@@ -1,0 +1,102 @@
+[
+ {
+  "request": "how do you turn 0.75 into a fraction?",
+  "beats": [
+   {
+    "intent": "A 10 by 10 grid with 75 squares shaded",
+    "narration": "Nought point seven five means seventy five hundredths: seventy five squares out of a hundred.",
+    "code": "stage.title(\"0.75 as a fraction\")\ngrid = VGroup(*[Square(0.4, stroke_width=1, color=GREY_B, fill_color=BLUE, fill_opacity=(0.05 if (k // 10 >= 5 and k % 10 >= 5) else 0.7)) for k in range(100)]).arrange_in_grid(rows=10, cols=10, buff=0).move_to([-2.5, -0.3, 0])\nstage.play(FadeIn(grid))\nstage.add(grid)\nstage.label(grid, \"75 of 100\", direction=DOWN, color=BLUE)"
+   },
+   {
+    "intent": "The grid split into four quarters of 25 squares, three of them full",
+    "narration": "Split the hundred into four quarters of twenty five. The shading fills exactly three of them.",
+    "code": "lines = VGroup(Line(grid.get_top() + 0 * RIGHT, grid.get_bottom(), color=YELLOW, stroke_width=4),\n               Line(grid.get_left(), grid.get_right(), color=YELLOW, stroke_width=4))\nstage.play(Create(lines))\nstage.add(lines)\nstage.caption(\"each quarter is 25 squares\")"
+   },
+   {
+    "intent": "The grid beside 75/100 = 3/4, dividing top and bottom by 25",
+    "narration": "In numbers: divide top and bottom by twenty five.",
+    "code": "stage.equation(r\"0.75 = \\frac{75}{100}\", r\"= \\frac{75 \\div 25}{100 \\div 25} = \\frac34\")"
+   },
+   {
+    "intent": "A circle cut into quarters with three shaded, beside it",
+    "narration": "Three quarters: the same amount, drawn as a pie.",
+    "code": "pie = VGroup(*[Sector(radius=1.1, start_angle=PI / 2 - k * PI / 2, angle=-PI / 2, color=WHITE, fill_color=BLUE, fill_opacity=(0.7 if k < 3 else 0.05)) for k in range(4)]).move_to([2.0, -2.0, 0])\nstage.play(FadeIn(pie))\nstage.add(pie)"
+   }
+  ]
+ },
+ {
+  "request": "how much faster is a cheetah than a sprinter over 100 m?",
+  "beats": [
+   {
+    "intent": "A 100 m track with a cheetah dot and a runner dot at the start",
+    "narration": "A cheetah and the fastest kind of human sprinter line up for a hundred metres.",
+    "code": "stage.title(\"Cheetah against sprinter\")\ntrack = Line([-5.5, 0, 0], [5.5, 0, 0], color=GREY_B)\nfinish = Line([5.5, -1.6, 0], [5.5, 1.6, 0], color=WHITE)\ncheetah = Dot([-5.5, 0.8, 0], color=ORANGE, radius=0.18)\nhuman = Dot([-5.5, -0.8, 0], color=BLUE, radius=0.18)\nstage.play(Create(track), Create(finish), FadeIn(cheetah), FadeIn(human))\nstage.add(track, finish, cheetah, human)\nstage.label(cheetah, \"cheetah\", direction=LEFT, color=ORANGE)\nstage.label(human, \"sprinter\", direction=LEFT, color=BLUE)"
+   },
+   {
+    "intent": "The cheetah reaching the finish while the runner is only about a third of the way",
+    "narration": "Running flat out, the cheetah crosses the line while the sprinter has covered under a third of the track.",
+    "code": "stage.play(cheetah.animate.move_to([5.5, 0.8, 0]), human.animate.move_to([-5.5 + 11 * 3.0 / 9.7, -0.8, 0]), run_time=2, rate_func=linear)\nstage.caption(\"cheetah finishes; sprinter at about 31 m\")"
+   },
+   {
+    "intent": "Bars of time for 100 m: cheetah 3.0 s, sprinter 9.7 s",
+    "narration": "At a hundred and twenty kilometres an hour the cheetah takes three seconds; at thirty seven, the sprinter takes nine point seven.",
+    "code": "stage.clear()\nb = draw_bars(stage, [3.0, 9.7], labels=[\"cheetah\", \"sprinter\"], color=ORANGE)\nstage.caption(\"seconds for 100 m at top speed\")"
+   },
+   {
+    "intent": "The bars beside 120 ÷ 37 ≈ 3.2 times as fast",
+    "narration": "The cheetah is over three times as fast, though it can only keep it up for a few hundred metres.",
+    "code": "stage.equation(r\"\\frac{120}{37} \\approx 3.2\")"
+   }
+  ]
+ },
+ {
+  "request": "how do scientists know how far away an earthquake was?",
+  "beats": [
+   {
+    "intent": "An earthquake star on the left and a recording station on the right",
+    "narration": "An earthquake sends two kinds of wave towards a recording station.",
+    "code": "stage.title(\"Locating an earthquake\")\nquake = Star(7, outer_radius=0.4, color=RED, fill_opacity=0.9).move_to([-5, 0, 0])\nstation = Square(0.6, color=GREEN, fill_opacity=0.6).move_to([5, 0, 0])\nstage.play(FadeIn(quake), FadeIn(station))\nstage.add(quake, station)\nstage.label(station, \"station\", direction=DOWN, color=GREEN)"
+   },
+   {
+    "intent": "A fast P wave arrow racing ahead and a slower S wave arrow behind",
+    "narration": "The P wave travels about six kilometres a second, the S wave about three and a half. The P wave arrives first.",
+    "code": "p = Arrow([-4.5, 0.5, 0], [4.6, 0.5, 0], buff=0, color=BLUE)\ns = Arrow([-4.5, -0.5, 0], [0.8, -0.5, 0], buff=0, color=ORANGE)\nstage.play(GrowArrow(p), GrowArrow(s), run_time=1.5)\nstage.add(p, s)\nstage.label(p, \"P: 6 km/s\", direction=UP, color=BLUE)\nstage.label(s, \"S: 3.5 km/s\", direction=DOWN, color=ORANGE)"
+   },
+   {
+    "intent": "A seismograph trace with the P wiggle and the S wiggle 20 s apart",
+    "narration": "The station's trace shows the P wave, then twenty seconds later the S wave.",
+    "code": "stage.clear()\nax = draw_axes(stage, x_range=(0, 40), y_range=(-2, 2), labels=(\"seconds\", \"shake\"))\ntrace = lambda t: (0.6 * np.sin(6 * t) * np.exp(-((t - 8) ** 2) / 6) + 1.4 * np.sin(4 * t) * np.exp(-((t - 28) ** 2) / 10))\ng = plot_graph(stage, ax, trace, color=YELLOW)\ngap = DoubleArrow(ax.c2p(8, 1.7), ax.c2p(28, 1.7), buff=0, color=GREEN)\nstage.play(GrowArrow(gap))\nstage.add(gap)\nstage.label(gap, \"20 s\", direction=UP, color=GREEN)"
+   },
+   {
+    "intent": "The trace beside d/3.5 - d/6 = 20, so d = 168 km",
+    "narration": "The farther away the quake, the bigger the gap. A twenty second gap means the quake was about a hundred and sixty eight kilometres away.",
+    "code": "stage.equation(r\"\\frac{d}{3.5} - \\frac{d}{6} = 20\", r\"\\Rightarrow d = 168\\ \\text{km}\")"
+   }
+  ]
+ },
+ {
+  "request": "why do only some numbers have whole square roots?",
+  "beats": [
+   {
+    "intent": "Dots arranged into squares: 1, 4, 9 and 16",
+    "narration": "Some numbers of dots make perfect squares: one, four, nine, sixteen.",
+    "code": "stage.title(\"Perfect squares\")\nsq = VGroup()\nfor n in (1, 2, 3, 4):\n    g = VGroup(*[Dot(radius=0.1, color=YELLOW) for _ in range(n * n)]).arrange_in_grid(rows=n, cols=n, buff=0.25)\n    sq.add(g)\nsq.arrange(RIGHT, buff=0.9, aligned_edge=DOWN).move_to([0, 0.4, 0])\nstage.play(LaggedStart(*[FadeIn(g) for g in sq], lag_ratio=0.3))\nstage.add(sq)\nfor g, n in zip(sq, (1, 4, 9, 16)):\n    stage.label(g, str(n), direction=DOWN, color=YELLOW)"
+   },
+   {
+    "intent": "Twelve dots failing to make a square: a 3 by 4 rectangle",
+    "narration": "Twelve dots can't make a square. The closest is three by four.",
+    "code": "stage.clear()\ntwelve = VGroup(*[Dot(radius=0.1, color=ORANGE) for _ in range(12)]).arrange_in_grid(rows=3, cols=4, buff=0.35).move_to([-2, 0, 0])\nstage.play(FadeIn(twelve))\nstage.add(twelve)\nstage.label(twelve, \"12: not a square\", direction=DOWN, color=ORANGE)"
+   },
+   {
+    "intent": "A 4 by 4 square of 16 beside it with its side labelled 4",
+    "narration": "Sixteen makes a square with side four. The side of the square is the square root.",
+    "code": "sixteen = VGroup(*[Dot(radius=0.1, color=GREEN) for _ in range(16)]).arrange_in_grid(rows=4, cols=4, buff=0.35).move_to([2.5, 0, 0])\nstage.play(FadeIn(sixteen))\nstage.add(sixteen)\nstage.label(sixteen, \"side 4\", direction=DOWN, color=GREEN)"
+   },
+   {
+    "intent": "The squares beside √16 = 4 and √12 ≈ 3.46",
+    "narration": "So the square root of sixteen is exactly four, while the root of twelve falls between three and four.",
+    "code": "stage.equation(r\"\\sqrt{16} = 4\", r\"\\sqrt{12} \\approx 3.46\")"
+   }
+  ]
+ }
+]
