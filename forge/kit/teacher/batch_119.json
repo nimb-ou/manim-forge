@@ -1,0 +1,102 @@
+[
+ {
+  "request": "how do you rearrange v = u + at to find t?",
+  "beats": [
+   {
+    "intent": "A bar for v = 20 above two bars, u = 5 and at = 15, that fill the same length",
+    "narration": "Take v equals u plus a t, with v twenty, u five and a three. The whole of v is u and a t laid end to end.",
+    "code": "stage.title(\"Rearranging v = u + at\")\nk = 0.3\nx0 = -6\nvbar = Rectangle(width=20 * k, height=0.6, color=GREEN, fill_opacity=0.5).move_to([x0 + 10 * k, 1.2, 0])\nubar = Rectangle(width=5 * k, height=0.6, color=BLUE, fill_opacity=0.5).move_to([x0 + 2.5 * k, 0.2, 0])\natbar = Rectangle(width=15 * k, height=0.6, color=ORANGE, fill_opacity=0.5).move_to([x0 + 12.5 * k, 0.2, 0])\nstage.play(FadeIn(vbar))\nstage.play(FadeIn(ubar), FadeIn(atbar))\nstage.add(vbar, ubar, atbar)\nstage.play(FadeIn(Text(\"v = 20\", font_size=26).move_to(vbar)), FadeIn(Text(\"u = 5\", font_size=24).move_to(ubar)), FadeIn(Text(\"at\", font_size=26).move_to(atbar)))"
+   },
+   {
+    "intent": "The u part greyed out: what's left, v − u = 15, is at",
+    "narration": "Take u away from both: v minus u is what's left, fifteen, and that is a t.",
+    "code": "stage.play(ubar.animate.set_fill(GREY_D, opacity=0.4).set_stroke(GREY_D))\nstage.label(atbar, \"v − u = 15\", direction=DOWN, color=ORANGE)"
+   },
+   {
+    "intent": "The at bar cut into t pieces of length a = 3: five pieces",
+    "narration": "a t means t lots of a. Cut fifteen into pieces of three: there are five, so t is five.",
+    "code": "pieces = VGroup(*[Rectangle(width=3 * k, height=0.6, color=YELLOW, fill_opacity=0.3) for _ in range(5)]).arrange(RIGHT, buff=0).move_to([x0 + 12.5 * k, -1.4, 0])\nstage.play(LaggedStart(*[FadeIn(p) for p in pieces], lag_ratio=0.2))\nstage.add(pieces)\nstage.play(*[FadeIn(Text(\"3\", font_size=22).move_to(p)) for p in pieces])\nstage.label(pieces, \"15 ÷ 3 = 5 pieces\", direction=DOWN, color=YELLOW)"
+   },
+   {
+    "intent": "The bars beside v = u + at, v − u = at, t = (v − u)/a",
+    "narration": "In symbols: subtract u from both sides, then divide both sides by a. t is v minus u, over a.",
+    "code": "stage.equation(r\"v = u + at\", r\"v - u = at\", r\"t = \\frac{v - u}{a}\")"
+   }
+  ]
+ },
+ {
+  "request": "why are two triangles with the same three sides always identical?",
+  "beats": [
+   {
+    "intent": "Three sticks of length 3, 4 and 5",
+    "narration": "Take three sticks: three, four and five units long.",
+    "code": "stage.title(\"Same three sides\")\nk = 0.6\nsticks = VGroup(Line(ORIGIN, 3 * k * RIGHT, color=BLUE), Line(ORIGIN, 4 * k * RIGHT, color=GREEN), Line(ORIGIN, 5 * k * RIGHT, color=ORANGE)).set_stroke(width=8).arrange(DOWN, buff=0.4, aligned_edge=LEFT).move_to([-4, 1.2, 0])\nstage.play(Create(sticks))\nstage.add(sticks)\nnums = VGroup(*[Text(t, font_size=24).next_to(s, RIGHT) for s, t in zip(sticks, (\"3\", \"4\", \"5\"))])\nstage.play(FadeIn(nums))\nstage.add(nums)"
+   },
+   {
+    "intent": "The sticks joined end to end into a triangle",
+    "narration": "Join them end to end. Once the corners are fixed, the triangle can't wobble: those three lengths allow only one shape.",
+    "code": "P = np.array([-5.5, -2.3, 0])\ntri1 = Polygon(P, P + 4 * k * RIGHT, P + 3 * k * UP, color=WHITE)\nsides1 = VGroup(Line(P, P + 4 * k * RIGHT, color=GREEN), Line(P + 4 * k * RIGHT, P + 3 * k * UP, color=ORANGE), Line(P + 3 * k * UP, P, color=BLUE)).set_stroke(width=8)\nstage.play(Transform(sticks, sides1), FadeOut(nums), run_time=1.5)\nstage.add(sticks)\nstage.play(FadeIn(Text(\"4\", font_size=24).next_to(sides1[0], DOWN)), FadeIn(Text(\"5\", font_size=24).move_to(sides1[1].get_center() + 0.3 * UR)), FadeIn(Text(\"3\", font_size=24).next_to(sides1[2], LEFT)))"
+   },
+   {
+    "intent": "A second triangle from the same lengths, turned and flipped elsewhere, slid onto the first: a perfect fit",
+    "narration": "Build another from the same three lengths, any way round you like. Turn it and slide it, and it lands exactly on the first.",
+    "code": "sides2 = sides1.copy().set_stroke(YELLOW, width=3).rotate(2.2).flip(UP).move_to([-0.5, 0.4, 0])\nstage.play(FadeIn(sides2))\nstage.add(sides2)\nstage.play(sides2.animate.flip(UP).rotate(-2.2).move_to(sides1), run_time=2)\nstage.add(sides2)\nstage.label(sides1, \"exactly the same\", direction=RIGHT, color=YELLOW)"
+   },
+   {
+    "intent": "The triangle with its three sides marked equal: SSS means congruent",
+    "narration": "So two triangles with the same three sides are congruent: same shape, same size. Mathematicians call this rule S S S.",
+    "code": "stage.equation(r\"\\mathrm{SSS} \\Rightarrow \\mathrm{congruent}\")"
+   }
+  ]
+ },
+ {
+  "request": "how do you factorise x² + 5x + 6 with algebra tiles?",
+  "beats": [
+   {
+    "intent": "An x² tile, five x tiles and six unit tiles laid out separately",
+    "narration": "x squared plus five x plus six as tiles: one big square, five long strips, six little squares.",
+    "code": "stage.title(\"Factorising with tiles\")\nX, U = 1.6, 0.4\ntl = np.array([-5.0, 1.6, 0])\nbig = Square(X, color=BLUE, fill_opacity=0.5).move_to([-5.2, 0.8, 0])\nstrips = VGroup(*[Rectangle(width=U, height=X, color=GREEN, fill_opacity=0.5) for _ in range(5)]).arrange(RIGHT, buff=0.15).move_to([-2.4, 0.8, 0])\nunits = VGroup(*[Square(U, color=ORANGE, fill_opacity=0.6) for _ in range(6)]).arrange(RIGHT, buff=0.15).move_to([-3.6, -1.4, 0])\nstage.play(FadeIn(big), FadeIn(strips), FadeIn(units))\nstage.add(big, strips, units)\nstage.label(big, \"x²\", direction=UP, color=BLUE)\nstage.label(strips, \"5x\", direction=UP, color=GREEN)\nstage.label(units, \"6\", direction=DOWN, color=ORANGE)"
+   },
+   {
+    "intent": "The tiles fitted into one rectangle: x² top left, three strips on its right, two below, six units in the corner",
+    "narration": "Fit them together into a rectangle: three strips down the side, two along the bottom, and the six little squares fill the corner exactly.",
+    "code": "stage.clear(keep=(big, strips, units))\nmoves = [big.animate.move_to(tl + np.array([X / 2, -X / 2, 0]))]\nmoves += [strips[i].animate.move_to(tl + np.array([X + U / 2 + U * i, -X / 2, 0])) for i in range(3)]\nmoves += [strips[3 + j].animate.rotate(PI / 2).move_to(tl + np.array([X / 2, -X - U / 2 - U * j, 0])) for j in range(2)]\nmoves += [units[3 * j + i].animate.move_to(tl + np.array([X + U / 2 + U * i, -X - U / 2 - U * j, 0])) for j in range(2) for i in range(3)]\nstage.play(*moves, run_time=2)\nstage.add(big, strips, units)"
+   },
+   {
+    "intent": "The rectangle's sides labelled x + 3 across and x + 2 down",
+    "narration": "The rectangle is x plus three wide and x plus two tall.",
+    "code": "top = Line(tl, tl + (X + 3 * U) * RIGHT)\nleft = Line(tl, tl + (X + 2 * U) * DOWN)\nstage.label(top, \"x + 3\", direction=UP, color=YELLOW)\nstage.label(left, \"x + 2\", direction=LEFT, color=YELLOW)"
+   },
+   {
+    "intent": "The rectangle beside x² + 5x + 6 = (x + 2)(x + 3)",
+    "narration": "Its area is the same tiles, so x squared plus five x plus six equals x plus two times x plus three.",
+    "code": "stage.equation(r\"x^2 + 5x + 6\", r\"= (x + 2)(x + 3)\")"
+   }
+  ]
+ },
+ {
+  "request": "how do you work out 156 ÷ 12 by chunking?",
+  "beats": [
+   {
+    "intent": "A bar of length 156",
+    "narration": "One hundred and fifty six divided by twelve: how many twelves fit into one hundred and fifty six?",
+    "code": "stage.title(\"156 ÷ 12 by chunking\")\nk = 0.03\nx0 = -6\nbar = Rectangle(width=156 * k, height=0.7, color=WHITE).move_to([x0 + 78 * k, 0.6, 0])\nstage.play(Create(bar))\nstage.add(bar)\nstage.label(bar, \"156\", direction=UP)"
+   },
+   {
+    "intent": "A chunk of ten twelves, 120, shaded; 36 left",
+    "narration": "Take a big easy chunk: ten twelves is a hundred and twenty. That leaves thirty six.",
+    "code": "c1 = Rectangle(width=120 * k, height=0.7, color=BLUE, fill_opacity=0.5).move_to([x0 + 60 * k, 0.6, 0])\nstage.play(GrowFromEdge(c1, LEFT))\nstage.add(c1)\nstage.play(FadeIn(Text(\"10 × 12 = 120\", font_size=24).move_to(c1)))\nstage.label(c1, \"36 left\", direction=DOWN + RIGHT, color=GREY_B)"
+   },
+   {
+    "intent": "A chunk of three twelves, 36, filling the rest",
+    "narration": "Three twelves is thirty six, which uses up the rest exactly.",
+    "code": "c2 = Rectangle(width=36 * k, height=0.7, color=ORANGE, fill_opacity=0.5).move_to([x0 + 138 * k, 0.6, 0])\nstage.play(GrowFromEdge(c2, LEFT))\nstage.add(c2)\nstage.label(c2, \"3 × 12 = 36\", direction=UP, color=ORANGE)"
+   },
+   {
+    "intent": "The bar beside 156 = 120 + 36 = 12 × (10 + 3), so 156 ÷ 12 = 13",
+    "narration": "Ten twelves and three twelves: thirteen twelves altogether. One hundred and fifty six divided by twelve is thirteen.",
+    "code": "stage.equation(r\"156 = 12 \\times 10 + 12 \\times 3\", r\"156 \\div 12 = 13\")"
+   }
+  ]
+ }
+]
