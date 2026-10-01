@@ -729,3 +729,21 @@ the README range (37–40% held-out, 45–51% short), and it agrees with
 flash-latest on only some scenes (held-out 01: 4/6 against 0/6 in the
 five scenes flash-latest finished), so compare runs within this table,
 not across judges.
+
+**Held-out audit, Oct 1.** The held-out topics were not fully held out. A
+pattern that catches all 20 held-out prompts (`forge/evaluate/heldout_guard.py`),
+matched against each training row's request, finds:
+
+| data | rows on held-out topics | which |
+|---|---|---|
+| planner narration (3Blue1Brown) | 16 of 190 arcs | "Matrix multiplication as composition", "But what is the Central Limit Theorem?", "Visualizing the chain rule", "What's so special about Euler's number e?", the Fourier transform, Gaussians |
+| planner gold | ChainRule, MontyHall, IrrationalSqrt2 (and Determinant, ReactionRate) | hand-written early scenes |
+| planner synthetic | 101 of 1,953 arcs | Fourier, logarithms, Monty Hall, birthday paradox, CLT |
+| kit coder rows | 54 of 1,211 scenes | matrix multiplication, Fourier, dice sums, a bell curve from samples, √2 |
+| Claude plans | 5 of 774 | dice-sum distributions, a bell curve from samples, Newton's method for √2 |
+
+So planner v3 and kit v6 had seen some held-out topics, and their held-out
+scores (37–42%) are somewhat optimistic; by how much is not measured. The
+builders now drop these rows (309 planner rows, 199 kit rows on today's
+data), so kit v8 and planner v5 are the first clean models. If v8 beats v6
+on held-out, the contamination worked against v8, not for it.

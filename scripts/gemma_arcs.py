@@ -36,6 +36,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from forge.app.pipeline import PLAN_SYSTEM  # noqa: E402
+from forge.evaluate.heldout_guard import HELDOUT  # noqa: E402
 from forge.kit.families import FAMILIES  # noqa: E402
 
 URL = "https://generativelanguage.googleapis.com/v1beta"
@@ -51,11 +52,8 @@ HELD_OUT = ("harmonic series; chain rule; matrix multiplication as composition; 
             "adding vectors tip to tail; square root of 2 irrational; Fibonacci or "
             "golden ratio; Fourier transform of a chord; determinant zero; "
             "central limit theorem")
-BANNED = re.compile(r"harmonic series|chain rule|monty hall|compound interest|"
-                    r"logarithm|birthday|standard deviation|least squares|merge sort|"
-                    r"pascal|roots? of unity|mean value|half.life|exponential decay|"
-                    r"tip.to.tail|root (of )?2|√2|irrational|fibonacci|golden ratio|"
-                    r"fourier transform|determinant (is )?zero|central limit", re.I)
+# One pattern for every builder (it catches all 20 held-out prompts).
+BANNED = HELDOUT
 
 PICTURES = """What the animation can draw (describe pictures in these terms, never code):
 - a coordinate grid with arrows (vectors), a matrix transforming the whole grid,

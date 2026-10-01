@@ -29,10 +29,14 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import sys
 from collections import defaultdict
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+
+from forge.evaluate.heldout_guard import row_touches_heldout  # noqa: E402
 
 
 def load(path: Path) -> list[dict]:
@@ -109,6 +113,12 @@ def main() -> int:
     if not rows:
         print(f"no {a.which} rows on disk")
         return 1
+
+    # Rows about a held-out topic never train (forge/evaluate/heldout_guard.py;
+    # the Oct 1 audit found 16 such arcs in the planner's narration alone).
+    before = len(rows)
+    rows = [r for r in rows if not row_touches_heldout(r)]
+    print(f"  held-out topics: {before - len(rows)} of {before} rows dropped")
 
     by_scene: dict[str, list[dict]] = defaultdict(list)
     for r in rows:

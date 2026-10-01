@@ -37,8 +37,12 @@ The headline metric: for 20 held-out prompts on topics nothing was built
 for, the share of planned beats whose end frame a vision judge (Gemini)
 says shows a picture of the beat's idea (`scripts/judge_sheets.py`).
 The 20 short prompts are the classic topics the kit and its teacher scenes
-were built around, so they measure the familiar case; the held-out topics
-never appear in any training data.
+were built around, so they measure the familiar case. The held-out topics
+were meant never to appear in training data; an audit on Oct 1 found that
+some did (3Blue1Brown narration arcs on the central limit theorem and the
+chain rule, a few gold and teacher scenes), so the numbers below are
+somewhat optimistic. From kit v8 and planner v5 on, every builder drops a
+row whose request is a held-out topic (`forge/evaluate/heldout_guard.py`).
 
 | configuration | 20 short prompts | 20 held-out |
 |---|---|---|

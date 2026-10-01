@@ -215,6 +215,13 @@ every compared run re-judged together). On it, today's best configuration
 v1.0 bar stays at ≥ 50% held-out on this judge; v8 is judged alongside a
 re-judge of ab_held_scaf.
 
+**Update 2026-10-01 15:40Z — held-out leakage.** An audit found held-out
+topics in the training data (16 narration arcs, gold scenes, ~4% of kit
+rows; RESULTS.md). Every builder now drops rows whose request is a held-out
+topic (`forge/evaluate/heldout_guard.py`, tested against all 20 prompts), so
+the Oct 3 SFT trains the first clean v8 and v5. Today's baselines (v6, v3)
+stay as measured, marked optimistic.
+
 **Update 2026-09-30.** The diagnostic answered "coder": oracle plans did
 not raise kit v6's held-out score. So the data effort went to coder rows:
 Claude batches 12–21 (~115 scenes aimed at the observed failures, every

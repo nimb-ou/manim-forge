@@ -21,6 +21,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from forge.app.pipeline import CODE_SYSTEM_KIT_TRAINED  # noqa: E402
+from forge.evaluate.heldout_guard import row_touches_heldout  # noqa: E402
 from forge.kit.families import hint  # noqa: E402
 
 SRC = ROOT / "data" / "kit" / "kit_beats_clean.jsonl"
@@ -39,8 +40,12 @@ def main() -> int:
     def n_tokens(msgs):
         return len(tok(tok.apply_chat_template(msgs, tokenize=False))["input_ids"])
     train, valid = [], []
-    dropped = 0
+    dropped = held_topic = 0
     for r in rows:
+        # A scene about a held-out topic never trains (heldout_guard.py).
+        if row_touches_heldout(r):
+            held_topic += 1
+            continue
         # The subject hint write_beat(relevance=True) adds at inference.
         user = dict(r["messages"][1])
         said = re.findall(r"^\s*(?:intent|narration):\s*(.*)$", user["content"], re.M)
@@ -70,7 +75,7 @@ def main() -> int:
                                     "id": "nimbou/manim-forge-kit",
                                     "licenses": [{"name": "CC-BY-NC-SA-4.0"}]}))
     print(f"{len(train)} train / {len(valid)} valid -> {OUT} "
-          f"({dropped} over 1,000 tokens dropped)")
+          f"({dropped} over 1,000 tokens dropped, {held_topic} on held-out topics)")
     return 0
 
 
