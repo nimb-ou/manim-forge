@@ -607,3 +607,9 @@ unlikely from v8 alone (local judge 52% / Gemini 37-40% today).
 measurement in between. The re-score running now and the judge at 07:15Z
 are the check. If neither moves, the batches' value rests entirely on the
 Oct 3 SFT, which is where it was always going to be measured.
+
+*05:15Z:* the re-score is in. Kit v6 on the same held-out plans with
+today's kit: local judge 52% / 32.5% (was 52% / 33%), five sheets changed,
+all in captions. As at kit930: the kit fixes don't move v6; they matter
+through the teacher scenes v8 learns from. Nothing to change in the plan.
+

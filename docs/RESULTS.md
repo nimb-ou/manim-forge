@@ -698,3 +698,12 @@ on bars, labels that follow, smooth trace_graph): held-out with kit v6 on
 the same plans came out identical (52% / 33%), 19 of 20 contact sheets
 byte-identical -- kit v6 rarely writes the calls they change. The kit is
 saturated for this coder; the lever is data (Claude batches 12-47).
+
+The kit work of Sep 30 - Oct 1 (stacked equation steps, pictures stepping
+aside for an equation, draw_polygon at its own coordinates, label fixes,
+highlight keeping text, caption word count): kit v6, same held-out plans
+(ab_held_kit1001), local judge 52% / 32.5% against 52% / 33% before. Five
+of 20 sheets changed, all in captions (a caption no longer cut short); no
+picture changed. Same conclusion: kit fixes help the teacher scenes they
+were found in and whatever v8 learns from them, not v6.
+
