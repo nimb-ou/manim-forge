@@ -1,0 +1,102 @@
+[
+ {
+  "request": "why does a block of wood float but a block of steel the same size sinks?",
+  "beats": [
+   {
+    "intent": "Two equal 10 cm cubes, wood and steel, each 1000 cm³",
+    "narration": "Here are two cubes exactly the same size, ten centimetres on a side: a thousand cubic centimetres each. One is wood, one is steel.",
+    "code": "stage.title(\"Density\")\nwood = Square(1.0, color=ORANGE, fill_opacity=0.6).move_to([-4.5, 1.2, 0])\nsteel = Square(1.0, color=GREY_B, fill_opacity=0.9).move_to([-1.5, 1.2, 0])\nstage.play(FadeIn(wood), FadeIn(steel))\nstage.add(wood, steel)\nstage.label(wood, \"wood\", direction=UP, color=ORANGE)\nstage.label(steel, \"steel\", direction=UP, color=GREY_B)\nstage.play(FadeIn(Text(\"each 1000 cm³\", font_size=26).move_to([-3.0, 0.3, 0])))"
+   },
+   {
+    "intent": "Bars beside each cube for their masses: 600 g and 7900 g",
+    "narration": "Weigh them. The wood is six hundred grams; the steel is seven thousand nine hundred.",
+    "code": "bw = Rectangle(width=0.3, height=2.2 * 600 / 7900, color=ORANGE, fill_opacity=0.8).next_to(wood, RIGHT, buff=0.2, aligned_edge=DOWN)\nbs = Rectangle(width=0.3, height=2.2, color=GREY_B, fill_opacity=0.8).next_to(steel, RIGHT, buff=0.2, aligned_edge=DOWN)\nstage.play(GrowFromEdge(bw, DOWN), GrowFromEdge(bs, DOWN))\nstage.add(bw, bs)\nstage.label(bw, \"600 g\", direction=RIGHT, color=ORANGE)\nstage.label(bs, \"7900 g\", direction=RIGHT, color=GREY_B)"
+   },
+   {
+    "intent": "Both cubes dropped into a tank: wood floating with 60% under the surface, steel on the bottom",
+    "narration": "Drop them in water. Water is one gram per cubic centimetre. The wood floats with sixty percent under the surface; the steel sinks straight to the bottom.",
+    "code": "stage.clear(keep=(wood, steel))\nwater = Rectangle(width=5, height=2.0, color=BLUE, fill_opacity=0.3).move_to([-3.0, -1.6, 0])\nstage.play(FadeIn(water))\nstage.add(water)\nstage.play(wood.animate.move_to([-4.3, -0.7, 0]), steel.animate.move_to([-1.8, -2.1, 0]), run_time=1.5)\nstage.add(wood, steel)\nstage.label(wood, \"floats\", direction=UP, color=ORANGE)\nstage.label(steel, \"sinks\", direction=UP, color=GREY_B)"
+   },
+   {
+    "intent": "The tank beside density = mass ÷ volume: 0.6 and 7.9 g/cm³ against water's 1",
+    "narration": "Density is mass divided by volume. Wood is nought point six grams per cubic centimetre, less than water, so it floats. Steel is seven point nine, so it sinks.",
+    "code": "stage.equation(r\"600 \\div 1000 = 0.6 < 1\", r\"7900 \\div 1000 = 7.9 > 1\")"
+   }
+  ]
+ },
+ {
+  "request": "why do snowshoes stop you sinking into snow?",
+  "beats": [
+   {
+    "intent": "A person standing on snow, an arrow for their 600 N weight",
+    "narration": "A person weighs about six hundred newtons. That force presses down through their feet into the snow.",
+    "code": "stage.title(\"Pressure on snow\")\nsnow = Rectangle(width=6.5, height=1.4, color=WHITE, fill_opacity=0.25).move_to([-3, -1.9, 0])\nstage.play(FadeIn(snow))\nstage.add(snow)\np1 = VGroup(Circle(radius=0.2, color=WHITE).move_to([-4.5, 0.5, 0]), Line([-4.5, 0.3, 0], [-4.5, -0.6, 0]), Line([-4.5, -0.6, 0], [-4.7, -1.2, 0]), Line([-4.5, -0.6, 0], [-4.3, -1.2, 0]))\nw1 = Arrow([-3.8, 0.6, 0], [-3.8, -0.7, 0], buff=0, color=RED)\nstage.play(FadeIn(p1), GrowArrow(w1))\nstage.add(p1, w1)\nstage.label(w1, \"600 N\", direction=RIGHT, color=RED)"
+   },
+   {
+    "intent": "The person sinking into the snow: all 600 N on 0.04 m² of feet",
+    "narration": "Their two feet cover only about nought point nought four square metres, so the snow under them gives way and they sink.",
+    "code": "stage.play(p1.animate.shift(0.5 * DOWN), run_time=1.2)\nstage.add(p1)\nstage.label(p1, \"feet: 0.04 m²\", direction=LEFT, color=YELLOW)"
+   },
+   {
+    "intent": "A second person on wide snowshoes, the same 600 N, staying on top",
+    "narration": "Same weight on snowshoes: they spread it over about nought point four square metres, ten times the area, and the person stays on top.",
+    "code": "p2 = VGroup(Circle(radius=0.2, color=WHITE).move_to([-1.5, 0.5, 0]), Line([-1.5, 0.3, 0], [-1.5, -0.6, 0]), Line([-1.5, -0.6, 0], [-1.7, -1.15, 0]), Line([-1.5, -0.6, 0], [-1.3, -1.15, 0]))\nshoes = Ellipse(width=1.6, height=0.18, color=BLUE, fill_opacity=0.8).move_to([-1.5, -1.2, 0])\nw2 = Arrow([-0.5, 0.6, 0], [-0.5, -0.7, 0], buff=0, color=RED)\nstage.play(FadeIn(p2), FadeIn(shoes), GrowArrow(w2))\nstage.add(p2, shoes, w2)\nstage.label(w2, \"600 N\", direction=RIGHT, color=RED)\nstage.label(shoes, \"snowshoes: 0.4 m²\", direction=DOWN, color=BLUE)"
+   },
+   {
+    "intent": "The picture beside pressure = force ÷ area: 600 ÷ 0.04 = 15 000 Pa and 600 ÷ 0.4 = 1500 Pa",
+    "narration": "Pressure is force divided by area. Ten times the area means a tenth of the pressure.",
+    "code": "stage.equation(r\"600 \\div 0.04 = 15\\,000 \\, \\mathrm{Pa}\", r\"600 \\div 0.4 = 1500 \\, \\mathrm{Pa}\")"
+   }
+  ]
+ },
+ {
+  "request": "why is a cone's volume a third of a cylinder's?",
+  "beats": [
+   {
+    "intent": "A cone and a cylinder with the same base and height",
+    "narration": "Take a cone and a cylinder with the same circular base and the same height.",
+    "code": "stage.title(\"Volume of a cone\")\nr, h = 1.0, 2.6\nbase_y = -2.0\ncone = VGroup(Polygon([-5.5, base_y, 0], [-3.5, base_y, 0], [-4.5, base_y + h, 0], color=ORANGE, fill_opacity=0.5), Ellipse(width=2 * r, height=0.4, color=ORANGE).move_to([-4.5, base_y, 0]))\ncyl = VGroup(Line([-2.5, base_y, 0], [-2.5, base_y + h, 0]), Line([-0.5, base_y, 0], [-0.5, base_y + h, 0]), Ellipse(width=2 * r, height=0.4).move_to([-1.5, base_y + h, 0]), Ellipse(width=2 * r, height=0.4).move_to([-1.5, base_y, 0])).set_color(WHITE)\nstage.play(Create(cone), Create(cyl))\nstage.add(cone, cyl)\nstage.label(cone, \"cone\", direction=UP, color=ORANGE)\nstage.label(cyl, \"cylinder\", direction=UP)"
+   },
+   {
+    "intent": "The cone's sand poured into the cylinder, filling it a third of the way",
+    "narration": "Fill the cone with sand and tip it into the cylinder. It fills exactly a third.",
+    "code": "layers = [Rectangle(width=2 * r, height=h / 3, color=ORANGE, fill_opacity=0.6, stroke_width=0).move_to([-1.5, base_y + h / 6 + k * h / 3, 0]) for k in range(3)]\nstage.play(TransformFromCopy(cone[0], layers[0]), run_time=1.2)\nstage.add(layers[0])\nstage.label(layers[0], \"1 cone\", direction=RIGHT, color=ORANGE)"
+   },
+   {
+    "intent": "Two more cones poured in, filling the cylinder to the top",
+    "narration": "A second cone fills two thirds, and a third cone fills it to the brim.",
+    "code": "for k in (1, 2):\n    stage.play(TransformFromCopy(cone[0], layers[k]), run_time=1.0)\n    stage.add(layers[k])\nstage.label(VGroup(*layers), \"3 cones = 1 cylinder\", direction=RIGHT, color=YELLOW)"
+   },
+   {
+    "intent": "The picture beside V = 1/3 π r² h, and r = 3, h = 10 gives 30π ≈ 94.2",
+    "narration": "So a cone's volume is a third of pi r squared h. A cone of radius three and height ten holds thirty pi, about ninety four cubic centimetres.",
+    "code": "stage.equation(r\"V = \\frac{1}{3} \\pi r^2 h\", r\"\\frac{1}{3} \\pi \\times 3^2 \\times 10 = 30\\pi \\approx 94.2\")"
+   }
+  ]
+ },
+ {
+  "request": "how do you find the surface area of a 3 by 2 by 1 cm box?",
+  "beats": [
+   {
+    "intent": "A cuboid 3 cm long, 2 cm high and 1 cm deep",
+    "narration": "A box is three centimetres long, two high and one deep. How much card covers it?",
+    "code": "stage.title(\"Surface area of a box\")\nk = 0.6\nfront = Rectangle(width=3 * k, height=2 * k, color=BLUE, fill_opacity=0.4).move_to([-3, -0.2, 0])\noff = np.array([0.35, 0.35, 0])\ntop = Polygon(front.get_corner(UL), front.get_corner(UR), front.get_corner(UR) + off, front.get_corner(UL) + off, color=GREEN, fill_opacity=0.4)\nside = Polygon(front.get_corner(UR), front.get_corner(DR), front.get_corner(DR) + off, front.get_corner(UR) + off, color=ORANGE, fill_opacity=0.4)\nbox = VGroup(front, top, side)\nstage.play(Create(box))\nstage.add(box)\nstage.label(Line(front.get_corner(DL), front.get_corner(DR)), \"3 cm\", direction=DOWN)\nstage.label(Line(front.get_corner(DL), front.get_corner(UL)), \"2 cm\", direction=LEFT)\nstage.label(Line(front.get_corner(DR), front.get_corner(DR) + off), \"1 cm\", direction=RIGHT)"
+   },
+   {
+    "intent": "The box unfolded into its net of six rectangles",
+    "narration": "Unfold it flat. The net has six rectangles.",
+    "code": "stage.clear()\nspecs = (((-1.5, 3), (3, 1), GREEN, \"3\"), ((-1.5, 2), (3, 2), BLUE, \"6\"), ((-1.5, 0), (3, 1), GREEN, \"3\"), ((-1.5, -1), (3, 2), BLUE, \"6\"), ((-2.5, 2), (1, 2), ORANGE, \"2\"), ((1.5, 2), (1, 2), ORANGE, \"2\"))\nc = np.array([-3, 0.0, 0])\nnet = VGroup()\nfor (x, y), (wd, ht), col, a in specs:\n    net.add(Rectangle(width=wd * k, height=ht * k, color=WHITE, fill_color=col, fill_opacity=0.3).move_to(c + k * np.array([x + wd / 2, y - ht / 2, 0])))\nstage.play(LaggedStart(*[FadeIn(f) for f in net], lag_ratio=0.2))\nstage.add(net)"
+   },
+   {
+    "intent": "The faces coloured in matching pairs, each showing its area: 6, 6, 3, 3, 2, 2",
+    "narration": "The faces come in pairs: front and back are three by two, six each; top and bottom three by one, three each; the ends two by one, two each.",
+    "code": "stage.play(*[f.animate.set_fill(opacity=0.6) for f in net])\nstage.play(*[FadeIn(Text(a, font_size=26).move_to(f)) for f, (_, _, _, a) in zip(net, specs)])\nstage.label(net, \"areas in cm²\", direction=RIGHT)"
+   },
+   {
+    "intent": "The net beside 2 × (6 + 3 + 2) = 22 cm²",
+    "narration": "Add one of each pair and double it: two times eleven is twenty two square centimetres.",
+    "code": "stage.equation(r\"2 \\times (6 + 3 + 2)\", r\"= 22 \\, \\mathrm{cm^2}\")"
+   }
+  ]
+ }
+]
