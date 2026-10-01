@@ -1,0 +1,102 @@
+[
+ {
+  "request": "how long is it from 9:45 to 11:20?",
+  "beats": [
+   {
+    "intent": "A time line from 9:30 to 11:30 with 9:45 and 11:20 marked",
+    "narration": "A train leaves at quarter to ten and arrives at twenty past eleven. How long is the journey?",
+    "code": "stage.title(\"From 9:45 to 11:20\")\ntx = lambda m: -5.5 + m * 11 / 120\nline = Line([tx(0), -0.6, 0], [tx(120), -0.6, 0], color=GREY_B)\nticks = VGroup(*[Line([tx(m), -0.75, 0], [tx(m), -0.45, 0], color=GREY_B) for m in (15, 30, 90, 110)])\nstage.play(Create(line), Create(ticks))\nstage.add(line, ticks)\nfor m, lab, col in ((15, \"9:45\", RED), (30, \"10:00\", WHITE), (90, \"11:00\", WHITE), (110, \"11:20\", RED)):\n    stage.add(Text(lab, font_size=26, color=col).move_to([tx(m), -1.1, 0]))\nstart = Dot([tx(15), -0.6, 0], color=RED)\nend = Dot([tx(110), -0.6, 0], color=RED)\nstage.play(FadeIn(start), FadeIn(end))\nstage.add(start, end)"
+   },
+   {
+    "intent": "A hop from 9:45 to 10:00 labelled 15 min",
+    "narration": "Count up to the next whole hour first: from nine forty five to ten is fifteen minutes.",
+    "code": "hop1 = ArcBetweenPoints([tx(15), -0.6, 0], [tx(30), -0.6, 0], angle=-PI / 2, color=YELLOW)\nstage.play(Create(hop1))\nstage.add(hop1)\nstage.label(hop1, \"15 min\", direction=UP, color=YELLOW)"
+   },
+   {
+    "intent": "A hop from 10:00 to 11:00 labelled 1 h, then 11:00 to 11:20 labelled 20 min",
+    "narration": "Then a whole hour to eleven, and twenty more minutes to twenty past.",
+    "code": "hop2 = ArcBetweenPoints([tx(30), -0.6, 0], [tx(90), -0.6, 0], angle=-PI / 2, color=GREEN)\nstage.play(Create(hop2))\nstage.add(hop2)\nstage.label(hop2, \"1 h\", direction=UP, color=GREEN)\nhop3 = ArcBetweenPoints([tx(90), -0.6, 0], [tx(110), -0.6, 0], angle=-PI / 2, color=BLUE)\nstage.play(Create(hop3))\nstage.add(hop3)\nstage.label(hop3, \"20 min\", direction=UP, color=BLUE)"
+   },
+   {
+    "intent": "The time line beside 15 + 60 + 20 = 95 min = 1 h 35 min",
+    "narration": "Fifteen plus sixty plus twenty is ninety five minutes: one hour thirty five.",
+    "code": "stage.equation(r\"15 + 60 + 20 = 95 \\, \\mathrm{min}\", r\"95 \\, \\mathrm{min} = 1 \\, \\mathrm{h} \\; 35 \\, \\mathrm{min}\")"
+   }
+  ]
+ },
+ {
+  "request": "why is your shadow shortest around midday?",
+  "beats": [
+   {
+    "intent": "A 1.7 m person with a low morning sun at 30°, a long 2.94 m shadow",
+    "narration": "In the morning the sun is low, about thirty degrees up. A person one point seven metres tall casts a long shadow.",
+    "code": "stage.title(\"Shadows and the sun\")\nground = Line([-6.5, -2, 0], [5.5, -2, 0], color=GREY_B)\nperson = Line([-1, -2, 0], [-1, -0.3, 0], color=WHITE, stroke_width=8)\nstage.play(Create(ground), Create(person))\nstage.add(ground, person)\ntip = np.array([-1 - 1.7 / np.tan(30 * DEGREES), -2, 0])\nsun = Dot(tip + 7 * np.array([np.cos(30 * DEGREES), np.sin(30 * DEGREES), 0]), radius=0.3, color=YELLOW)\nray = DashedLine(sun.get_center(), tip, color=YELLOW)\nshadow = Line(tip, [-1, -2, 0], color=BLUE_D, stroke_width=10)\nstage.play(FadeIn(sun), Create(ray))\nstage.play(Create(shadow))\nstage.add(sun, ray, shadow)\nsh_lab = stage.label(shadow, \"2.94 m\", direction=DOWN)"
+   },
+   {
+    "intent": "The sun climbing to 60°, the shadow shrinking to 0.98 m",
+    "narration": "By midday the sun is much higher, about sixty degrees, and the shadow shrinks to under a metre.",
+    "code": "stage.play(FadeOut(sh_lab))\ntip2 = np.array([-1 - 1.7 / np.tan(60 * DEGREES), -2, 0])\nsun2 = tip2 + 5 * np.array([np.cos(60 * DEGREES), np.sin(60 * DEGREES), 0])\nstage.play(sun.animate.move_to(sun2), Transform(ray, DashedLine(sun2, tip2, color=YELLOW)), Transform(shadow, Line(tip2, [-1, -2, 0], color=BLUE_D, stroke_width=10)), run_time=1.5)\nstage.add(sun, ray, shadow)\nstage.label(shadow, \"0.98 m\", direction=DOWN)"
+   },
+   {
+    "intent": "The right triangle of person, shadow and ray, the 60° angle marked at the shadow's tip",
+    "narration": "The person, the shadow and the sun's ray make a right angled triangle. The sun's height is the angle at the tip of the shadow.",
+    "code": "ang = Angle(Line(tip2, tip2 + RIGHT), Line(tip2, sun2), radius=0.6, color=GREEN)\nstage.play(Create(ang))\nstage.add(ang)\nstage.label(ang, \"60°\", direction=LEFT, color=GREEN)\nstage.label(person, \"1.7 m\", direction=RIGHT)"
+   },
+   {
+    "intent": "The picture beside shadow = 1.7 / tan 30° ≈ 2.94 and 1.7 / tan 60° ≈ 0.98",
+    "narration": "Shadow length is height divided by the tangent of the sun's angle. A higher sun has a bigger tangent, so a shorter shadow.",
+    "code": "stage.equation(r\"\\frac{1.7}{\\tan 30^\\circ} \\approx 2.94\", r\"\\frac{1.7}{\\tan 60^\\circ} \\approx 0.98\")"
+   }
+  ]
+ },
+ {
+  "request": "how much paint do I need for a wall with a window in it?",
+  "beats": [
+   {
+    "intent": "A 4 m by 2.5 m wall with its sides labelled",
+    "narration": "A wall is four metres wide and two and a half metres high.",
+    "code": "stage.title(\"Painting a wall\")\nk = 1.2\nwall = Rectangle(width=4 * k, height=2.5 * k, color=WHITE).move_to([-2.5, -0.4, 0])\nstage.play(Create(wall))\nstage.add(wall)\nstage.label(Line(wall.get_corner(DL), wall.get_corner(DR)), \"4 m\", direction=DOWN)\nstage.label(Line(wall.get_corner(DL), wall.get_corner(UL)), \"2.5 m\", direction=LEFT)"
+   },
+   {
+    "intent": "A 1.5 m by 1 m window inside the wall",
+    "narration": "It has a window one and a half metres by one metre, which you don't paint.",
+    "code": "window = Rectangle(width=1.5 * k, height=1 * k, color=BLUE_B, fill_color=BLACK, fill_opacity=1).move_to([-2.0, -0.1, 0])\ncross = VGroup(Line(window.get_top(), window.get_bottom()), Line(window.get_left(), window.get_right())).set_stroke(BLUE_B, 2)\nstage.play(Create(window), Create(cross))\nstage.add(window, cross)\nstage.label(window, \"1.5 m × 1 m\", direction=UP, color=BLUE_B)"
+   },
+   {
+    "intent": "The wall shaded around the window: 10 − 1.5 = 8.5 m²",
+    "narration": "The wall is ten square metres; take away the window's one and a half, and there's eight and a half to paint.",
+    "code": "stage.play(wall.animate.set_fill(ORANGE, opacity=0.5))\nstage.remove(window, cross)\nstage.add(window, cross)\nstage.label(wall, \"10 − 1.5 = 8.5 m²\", direction=RIGHT, color=ORANGE)"
+   },
+   {
+    "intent": "The wall beside 2 × 8.5 = 17 m² and 17 ÷ 10 = 1.7 litres",
+    "narration": "Two coats make seventeen square metres. If a litre covers ten square metres, you need one point seven litres.",
+    "code": "stage.equation(r\"2 \\times 8.5 = 17 \\, \\mathrm{m^2}\", r\"17 \\div 10 = 1.7 \\, \\mathrm{L}\")"
+   }
+  ]
+ },
+ {
+  "request": "what does a map scale of 1:25,000 mean?",
+  "beats": [
+   {
+    "intent": "A map with two places, A and B, and a ruler showing them 4 cm apart",
+    "narration": "On a map, a church and a bridge are four centimetres apart.",
+    "code": "stage.title(\"A 1:25,000 map\")\npaper = Rectangle(width=7, height=3.6, color=GREEN_E, fill_opacity=0.25).move_to([-2.5, 0.2, 0])\nroad = DashedLine([-5.6, 0.9, 0], [0.6, 0.9, 0], color=GREY_B)\na = Dot([-4.5, 0.9, 0], color=RED)\nb = Dot([-0.5, 0.9, 0], color=RED)\nstage.play(FadeIn(paper), Create(road), FadeIn(a), FadeIn(b))\nstage.add(paper, road, a, b)\nstage.label(a, \"A\", direction=UP, color=RED)\nstage.label(b, \"B\", direction=UP, color=RED)\nruler = VGroup(Line([-4.5, -0.6, 0], [-0.5, -0.6, 0]), *[Line([-4.5 + i, -0.75, 0], [-4.5 + i, -0.45, 0]) for i in range(5)])\nnums = VGroup(*[Text(f\"{i}\", font_size=22).move_to([-4.5 + i, -1.0, 0]) for i in range(5)])\nstage.play(Create(ruler), FadeIn(nums))\nstage.add(ruler, nums)\nstage.add(Text(\"cm\", font_size=22).next_to(nums, RIGHT, buff=0.2))"
+   },
+   {
+    "intent": "The first centimetre highlighted: 1 cm on the map is 25,000 cm = 250 m on the ground",
+    "narration": "One to twenty five thousand means each centimetre on the map is twenty five thousand centimetres on the ground: two hundred and fifty metres.",
+    "code": "one = Line([-4.5, -0.6, 0], [-3.5, -0.6, 0], color=YELLOW, stroke_width=8)\nstage.play(Create(one))\nstage.add(one)\nstage.label(one, \"1 cm = 250 m\", direction=UP, color=YELLOW)"
+   },
+   {
+    "intent": "All four centimetres highlighted: 4 cm on the map is 1 km",
+    "narration": "Four centimetres is four lots of two hundred and fifty metres: one kilometre.",
+    "code": "four = Line([-4.5, 0.9, 0], [-0.5, 0.9, 0], color=ORANGE, stroke_width=8)\nstage.play(Create(four))\nstage.add(four)\nstage.label(four, \"4 cm = 1 km\", direction=DOWN, color=ORANGE)"
+   },
+   {
+    "intent": "The map beside 4 × 25,000 = 100,000 cm = 1 km",
+    "narration": "Multiply by the scale, then convert: a hundred thousand centimetres is a thousand metres, one kilometre.",
+    "code": "stage.equation(r\"4 \\times 25\\,000 = 100\\,000 \\, \\mathrm{cm}\", r\"100\\,000 \\, \\mathrm{cm} = 1 \\, \\mathrm{km}\")"
+   }
+  ]
+ }
+]
