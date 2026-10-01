@@ -1,0 +1,102 @@
+[
+ {
+  "request": "if you mix 2 litres of 10% juice with 3 litres of 20% juice, how strong is the mix?",
+  "beats": [
+   {
+    "intent": "Two jugs: 2 litres at 10% juice and 3 litres at 20% juice, the juice part shaded at the bottom",
+    "narration": "One jug holds two litres of drink that is ten percent juice. Another holds three litres at twenty percent.",
+    "code": "stage.title(\"Mixing two drinks\")\nL = 0.6\nbase = -2.0\njug = lambda x, litres, frac, col: VGroup(Rectangle(width=1.3, height=litres * L, color=WHITE).move_to([x, base + litres * L / 2, 0]), Rectangle(width=1.3, height=litres * L * frac, color=col, fill_opacity=0.8, stroke_width=0).move_to([x, base + litres * L * frac / 2, 0]))\na = jug(-5.2, 2, 0.10, ORANGE)\nb = jug(-3.2, 3, 0.20, ORANGE)\nstage.play(FadeIn(a), FadeIn(b))\nstage.add(a, b)\nstage.label(a, \"2 L at 10%\", direction=UP)\nstage.label(b, \"3 L at 20%\", direction=UP)"
+   },
+   {
+    "intent": "The juice in each jug labelled: 0.2 L and 0.6 L",
+    "narration": "The first jug has a tenth of two litres of juice, nought point two. The second has a fifth of three, nought point six.",
+    "code": "stage.play(FadeIn(Text(\"0.2 L\", font_size=24, color=ORANGE).next_to(a[1], DOWN, buff=0.15)), FadeIn(Text(\"0.6 L\", font_size=24, color=ORANGE).next_to(b[1], DOWN, buff=0.15)))"
+   },
+   {
+    "intent": "Both poured into one 5 litre jug holding 0.8 litres of juice",
+    "narration": "Pour both into one jug: five litres of drink holding nought point eight litres of juice.",
+    "code": "mix = jug(-0.8, 5, 0.16, ORANGE)\nstage.play(TransformFromCopy(VGroup(a, b), mix), run_time=1.5)\nstage.add(mix)\nstage.label(mix, \"5 L with 0.8 L juice\", direction=RIGHT, color=ORANGE)"
+   },
+   {
+    "intent": "The jugs beside (0.2 + 0.6) ÷ 5 = 0.16 = 16%, not the 15% midpoint",
+    "narration": "Nought point eight out of five is sixteen percent, not fifteen: there's more of the stronger drink, so it counts for more.",
+    "code": "stage.equation(r\"\\frac{0.2 + 0.6}{5} = 0.16\", r\"= 16\\% \\ne 15\\%\")"
+   }
+  ]
+ },
+ {
+  "request": "how do you read a stem-and-leaf diagram?",
+  "beats": [
+   {
+    "intent": "Ten test scores listed: 12, 15, 17, 21, 23, 23, 28, 31, 34, 40",
+    "narration": "Ten students' scores out of fifty, in order.",
+    "code": "stage.title(\"Stem and leaf\")\ndata = [12, 15, 17, 21, 23, 23, 28, 31, 34, 40]\nraw = VGroup(*[Text(str(v), font_size=28) for v in data]).arrange(RIGHT, buff=0.35).move_to([-1.8, 2.2, 0])\nstage.play(FadeIn(raw))\nstage.add(raw)"
+   },
+   {
+    "intent": "The diagram: stems 1 to 4 down the left, units as leaves along each row",
+    "narration": "Split each score into its tens, the stem, and its units, the leaf. Each stem gets one row.",
+    "code": "stems = VGroup(*[Text(str(s), font_size=32, color=BLUE).move_to([-5.2, 1.0 - 0.65 * i, 0]) for i, s in enumerate((1, 2, 3, 4))])\nbar = Line([-4.85, 1.35, 0], [-4.85, -1.3, 0], color=WHITE)\nrows = {1: [2, 5, 7], 2: [1, 3, 3, 8], 3: [1, 4], 4: [0]}\nleaves = VGroup()\nfor i, s in enumerate((1, 2, 3, 4)):\n    for j, l in enumerate(rows[s]):\n        leaves.add(Text(str(l), font_size=32).move_to([-4.4 + 0.5 * j, 1.0 - 0.65 * i, 0]))\nstage.play(FadeIn(stems), Create(bar))\nstage.play(LaggedStart(*[FadeIn(l) for l in leaves], lag_ratio=0.08))\nstage.add(stems, bar, leaves)\nstage.play(FadeIn(Text(\"key: 2 | 3 = 23\", font_size=24, color=GREY_B).move_to([-4.2, -1.9, 0])))"
+   },
+   {
+    "intent": "The 5th and 6th leaves, 3 and 3 in the 20s row, highlighted as the middle",
+    "narration": "With ten scores the middle sits between the fifth and sixth. Counting leaves: the fifth and sixth are both twenty three.",
+    "code": "mid = SurroundingRectangle(VGroup(leaves[4], leaves[5]), color=YELLOW, buff=0.1)\nstage.play(Create(mid))\nstage.add(mid)\nstage.play(FadeIn(Text(\"← 5th and 6th\", font_size=26, color=YELLOW).move_to([-1.6, 1.0 - 0.65, 0])))"
+   },
+   {
+    "intent": "The diagram beside median = 23 and range = 40 − 12 = 28",
+    "narration": "So the median is twenty three. The first leaf and the last give the range: forty minus twelve, twenty eight.",
+    "code": "stage.equation(r\"\\mathrm{median} = \\frac{23 + 23}{2} = 23\", r\"\\mathrm{range} = 40 - 12 = 28\")"
+   }
+  ]
+ },
+ {
+  "request": "why is a sphere two thirds of the cylinder around it?",
+  "beats": [
+   {
+    "intent": "A ball of radius r fitting exactly inside a cylinder of radius r and height 2r",
+    "narration": "A ball sits exactly inside a can: the can's radius is the ball's radius r, and its height is two r.",
+    "code": "stage.title(\"Sphere in a cylinder\")\nr = 1.3\nc = np.array([-4.2, -0.4, 0])\ncan = VGroup(Line(c + np.array([-r, -r, 0]), c + np.array([-r, r, 0])), Line(c + np.array([r, -r, 0]), c + np.array([r, r, 0])), Ellipse(width=2 * r, height=0.45).move_to(c + r * UP), Ellipse(width=2 * r, height=0.45).move_to(c + r * DOWN)).set_color(WHITE)\nball = Circle(radius=r, color=BLUE, fill_opacity=0.35).move_to(c)\nstage.play(Create(can), FadeIn(ball))\nstage.add(can, ball)\nstage.label(Line(c, c + r * RIGHT), \"r\", direction=UP, color=YELLOW)\nstage.play(Create(Line(c, c + r * RIGHT, color=YELLOW)))"
+   },
+   {
+    "intent": "A bar for the cylinder's volume 2πr³, split into three equal parts",
+    "narration": "The can holds pi r squared times two r: two pi r cubed. Split that into three equal parts.",
+    "code": "cyl_bar = VGroup(*[Rectangle(width=1.0, height=0.7, color=WHITE, fill_opacity=0.1) for _ in range(3)]).arrange(RIGHT, buff=0).move_to([-0.6, 1.0, 0])\nstage.play(FadeIn(cyl_bar))\nstage.add(cyl_bar)\nstage.label(cyl_bar, \"can: 2πr³\", direction=RIGHT)"
+   },
+   {
+    "intent": "A bar for the ball's volume 4/3 πr³, exactly two of the three parts",
+    "narration": "The ball holds four thirds pi r cubed: exactly two of those three parts. Archimedes was so proud of this he had it carved on his tomb.",
+    "code": "sph_bar = VGroup(*[Rectangle(width=1.0, height=0.7, color=BLUE, fill_opacity=0.6) for _ in range(2)]).arrange(RIGHT, buff=0).next_to(cyl_bar, DOWN, buff=0.4, aligned_edge=LEFT)\nstage.play(GrowFromEdge(sph_bar, LEFT))\nstage.add(sph_bar)\nstage.label(sph_bar, \"ball: 4/3 πr³\", direction=RIGHT, color=BLUE)"
+   },
+   {
+    "intent": "The bars beside (4/3 πr³) ÷ (2πr³) = 2/3",
+    "narration": "Divide one by the other and everything cancels except two thirds.",
+    "code": "stage.equation(r\"\\frac{\\frac{4}{3}\\pi r^3}{2\\pi r^3} = \\frac{2}{3}\")"
+   }
+  ]
+ },
+ {
+  "request": "what is 20% of 50% of 300?",
+  "beats": [
+   {
+    "intent": "A bar for 300 people",
+    "narration": "There are three hundred people at a fair.",
+    "code": "stage.title(\"A percentage of a percentage\")\nw = 9\nx0 = -6.2\nwhole = Rectangle(width=w, height=0.7, color=WHITE).move_to([x0 + w / 2, 1.2, 0])\nstage.play(Create(whole))\nstage.add(whole)\nstage.label(whole, \"300 people\", direction=UP)"
+   },
+   {
+    "intent": "Half the bar shaded: 50% are adults, 150",
+    "narration": "Half of them are adults: a hundred and fifty.",
+    "code": "adults = Rectangle(width=w / 2, height=0.7, color=BLUE, fill_opacity=0.4).move_to([x0 + w / 4, 1.2, 0])\nstage.play(FadeIn(adults))\nstage.add(adults)\nstage.play(FadeIn(Text(\"adults: 150\", font_size=26).move_to(adults)))"
+   },
+   {
+    "intent": "A fifth of the adult part shaded darker: 20% of 150 = 30 adults with a dog",
+    "narration": "Twenty percent of the adults brought a dog. A fifth of a hundred and fifty is thirty.",
+    "code": "dogs = Rectangle(width=w / 10, height=0.7, color=ORANGE, fill_opacity=0.8).move_to([x0 + w / 20, 0.0, 0])\nstage.play(TransformFromCopy(adults, dogs))\nstage.add(dogs)\nstage.label(dogs, \"30 with a dog\", direction=RIGHT, color=ORANGE)\nticks = VGroup(*[DashedLine([x0 + k * w / 10, 1.55, 0], [x0 + k * w / 10, -0.4, 0], color=GREY_B) for k in (1, 5)])\nstage.play(Create(ticks))\nstage.add(ticks)"
+   },
+   {
+    "intent": "The bars beside 0.2 × 0.5 × 300 = 30, which is 10% of everyone",
+    "narration": "Twenty percent of fifty percent is nought point two times nought point five: ten percent of the whole crowd.",
+    "code": "stage.equation(r\"0.2 \\times 0.5 \\times 300 = 30\", r\"0.2 \\times 0.5 = 0.1 = 10\\%\")"
+   }
+  ]
+ }
+]
