@@ -1,0 +1,102 @@
+[
+ {
+  "request": "how do you change 36 km/h into metres per second?",
+  "beats": [
+   {
+    "intent": "A distance line with a car covering 36 km in one hour",
+    "narration": "A cyclist at thirty six kilometres an hour covers thirty six kilometres in one hour.",
+    "code": "stage.title(\"km/h to m/s\")\ndist = NumberLine(x_range=[0, 36000, 6000], length=10).move_to([0, 0.9, 0])\nstage.play(Create(dist))\nstage.add(dist)\ncar = Square(0.3, color=RED, fill_opacity=0.9).move_to(dist.n2p(0) + 0.3 * UP)\nstage.play(FadeIn(car))\nstage.play(car.animate.move_to(dist.n2p(36000) + 0.3 * UP), run_time=1.5, rate_func=linear)\nstage.add(car)\nstage.label(dist, \"36 km = 36 000 m\", direction=UP, color=YELLOW)"
+   },
+   {
+    "intent": "A time line underneath: one hour = 3600 seconds",
+    "narration": "In metres that's thirty six thousand. And one hour is sixty times sixty: three thousand six hundred seconds.",
+    "code": "time = NumberLine(x_range=[0, 3600, 600], length=10).move_to([0, -0.9, 0])\nstage.play(Create(time))\nstage.add(time)\nstage.label(time, \"1 hour = 3600 s\", direction=DOWN, color=BLUE)"
+   },
+   {
+    "intent": "The first sixth of each line matched: 6000 m in 600 s, so 10 m every second",
+    "narration": "Match the lines up piece by piece: six thousand metres in six hundred seconds. Every second, ten metres.",
+    "code": "seg_d = Line(dist.n2p(0), dist.n2p(6000), color=YELLOW, stroke_width=8)\nseg_t = Line(time.n2p(0), time.n2p(600), color=BLUE, stroke_width=8)\nlink = DashedLine(seg_d.get_end(), seg_t.get_end(), color=GREY_B)\nstage.play(Create(seg_d), Create(seg_t), Create(link))\nstage.add(seg_d, seg_t, link)\nstage.label(link, \"6000 m in 600 s\", direction=RIGHT, color=GREEN)"
+   },
+   {
+    "intent": "The lines beside 36 000 ÷ 3600 = 10 m/s and the shortcut 36 ÷ 3.6 = 10",
+    "narration": "Thirty six thousand metres over three thousand six hundred seconds is ten metres per second. The shortcut: divide kilometres per hour by three point six.",
+    "code": "stage.equation(r\"36\\,000 \\div 3600 = 10 \\, \\mathrm{m/s}\", r\"36 \\div 3.6 = 10\")"
+   }
+  ]
+ },
+ {
+  "request": "how do you take your pulse by counting for 15 seconds?",
+  "beats": [
+   {
+    "intent": "A heartbeat trace over 15 seconds",
+    "narration": "Press two fingers on your wrist and watch a clock for fifteen seconds.",
+    "code": "stage.title(\"Taking a pulse\")\ntx = lambda t: -5 + t * 10 / 15\npts = [[tx(0), 0.6, 0]]\nfor i in range(18):\n    t = (i + 0.5) * 15 / 18\n    pts += [[tx(t - 0.12), 0.6, 0], [tx(t - 0.04), 1.8, 0], [tx(t + 0.04), 0.2, 0], [tx(t + 0.12), 0.6, 0]]\npts.append([tx(15), 0.6, 0])\ntrace = VMobject(color=RED, stroke_width=3).set_points_as_corners(pts)\naxis = NumberLine(x_range=[0, 15, 5], length=10, include_numbers=True).move_to([0, -0.3, 0])\nstage.play(Create(axis))\nstage.play(Create(trace), run_time=2, rate_func=linear)\nstage.add(axis, trace)\nstage.label(axis, \"seconds\", direction=DOWN)"
+   },
+   {
+    "intent": "Each beat ticked off by a dot, a counter reaching 18",
+    "narration": "Count the beats: eighteen in fifteen seconds.",
+    "code": "ticks = VGroup(*[Dot([tx((i + 0.5) * 15 / 18 - 0.04), 1.95, 0], radius=0.07, color=YELLOW) for i in range(18)])\ncounter = Text(\"0 beats\", font_size=32, color=YELLOW).move_to([0, 2.6, 0])\nstage.add(counter)\nstage.play(LaggedStart(*[FadeIn(d) for d in ticks], lag_ratio=0.3), run_time=2)\nstage.play(Transform(counter, Text(\"18 beats in 15 s\", font_size=32, color=YELLOW).move_to(counter)))\nstage.add(ticks)"
+   },
+   {
+    "intent": "Four 15-second blocks making a minute, each holding 18 beats",
+    "narration": "A minute is four lots of fifteen seconds, so a minute holds four lots of eighteen beats.",
+    "code": "blocks = VGroup(*[Rectangle(width=2.4, height=0.7, color=BLUE, fill_opacity=0.3) for _ in range(4)]).arrange(RIGHT, buff=0.1).move_to([0, -2.3, 0])\nstage.play(LaggedStart(*[FadeIn(b) for b in blocks], lag_ratio=0.3))\nstage.add(blocks)\nstage.play(*[FadeIn(Text(\"15 s: 18\", font_size=24).move_to(b)) for b in blocks])\nstage.label(blocks, \"1 minute\", direction=DOWN, color=BLUE)"
+   },
+   {
+    "intent": "The picture beside 18 × 4 = 72 beats per minute",
+    "narration": "Eighteen times four is seventy two beats per minute: a normal resting pulse.",
+    "code": "stage.equation(r\"60 \\div 15 = 4\", r\"18 \\times 4 = 72 \\ \\mathrm{beats/min}\")"
+   }
+  ]
+ },
+ {
+  "request": "how many litres fit in a cubic metre?",
+  "beats": [
+   {
+    "intent": "A 10 cm cube in the corner, labelled 1 litre",
+    "narration": "A litre is the space inside a cube ten centimetres on each side.",
+    "code": "stage.title(\"Litres in a cubic metre\")\ns = 0.4\ncorner = np.array([-4.5, 1.4, 0])\ncube_front = Square(s, color=YELLOW, fill_opacity=0.7).move_to(corner + np.array([s / 2, -s / 2, 0]))\ncube_back = cube_front.copy().set_fill(opacity=0).shift(np.array([0.15, 0.15, 0]))\nedges = VGroup(*[Line(cube_front.get_corner(c), cube_back.get_corner(c), color=YELLOW) for c in (UL, UR, DR)])\ncube = VGroup(cube_back, edges, cube_front)\nstage.play(Create(cube))\nstage.add(cube)\nlit = stage.label(cube, \"1 litre: a 10 cm cube\", direction=RIGHT, color=YELLOW)"
+   },
+   {
+    "intent": "A 1 m square face, and ten litre cubes along its top edge",
+    "narration": "A cubic metre is a hundred centimetres on each side, so ten of those cubes fit along one edge.",
+    "code": "stage.play(FadeOut(lit))\nface = Square(10 * s, color=WHITE).move_to(corner + np.array([5 * s, -5 * s, 0]))\nstage.play(Create(face))\nstage.add(face)\nrow = VGroup(*[Square(s, color=YELLOW, fill_opacity=0.5).move_to(corner + np.array([(i + 0.5) * s, -s / 2, 0])) for i in range(10)])\nstage.play(LaggedStart(*[FadeIn(r) for r in row], lag_ratio=0.1))\nstage.add(row)\nstage.label(face, \"1 m\", direction=LEFT)"
+   },
+   {
+    "intent": "The whole face filled: 100 cubes in one layer, and ten layers going back",
+    "narration": "Ten rows of ten make a hundred in one layer. And the cubic metre is ten layers deep.",
+    "code": "grid = VGroup(*[Square(s, color=BLUE, fill_opacity=0.35, stroke_width=1).move_to(corner + np.array([(i + 0.5) * s, -(j + 0.5) * s, 0])) for j in range(1, 10) for i in range(10)])\nstage.play(FadeIn(grid))\nstage.add(grid)\nbehind = VGroup(*[face.copy().set_stroke(GREY_B, 1).shift(k * np.array([0.1, 0.1, 0])) for k in range(1, 10)])\nstage.play(LaggedStart(*[Create(b) for b in behind], lag_ratio=0.1))\nstage.add(behind)\nstage.label(VGroup(face, behind), \"100 per layer × 10 layers\", direction=RIGHT, color=BLUE)"
+   },
+   {
+    "intent": "The cube beside 10 × 10 × 10 = 1000, so 1 m³ = 1000 litres",
+    "narration": "Ten by ten by ten is a thousand. A cubic metre holds a thousand litres: about a tonne of water.",
+    "code": "stage.equation(r\"10 \\times 10 \\times 10 = 1000\", r\"1 \\, \\mathrm{m^3} = 1000 \\, \\mathrm{L}\")"
+   }
+  ]
+ },
+ {
+  "request": "if each step is 75 cm, how many steps are there in a kilometre?",
+  "beats": [
+   {
+    "intent": "Two footprints 0.75 m apart above a metre ruler",
+    "narration": "Each of your steps covers about seventy five centimetres.",
+    "code": "stage.title(\"Steps in a kilometre\")\nm = 2\nx0 = -5.5\nruler = NumberLine(x_range=[0, 3, 1], length=3 * m, include_numbers=True).move_to([x0 + 1.5 * m, -1.5, 0])\nstage.play(Create(ruler))\nstage.add(ruler)\nstage.label(ruler, \"metres\", direction=DOWN)\nprints = VGroup(*[Ellipse(width=0.45, height=0.22, color=WHITE, fill_opacity=0.8).move_to([x0 + 0.75 * m * i, -0.3 if i % 2 else 0.1, 0]) for i in range(5)])\nstage.play(FadeIn(prints[0]), FadeIn(prints[1]))\nstage.add(prints[0], prints[1])\nstep = Line([x0, 0.6, 0], [x0 + 0.75 * m, 0.6, 0], color=YELLOW)\nstage.play(Create(step))\nstage.add(step)\nstage.label(step, \"0.75 m\", direction=UP, color=YELLOW)"
+   },
+   {
+    "intent": "Four steps reaching the 3 m mark",
+    "narration": "Four steps take you exactly three metres.",
+    "code": "stage.play(LaggedStart(*[FadeIn(p) for p in prints[2:]], lag_ratio=0.4))\nstage.add(*prints[2:])\nfour = Line([x0, -0.9, 0], [x0 + 3 * m, -0.9, 0], color=GREEN, stroke_width=6)\nstage.play(Create(four))\nstage.add(four)\nstage.label(four, \"4 steps = 3 m\", direction=RIGHT, color=GREEN)"
+   },
+   {
+    "intent": "A kilometre as 1000 m: how many 3 m lots, each worth 4 steps",
+    "narration": "A kilometre is a thousand metres: three hundred and thirty three and a third lots of three metres, and each lot is four steps.",
+    "code": "km = Text(\"1000 m ÷ 3 m ≈ 333.3 lots\", font_size=30, color=BLUE).move_to([-2.5, 2.2, 0])\nstage.play(FadeIn(km))\nstage.add(km)"
+   },
+   {
+    "intent": "The picture beside 1000 ÷ 0.75 ≈ 1333 steps",
+    "narration": "So a kilometre is about one thousand three hundred and thirty three steps: a thousand divided by nought point seven five.",
+    "code": "stage.equation(r\"333.3 \\times 4 \\approx 1333\", r\"1000 \\div 0.75 \\approx 1333\")"
+   }
+  ]
+ }
+]
