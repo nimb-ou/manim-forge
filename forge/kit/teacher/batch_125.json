@@ -1,0 +1,102 @@
+[
+ {
+  "request": "a price goes from £80 to £100: what percentage increase is that?",
+  "beats": [
+   {
+    "intent": "A bar for £80 made of four £20 blocks",
+    "narration": "A ticket costs eighty pounds: four blocks of twenty.",
+    "code": "stage.title(\"Percentage increase\")\nbw = 1.3\nold = VGroup(*[Rectangle(width=bw, height=0.7, color=BLUE, fill_opacity=0.5) for _ in range(4)]).arrange(RIGHT, buff=0).move_to([-6 + 2 * bw, 1.2, 0])\nstage.play(FadeIn(old))\nstage.add(old)\nstage.play(*[FadeIn(Text(\"£20\", font_size=24).move_to(b)) for b in old])\nstage.label(old, \"£80\", direction=LEFT, color=BLUE)"
+   },
+   {
+    "intent": "The new £100 price: the same four blocks plus one more £20 block in orange",
+    "narration": "The price rises to a hundred pounds: one more block of twenty.",
+    "code": "new = VGroup(*[Rectangle(width=bw, height=0.7, color=BLUE, fill_opacity=0.5) for _ in range(4)], Rectangle(width=bw, height=0.7, color=ORANGE, fill_opacity=0.7)).arrange(RIGHT, buff=0).move_to([-6 + 2.5 * bw, -0.2, 0])\nstage.play(FadeIn(new))\nstage.add(new)\nstage.play(*[FadeIn(Text(\"£20\", font_size=24).move_to(b)) for b in new])\nstage.label(new, \"£100\", direction=LEFT, color=GREEN)"
+   },
+   {
+    "intent": "The orange block compared with the old price: 1 block out of 4, a quarter",
+    "narration": "Measured against the old price, the extra block is one out of four: a quarter, twenty five percent.",
+    "code": "ref = SurroundingRectangle(old, color=BLUE, buff=0.06)\next = SurroundingRectangle(new[4], color=ORANGE, buff=0.06)\nstage.play(Create(ref), Create(ext))\nstage.add(ref, ext)\nstage.label(ext, \"20 out of 80 = 25%\", direction=DOWN, color=ORANGE)"
+   },
+   {
+    "intent": "The bars beside 20 ÷ 80 = 25% up, but 20 ÷ 100 = 20% back down",
+    "narration": "Percentage change is measured from where you start. Up from eighty is twenty five percent; back down from a hundred is only twenty percent.",
+    "code": "stage.equation(r\"\\frac{100 - 80}{80} = 25\\%\", r\"\\frac{100 - 80}{100} = 20\\%\")"
+   }
+  ]
+ },
+ {
+  "request": "how long is the diagonal from corner to corner inside a 3 by 4 by 12 box?",
+  "beats": [
+   {
+    "intent": "A tall box 4 wide, 3 deep and 12 high, drawn in perspective",
+    "narration": "A box is four wide, three deep and twelve tall. How long is the longest stick that fits inside, corner to corner?",
+    "code": "stage.title(\"The diagonal of a box\")\nk = 0.28\no = np.array([-4.8, -2.4, 0])\nW = 4 * k * RIGHT\nD = 3 * k * 0.6 * np.array([1, 1, 0])\nH = 12 * k * UP\nP = {\"f0\": o, \"f1\": o + W, \"b0\": o + D, \"b1\": o + W + D}\nP.update({key + \"t\": v + H for key, v in list(P.items())})\npairs = [(\"f0\", \"f1\"), (\"f1\", \"b1\"), (\"b1\", \"b0\"), (\"b0\", \"f0\"), (\"f0t\", \"f1t\"), (\"f1t\", \"b1t\"), (\"b1t\", \"b0t\"), (\"b0t\", \"f0t\"), (\"f0\", \"f0t\"), (\"f1\", \"f1t\"), (\"b0\", \"b0t\"), (\"b1\", \"b1t\")]\nbox = VGroup(*[Line(P[a], P[b], color=GREY_B, stroke_width=2) for a, b in pairs])\nstage.play(Create(box))\nstage.add(box)\nstage.label(Line(P[\"f0\"], P[\"f1\"]), \"4\", direction=DOWN)\nstage.label(Line(P[\"f1\"], P[\"b1\"]), \"3\", direction=RIGHT)\nstage.label(Line(P[\"f0\"], P[\"f0t\"]), \"12\", direction=LEFT)"
+   },
+   {
+    "intent": "The floor diagonal from front-left to back-right corner: 5",
+    "narration": "First go across the floor, from one corner to the opposite one. That's the hypotenuse of a three by four right triangle: five.",
+    "code": "floor_d = Line(P[\"f0\"], P[\"b1\"], color=GREEN, stroke_width=5)\nstage.play(Create(floor_d))\nstage.add(floor_d)\nstage.play(FadeIn(Text(\"5\", font_size=28, color=GREEN).move_to((P[\"f0\"] + P[\"b1\"]) / 2 + 0.3 * DOWN + 0.15 * RIGHT)))"
+   },
+   {
+    "intent": "The diagonal rising from that corner to the opposite top corner, a right triangle of 5, 12 and 13 shaded",
+    "narration": "Now stand that floor diagonal up against the twelve tall edge: another right triangle. Its long side runs corner to corner through the box: thirteen.",
+    "code": "tri = Polygon(P[\"f0\"], P[\"b1\"], P[\"b1t\"], color=YELLOW, fill_opacity=0.25)\nspace_d = Line(P[\"f0\"], P[\"b1t\"], color=YELLOW, stroke_width=5)\nstage.play(FadeIn(tri), Create(space_d))\nstage.add(tri, space_d)\nstage.label(space_d, \"13\", direction=RIGHT, color=YELLOW)"
+   },
+   {
+    "intent": "The box beside √(3² + 4²) = 5 and √(5² + 12²) = 13",
+    "narration": "Pythagoras twice: three, four, five across the floor, then five, twelve, thirteen up through the box.",
+    "code": "stage.equation(r\"\\sqrt{3^2 + 4^2} = 5\", r\"\\sqrt{5^2 + 12^2} = 13\")"
+   }
+  ]
+ },
+ {
+  "request": "why are vertically opposite angles equal?",
+  "beats": [
+   {
+    "intent": "Two straight lines crossing at a point",
+    "narration": "Two straight lines cross.",
+    "code": "stage.title(\"Vertically opposite angles\")\nO = np.array([-3, -0.3, 0])\nd = np.array([np.cos(50 * DEGREES), np.sin(50 * DEGREES), 0])\nl1 = Line(O + 3 * LEFT, O + 3 * RIGHT, color=WHITE)\nl2 = Line(O - 2.8 * d, O + 2.8 * d, color=WHITE)\nstage.play(Create(l1), Create(l2))\nstage.add(l1, l2)"
+   },
+   {
+    "intent": "Angle a = 50° and its neighbour b = 130° marked: together they make a straight line",
+    "narration": "Mark an angle a, fifty degrees, and the angle b next to it. Together they make a straight line, so b is a hundred and thirty.",
+    "code": "a = Angle(Line(O, O + RIGHT), Line(O, O + d), radius=0.7, color=YELLOW)\nb = Angle(Line(O, O + d), Line(O, O + LEFT), radius=0.5, color=BLUE)\nstage.play(Create(a), Create(b))\nstage.add(a, b)\nstage.label(a, \"a = 50°\", direction=RIGHT, color=YELLOW)\nstage.label(b, \"b = 130°\", direction=UP, color=BLUE)"
+   },
+   {
+    "intent": "Angle c, opposite a, marked 50°: b and c also make a straight line",
+    "narration": "The angle c, opposite a, also sits next to b on a straight line. So c is a hundred and eighty minus a hundred and thirty: fifty, the same as a.",
+    "code": "c = Angle(Line(O, O + LEFT), Line(O, O - d), radius=0.7, color=YELLOW)\nstage.play(Create(c))\nstage.add(c)\nstage.label(c, \"c = 50°\", direction=LEFT, color=YELLOW)"
+   },
+   {
+    "intent": "The lines beside a + b = 180°, b + c = 180°, so a = c",
+    "narration": "Both a and c are what's left when b is taken from a straight line, so vertically opposite angles are always equal.",
+    "code": "stage.equation(r\"a + b = 180^\\circ\", r\"b + c = 180^\\circ\", r\"a = c\")"
+   }
+  ]
+ },
+ {
+  "request": "how does the cosine rule find a missing side?",
+  "beats": [
+   {
+    "intent": "A triangle with sides 5 and 7 meeting at a 60° angle",
+    "narration": "A triangle has sides five and seven, with a sixty degree angle between them.",
+    "code": "stage.title(\"The cosine rule\")\nk = 0.55\nA = np.array([-5.6, -2.0, 0])\nB = A + 7 * k * RIGHT\nC = A + 5 * k * np.array([np.cos(PI / 3), np.sin(PI / 3), 0])\nsides = VGroup(Line(A, B, color=WHITE), Line(A, C, color=WHITE))\nstage.play(Create(sides))\nstage.add(sides)\nang = Angle(Line(A, B), Line(A, C), radius=0.5, color=YELLOW)\nstage.play(Create(ang))\nstage.add(ang)\nstage.label(ang, \"60°\", direction=RIGHT, color=YELLOW)\nstage.label(sides[0], \"7\", direction=DOWN)\nstage.label(sides[1], \"5\", direction=LEFT)"
+   },
+   {
+    "intent": "The third side a drawn in orange with a question mark",
+    "narration": "The third side, opposite the angle, is unknown. Call it a.",
+    "code": "a_side = Line(B, C, color=ORANGE, stroke_width=5)\nstage.play(Create(a_side))\nstage.add(a_side)\nm = (B + C) / 2\nstage.play(FadeIn(Text(\"a = ?\", font_size=28, color=ORANGE).move_to(m + 0.5 * (m - A) / np.linalg.norm(m - A))))"
+   },
+   {
+    "intent": "A faint right-angled version with the 5 side standing straight up: its third side √74 ≈ 8.6 is longer",
+    "narration": "If the angle were ninety degrees, Pythagoras would give a squared equals twenty five plus forty nine, seventy four. A narrower angle pulls the sides together, so the real a is shorter: the cosine rule subtracts the difference.",
+    "code": "C2 = A + 5 * k * UP\nghost = VGroup(DashedLine(A, C2, color=GREY_B), DashedLine(B, C2, color=GREY_B))\nstage.play(Create(ghost))\nstage.add(ghost)\nstage.label(ghost[1], \"at 90°: √74 ≈ 8.6\", direction=UP, color=GREY_B)"
+   },
+   {
+    "intent": "The triangle beside a² = 5² + 7² − 2·5·7·cos 60° = 39, a ≈ 6.24",
+    "narration": "a squared is twenty five plus forty nine minus two times five times seven times a half: thirty nine. So a is about six point two four.",
+    "code": "stage.equation(r\"a^2 = 5^2 + 7^2 - 2 \\cdot 5 \\cdot 7 \\cos 60^\\circ\", r\"74 - 35 = 39\", r\"a \\approx 6.24\")"
+   }
+  ]
+ }
+]
