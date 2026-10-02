@@ -1,0 +1,102 @@
+[
+ {
+  "request": "how many litres does a 50 by 30 by 40 cm fish tank hold?",
+  "beats": [
+   {
+    "intent": "A fish tank 50 cm long, 30 cm deep and 40 cm tall",
+    "narration": "A fish tank is fifty centimetres long, thirty deep and forty tall.",
+    "code": "stage.title(\"Litres in a fish tank\")\nk = 0.07\no = np.array([-5.8, -2.0, 0])\nW, H = 50 * k * RIGHT, 40 * k * UP\nD = 30 * k * 0.5 * np.array([1, 1, 0])\nfront = Polygon(o, o + W, o + W + H, o + H, color=BLUE, fill_opacity=0.25)\ntop = Polygon(o + H, o + W + H, o + W + H + D, o + H + D, color=BLUE, fill_opacity=0.15)\nside = Polygon(o + W, o + W + D, o + W + D + H, o + W + H, color=BLUE, fill_opacity=0.1)\nstage.play(Create(front), Create(top), Create(side))\nstage.add(front, top, side)\nstage.label(Line(o, o + W), \"50 cm\", direction=DOWN)\nstage.label(Line(o, o + H), \"40 cm\", direction=LEFT)\nstage.label(Line(o + W, o + W + D), \"30 cm\", direction=DR)"
+   },
+   {
+    "intent": "The tank filled with water, its volume 50 × 30 × 40 cm³",
+    "narration": "Fill it. Its volume is length times depth times height.",
+    "code": "stage.play(front.animate.set_fill(BLUE, opacity=0.6), top.animate.set_fill(BLUE, opacity=0.4), side.animate.set_fill(BLUE, opacity=0.35))\nstage.play(FadeIn(Text(\"60 000 cm³\", font_size=30).move_to(front)))"
+   },
+   {
+    "intent": "A single 10 cm cube beside the tank, labelled 1 litre = 1000 cm³",
+    "narration": "A litre is a cube ten centimetres on each side: a thousand cubic centimetres.",
+    "code": "cube = Square(10 * k * 1.6, color=YELLOW, fill_opacity=0.6).move_to([0.4, -1.2, 0])\nstage.play(FadeIn(cube))\nstage.add(cube)\nstage.label(cube, \"1 L = 1000 cm³\", direction=RIGHT, color=YELLOW)"
+   },
+   {
+    "intent": "The tank beside 50 × 30 × 40 = 60 000 cm³ and 60 000 ÷ 1000 = 60 L",
+    "narration": "Sixty thousand cubic centimetres divided by a thousand is sixty litres.",
+    "code": "stage.equation(r\"50 \\times 30 \\times 40 = 60\\,000 \\, \\mathrm{cm^3}\", r\"60\\,000 \\div 1000 = 60 \\, \\mathrm{L}\")"
+   }
+  ]
+ },
+ {
+  "request": "how many posts do you need for a 20 m fence with a post every 2 m?",
+  "beats": [
+   {
+    "intent": "A 20 m line for the fence",
+    "narration": "A fence runs twenty metres, with a post every two metres. Twenty divided by two is ten, but is that the number of posts?",
+    "code": "stage.title(\"Fence posts\")\nk = 0.5\nx0 = -5.2\nline = Line([x0, -0.6, 0], [x0 + 20 * k, -0.6, 0], color=GREY_B)\nstage.play(Create(line))\nstage.add(line)\nstage.label(line, \"20 m\", direction=DOWN)"
+   },
+   {
+    "intent": "Ten 2 m gaps marked along the line",
+    "narration": "There are ten gaps of two metres.",
+    "code": "gaps = VGroup(*[Line([x0 + 2 * i * k, -0.6, 0], [x0 + 2 * (i + 1) * k, -0.6, 0], color=BLUE if i % 2 else YELLOW, stroke_width=10) for i in range(10)])\nstage.play(LaggedStart(*[Create(g) for g in gaps], lag_ratio=0.1))\nstage.add(gaps)\nstage.play(FadeIn(Text(\"10 gaps\", font_size=28, color=BLUE).move_to([x0 + 10 * k, 0.3, 0])))"
+   },
+   {
+    "intent": "Posts at every boundary, including both ends: 11 posts",
+    "narration": "But a post sits at both ends of every gap, including the very first and the very last. That's eleven posts.",
+    "code": "posts = VGroup(*[Rectangle(width=0.12, height=0.9, color=ORANGE, fill_opacity=0.9).move_to([x0 + 2 * i * k, -0.25, 0]) for i in range(11)])\nstage.play(LaggedStart(*[GrowFromEdge(p, DOWN) for p in posts], lag_ratio=0.1))\nstage.add(posts)\nstage.play(FadeIn(Text(\"11 posts\", font_size=28, color=ORANGE).move_to([x0 + 10 * k, 1.0, 0])))"
+   },
+   {
+    "intent": "The fence beside 20 ÷ 2 = 10 gaps, 10 + 1 = 11 posts",
+    "narration": "Posts are always one more than gaps on a straight fence.",
+    "code": "stage.equation(r\"20 \\div 2 = 10 \\ \\mathrm{gaps}\", r\"10 + 1 = 11 \\ \\mathrm{posts}\")"
+   }
+  ]
+ },
+ {
+  "request": "why does light bounce off a mirror at the same angle it hits it?",
+  "beats": [
+   {
+    "intent": "A flat mirror with a dashed normal line standing up from it",
+    "narration": "Light hits a flat mirror. Draw the normal: a line at right angles to the mirror where the light lands.",
+    "code": "stage.title(\"Reflection\")\nP = np.array([-3, -1.8, 0])\nmirror = Line(P + 3.2 * LEFT, P + 3.2 * RIGHT, color=GREY_B, stroke_width=8)\nnormal = DashedLine(P, P + 3.6 * UP, color=WHITE)\nstage.play(Create(mirror), Create(normal))\nstage.add(mirror, normal)\nstage.label(mirror, \"mirror\", direction=DOWN)"
+   },
+   {
+    "intent": "An incoming ray at 40° to the normal hitting the mirror",
+    "narration": "A ray comes in at forty degrees to the normal.",
+    "code": "src = P + 3.4 * np.array([-np.sin(40 * DEGREES), np.cos(40 * DEGREES), 0])\ninc = Arrow(src, P, buff=0, color=YELLOW, stroke_width=5)\nstage.play(GrowArrow(inc))\nstage.add(inc)\na_in = Angle(Line(P, P + UP), Line(P, src), radius=0.9, color=YELLOW)\nstage.play(Create(a_in))\nstage.add(a_in)\nstage.label(a_in, \"40°\", direction=UL, color=YELLOW)"
+   },
+   {
+    "intent": "The reflected ray leaving at 40° on the other side of the normal",
+    "narration": "It leaves at exactly the same angle on the other side: forty degrees.",
+    "code": "out_end = P + 3.4 * np.array([np.sin(40 * DEGREES), np.cos(40 * DEGREES), 0])\nref = Arrow(P, out_end, buff=0, color=ORANGE, stroke_width=5)\nstage.play(GrowArrow(ref))\nstage.add(ref)\na_out = Angle(Line(P, out_end), Line(P, P + UP), radius=0.9, color=ORANGE)\nstage.play(Create(a_out))\nstage.add(a_out)\nstage.label(a_out, \"40°\", direction=UR, color=ORANGE)"
+   },
+   {
+    "intent": "The picture beside angle of incidence = angle of reflection",
+    "narration": "The angle in equals the angle out, both measured from the normal. It's like a ball bouncing off a smooth wall.",
+    "code": "stage.equation(r\"\\theta_{\\mathrm{in}} = \\theta_{\\mathrm{out}} = 40^\\circ\")"
+   }
+  ]
+ },
+ {
+  "request": "when a cross-shaped net folds into a dice, which faces end up opposite?",
+  "beats": [
+   {
+    "intent": "A cross-shaped net of six squares numbered 1 to 6",
+    "narration": "Here's a net of six squares in a cross, numbered one to six. Fold it up and it makes a dice.",
+    "code": "stage.title(\"Folding a dice\")\ns = 0.9\nc = np.array([-3.4, -0.2, 0])\ncells = {1: (0, 1), 2: (-1, 0), 3: (0, 0), 4: (1, 0), 5: (0, -1), 6: (0, -2)}\nnet = VGroup()\nfor n, (i, j) in cells.items():\n    net.add(VGroup(Square(s, color=WHITE, fill_opacity=0.1), Text(str(n), font_size=32)).move_to(c + s * np.array([i, j, 0])))\nstage.play(LaggedStart(*[FadeIn(sq) for sq in net], lag_ratio=0.15))\nstage.add(net)"
+   },
+   {
+    "intent": "1 and 5 coloured the same: in the long column they have exactly one square between them",
+    "narration": "Look down the long column: one, three, five, six. Two squares with exactly one square between them in a straight line fold to opposite sides. So one is opposite five.",
+    "code": "stage.play(net[0][0].animate.set_fill(BLUE, opacity=0.6), net[4][0].animate.set_fill(BLUE, opacity=0.6))"
+   },
+   {
+    "intent": "3 and 6 coloured together, then 2 and 4 across the middle row",
+    "narration": "By the same rule, three is opposite six, and in the middle row two is opposite four.",
+    "code": "stage.play(net[2][0].animate.set_fill(GREEN, opacity=0.6), net[5][0].animate.set_fill(GREEN, opacity=0.6))\nstage.play(net[1][0].animate.set_fill(ORANGE, opacity=0.6), net[3][0].animate.set_fill(ORANGE, opacity=0.6))\nstage.label(net, \"same colour = opposite faces\", direction=RIGHT)"
+   },
+   {
+    "intent": "The net beside the opposite pairs 1 + 5 = 6, 2 + 4 = 6, 3 + 6 = 9",
+    "narration": "The opposite pairs add to six, six and nine. On a real dice opposite faces always add to seven, so this numbering would not make a real dice.",
+    "code": "stage.equation(r\"1 + 5 = 6, \\ 2 + 4 = 6\", r\"3 + 6 = 9\")"
+   }
+  ]
+ }
+]
