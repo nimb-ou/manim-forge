@@ -694,3 +694,31 @@ means less.
 
 **Spiralling?** No. The leak took one fix with a test and a measured cost.
 The rest of the block is the same data work, still checked on Oct 3.
+
+## Log · 2026-10-04 18:05Z
+
+**What happened.** The Mac slept from Oct 2 00:41Z to Oct 4 17:54Z: 65
+hours with nothing running (uptime intact, every process paused). Before it
+slept: teacher batches 126-136 (894 → 937 scenes), the held-out guard
+extended to single kit beats (56 more rows) and to "1 + 1/2 + 1/3", Gemma
+arcs 817 → 998. Batch 137 was committed on waking (941 scenes).
+
+**What the numbers say.** Nothing new: no model has finished since the
+flash-lite baseline (held-out 42%, marked optimistic for v6/v3).
+
+**What changed.** The Oct 3 00:30Z launcher woke and is building the v8/v5
+datasets now (all Claude scenes, guards on); the Oct 2 rebuild was stopped
+so the two did not race on the same files. The Gemma teacher and the local
+critic are paused (SIGSTOP) while the build renders, after swap reached
+5.6 GB with three renderers at once; they resume once the datasets are
+pushed. `caffeinate -i` is tied to round2.sh.
+
+**Plan.** Changed (PLAN.md, update 2026-10-04): v8 results land around
+Oct 5, which leaves no time for selfgen and v9. v1.0 on Oct 6 ships the
+better of v6 and v8 on held-out (flash-lite, judged together), with the
+gallery and README from that model; selfgen/v9 becomes v1.1.
+
+**Spiralling?** No, but a lesson about the setup: a long autonomous run on
+a laptop needs a sleep guard from the start. That cost two and a half
+days, and the plan absorbed it by dropping one round, not by cutting
+the check on v8.
