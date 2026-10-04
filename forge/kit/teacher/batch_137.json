@@ -1,0 +1,102 @@
+[
+ {
+  "request": "why is 0.3 × 0.2 equal to 0.06?",
+  "beats": [
+   {
+    "intent": "A 1 by 1 square split into a 10 by 10 grid of hundredths",
+    "narration": "Take a square of side one, cut into a ten by ten grid. Each little square is one hundredth.",
+    "code": "stage.title(\"Multiplying decimals\")\ns = 0.4\ntl = np.array([-5.6, 1.8, 0])\ngrid = VGroup(*[Square(s, color=GREY_D, stroke_width=1).move_to(tl + np.array([(i + 0.5) * s, -(j + 0.5) * s, 0])) for j in range(10) for i in range(10)])\nborder = Square(10 * s, color=WHITE).move_to(tl + np.array([5 * s, -5 * s, 0]))\nstage.play(FadeIn(grid), Create(border))\nstage.add(grid, border)\nstage.label(border, \"1 × 1\", direction=UP)"
+   },
+   {
+    "intent": "A strip 0.3 wide shaded across the square in blue",
+    "narration": "Shade a strip nought point three wide: three columns.",
+    "code": "cols = VGroup(*[grid[j * 10 + i] for j in range(10) for i in range(3)])\nstage.play(*[c.animate.set_fill(BLUE, opacity=0.35) for c in cols])\nstage.label(Line(tl, tl + 3 * s * RIGHT), \"0.3\", direction=UP, color=BLUE)"
+   },
+   {
+    "intent": "A strip 0.2 tall shaded across in orange; the overlap is 6 little squares",
+    "narration": "Now a strip nought point two tall: two rows. Where they overlap is a rectangle nought point three by nought point two: just six little squares.",
+    "code": "rows = VGroup(*[grid[j * 10 + i] for j in range(2) for i in range(10)])\nstage.play(*[r.animate.set_fill(ORANGE, opacity=0.35) for r in rows])\nboth = VGroup(*[grid[j * 10 + i] for j in range(2) for i in range(3)])\nstage.play(*[b.animate.set_fill(GREEN, opacity=0.9) for b in both])\nstage.label(Line(tl, tl + 2 * s * DOWN), \"0.2\", direction=LEFT, color=ORANGE)\nstage.label(both, \"6 hundredths\", direction=RIGHT, color=GREEN)"
+   },
+   {
+    "intent": "The grid beside 0.3 × 0.2 = 6/100 = 0.06",
+    "narration": "Six hundredths: nought point nought six. Three times two is six, and tenths times tenths make hundredths.",
+    "code": "stage.equation(r\"0.3 \\times 0.2 = \\frac{6}{100}\", r\"= 0.06\")"
+   }
+  ]
+ },
+ {
+  "request": "why do co-interior angles between parallel lines add up to 180°?",
+  "beats": [
+   {
+    "intent": "Two parallel lines crossed by a slanted line",
+    "narration": "Two parallel lines are crossed by a third line.",
+    "code": "stage.title(\"Co-interior angles\")\ny1, y2 = 0.8, -1.4\np1 = Line([-6.2, y1, 0], [0.2, y1, 0], color=WHITE)\np2 = Line([-6.2, y2, 0], [0.2, y2, 0], color=WHITE)\nd = np.array([np.cos(65 * DEGREES), np.sin(65 * DEGREES), 0])\nA = np.array([-3.0, y1, 0])\nB = A + (y2 - y1) / d[1] * d\ncross = Line(B - 1.0 * d, A + 1.0 * d, color=BLUE)\nstage.play(Create(p1), Create(p2), Create(cross))\nstage.add(p1, p2, cross)\nstage.play(FadeIn(Text(\">\", font_size=30).move_to([-5.2, y1, 0])), FadeIn(Text(\">\", font_size=30).move_to([-5.2, y2, 0])))"
+   },
+   {
+    "intent": "The angle inside the top line, between the lines on the right, marked 115°",
+    "narration": "Mark the angle at the top crossing on the inside, between the parallel lines: a hundred and fifteen degrees.",
+    "code": "top = Angle(Line(A, A + RIGHT), Line(A, B), radius=0.6, color=YELLOW, other_angle=True)\nstage.play(Create(top))\nstage.add(top)\nstage.label(top, \"115°\", direction=RIGHT, color=YELLOW)"
+   },
+   {
+    "intent": "The matching inside angle at the bottom crossing marked 65°",
+    "narration": "On the same side, inside the lines at the bottom crossing, the angle is sixty five degrees.",
+    "code": "bot = Angle(Line(B, B + RIGHT), Line(B, A), radius=0.6, color=ORANGE)\nstage.play(Create(bot))\nstage.add(bot)\nstage.label(bot, \"65°\", direction=RIGHT, color=ORANGE)"
+   },
+   {
+    "intent": "The lines beside 115° + 65° = 180°",
+    "narration": "These co-interior angles, on the same side and between the parallels, always add to a hundred and eighty: the bottom one matches the angle on the outside of the top crossing, and together those make a straight line.",
+    "code": "stage.equation(r\"115^\\circ + 65^\\circ = 180^\\circ\")"
+   }
+  ]
+ },
+ {
+  "request": "how do you change 3:45 pm into the 24-hour clock?",
+  "beats": [
+   {
+    "intent": "A clock face showing 3:45",
+    "narration": "The clock shows quarter to four, and it's afternoon: three forty five p m.",
+    "code": "stage.title(\"The 24-hour clock\")\nc = np.array([-4.2, 0.2, 0])\nface = Circle(radius=1.6, color=WHITE).move_to(c)\nticks = VGroup(*[Line(c + 1.45 * np.array([np.cos(a), np.sin(a), 0]), c + 1.6 * np.array([np.cos(a), np.sin(a), 0]), color=WHITE) for a in np.arange(0, TAU, TAU / 12)])\nang_h = PI / 2 - (3.75 / 12) * TAU\nang_m = PI / 2 - (45 / 60) * TAU\nhour = Line(c, c + 0.9 * np.array([np.cos(ang_h), np.sin(ang_h), 0]), color=YELLOW, stroke_width=7)\nminute = Line(c, c + 1.35 * np.array([np.cos(ang_m), np.sin(ang_m), 0]), color=WHITE, stroke_width=4)\nstage.play(Create(face), Create(ticks), Create(hour), Create(minute))\nstage.add(face, ticks, hour, minute)\nstage.label(face, \"3:45 pm\", direction=DOWN, color=YELLOW)"
+   },
+   {
+    "intent": "A 24-hour line from 0 to 24 with noon at 12 marked",
+    "narration": "The twenty four hour clock counts on past noon instead of starting again at one.",
+    "code": "nl = NumberLine(x_range=[0, 24, 3], length=6, include_numbers=True, font_size=22).move_to([-0.2, -2.3, 0])\nstage.play(Create(nl))\nstage.add(nl)\nnoon = Dot(nl.n2p(12), color=BLUE)\nstage.play(FadeIn(noon))\nstage.add(noon)\nstage.play(FadeIn(Text(\"noon\", font_size=24, color=BLUE).move_to(nl.n2p(10.6) + 0.55 * UP)))"
+   },
+   {
+    "intent": "An arc from noon on to 15:45, three and three-quarter hours later",
+    "narration": "Three forty five in the afternoon is three hours forty five after noon: twelve plus three, fifteen forty five.",
+    "code": "arc = ArcBetweenPoints(nl.n2p(12), nl.n2p(15.75), angle=-PI / 2, color=GREEN)\nstage.play(Create(arc))\nstage.add(arc)\nt = Dot(nl.n2p(15.75), color=GREEN)\nstage.play(FadeIn(t))\nstage.add(t)\nstage.play(FadeIn(Text(\"+ 3 h 45\", font_size=26, color=GREEN).move_to(nl.n2p(13.9) + 1.0 * UP)))"
+   },
+   {
+    "intent": "The clock beside 3:45 pm = 12 + 3:45 = 15:45",
+    "narration": "For afternoon times, add twelve to the hour.",
+    "code": "stage.equation(r\"3{:}45 \\ \\mathrm{pm} \\to 12 + 3 = 15\", r\"15{:}45\")"
+   }
+  ]
+ },
+ {
+  "request": "why do the diagonals of a rhombus cross at right angles?",
+  "beats": [
+   {
+    "intent": "A rhombus with all four sides equal, marked with ticks",
+    "narration": "A rhombus has four equal sides.",
+    "code": "stage.title(\"Diagonals of a rhombus\")\nc = np.array([-3.2, -0.3, 0])\na, b = 2.4, 1.4\nP = [c + a * LEFT, c + b * DOWN, c + a * RIGHT, c + b * UP]\nrh = Polygon(*P, color=WHITE)\nstage.play(Create(rh))\nstage.add(rh)\nmarks = VGroup(*[Line(ORIGIN, 0.2 * UP, color=YELLOW).move_to((P[i] + P[(i + 1) % 4]) / 2).rotate(np.arctan2(*(P[(i + 1) % 4] - P[i])[[1, 0]])) for i in range(4)])\nstage.play(Create(marks))\nstage.add(marks)"
+   },
+   {
+    "intent": "Both diagonals drawn, meeting at the middle M",
+    "narration": "Draw both diagonals. They meet in the middle.",
+    "code": "d1 = Line(P[0], P[2], color=BLUE)\nd2 = Line(P[1], P[3], color=ORANGE)\nstage.play(Create(d1), Create(d2))\nstage.add(d1, d2)\nstage.play(FadeIn(Dot(c)), FadeIn(Text(\"M\", font_size=24).next_to(c, DR, buff=0.1)))"
+   },
+   {
+    "intent": "The four triangles around M shaded: all congruent, so the four angles at M are equal",
+    "narration": "The diagonals cut it into four triangles with the same three sides, so they're identical. The four angles at the middle are equal, and four equal angles around a point are ninety degrees each.",
+    "code": "tris = VGroup(*[Polygon(c, P[i], P[(i + 1) % 4], color=col, fill_opacity=0.3, stroke_width=0) for i, col in zip(range(4), (BLUE, GREEN, BLUE, GREEN))])\nstage.play(FadeIn(tris))\nstage.add(tris)\nra = RightAngle(Line(c, P[2]), Line(c, P[3]), length=0.25, color=WHITE)\nstage.play(Create(ra))\nstage.add(ra)"
+   },
+   {
+    "intent": "The rhombus beside 4 equal angles, 360° ÷ 4 = 90°",
+    "narration": "So the diagonals of a rhombus always cross at right angles.",
+    "code": "stage.equation(r\"360^\\circ \\div 4 = 90^\\circ\")"
+   }
+  ]
+ }
+]
