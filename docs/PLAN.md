@@ -215,6 +215,17 @@ every compared run re-judged together). On it, today's best configuration
 v1.0 bar stays at ≥ 50% held-out on this judge; v8 is judged alongside a
 re-judge of ab_held_scaf.
 
+**Update 2026-10-04 18:00Z — the Mac slept 65 hours.** Nothing ran from
+Oct 2 00:41Z to Oct 4 17:54Z (no reboot; every job, including the Oct 3
+launcher, paused mid-sleep). On waking the launcher built the datasets
+(all 941 Claude scenes, held-out guard on) and pushes kit v8 and planner v5
+now; the separate Oct 2 rebuild was stopped so the two would not race.
+`caffeinate -i` is tied to round2.sh so idle sleep cannot stall the rest.
+With v8 results around Oct 5, there is no room for selfgen and a v9 before
+Oct 6: **v1.0 ships the better of v6 and v8 on held-out** (flash-lite judge,
+both re-judged together), with the gallery and README from that model.
+round2's selfgen/v9 continues afterwards as v1.1.
+
 **Update 2026-10-01 15:40Z — held-out leakage.** An audit found held-out
 topics in the training data (16 narration arcs, gold scenes, ~4% of kit
 rows; RESULTS.md). Every builder now drops rows whose request is a held-out
