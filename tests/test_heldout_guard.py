@@ -15,7 +15,8 @@ def test_every_heldout_prompt_is_caught():
 def test_neighbouring_topics_pass():
     for t in ("prove the Pythagorean theorem with squares on the sides",
               "how do you add 1/3 and 1/4?",
-              "what does a 10% hill sign mean?"):
+              "what does a 10% hill sign mean?",
+              "what's the chance of rolling a double with two dice?"):
         assert not touches_heldout(t), t
 
 
@@ -40,3 +41,10 @@ def test_a_kit_beat_is_judged_by_its_own_intent_too():
 def test_the_harmonic_sum_is_caught_without_its_name():
     assert touches_heldout("how a sum like 1 + 1/2 + 1/3 + ... keeps growing")
     assert not touches_heldout("why 1/2 + 1/4 + 1/8 + ... adds up to 1")
+
+
+def test_dice_totals_under_other_names_are_caught():
+    for t in ("why is 7 the most likely roll with two dice",
+              "which total is most likely when you roll two dice?",
+              "what's the chance of rolling a total of 8 with two dice, step by step?"):
+        assert touches_heldout(t), t

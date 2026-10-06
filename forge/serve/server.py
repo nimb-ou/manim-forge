@@ -42,6 +42,11 @@ KIT_CODER = ROOT / "adapters" / "mlx-coder6-kit"
 CODER = KIT_CODER if (KIT_CODER / "adapters.safetensors").exists() \
     else ROOT / "adapters" / "mlx-coder2"
 KIT_DEFAULT = CODER == KIT_CODER
+# One shot (forge/app/oneshot.py): the whole scene in one call, adapted from
+# the nearest hand-written scenes. Used when its adapter exists and ENGINE
+# says so; "twostage" is the planner + per-beat coder above.
+ONESHOT = ROOT / "adapters" / "mlx-oneshot"
+ENGINE = "twostage"
 
 
 class JobIn(BaseModel):
@@ -49,6 +54,7 @@ class JobIn(BaseModel):
     beats: int = Field(default=8, ge=2, le=24)
     quality: str = Field(default="medium", pattern="^(low|medium|high)$")
     kit: bool = KIT_DEFAULT
+    engine: str = Field(default=ENGINE, pattern="^(twostage|oneshot)$")
 
 
 @dataclass
@@ -78,6 +84,7 @@ class Worker(threading.Thread):
         super().__init__(daemon=True)
         self.q: queue.Queue[Job] = queue.Queue()
         self.host = None
+        self.oneshot = None                  # (model, tokenizer)
         self.jobs: dict[str, Job] = {}
 
     def submit(self, spec: JobIn) -> Job:
@@ -92,7 +99,11 @@ class Worker(threading.Thread):
         while True:
             job = self.q.get()
             try:
+                if job.spec.engine == "oneshot":
+                    self._run_oneshot(job)
+                    continue
                 if self.host is None:
+                    self.oneshot = None          # one 7B in memory at a time
                     job.emit({"stage": "loading", "note": "loading the model "
                               "(once per server start, ~20 s)"})
                     self.host = SwapHost(str(PLANNER), str(CODER))
@@ -107,6 +118,22 @@ class Worker(threading.Thread):
                 job.emit({"stage": "done", "ok": False,
                           "error": f"{type(exc).__name__}: {exc}",
                           "trace": traceback.format_exc()[-2000:]})
+
+    def _run_oneshot(self, job: Job) -> None:
+        from forge.app.oneshot import run_oneshot
+        from forge.app.pipeline import Options, load
+        if self.oneshot is None:
+            self.host = None
+            job.emit({"stage": "loading", "note": "loading the model "
+                      "(once per server start, ~20 s)"})
+            trained = (ONESHOT / "adapters.safetensors").exists()
+            self.oneshot = (*load(str(ONESHOT) if trained else None), trained)
+        model, tok, trained = self.oneshot
+        opts = Options(max_beats=job.spec.beats, quality=job.spec.quality,
+                       kit=True)
+        res = run_oneshot(job.spec.prompt, model, tok, job.emit, opts,
+                          api=not trained)
+        self._log(job, res)
 
     def _log(self, job: Job, res) -> None:
         SESSIONS.mkdir(parents=True, exist_ok=True)
@@ -199,4 +226,5 @@ def sessions(limit: int = 20) -> list[dict]:
 def health() -> dict:
     return {"ok": True, "model_loaded": worker.host is not None,
             "queued": worker.q.qsize(),
-            "planner": PLANNER.name, "coder": CODER.name, "kit": KIT_DEFAULT}
+            "planner": PLANNER.name, "coder": CODER.name, "kit": KIT_DEFAULT,
+            "engine": ENGINE}

@@ -30,7 +30,10 @@ HELDOUT = re.compile(
     r"|fourier transform"
     r"|determinant (is |of |equal to )?(zero|0)\b|zero determinant"
     r"|central limit|bell curve|normal distribution|gaussian"
-    r"|sums? of (two |several |many |\d+ )?dice|dice sums?",
+    r"|sums? of (two |several |many |\d+ )?dice|dice sums?"
+    # The sum of two dice under other names (found 2026-10-07: "why is 7 the
+    # most likely roll with two dice" was in the library).
+    r"|\b(totals?|rolls?)\b.{0,30}\b(two|2) dice|most likely (roll|total|sum)",
     re.I)
 
 

@@ -366,6 +366,25 @@ def run(request: str, host, emit: Emit, opts: Options | None = None,
               "note": why})
     emit({"stage": "code", "status": "done",
           "elapsed": round(time.time() - t0, 1)})
+    return finish(request, beats, bodies, cm, ctok, system, opts, emit,
+                  harness, t0, notes)
+
+
+def finish(request: str, beats: list[Beat], bodies: list[str], cm, ctok,
+           system: str, opts: Options, emit: Emit, harness=None,
+           t0: float | None = None, notes: list[str] | None = None) -> Result:
+    """Assemble (set-up, statement- then beat-level salvage) and render.
+
+    Shared by the two-stage run and the one-shot generator
+    (forge/app/oneshot.py), which arrives here with every beat written.
+    """
+    t0 = time.time() if t0 is None else t0
+    notes = [] if notes is None else notes
+    kit = opts.kit
+
+    def note(msg: str, **kw) -> None:
+        notes.append(msg)
+        emit({"stage": "assemble", "note": msg, **kw})
 
     # 3. assemble: set-up, then statement-level, then beat-level salvage
     emit({"stage": "assemble", "status": "start"})

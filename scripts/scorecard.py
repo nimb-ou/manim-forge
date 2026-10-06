@@ -103,6 +103,15 @@ def main() -> int:
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--heldout", action="store_true",
                     help="the 20 held-out prompts (forge/evaluate/heldout_prompts.json)")
+    ap.add_argument("--inscope", action="store_true",
+                    help="the 20 in-scope prompts (forge/evaluate/inscope_prompts.json)")
+    ap.add_argument("--oneshot", action="store_true",
+                    help="write the whole scene in one call from the nearest "
+                         "hand-written scenes (forge/app/oneshot.py); --coder "
+                         "is the adapter ('none' for the base model)")
+    ap.add_argument("--api", action="store_true",
+                    help="one-shot: put the kit reference in the system prompt")
+    ap.add_argument("--k", type=int, default=2, help="one-shot: examples shown")
     ap.add_argument("--short", action="store_true",
                     help="the 20 short one-idea prompts (the headline eval) "
                          "instead of the hard titles")
@@ -130,9 +139,10 @@ def main() -> int:
     mob = {n for n in dir(manim) if isinstance(getattr(manim, n), type)
            and issubclass(getattr(manim, n), manim.Mobject)}
     from forge.evaluate.hard_eval import build_tasks, concept_coverage
-    if a.short or a.heldout:
+    if a.short or a.heldout or a.inscope:
         from types import SimpleNamespace
-        name = "heldout_prompts.json" if a.heldout else "short_prompts.json"
+        name = "heldout_prompts.json" if a.heldout else \
+            "inscope_prompts.json" if a.inscope else "short_prompts.json"
         spec = json.loads((ROOT / "forge" / "evaluate" / name)
                           .read_text())["prompts"]
         # No reference video: coverage is 0 and length is against a nominal
@@ -144,7 +154,13 @@ def main() -> int:
         tasks = build_tasks()[a.start: a.start + a.n]
     out_dir = ROOT / "data" / "scorecard" / a.tag
     out_dir.mkdir(parents=True, exist_ok=True)
-    host = SwapHost(a.planner, a.coder)
+    if a.oneshot:
+        from forge.app.oneshot import run_oneshot
+        from forge.app.pipeline import load
+        om, otok = load(None if a.coder in ("", "none") else a.coder)
+        a.kit = True
+    else:
+        host = SwapHost(a.planner, a.coder)
     opts = Options(max_beats=a.max_beats, quality=a.quality, kit=a.kit, mark_beats=True,
                    relevance=a.relevance, exemplar=a.exemplar,
                    signatures=a.signatures)
@@ -170,7 +186,10 @@ def main() -> int:
                 cache[t.prompt] = [[b.n, b.seconds, b.intent, b.narration] for b in got]
                 cache_path.write_text(json.dumps(cache, indent=1))
             given = [Beat(*x) for x in cache[t.prompt]]
-        res = run(t.prompt, host, lambda e: None, opts, beats=given)
+        if a.oneshot:
+            res = run_oneshot(t.prompt, om, otok, opts=opts, api=a.api, k=a.k)
+        else:
+            res = run(t.prompt, host, lambda e: None, opts, beats=given)
         bodies = [b for b in res.bodies if b.strip()]
         # Visual and new: a picture repeated from an earlier beat does not
         # count (GRPO drew the same plane-and-circle five times running).

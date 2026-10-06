@@ -1,0 +1,65 @@
+{
+ "about": "In-scope test set (2026-10-07): unseen variants of question types the hand-written scenes cover -- new numbers or contexts. Never trained on; the one-shot library excludes nothing here because none is a teacher request verbatim.",
+ "prompts": [
+  {
+   "prompt": "a jacket costs £80 and is 15% off. what do you pay?"
+  },
+  {
+   "prompt": "if 9 people all shake hands with each other, how many handshakes is that?"
+  },
+  {
+   "prompt": "what is the area of a triangle with base 7 and height 4?"
+  },
+  {
+   "prompt": "why do the angles of a hexagon add up to 720 degrees?"
+  },
+  {
+   "prompt": "what's the chance of two heads when you flip two coins?"
+  },
+  {
+   "prompt": "a train goes 150 km in 2.5 hours. what is its average speed?"
+  },
+  {
+   "prompt": "how do you add 3/4 and 1/6?"
+  },
+  {
+   "prompt": "find the area under y = 3x from 0 to 4"
+  },
+  {
+   "prompt": "what is the slope of the line through (2, 1) and (5, 10)?"
+  },
+  {
+   "prompt": "a recipe for 4 people needs 300 g of flour. how much for 6 people?"
+  },
+  {
+   "prompt": "how much paint for a 4 m by 2.5 m wall with a 1 m by 2 m door in it?"
+  },
+  {
+   "prompt": "what is the median of 3, 9, 4, 7 and 12?"
+  },
+  {
+   "prompt": "how far does a dropped stone fall in 3 seconds?"
+  },
+  {
+   "prompt": "rotate the point (3, 1) by 90 degrees about the origin"
+  },
+  {
+   "prompt": "how many ways can you arrange the letters of the word CAT?"
+  },
+  {
+   "prompt": "what does multiplying by i do to the point 2 + i?"
+  },
+  {
+   "prompt": "a bike wheel has a radius of 35 cm. how far does it roll in one turn?"
+  },
+  {
+   "prompt": "solve 4x + 3 = 19 using a balance"
+  },
+  {
+   "prompt": "what is 15% of 240?"
+  },
+  {
+   "prompt": "why is 7 x 8 the same as 8 x 7?"
+  }
+ ]
+}
