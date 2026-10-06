@@ -15,6 +15,7 @@ training data than anything synthetic.
 from __future__ import annotations
 
 import json
+import os
 import queue
 import threading
 import time
@@ -29,6 +30,9 @@ from fastapi.responses import FileResponse, HTMLResponse, StreamingResponse
 from pydantic import BaseModel, Field
 
 ROOT = Path(__file__).resolve().parents[2]
+# The app retrieves from every hand-written scene, held-out topics included
+# (forge/kit/library.py); evaluations do not.
+os.environ.setdefault("FORGE_LIBRARY", "release")
 SESSIONS = ROOT / "data" / "sessions"
 HERE = Path(__file__).parent
 

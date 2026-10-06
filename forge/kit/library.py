@@ -45,9 +45,19 @@ def _words(text: str) -> list[str]:
     return w + [f"{a}_{b}" for a, b in zip(w, w[1:])]
 
 
+def release() -> bool:
+    """FORGE_LIBRARY=release keeps the held-out topics in the library.
+
+    Evaluations never set it: their numbers are for requests the library
+    has nothing on. The shipped app does (forge.serve), because someone
+    asking for the chain rule should get the hand-written chain rule scene
+    as an example, and the README reports both."""
+    return os.environ.get("FORGE_LIBRARY") == "release"
+
+
 @lru_cache(maxsize=1)
 def scenes() -> tuple[dict, ...]:
-    """Every distinct teacher scene, held-out topics removed."""
+    """Every distinct teacher scene; held-out topics removed unless release()."""
     from forge.evaluate.heldout_guard import touches_heldout
     seen, out = set(), []
     for f in sorted(SCENE_DIR.glob("batch_*.json")):
@@ -59,7 +69,7 @@ def scenes() -> tuple[dict, ...]:
             if key in seen:
                 continue
             text = s["request"] + " " + " ".join(b["intent"] for b in s["beats"])
-            if touches_heldout(text):
+            if touches_heldout(text) and not release():
                 continue
             seen.add(key)
             out.append({"request": s["request"], "beats": s["beats"],
