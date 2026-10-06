@@ -59,9 +59,16 @@ def release() -> bool:
 def scenes() -> tuple[dict, ...]:
     """Every distinct teacher scene; held-out topics removed unless release()."""
     from forge.evaluate.heldout_guard import touches_heldout
+    from forge.kit.exemplars import SCENES as EXEMPLARS
     seen, out = set(), []
-    for f in sorted(SCENE_DIR.glob("batch_*.json")):
-        data = json.loads(f.read_text())
+    sources = [(f.name, json.loads(f.read_text()))
+               for f in sorted(SCENE_DIR.glob("batch_*.json"))]
+    # The worked examples in exemplars.py are hand-written kit scenes too.
+    sources.append(("exemplars.py", [
+        {"request": r, "beats": [{"intent": i, "narration": n, "code": c}
+                                 for i, n, c in beats]}
+        for r, beats in EXEMPLARS]))
+    for name, data in sources:
         for s in data if isinstance(data, list) else data.get("scenes", []):
             if not isinstance(s, dict) or not s.get("beats"):
                 continue
@@ -73,7 +80,7 @@ def scenes() -> tuple[dict, ...]:
                 continue
             seen.add(key)
             out.append({"request": s["request"], "beats": s["beats"],
-                        "source": f.name})
+                        "source": name})
     return tuple(out)
 
 
