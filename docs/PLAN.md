@@ -11,6 +11,104 @@ things only Nimit can do.
 
 ---
 
+## Finish plan — 2026-10-07 (supersedes the 2026-09-29 finish plan below)
+
+### Where it actually stands
+
+18 days, 484 commits. A working two-stage pipeline (planner → kit coder →
+Forge kit → render → salvage), a local web app, coder v1–v8 and planner
+v2–v5 trained, 1,061 hand-written teacher scenes.
+
+| | number | what it means |
+|---|---|---|
+| held-out, Gemini flash-lite | **43–44%** (v6 and v8 level) | ~2.6 of 6 beats show their idea |
+| short prompts, flash-lite | ~50% (v6) | the familiar case is not much better |
+| by eye, held-out | a few of 20 clearly good | titles and pictures drift, arcs contradict themselves |
+
+**Are we spiralling? Partly, yes.** Since Sep 30 the main activity has been
+teacher batches, about one every 30-minute check, with no measurement that
+could say whether they helped. When the measurement came (v8, Oct 6) it said
+they did not: ~400 more scenes, +1 beat on the headline judge. The local
+judge said +14 points and would have sent round 2 into self-training on the
+strength of it. The batches are good material but they are no longer the
+lever. Also lost: ~65 h to the Mac sleeping (Oct 2–4).
+
+### What limits quality (from the sheets, not guesses)
+
+1. **Coherence across beats.** Each beat is written separately; by beat 4
+   the picture has nothing to do with beat 1 and the title is the planner's
+   wording, not what is drawn.
+2. **The planner's arcs.** Planner v3 writes lecture notes ("Host explains
+   the rules"); a 7B cannot keep a story logically consistent (Monty Hall).
+3. **Fidelity to the intent.** Given "a vertical stretch by k" the coder
+   draws one line.
+
+More rows of the same kind did not move any of these.
+
+### The limits we now know
+
+| resource | limit | use |
+|---|---|---|
+| Mac, 16 GB | one 7B at a time; renders contend; sleeps unless guarded | inference, eval, app |
+| Kaggle GPU | 30 h/week; ~14 h left until the ~Oct 10 reset; an SFT is ~8 h | at most one more SFT round |
+| Gemini flash-lite | ~100+ judge calls/day (flash: ~20) | the only headline judge |
+| local judge (Qwen3.5-4B) | lenient; disagrees with Gemini by 20 points | filtering, never decisions |
+| Gemma API | frequent 500s | not on the critical path |
+| Mistral | budget exhausted | — |
+
+### The decision
+
+Stop growing the data. Make it **great on an honest scope and working
+end to end**, then release:
+
+- **Scope:** school-level maths and everyday quantitative questions, the
+  ground the 1,061 scenes cover, plus whatever transfers. Report the
+  held-out topics honestly as "outside scope: ~44%".
+- **Lever 1, retrieval:** for a request, retrieve the nearest hand-written
+  scenes and give planner and coder the best one as a worked example, so
+  the 7B adapts a coherent arc instead of inventing one. Measured, not
+  assumed.
+- **Lever 2, planner v5:** trained on picture-naming arcs, never measured
+  end to end. One run decides it.
+- **No more teacher batches** unless a measured failure class needs them.
+
+### One week: Oct 7 → Oct 13
+
+| day | goal | done when |
+|---|---|---|
+| Tue 7 | close loose ends; build the **in-scope test set** (20 unseen variants of covered question types: new numbers and contexts, never trained); measure planner v5 + kit v8 vs planner v3 + kit v8, full pipeline, flash-lite | numbers in RESULTS.md, planner chosen |
+| Wed 8 | retrieval: embed the 1,061 requests, top-k example injected into planner and coder prompts; measure on in-scope, short and held-out | keep it only if in-scope rises ≥ 10 points |
+| Thu 9 | fix the top two failure classes the sheets show (beat titles from what is drawn; carry objects across beats); web app end to end on the Mac, timed | app produces a scene from the README steps; time per scene recorded |
+| Fri 10 | gallery: 20 candidates from the in-scope set, keep the 10 that are right by eye; README rewritten with real numbers and honest scope | gallery page, README |
+| Sat 11 | **v1.0**: tag, model card, release script dry run; public HF release only with Nimit's OK | v1.0 tag |
+| Sun 12 – Mon 13 | buffer; Kaggle quota resets ~Oct 10: one v9 SFT only if retrieval worked and its prompt format needs training | v1.1 decision written down |
+
+**Rules for the week:** one experiment at a time; flash-lite decides,
+Gemini runs for every compared config together; every result goes in
+RESULTS.md before the next build; checks every 2 h when something is
+running, none when nothing is; sleep guard on anything long.
+
+**v1.0 is done when:** (1) the README steps produce a video on a 16 GB
+Mac; (2) on the in-scope set, flash-lite ≥ 65% of beats and ≥ 7 of 10
+gallery scenes right by eye; (3) held-out reported as measured; (4)
+adapters released or ready to release.
+
+### Whole project
+
+| when | phase | outcome |
+|---|---|---|
+| Sep 19–22 | harness, corpus, gold scenes, first SFT | raw-Manim coder: 24–25% |
+| Sep 23–27 | Forge kit, kit coder v5–v7, GRPO, planner v2–v4 | kit v6 + planner v3: the app's config |
+| Sep 28–Oct 1 | judges, oracle diagnostic, Claude teacher batches, held-out audit | "coder is the binding constraint"; leak found and fixed |
+| Oct 2–4 | Mac asleep 65 h | — |
+| Oct 4–6 | kit v8, planner v5 SFT | v8 = v6 on Gemini |
+| Oct 7–11 | this plan: scope, retrieval, planner v5, app, gallery | **v1.0, Oct 11** |
+| Oct 12–18 | v1.1 only if a measured lever remains (v9 on retrieval prompts) | v1.1 or stop |
+| after | maintenance: issues, new kit blocks for real failure classes | — |
+
+
+---
+
 ## 1. Where we stand
 
 `python -m forge.doctor` for the live figures. At the time of writing:

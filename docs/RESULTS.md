@@ -755,3 +755,21 @@ itself. That adds 56 rows (255 of 5,609 dropped). Planner arcs are still
 judged by their request alone: their beats mention held-out words in
 passing (a bell curve inside a normal-distribution arc), and dropping
 every such arc would remove 15% more of the 3Blue1Brown narration.
+
+**Kit v8 (Oct 4 SFT: teacher + self + 941 Claude scenes, held-out guard on).**
+Cached planner-v3 plans, `--kit --relevance`, 20 held-out prompts:
+
+| | local judge (Qwen3.5-4B) | Gemini flash-lite |
+|---|---|---|
+| kit v6 (ab_held_kit1001, same kit and flags) | 52.5% (63/120) | 43% (52/120) |
+| kit v8 | 66% (79/120) | 44% (53/120) |
+
+Short prompts, v8: 79% local. The local judge's +14 points does not
+survive the headline judge: on Gemini, v8 and v6 are level (+1 beat), with
+large swings per scene (v8 better on Monty Hall, merge sort, determinant
+zero; worse on the chain rule, logarithms, Pascal's triangle). By eye, the
+v8 sheets have the same failures as v6: beat titles and pictures drift
+apart, later beats lose the objects of earlier ones, and arcs contradict
+themselves (Monty Hall highlights door 3 after "you choose door 1").
+Two conclusions: ~400 more Claude scenes did not move held-out quality,
+and the local judge is too lenient to decide anything on its own.

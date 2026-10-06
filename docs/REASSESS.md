@@ -722,3 +722,22 @@ gallery and README from that model; selfgen/v9 becomes v1.1.
 a laptop needs a sleep guard from the start. That cost two and a half
 days, and the plan absorbed it by dropping one round, not by cutting
 the check on v8.
+
+## Log · 2026-10-07 (full reassessment, asked for by Nimit)
+
+**Numbers.** Kit v8 vs v6, held-out, same kit and plans: Gemini flash-lite
+44% vs 43%; local judge 66% vs 52.5%. Planner v5 trained (8,749 rows, 0.77
+epoch) but not yet measured.
+
+**Honest answer to "are we spiralling".** Partly. The 30-minute loop made
+a teacher batch every cycle for a week with no measurement able to judge
+them; the first one (v8) shows no headline gain. The local judge would
+have sent round 2 into self-training on a gain that isn't there, so round 2
+was stopped. The batches remain useful as examples (see the retrieval
+plan), not as more SFT rows.
+
+**What changes.** PLAN.md "Finish plan — 2026-10-07": stop growing the
+data; honest scope (school maths and everyday quantities); measure planner
+v5 end to end; try retrieval of hand-written scenes as worked examples;
+make the app work from the README; gallery checked by eye; v1.0 on Oct 11.
+Checks every 2 h only while something runs.
