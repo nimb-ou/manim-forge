@@ -21,6 +21,9 @@ uvicorn[standard]>=0.32
 # --- Phase 5: fine-tuning (Apple Silicon) ------------------------------------
 # installed separately (not on PyPI for every platform):
 #   pip install mlx>=0.21 mlx-lm>=0.20
+# narration (optional; forge/app/voice.py, Kokoro-82M): videos stay silent
+# without these
+#   pip install mlx-audio>=0.5 "misaki[en]"
 
 # --- development -------------------------------------------------------------
 pytest>=8.0              # tests/ — run with ./.venv/bin/python -m pytest -q
