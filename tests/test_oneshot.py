@@ -53,4 +53,7 @@ def test_score_prefers_whole_clean_renders():
     messy = Result("r", beats, ["a"] * 4, ok=True, layout=[0, 2, 0, 1])
     short = Result("r", beats, ["a", "", "a", "a"], ok=True, layout=[0, 0, 0])
     failed = Result("r", beats, ["a"] * 4, ok=False)
+    slip = Result("r", beats, ['stage.equation("2 + 2 = 5")'] + ["a"] * 3, ok=True,
+                  layout=[0, 0, 0, 0])
     assert score(clean) > score(messy) > score(short) > score(failed)
+    assert score(clean) > score(slip) and score(messy) > score(slip)

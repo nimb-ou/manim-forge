@@ -96,10 +96,13 @@ def parse_scene(text: str) -> tuple[list[Beat], list[str]]:
 
 def score(res) -> tuple:
     """How good a rendered sample looks without a judge: it rendered, kept
-    every beat, has few layout problems (kit.layout_issues), and has 3-6
-    beats. Higher is better."""
+    every beat, shows no arithmetic slip (forge/app/checks.py), has few
+    layout problems (kit.layout_issues), and has 3-6 beats. Higher is
+    better."""
+    from forge.app.checks import arithmetic_errors
     kept = sum(1 for b in res.bodies if b.strip())
-    return (res.ok, kept / max(1, len(res.beats)),
+    slips = len(arithmetic_errors("\n".join(res.bodies)))
+    return (res.ok, kept / max(1, len(res.beats)), -slips,
             -sum(res.layout), 3 <= len(res.beats) <= 6)
 
 
@@ -137,11 +140,10 @@ def run_oneshot(request: str, model, tok, emit=lambda e: None, opts=None,
                          emit if samples == 1 else (lambda e: None),
                          harness, t0, [])
         if samples > 1:
-            res.notes.append(f"sample {n + 1}/{samples}: ok={res.ok} "
-                             f"layout={sum(res.layout)}")
+            res.notes.append(f"sample {n + 1}/{samples}: score {score(res)}")
         if best is None or score(res) > score(best):
             best = res
-        if best.ok and score(best)[1] == 1 and score(best)[2] == 0:
+        if best.ok and score(best)[1:4] == (1, 0, 0):
             break
     if samples > 1:
         emit({"stage": "done", "ok": best.ok, "video": best.video,
