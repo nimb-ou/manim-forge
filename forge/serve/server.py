@@ -55,6 +55,7 @@ class JobIn(BaseModel):
     quality: str = Field(default="medium", pattern="^(low|medium|high)$")
     kit: bool = KIT_DEFAULT
     engine: str = Field(default=ENGINE, pattern="^(twostage|oneshot)$")
+    narrate: bool = True
 
 
 @dataclass
@@ -111,7 +112,8 @@ class Worker(threading.Thread):
                 # with the kit: 34% -> 43% on-subject pictures, short evals.
                 opts = Options(max_beats=job.spec.beats,
                                quality=job.spec.quality, kit=job.spec.kit,
-                               relevance=job.spec.kit)
+                               relevance=job.spec.kit,
+                               narrate=job.spec.narrate and job.spec.kit)
                 res = run(job.spec.prompt, self.host, job.emit, opts)
                 self._log(job, res)
             except Exception as exc:                          # noqa: BLE001
@@ -130,7 +132,7 @@ class Worker(threading.Thread):
             self.oneshot = (*load(str(ONESHOT) if trained else None), trained)
         model, tok, trained = self.oneshot
         opts = Options(max_beats=job.spec.beats, quality=job.spec.quality,
-                       kit=True)
+                       kit=True, narrate=job.spec.narrate)
         res = run_oneshot(job.spec.prompt, model, tok, job.emit, opts,
                           api=not trained)
         self._log(job, res)

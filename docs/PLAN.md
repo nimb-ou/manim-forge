@@ -13,6 +13,41 @@ things only Nimit can do.
 
 ## Finish plan — 2026-10-07 (supersedes the 2026-09-29 finish plan below)
 
+### Running now (kept current; the 2-hourly check reads this)
+
+| job | where | started | expect |
+|---|---|---|---|
+| one-shot SFT v1 (`nimbou/manim-forge-oneshot-sft`) | Kaggle | Oct 6 22:20Z | adapter ~Oct 7 05:00Z; collect with `collect_adapter.py --kernel nimbou/manim-forge-oneshot-sft --peft adapters/kaggle-oneshot --mlx adapters/mlx-oneshot` |
+| `scripts/queue/inscope_base.sh` (p3+k8, p5+k8, untuned one-shot on the in-scope set, then flash-lite) | Mac | Oct 6 22:20Z | ~2.5 h |
+
+### Log
+
+**Oct 7, 04:00 IST: a new approach, one-shot with retrieval.** Reading
+the pipeline again: the per-beat coder sees earlier beats only as intents
+and variable names, never their code, and that is exactly the failure the
+sheets show (drift, titles not matching pictures, arcs that contradict
+themselves). So instead of a planner plus N blind coder calls, **one call
+writes the whole scene**, shown the two nearest of the 915 hand-written
+scenes (TF-IDF + bge-small retrieval) to adapt. A first look with the
+*untuned* base model on 4 in-scope prompts: all 4 rendered, at ~30 s
+each against ~75–150 s; the handshakes scene was coherent and right (36);
+the jacket scene copied VAT from its example and got the answer wrong.
+So it adapts, but too literally, which is what training on the adapt
+task (retrieval-augmented SFT, 1,731 rows, 2 epochs) should fix. That run
+is on Kaggle now.
+
+Also: a scene-level judge (`judge_scenes.py`: answers / correct /
+coherent / clean), because the per-beat judge only asks whether a frame
+matches the model's *own* intent, which a one-shot model could game.
+Flash-lite is lenient and noisy on it, so **every comparison this week is
+also graded by eye**. The held-out guard missed "why is 7 the most likely
+roll with two dice" (dice totals); now caught. Kit v8 and one-shot v1 both
+trained with the old guard, so both saw 3 such scenes (the CLT prompt is
+1 of 20 held-out).
+
+**The decision rule for v1.0:** ship whichever engine wins on the in-scope
+set by eye plus scene judge, held-out reported as measured.
+
 ### Where it actually stands
 
 18 days, 484 commits. A working two-stage pipeline (planner → kit coder →

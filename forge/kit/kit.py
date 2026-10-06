@@ -139,6 +139,47 @@ _PALETTE = [BLUE, YELLOW, GREEN, RED, TEAL, ORANGE]
 _CURRENT: list = []      # the live Stage, for block calls that forget it
 
 
+def layout_issues(scene) -> int:
+    """Text that collides with other text, plus anything off the frame, on
+    screen now. A cheap, automatic stand-in for "is this frame readable",
+    printed at every beat mark so the one-shot generator can prefer the
+    cleanest of several samples (forge/app/oneshot.py)."""
+    from manim import (DecimalNumber, Integer, MathTex, MarkupText, Tex,
+                       Text)
+    kinds = (Text, MathTex, Tex, MarkupText, DecimalNumber, Integer)
+    texts, seen = [], set()
+
+    def walk(m):
+        if id(m) in seen:
+            return
+        seen.add(id(m))
+        if isinstance(m, kinds):
+            if m.get_fill_opacity() > 0.05 and m.width > 1e-3:
+                texts.append(m)
+            return
+        for sub in m.submobjects:
+            walk(sub)
+    for m in scene.mobjects:
+        walk(m)
+    boxes = [(t.get_left()[0], t.get_bottom()[1], t.get_right()[0], t.get_top()[1])
+             for t in texts]
+    bad = 0
+    for i in range(len(boxes)):
+        a = boxes[i]
+        for b in boxes[i + 1:]:
+            w = min(a[2], b[2]) - max(a[0], b[0])
+            h = min(a[3], b[3]) - max(a[1], b[1])
+            if w > 0 and h > 0:
+                small = min((a[2] - a[0]) * (a[3] - a[1]), (b[2] - b[0]) * (b[3] - b[1]))
+                if w * h > 0.2 * small:
+                    bad += 1
+    for m in scene.mobjects:
+        if m.width > 1e-3 and (abs(m.get_left()[0]) > 7.3 or abs(m.get_right()[0]) > 7.3
+                               or abs(m.get_top()[1]) > 4.15 or abs(m.get_bottom()[1]) > 4.15):
+            bad += 1
+    return bad
+
+
 class Stage:
     """Owns the layout: a title slot, a caption slot, and regions between.
 
@@ -338,14 +379,23 @@ class Stage:
         self._caption = None if self._caption in gone else self._caption
         self._objects = [m for m in self._objects if id(m) in keep_ids]
 
-    def mark(self):
+    def mark(self, min_seconds: float = 0.0):
         """Record the scene clock at the end of a beat (the pipeline adds
         one after each beat when asked): contact sheets then show each
         beat's last frame instead of evenly spaced ones, which caught
-        curves mid-draw and missed pictures that were on screen briefly."""
+        curves mid-draw and missed pictures that were on screen briefly.
+
+        ``min_seconds`` holds the beat until it has lasted that long -- its
+        narration's length, when the video is voiced (forge/app/voice.py)."""
         import sys as _sys
+        start = self._t[-1] if getattr(self, "_t", None) else 0.0
+        short = min_seconds - (float(self.scene.renderer.time) - start)
+        if short > 0.05:
+            self.scene.wait(short)
         self._t = getattr(self, "_t", []) + [float(self.scene.renderer.time)]
         print("BEAT_ENDS", self._t, file=_sys.stderr, flush=True)
+        self._layout = getattr(self, "_layout", []) + [layout_issues(self.scene)]
+        print("LAYOUT", self._layout, file=_sys.stderr, flush=True)
 
     def pause(self, seconds: float = 1.0):
         self.scene.wait(seconds)

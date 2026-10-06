@@ -94,24 +94,60 @@ def parse_scene(text: str) -> tuple[list[Beat], list[str]]:
     return beats, bodies
 
 
+def score(res) -> tuple:
+    """How good a rendered sample looks without a judge: it rendered, kept
+    every beat, has few layout problems (kit.layout_issues), and has 3-6
+    beats. Higher is better."""
+    kept = sum(1 for b in res.bodies if b.strip())
+    return (res.ok, kept / max(1, len(res.beats)),
+            -sum(res.layout), 3 <= len(res.beats) <= 6)
+
+
 def run_oneshot(request: str, model, tok, emit=lambda e: None, opts=None,
                 harness=None, api: bool = False, k: int = 2,
-                max_tokens: int = 2400, exclude: set[str] | None = None):
-    """Generate, parse, then assemble and render as the pipeline does."""
+                max_tokens: int = 2400, exclude: set[str] | None = None,
+                samples: int = 1, temp: float = 0.7):
+    """Generate, parse, assemble and render as the pipeline does.
+
+    With ``samples`` > 1 the first sample is greedy and the rest are drawn
+    at ``temp``; each is rendered and the best by ``score`` is returned.
+    A sample that renders whole with no layout problem ends the search.
+    """
     from forge.app.pipeline import Options, Result, ask, finish
     opts = opts or Options(kit=True)
     t0 = time.time()
-    emit({"stage": "plan", "status": "start"})
-    reply = ask(model, tok, system_prompt(api),
-                user_prompt(request, k, exclude=exclude),
-                max_tokens=max_tokens)
-    beats, bodies = parse_scene(reply)
-    emit({"stage": "plan", "status": "done", "n": len(beats),
-          "elapsed": round(time.time() - t0, 1)})
-    if not beats:
+    system = system_prompt(api)
+    user = user_prompt(request, k, exclude=exclude)
+    best = None
+    for n in range(samples):
+        emit({"stage": "plan", "status": "start",
+              **({"note": f"sample {n + 1} of {samples}"} if samples > 1 else {})})
+        reply = ask(model, tok, system, user, max_tokens=max_tokens,
+                    temp=temp if n else 0.0)
+        beats, bodies = parse_scene(reply)
+        emit({"stage": "plan", "status": "done", "n": len(beats),
+              "elapsed": round(time.time() - t0, 1)})
+        if not beats:
+            res = Result(request, [], [], code=reply, error="no beats")
+        else:
+            for b, body in zip(beats, bodies):
+                emit({"stage": "code", "beat": b.n, "intent": b.intent,
+                      "code": body})
+            res = finish(request, beats, bodies, model, tok, system, opts,
+                         emit if samples == 1 else (lambda e: None),
+                         harness, t0, [])
+        if samples > 1:
+            res.notes.append(f"sample {n + 1}/{samples}: ok={res.ok} "
+                             f"layout={sum(res.layout)}")
+        if best is None or score(res) > score(best):
+            best = res
+        if best.ok and score(best)[1] == 1 and score(best)[2] == 0:
+            break
+    if samples > 1:
+        emit({"stage": "done", "ok": best.ok, "video": best.video,
+              "duration": best.duration, "error": best.error,
+              "code": best.code, "elapsed": round(time.time() - t0, 1)})
+    if not best.beats:
         emit({"stage": "done", "ok": False, "error": "no beats in the reply"})
-        return Result(request, [], [], code=reply, error="no beats")
-    for b, body in zip(beats, bodies):
-        emit({"stage": "code", "beat": b.n, "intent": b.intent, "code": body})
-    return finish(request, beats, bodies, model, tok, system_prompt(api),
-                  opts, emit, harness, t0, [])
+    best.seconds = time.time() - t0
+    return best

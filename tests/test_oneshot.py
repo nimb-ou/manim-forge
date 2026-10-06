@@ -42,3 +42,15 @@ def test_prompt_shows_examples_and_the_request():
     p = user_prompt("what is 15% of 240?", k=2)
     assert p.count("REQUEST:") == 3 and p.rstrip().endswith("what is 15% of 240?")
     assert "# beat 1:" in p
+
+
+def test_score_prefers_whole_clean_renders():
+    from forge.app.oneshot import score
+    from forge.app.pipeline import Result
+    from forge.app.twostage import Beat
+    beats = [Beat(i, None, "x") for i in range(1, 5)]
+    clean = Result("r", beats, ["a"] * 4, ok=True, layout=[0, 0, 0, 0])
+    messy = Result("r", beats, ["a"] * 4, ok=True, layout=[0, 2, 0, 1])
+    short = Result("r", beats, ["a", "", "a", "a"], ok=True, layout=[0, 0, 0])
+    failed = Result("r", beats, ["a"] * 4, ok=False)
+    assert score(clean) > score(messy) > score(short) > score(failed)

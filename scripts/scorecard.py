@@ -112,6 +112,8 @@ def main() -> int:
     ap.add_argument("--api", action="store_true",
                     help="one-shot: put the kit reference in the system prompt")
     ap.add_argument("--k", type=int, default=2, help="one-shot: examples shown")
+    ap.add_argument("--samples", type=int, default=1,
+                    help="one-shot: render up to N samples, keep the best")
     ap.add_argument("--short", action="store_true",
                     help="the 20 short one-idea prompts (the headline eval) "
                          "instead of the hard titles")
@@ -187,7 +189,8 @@ def main() -> int:
                 cache_path.write_text(json.dumps(cache, indent=1))
             given = [Beat(*x) for x in cache[t.prompt]]
         if a.oneshot:
-            res = run_oneshot(t.prompt, om, otok, opts=opts, api=a.api, k=a.k)
+            res = run_oneshot(t.prompt, om, otok, opts=opts, api=a.api, k=a.k,
+                              samples=a.samples)
         else:
             res = run(t.prompt, host, lambda e: None, opts, beats=given)
         bodies = [b for b in res.bodies if b.strip()]
@@ -201,6 +204,7 @@ def main() -> int:
                "coverage": round(cov, 3), "matched": hits,
                "seconds": res.duration or 0.0, "real_seconds": t.real_seconds,
                "error": res.error, "notes": res.notes,
+               "layout": getattr(res, "layout", []),
                "elapsed": round(time.time() - t0)}
         slug = re.sub(r"[^a-z0-9]+", "-", t.prompt.lower())[:40].strip("-")
         (out_dir / f"{i:02d}-{slug}.py").write_text(res.code)

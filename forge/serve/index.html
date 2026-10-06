@@ -139,6 +139,8 @@ details pre {
       <div class="row"><label for="beats">beats</label><input id="beats" type="number" min="2" max="24" value="8"></div>
       <div class="row"><label for="quality">quality</label>
         <select id="quality"><option value="low">low · fast</option><option value="medium" selected>medium</option><option value="high">high</option></select></div>
+      <div class="row"><label for="engine">engine</label><select id="engine"><option value="oneshot">one shot · whole scene</option><option value="twostage">planner + coder</option></select></div>
+      <div class="row"><label for="narrate">voice</label><select id="narrate"><option value="1" selected>narrated</option><option value="0">silent</option></select></div>
       <div class="row"><label for="kit">visual kit</label><select id="kit"><option value="1" selected>on</option><option value="0">off (raw Manim)</option></select></div>
       <button id="go" type="submit">Make the animation</button>
     </div>
@@ -202,7 +204,7 @@ async function health() {
   } catch { $("health").textContent = "server not reachable"; }
 }
 health(); setInterval(health, 10000);
-fetch("/api/health").then((r) => r.json()).then((h) => { $("kit").value = h.kit ? "1" : "0"; }).catch(() => {});
+fetch("/api/health").then((r) => r.json()).then((h) => { $("kit").value = h.kit ? "1" : "0"; $("engine").value = h.engine || "twostage"; }).catch(() => {});
 
 $("form").onsubmit = async (ev) => {
   ev.preventDefault();
@@ -210,7 +212,8 @@ $("form").onsubmit = async (ev) => {
   $("meta").textContent = ""; $("codebox").hidden = true;
   $("player").textContent = "Working…";
   const body = { prompt: $("prompt").value.trim(), beats: +$("beats").value,
-                 quality: $("quality").value, kit: $("kit").value === "1" };
+                 quality: $("quality").value, kit: $("kit").value === "1",
+                 engine: $("engine").value, narrate: $("narrate").value === "1" };
   const r = await fetch("/api/jobs", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
   if (!r.ok) { note(await r.text(), true); $("go").disabled = false; return; }
   const { id } = await r.json();

@@ -302,6 +302,7 @@ class Options:
     relevance: bool = False         # subject hint + resample off-subject beats
     exemplar: bool = False          # a hand-written scene for a similar request
     mark_beats: bool = False        # record each beat's end time (kit only)
+    narrate: bool = False           # speak each beat's narration (forge/app/voice.py)
     # The relevance hint with each block's call: 45%/37% (short/held-out) vs
     # 58%/39% for names only, on identical plans -- off.
     signatures: bool = False
@@ -320,6 +321,7 @@ class Result:
     notes: list[str] = field(default_factory=list)
     seconds: float = 0.0
     beat_ends: list[float] = field(default_factory=list)
+    layout: list[int] = field(default_factory=list)   # kit.layout_issues per beat
 
 
 def run(request: str, host, emit: Emit, opts: Options | None = None,
@@ -441,10 +443,25 @@ def finish(request: str, beats: list[Beat], bodies: list[str], cm, ctok,
         harness = RenderHarness(python_bin=str(root / ".venv" / "bin" / "python"),
                                 cache_dir=str(root / "data" / "frames"),
                                 timeout=600, store_video=True)
-    mark = opts.mark_beats and kit
+    mark = (opts.mark_beats or opts.narrate) and kit
+    voiced: list = []
+    if opts.narrate and kit:
+        try:
+            from forge.app.voice import speak
+            import tempfile
+            voiced = speak([b.narration or "" for b in beats],
+                           Path(tempfile.mkdtemp(prefix="forge-voice-")))
+        except Exception as exc:                              # noqa: BLE001
+            notes.append(f"narration skipped ({type(exc).__name__}: {exc})")
+            voiced = []
+    hold = [(d + 0.35 if d else 0.0) for _, d in voiced] or [0.0] * len(beats)
 
     def marked(bs: list[str]) -> list[str]:
-        return [b + "\nstage.mark()" if b.strip() else b for b in bs] if mark else bs
+        if not mark:
+            return bs
+        return [b + (f"\nstage.mark(min_seconds={hold[j]:.2f})" if hold[j]
+                     else "\nstage.mark()") if b.strip() else b
+                for j, b in enumerate(bs)]
     if mark:
         asm = assemble(beats, marked(bodies), kit=kit)
     emit({"stage": "render", "status": "start", "quality": opts.quality})
@@ -467,8 +484,22 @@ def finish(request: str, beats: list[Beat], bodies: list[str], cm, ctok,
         res = harness.render(asm.code, quality=opts.quality, use_cache=False)
     got = re.findall(r"BEAT_ENDS \[([^\]]*)\]", res.stderr or "")
     ends = [float(x) for x in got[-1].split(",") if x.strip()] if got else []
+    lay = re.findall(r"LAYOUT \[([^\]]*)\]", res.stderr or "")
+    layout = [int(x) for x in lay[-1].split(",") if x.strip()] if lay else []
+    video = res.video_path if res.ok else None
+    if video and voiced and ends:
+        from forge.app.voice import mux
+        live = [j for j, b in enumerate(bodies) if b.strip()]
+        starts = [0.0] + ends[:-1]
+        clips = [(voiced[j][0], t) for j, t in zip(live, starts)]
+        dest = Path(video).with_name(Path(video).stem + "_voiced.mp4")
+        if mux(video, clips, dest):
+            video = str(dest)
+        else:
+            notes.append("narration could not be mixed in; silent video")
     out = Result(request, beats, bodies, asm.code, ok=res.ok, beat_ends=ends,
-                 video=res.video_path if res.ok else None,
+                 layout=layout,
+                 video=video,
                  duration=res.duration_s, notes=notes,
                  error="" if res.ok else res.error_kind.value,
                  seconds=time.time() - t0)
