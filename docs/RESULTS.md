@@ -812,3 +812,29 @@ retrieval it found the plain discount scene and got £68.
 finished training on Kaggle; it is scored there
 (`kaggle/oneshot_eval`) on in-scope, held-out and short while the Mac is
 unplugged.
+
+### One-shot v1 (trained) — 2026-10-07/08
+
+Retrieval-augmented SFT on 1,731 rows (each library scene with two
+neighbours, near and far), 2 epochs planned, stopped at step ~380 of 434 by
+the time budget after a 3,072-token attempt ran out of memory; trained at
+2,560 tokens. Eval loss 0.565 → 0.186. Scored on Kaggle (transformers,
+nf4) because the Mac was on battery; graded by eye:
+
+| config | G | P | B |
+|---|---|---|---|
+| untuned base + kit API (Mac, MLX; 16 of 20) | **12** | 4 | 0 |
+| v1, 1 sample | 6 | 10 | 4 |
+| v1, best of 3 (score(): render, kept, slips, layout) | 7 | 8 | 5 |
+| v1, held-out (no library scene on the topic) | 3 | 4 | 13 |
+
+**The fine-tune made in-scope worse.** v1 draws as well as the base but
+gets more of the maths wrong: area under 3x "12", a 1 m × 2 m door taken
+as 1 m², i(2 + i) = −1 + i, 300 g × 1.5 written as 450 × 1.5 = 675, 37.5
+m after showing 45. ~1,700 rows of short scenes cost the base model some of
+its own arithmetic, and v1's prompt no longer carries the kit reference.
+Best-of-3 cannot fix an answer that is wrong in every sample. Held-out
+v1 is about where the old pipeline was (3 of 20 clearly right): with no
+nearby scene there is nothing to adapt. Not yet separated: the engine
+(transformers nf4 vs MLX 4-bit), which run 2 on Kaggle measures by
+scoring the untuned base there too, beside Qwen3.5-9B untuned.

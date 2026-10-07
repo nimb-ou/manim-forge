@@ -15,6 +15,7 @@ Output:  /kaggle/working/scorecard/<tag>/ for each run in SPECS.
 import glob
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -24,27 +25,36 @@ import types
 from pathlib import Path
 
 t0 = time.time()
-SPECS = [  # (prompt set flag, tag, samples)
-    ("--inscope", "is_os1", 1),
-    ("--heldout", "held_os1", 1),
-    ("--short", "short_os1", 1),
-    ("--inscope", "is_os1_n3", 3),
+# (prompt-set flag, tag, samples, base model, use the trained adapter, kit API in prompt)
+# Run 2 (2026-10-07): v1 scored worse in-scope than the untuned base did on
+# the Mac (5 vs 12 of 16 good by eye). A separates the engine (transformers
+# nf4 here, MLX there) from the training; B asks whether a 2026 base model,
+# untuned, does better still.
+SPECS = [
+    ("--inscope", "is_base_k", 1, "Qwen/Qwen2.5-Coder-7B-Instruct", False, True),
+    ("--inscope", "is_q35_9b", 1, "Qwen/Qwen3.5-9B", False, True),
+    ("--heldout", "held_q35_9b", 1, "Qwen/Qwen3.5-9B", False, True),
 ]
-BASE = "Qwen/Qwen2.5-Coder-7B-Instruct"
+
+
+sys.stdout.reconfigure(line_buffering=True)
 
 
 def sh(cmd, t=3600):
-    r = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=t)
-    if r.returncode:
-        print("FAILED:", cmd[:120], r.stderr[-800:], flush=True)
+    # Streamed, not captured: version 1 and 2 of this kernel died during set-up
+    # with an empty log, because everything was captured and nothing printed.
+    print("$", cmd[:140], flush=True)
+    r = subprocess.run(cmd, shell=True, text=True, timeout=t)
+    print("  exit", r.returncode, round(time.time() - t0), "s", flush=True)
     return r
 
 
 sh("apt-get update -qq && DEBIAN_FRONTEND=noninteractive apt-get install -y -qq "
    "libcairo2-dev libpango1.0-dev ffmpeg texlive-latex-base texlive-latex-extra "
-   "texlive-fonts-recommended dvisvgm > /dev/null")
+   "texlive-fonts-recommended dvisvgm 2>&1 | tail -3")
 sh(f"{sys.executable} -m pip install -q manim==0.21.0 transformers==5.17.0 "
-   "peft==0.21.0 accelerate==1.15.0 'bitsandbytes>=0.48'")
+   "peft==0.21.0 accelerate==1.15.0 'bitsandbytes>=0.48' 2>&1 | tail -5")
+sh("nvidia-smi --query-gpu=name,memory.used --format=csv; free -g; df -h /kaggle/working")
 print("setup", round(time.time() - t0), "s", flush=True)
 
 adapter = Path(glob.glob("/kaggle/input/**/adapter/adapter_config.json",
@@ -79,24 +89,49 @@ core.clear_cache = lambda: None
 mlx.core = core
 sys.modules["mlx"], sys.modules["mlx.core"] = mlx, core
 
-TOK = AutoTokenizer.from_pretrained(BASE)
-MODEL = AutoModelForCausalLM.from_pretrained(
-    BASE, device_map={"": 0}, dtype=torch.float16,
-    quantization_config=BitsAndBytesConfig(
-        load_in_4bit=True, bnb_4bit_quant_type="nf4",
-        bnb_4bit_compute_dtype=torch.float16, bnb_4bit_use_double_quant=True))
-MODEL = PeftModel.from_pretrained(MODEL, str(adapter)).eval()
-print("model loaded", round(time.time() - t0), "s", flush=True)
+CUR = {}
+
+
+def use(base: str, trained: bool):
+    """Load a base (4-bit nf4) and optionally the one-shot adapter, freeing
+    the previous model first: one 9B and one 7B do not fit a T4 together."""
+    key = (base, trained)
+    if CUR.get("key") == key:
+        return
+    CUR.clear()
+    import gc
+    gc.collect()
+    torch.cuda.empty_cache()
+    q = BitsAndBytesConfig(load_in_4bit=True, bnb_4bit_quant_type="nf4",
+                           bnb_4bit_compute_dtype=torch.float16,
+                           bnb_4bit_use_double_quant=True)
+    tok = AutoTokenizer.from_pretrained(base)
+    try:
+        model = AutoModelForCausalLM.from_pretrained(
+            base, device_map={"": 0}, dtype=torch.float16, quantization_config=q)
+    except (ValueError, KeyError) as exc:      # a vision-language checkpoint
+        print("CausalLM failed, trying ImageTextToText:", exc, flush=True)
+        from transformers import AutoModelForImageTextToText
+        model = AutoModelForImageTextToText.from_pretrained(
+            base, device_map={"": 0}, dtype=torch.float16, quantization_config=q)
+    if trained:
+        model = PeftModel.from_pretrained(model, str(adapter))
+    CUR.update(key=key, model=model.eval(), tok=tok)
+    print("loaded", base, "adapter" if trained else "untuned",
+          round(time.time() - t0), "s", flush=True)
 
 
 def hf_load(_adapter=None):
-    return MODEL, TOK
+    return CUR["model"], CUR["tok"]
 
 
 def hf_ask(model, tok, system, user, max_tokens, temp=0.0, rep_penalty=0.0):
-    chat = tok.apply_chat_template(
-        [{"role": "system", "content": system}, {"role": "user", "content": user}],
-        add_generation_prompt=True, tokenize=False)
+    msgs = [{"role": "system", "content": system}, {"role": "user", "content": user}]
+    try:     # Qwen3.x thinks unless told not to; the answer is the scene itself
+        chat = tok.apply_chat_template(msgs, add_generation_prompt=True,
+                                       tokenize=False, enable_thinking=False)
+    except TypeError:
+        chat = tok.apply_chat_template(msgs, add_generation_prompt=True, tokenize=False)
     ids = tok(chat, return_tensors="pt").to("cuda")
     kw = dict(max_new_tokens=max_tokens, do_sample=temp > 0,
               pad_token_id=tok.eos_token_id)
@@ -106,7 +141,8 @@ def hf_ask(model, tok, system, user, max_tokens, temp=0.0, rep_penalty=0.0):
         kw["repetition_penalty"] = rep_penalty
     with torch.no_grad():
         out = model.generate(**ids, **kw)
-    return tok.decode(out[0, ids["input_ids"].shape[1]:], skip_special_tokens=True)
+    text = tok.decode(out[0, ids["input_ids"].shape[1]:], skip_special_tokens=True)
+    return re.sub(r"<think>.*?</think>", "", text, flags=re.S).strip()
 
 
 import forge.app.pipeline as P  # noqa: E402
@@ -115,10 +151,16 @@ import scorecard  # noqa: E402
 
 OUT = Path("/kaggle/working/scorecard")
 OUT.mkdir(exist_ok=True)
-for flag, tag, n in SPECS:
+for flag, tag, n, base, trained, api in SPECS:
     t1 = time.time()
-    sys.argv = ["scorecard.py", flag, "--n", "20", "--oneshot", "--coder", str(adapter),
-                "--samples", str(n), "--tag", tag]
+    try:
+        use(base, trained)
+    except Exception as exc:                                  # noqa: BLE001
+        print(f"{tag} could not load {base}: {type(exc).__name__}: {exc}", flush=True)
+        continue
+    sys.argv = ["scorecard.py", flag, "--n", "20", "--oneshot", "--coder",
+                str(adapter) if trained else "none", "--samples", str(n), "--tag", tag] \
+        + (["--api"] if api else [])
     try:
         scorecard.main()
     except Exception as exc:                                  # noqa: BLE001
@@ -129,4 +171,9 @@ for flag, tag, n in SPECS:
     print(f"{tag} done in {round(time.time() - t1)} s (total {round(time.time() - t0)} s)",
           flush=True)
 shutil.rmtree(ROOT, ignore_errors=True)
+# One archive: `kaggle kernels output` fetched ~20 files an hour on
+# 2026-10-07, so the scorecard dirs also leave as a single tar.
+with tarfile.open("/kaggle/working/scorecards.tar.gz", "w:gz") as t:
+    for d in sorted(OUT.iterdir()):
+        t.add(d, arcname=d.name)
 print("all done", round(time.time() - t0), "s", flush=True)

@@ -55,6 +55,22 @@ trained with the old guard, so both saw 3 such scenes (the CLT prompt is
 **The decision rule for v1.0:** ship whichever engine wins on the in-scope
 set by eye plus scene judge, held-out reported as measured.
 
+**Oct 7, 21:00 IST: the fine-tune did not help.** One-shot v1 (RAFT SFT,
+eval loss 0.186) scored on Kaggle, graded by eye on the same 16 in-scope
+prompts: **5 good, 8 partial, 3 bad**, against **12 / 4 / 0** for the
+*untuned* base with the kit reference in its prompt. v1's misses are
+arithmetic (area under 3x "12", a 1 × 2 door as 1 m², i(2 + i) = −1 + i):
+training on ~1,700 rows of short scenes cost the base model some of its
+own reasoning (and it lost the kit reference). Held-out, v1: 3 / 4 / 13.
+Two confounds remain (the engine, transformers nf4 on Kaggle vs MLX on
+the Mac; and the kit reference), so run 2 on Kaggle scores the untuned
+Qwen2.5-Coder-7B with the reference there too, and **Qwen3.5-9B**
+(March 2026, MLX 4-bit builds exist, fits 16 GB) untuned the same way.
+If a stronger untuned base plus retrieval plus the checks wins, that is
+the product, and fine-tuning becomes optional (a v1.1 question).
+`scripts/queue/eval_run2.sh` runs it; kernel outputs now leave as one tar
+(`kaggle kernels output` managed ~20 files an hour today).
+
 **Oct 7, 06:30 IST: baselines by eye on the in-scope set** (`data/eye/*.json`;
 G = right and the pictures show it, P = right answer on screen but weak or
 drifting pictures, B = wrong, missing or broken):
