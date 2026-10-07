@@ -23,7 +23,8 @@ def test_job_streams_events_and_logs_a_session(tmp_path, monkeypatch):
 
     monkeypatch.setattr(pipeline, "run", fake_run)
     with TestClient(srv.app) as client:
-        jid = client.post("/api/jobs", json={"prompt": "circles"}).json()["id"]
+        jid = client.post("/api/jobs", json={"prompt": "circles",
+                                             "engine": "twostage"}).json()["id"]
         with client.stream("GET", f"/api/jobs/{jid}/events") as r:
             events = [json.loads(l[6:]) for l in r.iter_lines()
                       if l.startswith("data: ")]
@@ -36,3 +37,35 @@ def test_job_streams_events_and_logs_a_session(tmp_path, monkeypatch):
             time.sleep(0.1)
         rec = json.loads(next(tmp_path.glob("*.json")).read_text())
         assert rec["request"] == "circles" and rec["bodies"] == ["c = Circle()"]
+
+
+def test_oneshot_job_runs_the_oneshot_engine(tmp_path, monkeypatch):
+    import forge.serve.server as srv
+    from forge.app import oneshot, pipeline
+
+    monkeypatch.setattr(srv, "SESSIONS", tmp_path)
+    monkeypatch.setattr(srv.worker, "oneshot", None)
+    monkeypatch.setattr(pipeline, "load", lambda adapter=None: ("model", "tok"))
+    seen = {}
+
+    def fake_oneshot(req, model, tok, emit, opts, api=False, **kw):
+        seen.update(model=model, narrate=opts.narrate, api=api)
+        emit({"stage": "done", "ok": False, "error": "fake"})
+        return pipeline.Result(req, [pipeline.Beat(1, None, "a square")],
+                               ["s = Square()"], error="fake")
+
+    monkeypatch.setattr(oneshot, "run_oneshot", fake_oneshot)
+    with TestClient(srv.app) as client:
+        jid = client.post("/api/jobs", json={"prompt": "squares", "engine": "oneshot",
+                                             "narrate": False}).json()["id"]
+        with client.stream("GET", f"/api/jobs/{jid}/events") as r:
+            stages = [json.loads(l[6:])["stage"] for l in r.iter_lines()
+                      if l.startswith("data: ")]
+        assert stages[-1] == "done"
+        for _ in range(20):
+            if list(tmp_path.glob("*.json")):
+                break
+            time.sleep(0.1)
+        rec = json.loads(next(tmp_path.glob("*.json")).read_text())
+        assert rec["bodies"] == ["s = Square()"] and seen["model"] == "model"
+        assert seen["narrate"] is False

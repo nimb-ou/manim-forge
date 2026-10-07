@@ -50,7 +50,7 @@ KIT_DEFAULT = CODER == KIT_CODER
 # the nearest hand-written scenes. Used when its adapter exists and ENGINE
 # says so; "twostage" is the planner + per-beat coder above.
 ONESHOT = ROOT / "adapters" / "mlx-oneshot"
-ENGINE = "twostage"
+ENGINE = "oneshot"     # 2026-10-07: 12 of 16 in-scope right by eye, untuned, vs 0 of 20
 
 
 class JobIn(BaseModel):

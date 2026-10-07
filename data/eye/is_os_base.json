@@ -1,0 +1,67 @@
+{
+ "rubric": "same as is_p3_k8; untuned base + kit API in prompt + 2 retrieved scenes (hybrid, 942-scene library); stopped at 16/20",
+ "01": [
+  "G",
+  "bars \u00a380 -> \u00a368 with the \u00a312 cut; 80 x 0.85 = 68"
+ ],
+ "02": [
+  "G",
+  "9 people, A's 8 edges, all 36, 9x8/2=36"
+ ],
+ "03": [
+  "P",
+  "14 right; rectangle and red pieces overlap into a mess"
+ ],
+ "04": [
+  "G",
+  "hexagon cut into 4 triangles, 4 x 180 = 720"
+ ],
+ "05": [
+  "G",
+  "tree H/T -> HH HT TH TT, HH lit, P=1/4"
+ ],
+ "06": [
+  "G",
+  "150 km track, 150/2.5 = 60 km/h (plain picture)"
+ ],
+ "07": [
+  "G",
+  "bars of twelfths 9/12 + 2/12 = 11/12"
+ ],
+ "08": [
+  "G",
+  "triangle base 4 height 12, rectangles approach 24, integral = 24"
+ ],
+ "09": [
+  "G",
+  "run 3 rise 9, m = 3, y = 3x + 1 drawn"
+ ],
+ "10": [
+  "P",
+  "x1.5 -> 450 g right; bars barely change height"
+ ],
+ "11": [
+  "P",
+  "8 m^2 right; then invents 2 coats and 1.6 L"
+ ],
+ "12": [
+  "G",
+  "sorted on a number line, 4 7 9 middle, median 7 (small text)"
+ ],
+ "13": [
+  "P",
+  "45 m right (g=10) but shows 1/2 x 5 x 3^2 = 45 (slip)"
+ ],
+ "14": [
+  "G",
+  "(3,1) turned a quarter turn, matrix [[0,-1],[1,0]]"
+ ],
+ "15": [
+  "G",
+  "tree of arrangements, 3 x 2 x 1 = 6"
+ ],
+ "16": [
+  "G",
+  "2+i -> -1+2i -> -2-i on the plane"
+ ]
+}

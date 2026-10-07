@@ -64,8 +64,9 @@ def visual(body: str, mobjects: set[str]) -> bool:
 def contact_sheet(video: str, out: Path, k: int = 6, times=None) -> None:
     """Frames in a grid of three columns: at each beat's end when ``times``
     (the pipeline's beat marks) are known, else ``k`` evenly spaced."""
-    ff = "/opt/homebrew/bin/ffmpeg"
-    probe = subprocess.run(["/opt/homebrew/bin/ffprobe", "-v", "error",
+    import shutil
+    ff = shutil.which("ffmpeg") or "/opt/homebrew/bin/ffmpeg"
+    probe = subprocess.run([shutil.which("ffprobe") or "/opt/homebrew/bin/ffprobe", "-v", "error",
                             "-show_entries", "format=duration", "-of",
                             "csv=p=0", video], capture_output=True, text=True)
     try:

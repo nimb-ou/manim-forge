@@ -237,6 +237,22 @@ CATALOG: list[Dataset] = [
         "<Scene>/ render artefacts and verdicts",
         archive=False,   # regenerable, and superseded by the showcase ledger
     ),
+    Dataset(
+        "data/eye",
+        "Scene grades made by eye from contact sheets, one file per scorecard "
+        "run: the evidence behind the in-scope comparison (docs/RESULTS.md, "
+        "2026-10-07), since the vision judges are lenient or noisy.",
+        '{"rubric": str, "01": ["G"|"P"|"B", "what the sheet shows"], ...}',
+        keeps_failures="every B is a written reason the scene failed",
+    ),
+    Dataset(
+        "data/scorecard",
+        "Scorecard runs (scripts/scorecard.py): per tag the generated scenes, "
+        "their contact sheets, scorecard.json and the judges' verdicts.",
+        "<tag>/{NN-slug.py, NN-slug.jpg, scorecard.json, judge.json, scene_judge.json}",
+        keeps_failures="failed renders keep their code and error",
+        archive=False,   # regenerable from the adapters and prompt sets
+    ),
 ]
 
 

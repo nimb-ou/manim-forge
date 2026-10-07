@@ -11,13 +11,14 @@ stays silent, and the pipeline says so in its notes.
 """
 from __future__ import annotations
 
+import shutil
 import subprocess
 from functools import lru_cache
 from pathlib import Path
 
 VOICE_MODEL = "mlx-community/Kokoro-82M-bf16"
 VOICE = "af_heart"
-FFMPEG = "/opt/homebrew/bin/ffmpeg"
+FFMPEG = shutil.which("ffmpeg") or "/opt/homebrew/bin/ffmpeg"
 GAP = 0.35            # seconds of quiet after a line before the beat may end
 
 

@@ -773,3 +773,42 @@ apart, later beats lose the objects of earlier ones, and arcs contradict
 themselves (Monty Hall highlights door 3 after "you choose door 1").
 Two conclusions: ~400 more Claude scenes did not move held-out quality,
 and the local judge is too lenient to decide anything on its own.
+
+## One shot vs the two-stage pipeline, in-scope · 2026-10-07
+
+A new test set, `forge/evaluate/inscope_prompts.json`: 20 unseen variants of
+question types the hand-written scenes cover (new numbers or contexts: a
+jacket 15% off, 9 people shaking hands, 3/4 + 1/6, the slope through (2, 1)
+and (5, 10), ...). Graded **by eye** from the contact sheets, per scene
+(`data/eye/<tag>.json`): **G** = right answer and the pictures show it,
+coherent and readable; **P** = right answer on screen but the pictures are
+weak, empty or drift, or one flaw; **B** = wrong, missing or broken.
+
+| config | G | P | B | s/scene |
+|---|---|---|---|---|
+| planner v3 + kit v8, relevance (the shipped app) | **0** | 13 | 7 | ~170 |
+| planner v5 + kit v8, relevance | **0** | 9 | 11 | ~95 |
+| **one shot, untuned base** + kit API + 2 retrieved scenes (16 of 20) | **12** | 4 | 0 | ~45 |
+
+The two-stage pipeline often gets the number right as *text* (80 − 12 =
+68, P = 1/4) over an empty grid, then drifts for eight more beats into
+another topic (instantaneous speed, conditional probability, 3D
+rotation). Planner v5's shorter arcs contradict themselves (720°, then
+1080°, then 900°; 1/4 then 1/6). The one shot, with no training at all,
+adapts the nearest hand-written scene: bars for the jacket, a complete
+graph for the handshakes, fraction bars in twelfths, a probability tree, a
+rotation with its matrix, i(2 + i) = −1 + 2i on the plane. Its partials:
+one messy overlap, flat bars, an invented second coat of paint, and one
+arithmetic slip (½ × 5 × 3² = 45) that `forge/app/checks.py` flags.
+
+The run stopped at 16 of 20 because the Mac was on battery and slowed
+~50× (scenes 10–16 took 1,000–3,000 s each); its scorecard.json is rebuilt
+from the log. Retrieval matters: the 4-prompt probe the night before, with
+TF-IDF alone, copied VAT into the jacket scene; with the hybrid
+retrieval it found the plain discount scene and got £68.
+
+**Decision:** the app's default engine is now the one shot
+(`forge/serve/server.py`). One-shot v1 (retrieval-augmented SFT, 1,731 rows)
+finished training on Kaggle; it is scored there
+(`kaggle/oneshot_eval`) on in-scope, held-out and short while the Mac is
+unplugged.

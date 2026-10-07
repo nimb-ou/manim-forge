@@ -17,8 +17,15 @@ things only Nimit can do.
 
 | job | where | started | expect |
 |---|---|---|---|
-| one-shot SFT v1 (`nimbou/manim-forge-oneshot-sft`) | Kaggle | Oct 6 22:20Z | adapter ~Oct 7 05:00Z; collect with `collect_adapter.py --kernel nimbou/manim-forge-oneshot-sft --peft adapters/kaggle-oneshot --mlx adapters/mlx-oneshot` |
-| `scripts/queue/inscope_base.sh` (p3+k8, p5+k8, untuned one-shot on the in-scope set, then flash-lite) | Mac | Oct 6 22:20Z | ~2.5 h |
+| one-shot SFT v1 (`nimbou/manim-forge-oneshot-sft`) | Kaggle | Oct 6 22:20Z | finishing |
+| `scripts/queue/kaggle_eval_os1.sh`: when the SFT finishes, push `kaggle/oneshot_eval` (is_os1, held_os1, short_os1, is_os1_n3 on the T4), download into data/scorecard, judge with flash-lite | Mac (polls only) + Kaggle | Oct 7 05:40Z | ~3 h after the SFT ends |
+| `scripts/queue/inscope_base.sh`: flash-lite on is_p3_k8, is_p5_k8, is_os_base | Mac (network only) | — | finishing |
+
+**The Mac is on battery** (30% at 04:40Z, discharging; the user was asked to
+plug it in). Mac MLX runs were ~50× slower; nothing heavy runs on the Mac
+until it is on power. Evaluations go to Kaggle (`kaggle/oneshot_eval`).
+Launch Mac background jobs from bash, not zsh: zsh's `bg_nice` runs `&`
+jobs at nice 5.
 
 ### Log
 

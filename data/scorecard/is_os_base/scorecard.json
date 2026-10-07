@@ -1,0 +1,153 @@
+{
+ "summary": {
+  "tag": "is_os_base",
+  "n": 16,
+  "note": "rebuilt from the log; stopped at 16/20 (Mac on battery, 50x slow)"
+ },
+ "rows": [
+  {
+   "title": "a jacket costs \u00a380 and is 15% off. what do you pay?",
+   "ok": true,
+   "beats": 3,
+   "kept": 3,
+   "visual_beats": 2,
+   "error": "",
+   "notes": []
+  },
+  {
+   "title": "if 9 people all shake hands with each other, how many handshakes is th",
+   "ok": true,
+   "beats": 4,
+   "kept": 4,
+   "visual_beats": 3,
+   "error": "",
+   "notes": []
+  },
+  {
+   "title": "what is the area of a triangle with base 7 and height 4?",
+   "ok": true,
+   "beats": 4,
+   "kept": 4,
+   "visual_beats": 3,
+   "error": "",
+   "notes": []
+  },
+  {
+   "title": "why do the angles of a hexagon add up to 720 degrees?",
+   "ok": true,
+   "beats": 3,
+   "kept": 3,
+   "visual_beats": 2,
+   "error": "",
+   "notes": []
+  },
+  {
+   "title": "what's the chance of two heads when you flip two coins?",
+   "ok": true,
+   "beats": 3,
+   "kept": 3,
+   "visual_beats": 1,
+   "error": "",
+   "notes": []
+  },
+  {
+   "title": "a train goes 150 km in 2.5 hours. what is its average speed?",
+   "ok": true,
+   "beats": 3,
+   "kept": 3,
+   "visual_beats": 1,
+   "error": "",
+   "notes": []
+  },
+  {
+   "title": "how do you add 3/4 and 1/6?",
+   "ok": true,
+   "beats": 4,
+   "kept": 4,
+   "visual_beats": 3,
+   "error": "",
+   "notes": []
+  },
+  {
+   "title": "find the area under y = 3x from 0 to 4",
+   "ok": true,
+   "beats": 4,
+   "kept": 4,
+   "visual_beats": 3,
+   "error": "",
+   "notes": []
+  },
+  {
+   "title": "what is the slope of the line through (2, 1) and (5, 10)?",
+   "ok": true,
+   "beats": 5,
+   "kept": 5,
+   "visual_beats": 3,
+   "error": "",
+   "notes": []
+  },
+  {
+   "title": "a recipe for 4 people needs 300 g of flour. how much for 6 people?",
+   "ok": true,
+   "beats": 3,
+   "kept": 3,
+   "visual_beats": 2,
+   "error": "",
+   "notes": []
+  },
+  {
+   "title": "how much paint for a 4 m by 2.5 m wall with a 1 m by 2 m door in it?",
+   "ok": true,
+   "beats": 4,
+   "kept": 4,
+   "visual_beats": 3,
+   "error": "",
+   "notes": []
+  },
+  {
+   "title": "what is the median of 3, 9, 4, 7 and 12?",
+   "ok": true,
+   "beats": 3,
+   "kept": 3,
+   "visual_beats": 3,
+   "error": "",
+   "notes": []
+  },
+  {
+   "title": "how far does a dropped stone fall in 3 seconds?",
+   "ok": true,
+   "beats": 3,
+   "kept": 3,
+   "visual_beats": 3,
+   "error": "",
+   "notes": []
+  },
+  {
+   "title": "rotate the point (3, 1) by 90 degrees about the origin",
+   "ok": true,
+   "beats": 5,
+   "kept": 4,
+   "visual_beats": 4,
+   "error": "",
+   "notes": []
+  },
+  {
+   "title": "how many ways can you arrange the letters of the word CAT?",
+   "ok": true,
+   "beats": 6,
+   "kept": 6,
+   "visual_beats": 5,
+   "error": "",
+   "notes": []
+  },
+  {
+   "title": "what does multiplying by i do to the point 2 + i?",
+   "ok": true,
+   "beats": 6,
+   "kept": 6,
+   "visual_beats": 5,
+   "error": "",
+   "notes": []
+  }
+ ]
+}
