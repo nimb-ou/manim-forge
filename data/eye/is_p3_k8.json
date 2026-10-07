@@ -1,0 +1,83 @@
+{
+ "rubric": "G = right answer, pictures carry the idea, coherent and readable; P = right answer on screen but pictures weak/empty/drifting or one flaw; B = wrong or no answer, or broken",
+ "01": [
+  "P",
+  "80-12=68 right as text over an empty grid; drifts to 15% of 68"
+ ],
+ "02": [
+  "B",
+  "blank frames, one dot, 'Third Person' repeated; no count"
+ ],
+ "05": [
+  "P",
+  "P=1/4 as text; two empty circles; unrelated bars"
+ ],
+ "06": [
+  "P",
+  "60 km/h as formula; empty/vertical graph; drifts to instantaneous speed"
+ ],
+ "07": [
+  "B",
+  "two unrelated lines; stops at 3/4=9/12, never adds"
+ ],
+ "08": [
+  "P",
+  "24 right, shaded triangle; rambling, stray rectangles, 12 near-identical beats"
+ ],
+ "09": [
+  "P",
+  "m=9/3=3 right; arrows from origin not between the points; drifts to vertical lines"
+ ],
+ "10": [
+  "P",
+  "450 g right as text; grid and arrow mean nothing"
+ ],
+ "11": [
+  "P",
+  "8 m2 right; invents cans and 3.2; overlapping squares"
+ ],
+ "12": [
+  "P",
+  "median 7 right; bars unsorted nonsense, '6.5' average"
+ ],
+ "03": [
+  "B",
+  "render failed (api_misuse)"
+ ],
+ "04": [
+  "B",
+  "render failed"
+ ],
+ "13": [
+  "P",
+  "44.1 m right; v-t triangle is a fair picture but 12 near-identical beats"
+ ],
+ "14": [
+  "P",
+  "vector (3,1) turns to about (-1,3) but no coordinates; drifts to 3D"
+ ],
+ "15": [
+  "P",
+  "3!=6 as text over blank frames; drifts to 4 and 5 letters"
+ ],
+ "16": [
+  "B",
+  "i(2+i) shown as (0,2): wrong (should be -1+2i)"
+ ],
+ "17": [
+  "P",
+  "219.91 cm right but garbled latex, empty frames, drifts to RPM"
+ ],
+ "18": [
+  "B",
+  "never reaches x=4; no balance drawn"
+ ],
+ "19": [
+  "P",
+  "36 right on a number line; padded"
+ ],
+ "20": [
+  "B",
+  "explains 7+8=8+7, not multiplication; grids late and unexplained"
+ ]
+}

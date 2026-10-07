@@ -48,6 +48,26 @@ trained with the old guard, so both saw 3 such scenes (the CLT prompt is
 **The decision rule for v1.0:** ship whichever engine wins on the in-scope
 set by eye plus scene judge, held-out reported as measured.
 
+**Oct 7, 06:30 IST: baselines by eye on the in-scope set** (`data/eye/*.json`;
+G = right and the pictures show it, P = right answer on screen but weak or
+drifting pictures, B = wrong, missing or broken):
+
+| config | G | P | B |
+|---|---|---|---|
+| planner v3 + kit v8 (shipped) | 0 | 13 | 7 |
+| planner v5 + kit v8 | 0 | 9 | 11 |
+| untuned one-shot (4-prompt probe) | 2 | 1 | 1 |
+
+Planner v5 contradicts itself within a scene (720, then 1080, then 900),
+so it is dropped. The two-stage pipeline gets nothing right *with
+pictures*. Still to do (the queue `scripts/queue/oneshot_v1.sh` runs it
+unattended): finish `is_os_base` (scene 11 was in a long generation at
+01:05Z), flash-lite on the three baselines, collect one-shot v1 from Kaggle
+(~05:00Z), score it on in-scope (1 and 3 samples), held-out and short, both
+judges. **Next by hand:** grade is_os_base / is_os1 / is_os1_n3 by eye
+(`scripts/stack_sheets.py <tag> 01 02 03 04`), write RESULTS.md, and if
+one-shot wins set `ENGINE = "oneshot"` in forge/serve/server.py.
+
 ### Where it actually stands
 
 18 days, 484 commits. A working two-stage pipeline (planner → kit coder →
