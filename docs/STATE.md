@@ -1,23 +1,54 @@
 # State — read this first
 
 Everything needed to resume with no prior context. If this file and the repo
-disagree, the repo is right and this file is stale — fix it.
+disagree, the repo is right and this file is stale — fix it. The full story,
+mistakes included, is `docs/HISTORY.md`; every measurement is in
+`docs/RESULTS.md`; the remaining phases are at the top of `docs/PLAN.md`.
 
-*Every figure here is produced by `python -m forge.doctor`. If this file and
-the repo disagree, the repo is right — and the doctor will say so.*
+## What this is (v1.0, 2026-10-08)
 
-## What this is
+A request in plain English becomes a short, narrated 3Blue1Brown-style
+animation, made entirely on a 16 GB Apple Silicon Mac. Never commercial;
+CC BY-NC-SA 4.0. Repo: github.com/nimb-ou/manim-forge
 
-A locally-trained model that turns plain English into 3Blue1Brown-style Manim
-animation. Runs on a MacBook Air M4, 16 GB. Never commercial; CC BY-NC-SA 4.0.
-Repo: github.com/nimb-ou/manim-forge
+## How v1.0 works
 
-## The one idea
+1. **Retrieve** the two nearest of 942 hand-written, checked kit scenes
+   (`forge/kit/library.py`: TF-IDF + bge-small).
+2. **One call writes the whole scene** — beats, narration, code — with the
+   kit's reference in the prompt (`forge/app/oneshot.py`). Model:
+   **Qwen3.5-9B, untuned**, MLX 4-bit (`oneshot.BASE_MODEL`), thinking off.
+3. **Check** on-screen arithmetic (`forge/app/checks.py`), and at every beat
+   mark text collisions, off-frame objects and empty pictures
+   (`kit.layout_issues`); a sample that fails, or does not render whole, is
+   replaced by a second (best of 2, `oneshot.score`).
+4. **Render** with the Forge kit (64 blocks, `forge/kit/kit.py`), salvaging a
+   failing statement before a whole beat (`forge/app/pipeline.finish`).
+5. **Narrate** each beat with Kokoro-82M and hold the beat until its line is
+   said (`forge/app/voice.py`).
 
-**Every training row is proven to render.** Public Manim datasets are text that
-was never executed, spanning years of incompatible API versions. The render
-gate is a mechanical filter needing no per-row judgement, and it is the same
-component that serves as the evaluation metric and the product's repair loop.
+Served by `python -m forge.serve` (http://127.0.0.1:8766 via
+`.claude/launch.json`, 8765 by default). ~45–50 s a scene; ~3 min when a
+second sample is needed.
+
+## How good it is (by eye, 20 prompts each; `data/eye/`)
+
+| | good | partial | bad |
+|---|---|---|---|
+| in-scope (school maths, everyday quantities) | 13 | 5 | 2 |
+| held-out (20 classic topics, library scenes removed) | 8 | 8 | 4 |
+
+Those are Kaggle (nf4) numbers; the same configuration on the Mac's own MLX
+engine is `is_v1` / `held_v1` in RESULTS.md. Gallery: `docs/GALLERY.md`.
+
+## What did not work, so do not repeat it blindly
+
+Fine-tuning for this task (seven kit/coder/planner adapters, GRPO, a
+retrieval-augmented SFT): each taught format and lost reasoning; the best
+fine-tune was beaten by the untuned base with good context. Adding hand-
+written scenes as *training data* plateaued (+1 point for ~400 scenes);
+adding them to the *library* helps at once. The local vision judge is too
+lenient to decide anything. Details: `docs/HISTORY.md`.
 
 ## Numbers that matter
 
@@ -33,57 +64,40 @@ the block below and exits non-zero if it has drifted; `--write` updates it.
 | — of those, rescued by lint | 38 (no API cost) |
 | Synthetic, verified | **667** unique |
 | Gold scenes, authored | **44 of 61** · 182 beats |
-| Gold rendered at 1080p60 | **43 of 44** |
+| Gold rendered at 1080p60 | **44 of 44** |
 | Training mix | **3,010** train / 131 valid |
 | 3b1b narration segments | 5,825 |
 
 *Re-derived by `python -m forge.doctor`. Do not edit by hand.*
 <!-- doctor:end -->
 
-| | |
-|---|---|
-| Benchmark, single scenes | **93%** at repair rounds=4 |
-| Hard eval, whole explainer | 85% render · 16.3s vs 16 min · 8.8% coverage |
-| Free-tier budget | ~900–1,000 calls/day *total*, not per model |
-
-**Nothing has been trained yet.** Every number above is the untuned
-Qwen2.5-Coder-7B with inference-time scaffolding. That is the single largest
-outstanding item.
-
 ## Layout
 
 ```
-forge/harness/     render + error classification — the load-bearing component
-forge/ingest/      5 public sources -> one schema, AST-structural dedupe
-forge/gate/        execute everything, keep what survives
-forge/repair/      lint + API introspection + escalating repair loop
-forge/retrieve/    few-shot retrieval over verified scenes (local embeddings)
-forge/synth/       teacher generation, model rotation, task types
-forge/primitives/  11 modules — the animation computes its own claims
-forge/gold/        44 hand-authored scenes + the 61-scene curriculum
-forge/evaluate/    benchmark, hard eval, visual critic
-forge/orchestrator.py  job model: health is progress, never existence
-forge/app/         local FastAPI platform
-forge/catalog.py   every dataset declared, with orphan detection
+forge/kit/        the Forge kit, the scene library, teacher scenes (forge/kit/teacher)
+forge/app/        oneshot.py (v1.0), checks.py, voice.py, pipeline.py (assembly,
+                  salvage, render), twostage.py (the older planner + coder)
+forge/serve/      the web app (FastAPI + server-sent events)
+forge/harness/    render + error classification
+forge/evaluate/   prompt sets (inscope, heldout, short), held-out guard
+scripts/          scorecard.py, judge_sheets.py, judge_scenes.py, make_gallery.py,
+                  stack_sheets.py (eye grading), kaggle eval queues
+kaggle/           SFT kernels and oneshot_eval (score a config on a T4)
+data/eye/         by-eye grades with a reason per scene
+docs/gallery/     the v1.0 gallery
 ```
 
 ## Commands
 
 ```bash
-python -m forge.catalog                     # what data exists, what is orphaned
-python -m forge.gold.curriculum             # what to build next
-./scripts/forge_start.sh                    # the always-on pool
-./scripts/forge_stop.sh                     # and stopping it, properly
-python scripts/forge_run.py --status        # one report, starts nothing
-python scripts/register_gold.py --scene ... --prompt ...   # finish a gold scene
-python scripts/prepare_training.py          # rebuild the training mix
-python scripts/run_repair_benchmark.py --n 100 --retrieval   # the 93% number
-python scripts/run_hard_eval.py --n 81 --backend local --retrieval
-python scripts/backup_to_hf.py              # -> nimitttt/manim-forge-corpus (private)
-uvicorn forge.app.server:app --port 8765    # the platform
+export PATH="/Library/TeX/texbin:$PATH"            # before anything that renders
+./.venv/bin/python -m forge.serve                   # the app
+./.venv/bin/python -m pytest -q                     # gates every commit
+./.venv/bin/python -m forge.doctor                  # invariants (CI runs it too)
+./.venv/bin/python -u scripts/scorecard.py --inscope --oneshot --api --coder none --samples 2 --tag T
+./.venv/bin/python scripts/stack_sheets.py T 01 02 03 04   # sheets to grade by eye
+./.venv/bin/python -u scripts/make_gallery.py       # gallery candidates
 ```
-
-`export PATH="/Library/TeX/texbin:$PATH"` before anything that renders.
 
 ## Hard-won facts
 
@@ -167,29 +181,11 @@ looked.
 
 ## Standing instructions from Nimit
 
-- Preserve every artefact, failures included. Storage is not a constraint.
-- Narrate the work in chat; teach as you go; show real output.
-- High bar. Do not ship something that merely renders.
-- One variable per experiment. (Broken three times so far; costs a week
-  once training starts.)
+- Work autonomously; condensed updates; judge by evidence (sheets by eye).
+- Commit only after pytest passes; check CI with `gh run list -L 2`.
+- Never train on the Mac; one 7B/9B model in memory at a time.
+- Held-out topics never in training data or the evaluation library.
+- Long jobs: caffeinate, launched from bash (zsh niced `&` jobs), on AC
+  power (`pmset -g batt`). Kaggle calls under a deadline; outputs as one tar.
+- Keys only in `.env` / `~/.kaggle`; never in the transcript.
 
-## Where the work stands
-
-Done and verified:
-
-- The pipeline end to end: ingest → gate → repair → retrieve → evaluate.
-- 44 gold scenes, all importing cleanly, 182 beats, narration audit clean.
-- A training mix of 2,989 examples with the composition written into the file.
-- Serving architecture costed against measured latency (`docs/ARCHITECTURE.md`).
-
-Not done:
-
-1. **Train something.** No fine-tune has been run. Every number is untuned.
-2. 17 gold scenes remain (3 Tier 2, 14 Tier 3) — `python -m forge.gold.curriculum`.
-3. 25 gold scenes not yet rendered at 1080p60.
-4. GRPO with the render gate as reward — the week-long run.
-5. Deploy. Architecture written, nothing built.
-6. Public dataset release pending a licensing review.
-
-See `docs/RESULTS.md` for what has been measured and `docs/POSTMORTEM.md` for
-what went wrong and what was changed so it cannot recur.

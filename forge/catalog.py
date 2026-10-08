@@ -238,6 +238,47 @@ CATALOG: list[Dataset] = [
         archive=False,   # regenerable, and superseded by the showcase ledger
     ),
     Dataset(
+        "data/kit",
+        "Kit-era data: the hand-written teacher scenes as rendered batches "
+        "(claude_scenes/, tracked copy in forge/kit/teacher), kit beat rows, "
+        "teacher and Gemma plans, critic verdicts, the library embedding cache.",
+        "mixed: batch_NN.json scenes {request, beats[{intent, narration, code}]}, "
+        "*.jsonl rows, *_sheets/ contact sheets",
+        keeps_failures="critic rejections are kept with their reasons",
+    ),
+    Dataset(
+        "data/eval",
+        "Cached plans for evaluations (planner v3/v4, oracle), so coder "
+        "configurations were compared on identical plans.",
+        "{prompt: [[n, seconds, intent, narration], ...]}",
+        archive=False,
+    ),
+    Dataset(
+        "data/coder_scene_gate.json",
+        "Render-gate verdicts for coder-generated scenes (two-stage era).",
+        "{scene: verdict}",
+        archive=False,
+    ),
+    Dataset(
+        "data/sessions",
+        "Every web-app job: request, options, beats, code, outcome, video path "
+        "(forge.serve). Real requests with real outcomes.",
+        "{id, created, request, options, ok, error, notes, beats, bodies, code, video, seconds}",
+        keeps_failures="failed jobs are logged with their error like any other",
+    ),
+    Dataset(
+        "data/logs",
+        "Run logs; setup_replies.jsonl holds API replies from service setup checks.",
+        "text logs; jsonl",
+        archive=False,
+    ),
+    Dataset(
+        "data/probe",
+        "One-off environment probes (Kaggle rendering, Sep 24).",
+        "json",
+        archive=False,
+    ),
+    Dataset(
         "data/eye",
         "Scene grades made by eye from contact sheets, one file per scorecard "
         "run: the evidence behind the in-scope comparison (docs/RESULTS.md, "
