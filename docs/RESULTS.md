@@ -866,3 +866,25 @@ API misuse), the kind best-of-N sampling recovers.
 retrieval, the kit reference and the checks. Fine-tuning is a v1.1
 question, and the evidence so far says a narrow SFT costs this task more
 than it gives.
+
+### v1.0 as shipped, on the Mac · 2026-10-08
+
+The exact app configuration on the Mac's own engine (MLX 4-bit): Qwen3.5-9B
+untuned, kit reference, two retrieved scenes from the evaluation library
+(held-out topics removed), best of 2. All 40 scenes rendered — the second
+sample recovered every render failure. By eye (`data/eye/is_v1.json`,
+`held_v1.json`):
+
+| | good | partial | bad |
+|---|---|---|---|
+| in-scope | **12** | 6 | 2 |
+| held-out | **9** | 4 | 7 |
+
+Consistent with the Kaggle run of the same model (13/5/2 and 8/8/4). The
+remaining failures are mostly wrong maths stated confidently: a secant on a
+curve for "the slope of the line through two points", 45 m then 67.5 m, a
+matrix product called the identity, a standard deviation of 0.29 for 0.41,
+Pascal's row 1 3 6 4 1, dice sums that stay flat. About 100 s a scene in
+this batch run, ~50 s in the app when the first sample is clean.
+
+**v1.0's numbers are these.**

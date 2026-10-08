@@ -1,0 +1,83 @@
+{
+ "rubric": "v1.0 as shipped: Qwen3.5-9B untuned on the Mac (MLX 4-bit), kit reference, 2 retrieved scenes (evaluation library), best of 2; held-out topics",
+ "01": [
+  "G",
+  "terms grouped: 1/3 + 1/4 > 1/2, then 1/5..1/8 > 1/2; the sum grows forever"
+ ],
+ "02": [
+  "G",
+  "machine 1 doubles, machine 2 triples: 1 -> 2 -> 6; stretch by 2 then 3 is 6"
+ ],
+ "03": [
+  "B",
+  "B A shown as the identity: wrong ([[1,0],[0,0.5]])"
+ ],
+ "04": [
+  "P",
+  "stay 1/3, switch 2/3 right; dots for doors"
+ ],
+ "05": [
+  "P",
+  "doubling bars, then (1 + 1/n)^n creeping to 2.718; the compounding link is thin"
+ ],
+ "06": [
+  "B",
+  "complex rotation, not logarithms"
+ ],
+ "07": [
+  "P",
+  "23 circles and the product 365/365 x 364/365...; cluttered"
+ ],
+ "08": [
+  "B",
+  "sqrt((0.25 + 0 + 0.25)/3) shown as 0.29: wrong (0.41)"
+ ],
+ "09": [
+  "G",
+  "a bad guess, its errors, the line minimising squared errors"
+ ],
+ "10": [
+  "P",
+  "bars end sorted; no split or merge shown"
+ ],
+ "11": [
+  "B",
+  "row '1 3 6 4 1': wrong"
+ ],
+ "12": [
+  "B",
+  "the roots drawn on the real axis, not the circle"
+ ],
+ "13": [
+  "G",
+  "x^2 on [0,2]: average slope 2, a tangent parallel to the secant"
+ ],
+ "14": [
+  "G",
+  "100 -> 50 -> 25 every 10 min, formula, shorter half-life faster"
+ ],
+ "15": [
+  "G",
+  "(2,1) + (1,3) = (3,4) tip to tail"
+ ],
+ "16": [
+  "B",
+  "empty boxes"
+ ],
+ "17": [
+  "G",
+  "Fibonacci bars, ratios -> 1.618, x^2 = x + 1"
+ ],
+ "18": [
+  "G",
+  "one tone, one spike; two tones, spikes at 2 and 3"
+ ],
+ "19": [
+  "G",
+  "unit square flattened to a line, det = 2x2 - 1x4 = 0"
+ ],
+ "20": [
+  "B",
+  "dice-sum histograms flat, never a bell"
+ ]
+}

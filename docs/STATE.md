@@ -35,11 +35,11 @@ second sample is needed.
 
 | | good | partial | bad |
 |---|---|---|---|
-| in-scope (school maths, everyday quantities) | 13 | 5 | 2 |
-| held-out (20 classic topics, library scenes removed) | 8 | 8 | 4 |
+| in-scope (school maths, everyday quantities) | 12 | 6 | 2 |
+| held-out (20 classic topics, library scenes removed) | 9 | 4 | 7 |
 
-Those are Kaggle (nf4) numbers; the same configuration on the Mac's own MLX
-engine is `is_v1` / `held_v1` in RESULTS.md. Gallery: `docs/GALLERY.md`.
+On the Mac's own MLX engine, best of 2 (`is_v1`, `held_v1`). Gallery:
+`docs/GALLERY.md`.
 
 ## What did not work, so do not repeat it blindly
 

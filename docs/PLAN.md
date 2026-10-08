@@ -21,10 +21,10 @@ end to end.
 
 | phase | when | done when | status |
 |---|---|---|---|
-| 1. Gallery | Oct 8, by 12:00Z | 14 candidates rendered through the app's path; 10 right by eye in docs/GALLERY.md | running |
-| 2. The app, end to end | Oct 8, by 14:00Z | forge.serve from the README steps; a job over HTTP and in the browser; narrated video plays; timed | — |
-| 3. Final numbers on the shipped engine | Oct 8, evening | in-scope + held-out on the Mac (MLX, best of 2), graded by eye; RESULTS.md and README updated | — |
-| 4. v1.0 | Oct 9 | STATE.md current, release notes, tag v1.0, CI green | — |
+| 1. Gallery | Oct 8, by 12:00Z | 14 candidates rendered through the app's path; 10 right by eye in docs/GALLERY.md | **done** (8 first time, 2 after a sampled retry) |
+| 2. The app, end to end | Oct 8, by 14:00Z | forge.serve from the README steps; a job over HTTP and in the browser; narrated video plays; timed | **done** (~46 s; ~3 min with a second sample) |
+| 3. Final numbers on the shipped engine | Oct 8, evening | in-scope + held-out on the Mac (MLX, best of 2), graded by eye; RESULTS.md and README updated | **done** (12/6/2 and 9/4/7) |
+| 4. v1.0 | Oct 9 | STATE.md current, release notes, tag v1.0, CI green | **done** (tag v1.0, GitHub release) |
 | after: v1.1 (only if measured) | Oct 10+ | grow the library on weak topics (each checked scene helps retrieval at once); a fine-tune of the 9B only if it beats untuned by eye; public HF release only with Nimit's OK | — |
 
 **Rules:** no new data or training before v1.0. Every comparison is graded

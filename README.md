@@ -45,7 +45,8 @@ wrong or broken. Grades and reasons per scene are in `data/eye/`.
 
 | | in-scope: good / partial / bad | held-out: good / partial / bad |
 |---|---|---|
-| **v1.0: one shot, Qwen3.5-9B, untuned** | **13 / 5 / 2** | **8 / 8 / 4** |
+| **v1.0 as shipped (Mac, MLX, best of 2)** | **12 / 6 / 2** | **9 / 4 / 7** |
+| same model, one sample, on Kaggle | 13 / 5 / 2 | 8 / 8 / 4 |
 | one shot, Qwen2.5-Coder-7B, untuned | 10 / 8 / 2 | — |
 | one shot, Qwen2.5-Coder-7B, fine-tuned for it | 6 / 10 / 4 | 3 / 4 / 13 |
 | planner + per-beat coder, fine-tuned (the old app) | 0 / 13 / 7 | ~3 good |
@@ -56,9 +57,11 @@ scenes cover — school maths and everyday quantities
 library deliberately has nothing on (`forge/evaluate/heldout_prompts.json`),
 graded with those scenes removed; the shipped app keeps them in.
 
-The honest scope: questions like the ones in the in-scope set work most of
-the time; famous university topics work about half the time; a beat with
-a wrong number still gets through now and then. The fine-tuned models
+The honest scope: questions like the ones in the in-scope set come out
+right about 60% of the time and with the right answer on screen about 90%;
+famous university topics come out right about half the time; when it is
+wrong it is usually a confident wrong number. See the ten scenes in
+[`docs/GALLERY.md`](docs/GALLERY.md). The fine-tuned models
 this project trained are not in v1.0 — retrieval, a stronger base model and
 checks beat every one of them (`docs/RESULTS.md`, Oct 7–8).
 

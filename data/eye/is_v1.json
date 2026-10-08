@@ -1,0 +1,83 @@
+{
+ "rubric": "v1.0 as shipped: Qwen3.5-9B untuned on the Mac (MLX 4-bit), kit reference, 2 retrieved scenes (evaluation library), best of 2",
+ "01": [
+  "G",
+  "£80 -> £68, £12 cut, 80 x 0.85 = 68"
+ ],
+ "02": [
+  "G",
+  "complete graph on 9, 36 two ways"
+ ],
+ "03": [
+  "P",
+  "14 right; outside pieces overlap into a mess"
+ ],
+ "04": [
+  "G",
+  "4 triangles, 720, 120 each"
+ ],
+ "05": [
+  "G",
+  "tree, HH, 1/4"
+ ],
+ "06": [
+  "P",
+  "60 km/h right; a block on a number line"
+ ],
+ "07": [
+  "G",
+  "twelfths, 11/12"
+ ],
+ "08": [
+  "G",
+  "rectangles approach 24, integral 24"
+ ],
+ "09": [
+  "B",
+  "answers a secant on y = x^2/2, not the line through (2,1), (5,10)"
+ ],
+ "10": [
+  "G",
+  "flour bars 4 -> 6 people, 300 x 1.5 = 450"
+ ],
+ "11": [
+  "P",
+  "8 m2 right; invents two coats and 1.6 L"
+ ],
+ "12": [
+  "G",
+  "sorted 3, 4, 7, 9, 12, median 7"
+ ],
+ "13": [
+  "B",
+  "45 m at t = 3, then '1/2 x 3 x 45 = 67.5 m'"
+ ],
+ "14": [
+  "G",
+  "(3,1) -> (-1,3) with the rotation matrix"
+ ],
+ "15": [
+  "P",
+  "3! = 6; a tangled tree with a 'CC' branch"
+ ],
+ "16": [
+  "G",
+  "i(2 + i) = 2i - 1, arrow to -1 + 2i"
+ ],
+ "17": [
+  "P",
+  "2.2 m right; unrendered '\\\\pi' text"
+ ],
+ "18": [
+  "G",
+  "balance, 4x = 16, x = 4"
+ ],
+ "19": [
+  "G",
+  "240 in tenths, 10% + 5% = 36"
+ ],
+ "20": [
+  "P",
+  "7 x 8 = 8 x 7 = 56; a 9-dot grid, empty boxes"
+ ]
+}
