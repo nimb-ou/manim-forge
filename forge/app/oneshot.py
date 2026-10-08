@@ -52,13 +52,31 @@ BEAT_LINE = re.compile(r"^\s*#\s*beat\s*(\d+)\s*[:.-]\s*(.*)$", re.I)
 SAY_LINE = re.compile(r"^\s*#\s*say\s*:\s*(.*)$", re.I)
 
 
-def system_prompt(api: bool) -> str:
+#: Decide what to explain before writing how (v1.1 experiment). The lines
+#: are comments, so they cost nothing to render and stay in the code for
+#: anyone reading it.
+PLAN_RULES = (
+    "\n\nBEFORE THE BEATS, plan the explanation in 4 to 6 comment lines "
+    "starting with `# plan:` --\n"
+    "  # plan: idea: the one thing the viewer must understand afterwards\n"
+    "  # plan: picture: the picture that makes it obvious, and what moves in it\n"
+    "  # plan: numbers: every number you will show, worked out step by step\n"
+    "  # plan: arc: setup -> the key move -> the payoff, one beat each\n"
+    "Then write the beats so that they follow the plan exactly. Every point "
+    "you draw on axes must lie inside their x_range and y_range; draw a "
+    "curve once and reuse it."
+)
+
+
+def system_prompt(api: bool, plan: bool = False) -> str:
     """With ``api`` the kit's reference is appended: an untuned model has
-    never seen the kit and has only the examples to go on."""
+    never seen the kit and has only the examples to go on. With ``plan`` the
+    model writes a short lesson plan first (PLAN_RULES)."""
+    base = ONESHOT_SYSTEM + (PLAN_RULES if plan else "")
     if not api:
-        return ONESHOT_SYSTEM
+        return base
     from forge.app.pipeline import _kit_api
-    return ONESHOT_SYSTEM + "\n\nTHE KIT\n" + _kit_api()
+    return base + "\n\nTHE KIT\n" + _kit_api()
 
 
 def user_prompt(request: str, k: int = 2, exclude: set[str] | None = None,
@@ -115,7 +133,8 @@ def score(res) -> tuple:
 def run_oneshot(request: str, model, tok, emit=lambda e: None, opts=None,
                 harness=None, api: bool = False, k: int = 2,
                 max_tokens: int = 2400, exclude: set[str] | None = None,
-                samples: int = 1, temp: float = 0.7, greedy_first: bool = True):
+                samples: int = 1, temp: float = 0.7, greedy_first: bool = True,
+                plan: bool = False, think: bool = False):
     """Generate, parse, assemble and render as the pipeline does.
 
     With ``samples`` > 1 the first sample is greedy and the rest are drawn
@@ -125,7 +144,7 @@ def run_oneshot(request: str, model, tok, emit=lambda e: None, opts=None,
     from forge.app.pipeline import Options, Result, ask, finish
     opts = opts or Options(kit=True)
     t0 = time.time()
-    system = system_prompt(api)
+    system = system_prompt(api, plan=plan)
     user = user_prompt(request, k, exclude=exclude)
     best = None
 
@@ -142,8 +161,10 @@ def run_oneshot(request: str, model, tok, emit=lambda e: None, opts=None,
     for n in range(samples):
         emit({"stage": "plan", "status": "start",
               **({"note": f"sample {n + 1} of {samples}"} if samples > 1 else {})})
-        reply = ask(model, tok, system, user, max_tokens=max_tokens,
-                    temp=temp if (n or not greedy_first) else 0.0)
+        reply = ask(model, tok, system, user,
+                    max_tokens=max_tokens + (4000 if think else 0),
+                    temp=temp if (n or not greedy_first) else 0.0,
+                    think=think)
         beats, bodies = parse_scene(reply)
         # The app lists beats from plan events and fills them from code
         # events; a new sample clears the list ("reset") and shows its own.

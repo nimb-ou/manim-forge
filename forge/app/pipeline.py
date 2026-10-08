@@ -116,7 +116,7 @@ _THINK = re.compile(r"<think>.*?(?:</think>|$)", re.S)
 
 
 def ask(model, tok, system: str, user: str, max_tokens: int,
-        temp: float = 0.0, rep_penalty: float = 0.0) -> str:
+        temp: float = 0.0, rep_penalty: float = 0.0, think: bool = False) -> str:
     from mlx_lm import generate
     from mlx_lm.sample_utils import make_logits_processors, make_sampler
     msgs = [{"role": "system", "content": system},
@@ -124,7 +124,7 @@ def ask(model, tok, system: str, user: str, max_tokens: int,
     # Qwen3.x reasons in a <think> block unless told not to; the scene is the
     # answer. Other templates ignore the flag.
     chat = tok.apply_chat_template(msgs, add_generation_prompt=True,
-                                   tokenize=False, enable_thinking=False)
+                                   tokenize=False, enable_thinking=think)
     procs = (make_logits_processors(repetition_penalty=rep_penalty,
                                     repetition_context_size=256)
              if rep_penalty else None)
@@ -132,6 +132,10 @@ def ask(model, tok, system: str, user: str, max_tokens: int,
                     sampler=make_sampler(temp=temp,
                                          top_p=0.95 if temp else 0.0),
                     logits_processors=procs, verbose=False)
+    # With thinking on, the template may open <think> in the prompt itself,
+    # so the reply holds only the closing tag.
+    if "</think>" in out:
+        out = out.split("</think>")[-1]
     return _THINK.sub("", out).strip()
 
 

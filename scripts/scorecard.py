@@ -104,6 +104,8 @@ def main() -> int:
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--heldout", action="store_true",
                     help="the 20 held-out prompts (forge/evaluate/heldout_prompts.json)")
+    ap.add_argument("--world", action="store_true",
+                    help="the 30 real-world requests (forge/evaluate/world_prompts.json)")
     ap.add_argument("--inscope", action="store_true",
                     help="the 20 in-scope prompts (forge/evaluate/inscope_prompts.json)")
     ap.add_argument("--oneshot", action="store_true",
@@ -115,6 +117,10 @@ def main() -> int:
     ap.add_argument("--k", type=int, default=2, help="one-shot: examples shown")
     ap.add_argument("--base", default="", help="one-shot: base model (default "
                     "forge.app.oneshot.BASE_MODEL)")
+    ap.add_argument("--plan", action="store_true",
+                    help="one-shot: write a lesson plan (# plan: lines) before the beats")
+    ap.add_argument("--think", action="store_true",
+                    help="one-shot: let the model reason (enable_thinking) first")
     ap.add_argument("--samples", type=int, default=1,
                     help="one-shot: render up to N samples, keep the best")
     ap.add_argument("--short", action="store_true",
@@ -144,10 +150,11 @@ def main() -> int:
     mob = {n for n in dir(manim) if isinstance(getattr(manim, n), type)
            and issubclass(getattr(manim, n), manim.Mobject)}
     from forge.evaluate.hard_eval import build_tasks, concept_coverage
-    if a.short or a.heldout or a.inscope:
+    if a.short or a.heldout or a.inscope or a.world:
         from types import SimpleNamespace
         name = "heldout_prompts.json" if a.heldout else \
-            "inscope_prompts.json" if a.inscope else "short_prompts.json"
+            "inscope_prompts.json" if a.inscope else \
+            "world_prompts.json" if a.world else "short_prompts.json"
         spec = json.loads((ROOT / "forge" / "evaluate" / name)
                           .read_text())["prompts"]
         # No reference video: coverage is 0 and length is against a nominal
@@ -195,7 +202,7 @@ def main() -> int:
             given = [Beat(*x) for x in cache[t.prompt]]
         if a.oneshot:
             res = run_oneshot(t.prompt, om, otok, opts=opts, api=a.api, k=a.k,
-                              samples=a.samples)
+                              samples=a.samples, plan=a.plan, think=a.think)
         else:
             res = run(t.prompt, host, lambda e: None, opts, beats=given)
         bodies = [b for b in res.bodies if b.strip()]

@@ -1,0 +1,125 @@
+{
+ "about": "Real-world set (2026-10-08): 30 requests phrased the way people ask, across topics, including Nimit's own first try ('how gradient descent works?'). Graded by eye on three axes: correct, visuals, explanation. Used to measure every v1.1+ change; never trained on. Some overlap held-out topics on purpose -- the app uses the release library.",
+ "prompts": [
+  {
+   "prompt": "how gradient descent works?",
+   "family": "ml"
+  },
+  {
+   "prompt": "what does a neuron in a neural network do?",
+   "family": "ml"
+  },
+  {
+   "prompt": "why do we need a learning rate?",
+   "family": "ml"
+  },
+  {
+   "prompt": "how does binary search find a number so fast?",
+   "family": "cs"
+  },
+  {
+   "prompt": "what is recursion, using the towers of Hanoi?",
+   "family": "cs"
+  },
+  {
+   "prompt": "what is a derivative, really?",
+   "family": "calc"
+  },
+  {
+   "prompt": "why is the integral the area under a curve?",
+   "family": "calc"
+  },
+  {
+   "prompt": "what does it mean for a limit to exist?",
+   "family": "calc"
+  },
+  {
+   "prompt": "why is the derivative of x squared equal to 2x?",
+   "family": "calc"
+  },
+  {
+   "prompt": "how does a Taylor series approximate sin x?",
+   "family": "calc"
+  },
+  {
+   "prompt": "what is a vector?",
+   "family": "linalg"
+  },
+  {
+   "prompt": "what does a matrix do to a vector?",
+   "family": "linalg"
+  },
+  {
+   "prompt": "what are eigenvectors?",
+   "family": "linalg"
+  },
+  {
+   "prompt": "what is the dot product and why does it measure alignment?",
+   "family": "linalg"
+  },
+  {
+   "prompt": "what is a linear transformation?",
+   "family": "linalg"
+  },
+  {
+   "prompt": "what is conditional probability?",
+   "family": "prob"
+  },
+  {
+   "prompt": "why does a test with 99% accuracy still give false alarms?",
+   "family": "prob"
+  },
+  {
+   "prompt": "what is the expected value of a dice roll?",
+   "family": "prob"
+  },
+  {
+   "prompt": "what is a histogram and how do you read it?",
+   "family": "stats"
+  },
+  {
+   "prompt": "how likely is it to flip 3 heads in a row?",
+   "family": "prob"
+  },
+  {
+   "prompt": "why do objects fall at the same rate?",
+   "family": "phys"
+  },
+  {
+   "prompt": "what is a sine wave and what do amplitude and frequency mean?",
+   "family": "phys"
+  },
+  {
+   "prompt": "how does a projectile move?",
+   "family": "phys"
+  },
+  {
+   "prompt": "what is momentum?",
+   "family": "phys"
+  },
+  {
+   "prompt": "why does a negative times a negative give a positive?",
+   "family": "school"
+  },
+  {
+   "prompt": "how do you find the area of a circle?",
+   "family": "school"
+  },
+  {
+   "prompt": "what is Pythagoras' theorem and why is it true?",
+   "family": "school"
+  },
+  {
+   "prompt": "how does compound growth differ from simple growth?",
+   "family": "school"
+  },
+  {
+   "prompt": "what are prime numbers and how do you find them?",
+   "family": "school"
+  },
+  {
+   "prompt": "why can't you divide by zero?",
+   "family": "school"
+  }
+ ]
+}
