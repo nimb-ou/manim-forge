@@ -39,7 +39,7 @@ launch agents (supervisor, pool, autopilot) are disabled
 
 | job | where | started | expect |
 |---|---|---|---|
-| Qwen3.5-9B MLX download and first scene | Mac (on AC again) | Oct 8 08:00Z | minutes |
+| nothing — v1.0 released Oct 8 (tag v1.0) | — | — | — |
 
 **The Mac was on battery** Oct 7 (30% at 04:40Z; back on AC Oct 8). Mac MLX runs were ~50× slower; nothing heavy runs on the Mac
 until it is on power. Evaluations go to Kaggle (`kaggle/oneshot_eval`).
