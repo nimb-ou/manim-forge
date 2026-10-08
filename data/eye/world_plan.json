@@ -1,0 +1,123 @@
+{
+ "rubric": "G/P/B as is_p3_k8; v1.0 + lesson plan (# plan: lines) first",
+ "01": [
+  "G",
+  ""
+ ],
+ "02": [
+  "B",
+  "plan run failed to render; v1 an empty plane then a sigmoid, no neuron"
+ ],
+ "03": [
+  "P",
+  ""
+ ],
+ "04": [
+  "G",
+  ""
+ ],
+ "05": [
+  "G",
+  ""
+ ],
+ "06": [
+  "G",
+  ""
+ ],
+ "07": [
+  "G",
+  ""
+ ],
+ "08": [
+  "G",
+  "plan: f = 1 + 1/x with an epsilon band; v1 muddled"
+ ],
+ "09": [
+  "G",
+  ""
+ ],
+ "10": [
+  "G",
+  ""
+ ],
+ "11": [
+  "P",
+  "plan never draws the arrow"
+ ],
+ "12": [
+  "G",
+  ""
+ ],
+ "13": [
+  "G",
+  ""
+ ],
+ "14": [
+  "G",
+  ""
+ ],
+ "15": [
+  "P",
+  ""
+ ],
+ "16": [
+  "G",
+  ""
+ ],
+ "17": [
+  "P",
+  ""
+ ],
+ "18": [
+  "G",
+  ""
+ ],
+ "19": [
+  "G",
+  ""
+ ],
+ "20": [
+  "P",
+  ""
+ ],
+ "21": [
+  "G",
+  "plan: a = F/m = g, the reason; v1 only shows them fall"
+ ],
+ "22": [
+  "P",
+  ""
+ ],
+ "23": [
+  "P",
+  "v1: vectors and equations, no flight"
+ ],
+ "24": [
+  "P",
+  ""
+ ],
+ "25": [
+  "G",
+  ""
+ ],
+ "26": [
+  "B",
+  "v1 says area 3pi for r = 3; plan's slices vanish"
+ ],
+ "27": [
+  "G",
+  ""
+ ],
+ "28": [
+  "G",
+  ""
+ ],
+ "29": [
+  "G",
+  "v1: text only; plan: a dot-grid sieve"
+ ],
+ "30": [
+  "P",
+  ""
+ ]
+}

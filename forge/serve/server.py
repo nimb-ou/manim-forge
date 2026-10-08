@@ -143,7 +143,7 @@ class Worker(threading.Thread):
         # an arithmetic slip or a layout problem: both of Qwen3.5-9B's
         # in-scope failures in run 2 were render failures.
         res = run_oneshot(job.spec.prompt, model, tok, job.emit, opts,
-                          api=True, samples=2)
+                          api=True, samples=2, plan=True)
         self._log(job, res)
 
     def _log(self, job: Job, res) -> None:

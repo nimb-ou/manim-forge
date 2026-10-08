@@ -674,6 +674,9 @@ def draw_vector(stage: Stage, plane_, xy, color=YELLOW, label: str | None = None
     """An arrow from the plane's origin to (x, y), grown, optionally labelled."""
     _need(plane_, "c2p", "the plane from draw_plane(stage)", "draw_vector(stage, plane, (x, y))")
     a = Arrow(plane_.c2p(0, 0), plane_.c2p(*xy), buff=0, color=color)
+    tip = plane_.c2p(*xy)
+    if abs(tip[0]) > 7.1 or abs(tip[1]) > 3.9:     # the arrow leaves the frame
+        stage._issues += 1
     stage.scene.play(GrowArrow(a), run_time=0.8)
     stage._objects.append(a)
     if label:
@@ -812,7 +815,12 @@ def plot_graph(stage: Stage, ax, f, x_range=None, color=BLUE, label: str | None 
     """Plot f on the axes and draw it."""
     _need(ax, "plot", "the axes from draw_axes(stage)", "plot_graph(stage, axes, f)")
     xr = x_range or (ax.x_range[0], ax.x_range[1])
+    want = xr[1] - xr[0]
     xr = _inside(ax, f, xr[0], xr[1])
+    # Most of the curve cut away because it leaves the axes (3 sin 3x on
+    # axes 2 tall drew one steep stroke): axes too small for the curve.
+    if want and (xr[1] - xr[0]) < 0.6 * want:
+        stage._issues += 1
     g = ax.plot(f, x_range=[xr[0], xr[1]], color=color)
     # Callable like the function it plots: models write g(x) for a height
     # on the curve ("'ParametricFunction' object is not callable", twice).
