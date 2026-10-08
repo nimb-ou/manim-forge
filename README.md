@@ -1,58 +1,66 @@
 # Manim Forge
 
-Type a sentence — *"why the angles of a triangle add up to 180°"* — and get
-a short 3Blue1Brown-style animation, planned, written, rendered and checked
-by a local 7B model on a Mac.
+Type a sentence — *"a jacket costs £80 and is 15% off, what do you pay?"* —
+and get a short narrated 3Blue1Brown-style animation, written, rendered and
+checked by a local model on a Mac. No cloud, no API key.
 
 Free, non-commercial, and built in the open — including the parts that went
-wrong ([`docs/POSTMORTEM.md`](docs/POSTMORTEM.md)).
+wrong ([`docs/POSTMORTEM.md`](docs/POSTMORTEM.md),
+[`docs/RESULTS.md`](docs/RESULTS.md)).
 
 ---
 
 ## How it works
 
 ```
-request ──► planner ──► beats ──► kit coder ──► Forge kit ──► render ──► video
-            (arc of 3–8      (one beat's        (64 animation       │
-             beats, each      code at a time,    blocks that         └─ a failing
-             a picture +      on top of the      draw and animate)      statement or
-             narration)       earlier beats)                            beat is dropped,
-                                                                        the rest re-rendered
+request ──► retrieve ──► one call writes ──► checks ──► Forge kit ──► render ──► voice ──► video
+            the 2 nearest   the whole scene     (arithmetic   (64 animation   (failing     (Kokoro,
+            of 942 hand-    (3–6 beats, code    on screen,    blocks)          statements   local)
+            written scenes  + narration)        layout, renders)               dropped)
 ```
 
-- **Two fine-tuned adapters on Qwen2.5-Coder-7B** (QLoRA, trained on Kaggle,
-  run locally with MLX): a *planner* that writes the arc and a *kit coder*
-  that writes each beat.
+- **One call writes the whole scene**, beat by beat in one context, so later
+  beats reuse and transform what earlier beats built
+  (`forge/app/oneshot.py`). The model is **Qwen3.5-9B, untuned**, 4-bit,
+  running under MLX.
+- **It adapts rather than invents.** The two nearest of 942 hand-written,
+  checked scenes (TF-IDF + a small embedding, `forge/kit/library.py`) are in
+  the prompt, along with the kit's reference.
 - **The Forge kit** (`forge/kit/kit.py`): 64 blocks — `apply_matrix`,
-  `slide_tangent`, `riemann_refine`, `bayes_square`, `wind_signal`, … — that
-  take the calls a small model actually makes and still produce a clean frame.
-  Fuzz-tested on 70 case groups (`scripts/fuzz_kit.py`).
-- **Render-verified training data.** Every training row rendered; beats are
-  kept only if a vision model, looking at the frame at the end of the beat,
-  says it shows the beat's idea (`scripts/critic_kit_scenes.py`).
+  `slide_tangent`, `riemann_refine`, `bayes_square`, … — that draw and animate
+  the picture so a small model's calls still produce a clean frame.
+- **Checks before you see it:** on-screen arithmetic is evaluated
+  (`forge/app/checks.py`), text collisions and off-frame objects are counted
+  at each beat (`kit.layout_issues`), and a scene that fails any of them, or
+  fails to render whole, is sampled once more.
+- **Narrated:** each beat's line is spoken by Kokoro-82M and the beat is
+  held until it is said (`forge/app/voice.py`).
 
 ## Where it stands
 
-The headline metric: for 20 held-out prompts on topics nothing was built
-for, the share of planned beats whose end frame a vision judge (Gemini)
-says shows a picture of the beat's idea (`scripts/judge_sheets.py`).
-The 20 short prompts are the classic topics the kit and its teacher scenes
-were built around, so they measure the familiar case. The held-out topics
-were meant never to appear in training data; an audit on Oct 1 found that
-some did (3Blue1Brown narration arcs on the central limit theorem and the
-chain rule, a few gold and teacher scenes), so the numbers below are
-somewhat optimistic. From kit v8 and planner v5 on, every builder drops a
-row whose request is a held-out topic (`forge/evaluate/heldout_guard.py`).
+Graded **by eye** from contact sheets (the vision judges proved lenient),
+20 prompts per set: **good** = right answer and the pictures show it;
+**partial** = right answer on screen, weak pictures or one flaw; **bad** =
+wrong or broken. Grades and reasons per scene are in `data/eye/`.
 
-| configuration | 20 short prompts | 20 held-out |
+| | in-scope: good / partial / bad | held-out: good / partial / bad |
 |---|---|---|
-| raw Manim, fine-tuned | 24% | 25% |
-| planner v3 + kit coder v6 (the app today) | 45–51% | 37–40% |
+| **v1.0: one shot, Qwen3.5-9B, untuned** | **13 / 5 / 2** | **8 / 8 / 4** |
+| one shot, Qwen2.5-Coder-7B, untuned | 10 / 8 / 2 | — |
+| one shot, Qwen2.5-Coder-7B, fine-tuned for it | 6 / 10 / 4 | 3 / 4 / 13 |
+| planner + per-beat coder, fine-tuned (the old app) | 0 / 13 / 7 | ~3 good |
 
-By eye, of 20 held-out scenes about 3 are clearly good. The current plan —
-better plans, critic-filtered data, the next SFT round — is in
-[`docs/PLAN.md`](docs/PLAN.md); every measurement, with its confounds, in
-[`docs/RESULTS.md`](docs/RESULTS.md).
+*In-scope*: new numbers and contexts for question types the hand-written
+scenes cover — school maths and everyday quantities
+(`forge/evaluate/inscope_prompts.json`). *Held-out*: 20 classic topics the
+library deliberately has nothing on (`forge/evaluate/heldout_prompts.json`),
+graded with those scenes removed; the shipped app keeps them in.
+
+The honest scope: questions like the ones in the in-scope set work most of
+the time; famous university topics work about half the time; a beat with
+a wrong number still gets through now and then. The fine-tuned models
+this project trained are not in v1.0 — retrieval, a stronger base model and
+checks beat every one of them (`docs/RESULTS.md`, Oct 7–8).
 
 ## Run it
 
@@ -62,15 +70,15 @@ Apple Silicon Mac, 16 GB.
 brew install cairo pango pkg-config ffmpeg
 brew install --cask basictex          # MathTex needs LaTeX
 python3 -m venv .venv && ./.venv/bin/pip install -r requirements.txt mlx mlx-lm
+./.venv/bin/pip install mlx-audio "misaki[en]"     # narration (optional)
 export PATH="/Library/TeX/texbin:$PATH"
 ```
-
-The app expects the adapters in `adapters/mlx-planner3` and
-`adapters/mlx-coder6-kit` (the base model downloads on first run):
 
 ```bash
 ./.venv/bin/python -m forge.serve     # http://127.0.0.1:8765
 ```
+
+The model (~6 GB) downloads on the first request.
 
 Tests and invariants:
 
@@ -83,8 +91,8 @@ Tests and invariants:
 
 ```
 forge/
-  kit/          the Forge kit, block families, Claude-written teacher scenes
-  app/          the two-stage pipeline: plan, write each beat, assemble, salvage
+  kit/          the Forge kit, the scene library, the hand-written teacher scenes
+  app/          one shot (oneshot.py), checks, voice, and the older two-stage pipeline
   serve/        the local web app (FastAPI + server-sent events)
   harness/      render + error classification
   evaluate/     held-out prompts, local and Gemini vision judges

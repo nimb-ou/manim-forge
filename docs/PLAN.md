@@ -11,6 +11,28 @@ things only Nimit can do.
 
 ---
 
+## Finish — 2026-10-08 (supersedes everything below; history in docs/HISTORY.md)
+
+**Engine (decided, measured):** one shot on Qwen3.5-9B, untuned, two
+retrieved library scenes, kit reference, arithmetic + layout checks, best of
+2, Kokoro narration. In-scope by eye 13 good / 5 partial / 2 bad; held-out
+8 / 8 / 4 (Kaggle, nf4). On the Mac: ~36 s to write a scene, ~50 s narrated
+end to end.
+
+| phase | when | done when | status |
+|---|---|---|---|
+| 1. Gallery | Oct 8, by 12:00Z | 14 candidates rendered through the app's path; 10 right by eye in docs/GALLERY.md | running |
+| 2. The app, end to end | Oct 8, by 14:00Z | forge.serve from the README steps; a job over HTTP and in the browser; narrated video plays; timed | — |
+| 3. Final numbers on the shipped engine | Oct 8, evening | in-scope + held-out on the Mac (MLX, best of 2), graded by eye; RESULTS.md and README updated | — |
+| 4. v1.0 | Oct 9 | STATE.md current, release notes, tag v1.0, CI green | — |
+| after: v1.1 (only if measured) | Oct 10+ | grow the library on weak topics (each checked scene helps retrieval at once); a fine-tune of the 9B only if it beats untuned by eye; public HF release only with Nimit's OK | — |
+
+**Rules:** no new data or training before v1.0. Every comparison is graded
+by eye on the same prompts and the same engine. Long jobs run under
+caffeinate, launched from bash, on AC power (`pmset -g batt`). The old
+launch agents (supervisor, pool, autopilot) are disabled
+(~/Library/LaunchAgents/manimforge-disabled/).
+
 ## Finish plan — 2026-10-07 (supersedes the 2026-09-29 finish plan below)
 
 ### Running now (kept current; the 2-hourly check reads this)

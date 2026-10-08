@@ -139,8 +139,11 @@ class Worker(threading.Thread):
         model, tok = self.oneshot
         opts = Options(max_beats=job.spec.beats, quality=job.spec.quality,
                        kit=True, narrate=job.spec.narrate)
+        # A second sample only when the first fails to render whole or shows
+        # an arithmetic slip or a layout problem: both of Qwen3.5-9B's
+        # in-scope failures in run 2 were render failures.
         res = run_oneshot(job.spec.prompt, model, tok, job.emit, opts,
-                          api=True)
+                          api=True, samples=2)
         self._log(job, res)
 
     def _log(self, job: Job, res) -> None:
