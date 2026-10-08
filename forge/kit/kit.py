@@ -208,6 +208,11 @@ class Stage:
         self._title = None
         self._caption = None
         self._objects: list = []
+        # Misuses the kit repaired silently (a dot where a plane belongs, a
+        # point outside its axes): counted into the beat's layout problems
+        # so a cleaner sample wins (forge/app/oneshot.score).
+        self._issues = 0
+        self._issues_at_mark = 0
 
     # text slots ---------------------------------------------------------
     def _text(self, s: str, size: int):
@@ -286,7 +291,12 @@ class Stage:
             return
         # Sized by what is on the frame: a sheared plane's grid runs far
         # past it and made the picture shrink to nothing.
-        sized = [m for m in tops if m.width < 16 and m.height < 10] or tops
+        # Nor by anything off the frame: a ball placed above its axes (y = 16
+        # on axes to 6) made the box huge and shrank a gradient-descent scene
+        # into a corner.
+        on_frame = [m for m in tops if abs(m.get_center()[0]) < 7.5
+                    and abs(m.get_center()[1]) < 4.5]
+        sized = [m for m in on_frame if m.width < 16 and m.height < 10] or on_frame or tops
         box = Group(*sized)
         lo, hi = box.get_left()[0], box.get_right()[0]
         if hi <= cx - w / 2 + 0.2 or lo >= cx + w / 2 - 0.2:
@@ -407,7 +417,9 @@ class Stage:
             self.scene.wait(short)
         self._t = getattr(self, "_t", []) + [float(self.scene.renderer.time)]
         print("BEAT_ENDS", self._t, file=_sys.stderr, flush=True)
-        self._layout = getattr(self, "_layout", []) + [layout_issues(self.scene)]
+        fresh = self._issues - self._issues_at_mark
+        self._issues_at_mark = self._issues
+        self._layout = getattr(self, "_layout", []) + [layout_issues(self.scene) + fresh]
         print("LAYOUT", self._layout, file=_sys.stderr, flush=True)
 
     def pause(self, seconds: float = 1.0):
@@ -957,7 +969,13 @@ def mark_point(stage: Stage, nl, x: float, y=None, color=YELLOW, label: str | No
     if y is not None:
         x = (x, y)
     if np.ndim(x) == 1 and hasattr(nl, "c2p"):          # a point on axes
-        d = Dot(nl.c2p(*list(x)[:2]), color=color)
+        px, py = list(x)[:2]
+        xr, yr = getattr(nl, "x_range", None), getattr(nl, "y_range", None)
+        if xr is not None and yr is not None and not (
+                min(xr[:2]) - 1e-9 <= px <= max(xr[:2]) + 1e-9
+                and min(yr[:2]) - 1e-9 <= py <= max(yr[:2]) + 1e-9):
+            stage._issues += 1          # drawn off its own axes
+        d = Dot(nl.c2p(px, py), color=color)
     elif np.ndim(x) == 1:                               # (x, y) on a number line
         d = Dot(nl.n2p(float(np.ravel(x)[0])), color=color)
     else:
@@ -1518,21 +1536,56 @@ def bayes_square(stage: Stage, prior: float = 0.01, sensitivity: float = 0.9,
 
 def gradient_descent(stage: Stage, ax, f, x0: float, lr: float = 0.2,
                      steps: int = 10, color=YELLOW):
-    """A ball stepping downhill on f by the slope, step by step."""
+    """A ball stepping downhill on f by the slope, step by step, leaving a
+    trail, with the tangent it reads at each step: the steps shrink as the
+    slope flattens, which is the whole idea."""
     _need(ax, "c2p", "the axes from draw_axes(stage)", "gradient_descent(stage, ax, f, x0)")
     # The valley itself: a ball stepping on bare axes ("the loss curve with a
-    # ball stepping downhill") showed a dot and no curve.
-    if not any(isinstance(o, ParametricFunction) for o in stage._objects):
+    # ball stepping downhill") showed a dot and no curve. A curve already on
+    # screen is reused rather than drawn twice.
+    graph = stage._last.get("graph")
+    if not (graph is not None and _on_screen(stage, graph)) and \
+            not any(isinstance(o, ParametricFunction) for o in stage._objects):
         plot_graph(stage, ax, f)
     h = 1e-4
-    x = x0
+    xr, yr = ax.x_range, ax.y_range
+    x = min(max(float(x0), xr[0]), xr[1])
+    # A start whose height is above the axes (x0 = -2 on (x - 1)^2 is 9, the
+    # axes stop at 6) is an invisible ball: walk the start downhill, along
+    # the curve, until it is on the axes, and count the repair.
+    if not (yr[0] <= f(x) <= yr[1]):
+        stage._issues += 1
+        for _ in range(200):
+            slope = (f(x + h) - f(x - h)) / (2 * h)
+            if yr[0] <= f(x) <= yr[1] or abs(slope) < 1e-9:
+                break
+            x = min(max(x - 0.02 * (xr[1] - xr[0]) * (1 if slope > 0 else -1), xr[0]), xr[1])
     ball = Dot(ax.c2p(x, f(x)), color=color, radius=0.12)
     stage.scene.play(GrowFromCenter(ball), run_time=0.5)
-    for _ in range(steps):
+    trail = VGroup()
+    tangent = None
+    for k in range(steps):
         slope = (f(x + h) - f(x - h)) / (2 * h)
-        x = x - lr * slope
-        stage.scene.play(ball.animate.move_to(ax.c2p(x, f(x))), run_time=0.4)
-    stage._objects.append(ball)
+        half = 0.6 / max(1.0, (1 + slope * slope) ** 0.5)
+        seg = Line(ax.c2p(x - half, f(x) - slope * half),
+                   ax.c2p(x + half, f(x) + slope * half), color=GREY_B,
+                   stroke_width=3)
+        new_x = min(max(x - lr * slope, xr[0]), xr[1])
+        ghost = Dot(ax.c2p(x, f(x)), color=color, radius=0.06, fill_opacity=0.5)
+        trail.add(ghost)
+        anims = [FadeIn(ghost, run_time=0.2)]
+        anims.append(Transform(tangent, seg) if tangent is not None else Create(seg))
+        stage.scene.play(*anims, run_time=0.35 if k < 4 else 0.2)
+        if tangent is None:
+            tangent = seg
+        stage.scene.play(ball.animate.move_to(ax.c2p(new_x, f(new_x))),
+                         run_time=0.45 if k < 4 else 0.25)
+        x = new_x
+        if abs(slope) < 1e-3:
+            break
+    if tangent is not None:
+        stage.scene.play(FadeOut(tangent), run_time=0.3)
+    stage._objects += [trail, ball]
     return ball
 
 
@@ -2294,6 +2347,17 @@ def _tolerant(f):
         if st is not None and slot and slot not in kw and \
                 (len(args) < 2 or not hasattr(args[1], _SLOTS[slot][0])):
             have = st._last.get(slot)
+            # Any coordinate system already on screen that can do the job
+            # (axes for a plane's c2p) before a fresh one: a fresh plane is a
+            # new picture and clears the screen -- draw_vector(stage, ball,
+            # ...) once wiped a gradient-descent scene's axes and curve.
+            if have is None or not _on_screen(st, have):
+                need = _SLOTS[slot][0]
+                have = next((m for k, m in st._last.items() if k in _SLOTS
+                             and m is not None and hasattr(m, need)
+                             and _on_screen(st, m)), have)
+            if len(args) >= 2:
+                st._issues += 1
             if have is None:
                 have = globals()[_SLOTS[slot][1]](st)
             # a wrong picture in the slot is replaced; data is shifted along
