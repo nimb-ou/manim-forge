@@ -113,6 +113,8 @@ def main() -> int:
     ap.add_argument("--api", action="store_true",
                     help="one-shot: put the kit reference in the system prompt")
     ap.add_argument("--k", type=int, default=2, help="one-shot: examples shown")
+    ap.add_argument("--base", default="", help="one-shot: base model (default "
+                    "forge.app.oneshot.BASE_MODEL)")
     ap.add_argument("--samples", type=int, default=1,
                     help="one-shot: render up to N samples, keep the best")
     ap.add_argument("--short", action="store_true",
@@ -160,7 +162,9 @@ def main() -> int:
     if a.oneshot:
         from forge.app.oneshot import run_oneshot
         from forge.app.pipeline import load
-        om, otok = load(None if a.coder in ("", "none") else a.coder)
+        from forge.app.oneshot import BASE_MODEL
+        om, otok = load(None if a.coder in ("", "none") else a.coder,
+                        base=a.base or BASE_MODEL)
         a.kit = True
     else:
         host = SwapHost(a.planner, a.coder)

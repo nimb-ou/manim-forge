@@ -42,6 +42,12 @@ ONESHOT_SYSTEM = (
     "stage.title, stage.caption, stage.label and stage.equation."
 )
 
+#: The one-shot engine's model (2026-10-08). Graded by eye on the in-scope
+#: set, untuned with retrieval and the kit reference, same engine: Qwen3.5-9B
+#: 13 good of 20, Qwen2.5-Coder-7B 10, the 7B fine-tuned for this task 6; on
+#: held-out topics 8 against 3 for the fine-tune (docs/RESULTS.md).
+BASE_MODEL = "mlx-community/Qwen3.5-9B-MLX-4bit"
+
 BEAT_LINE = re.compile(r"^\s*#\s*beat\s*(\d+)\s*[:.-]\s*(.*)$", re.I)
 SAY_LINE = re.compile(r"^\s*#\s*say\s*:\s*(.*)$", re.I)
 

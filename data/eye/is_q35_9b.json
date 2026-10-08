@@ -1,0 +1,83 @@
+{
+ "rubric": "Qwen3.5-9B (thinking off) same as is_p3_k8; untuned, kit API in prompt, 2 retrieved scenes, Kaggle T4 (transformers nf4)",
+ "01": [
+  "G",
+  "bars 'price' and '15% off', 80 x 0.85 = 68"
+ ],
+ "02": [
+  "G",
+  "A: 8, B: 7 new, ... H: 1 new on the complete graph, 36 = 9x8/2"
+ ],
+ "03": [
+  "G",
+  "triangle in its rectangle, h = 4, b = 7, 14 (clean)"
+ ],
+ "04": [
+  "G",
+  "6 triangles from the centre, 6 x 180 - 360 = 720"
+ ],
+ "05": [
+  "G",
+  "tree, HH lit, 1/4"
+ ],
+ "06": [
+  "P",
+  "60 right; '2 h / 0.5 h' bars and a 'naive 75' nobody asked for"
+ ],
+ "07": [
+  "B",
+  "render failed: unclosed bracket"
+ ],
+ "08": [
+  "G",
+  "triangle base 4 height 12, rectangles approach 24, 1/2 x 4 x 12 = 24"
+ ],
+ "09": [
+  "P",
+  "run 3 rise 9, m = 3 right; 'y = 3x - 1' wrong (3x - 5)"
+ ],
+ "10": [
+  "G",
+  "flour bars 4 -> 6 people, x1.5, 450 g"
+ ],
+ "11": [
+  "P",
+  "8 m2 right; invents two coats and 1.6 L"
+ ],
+ "12": [
+  "G",
+  "3, 4, 7, 9, 12 sorted, median 7"
+ ],
+ "13": [
+  "G",
+  "speed graph to (3, 30), area 1/2 x 3 x 30 = 45 m"
+ ],
+ "14": [
+  "B",
+  "render failed: api_misuse"
+ ],
+ "15": [
+  "P",
+  "3! = 6; shows CAT and TAC one at a time"
+ ],
+ "16": [
+  "G",
+  "i(2 + i) = 2i + i^2 = 2i - 1, arrow to -1 + 2i"
+ ],
+ "17": [
+  "G",
+  "r = 0.35 m wheel rolls one circumference, 2 pi x 0.35 = 2.2 m"
+ ],
+ "18": [
+  "G",
+  "balance, 4x = 16, x = 4"
+ ],
+ "19": [
+  "G",
+  "240 in tenths, 10% = 24, 5% = 12, 36"
+ ],
+ "20": [
+  "P",
+  "'times8 = 56' garbled; an area box"
+ ]
+}

@@ -9,3 +9,6 @@ if str(ROOT) not in sys.path:
 # the library (forge/kit/library.py), which on a busy Mac hung the suite.
 import os
 os.environ.setdefault("FORGE_RETRIEVAL", "tfidf")
+# The server defaults the library to "release" (held-out topics kept) when it
+# is imported; tests always see the evaluation library.
+os.environ["FORGE_LIBRARY"] = "eval"

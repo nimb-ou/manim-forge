@@ -17,12 +17,9 @@ things only Nimit can do.
 
 | job | where | started | expect |
 |---|---|---|---|
-| one-shot SFT v1 (`nimbou/manim-forge-oneshot-sft`) | Kaggle | Oct 6 22:20Z | finishing |
-| `scripts/queue/kaggle_eval_os1.sh`: when the SFT finishes, push `kaggle/oneshot_eval` (is_os1, held_os1, short_os1, is_os1_n3 on the T4), download into data/scorecard, judge with flash-lite | Mac (polls only) + Kaggle | Oct 7 05:40Z | ~3 h after the SFT ends |
-| `scripts/queue/inscope_base.sh`: flash-lite on is_p3_k8, is_p5_k8, is_os_base | Mac (network only) | — | finishing |
+| Qwen3.5-9B MLX download and first scene | Mac (on AC again) | Oct 8 08:00Z | minutes |
 
-**The Mac is on battery** (30% at 04:40Z, discharging; the user was asked to
-plug it in). Mac MLX runs were ~50× slower; nothing heavy runs on the Mac
+**The Mac was on battery** Oct 7 (30% at 04:40Z; back on AC Oct 8). Mac MLX runs were ~50× slower; nothing heavy runs on the Mac
 until it is on power. Evaluations go to Kaggle (`kaggle/oneshot_eval`).
 Launch Mac background jobs from bash, not zsh: zsh's `bg_nice` runs `&`
 jobs at nice 5.
@@ -54,6 +51,17 @@ trained with the old guard, so both saw 3 such scenes (the CLT prompt is
 
 **The decision rule for v1.0:** ship whichever engine wins on the in-scope
 set by eye plus scene judge, held-out reported as measured.
+
+**Oct 8, 13:00 IST: v1.0's engine is chosen.** Run 2 (RESULTS.md):
+Qwen3.5-9B untuned, with retrieval and the kit reference, 13 / 5 / 2
+in-scope and 8 / 8 / 4 held-out by eye, against 10 / 8 / 2 for the untuned
+7B and 6 / 10 / 4 (held-out 3 / 4 / 13) for the fine-tune, all on one
+engine. v1.0 ships `forge.app.oneshot.BASE_MODEL` =
+mlx-community/Qwen3.5-9B-MLX-4bit, no adapter. **Remaining to v1.0:**
+(1) Qwen3.5-9B on the Mac (MLX): speed and a scene; (2) best-of-2 in the
+app for render failures; (3) the web app end to end, timed, narrated;
+(4) gallery of 10 by eye; (5) README rewritten with these numbers;
+(6) tag v1.0.
 
 **Oct 7, 21:00 IST: the fine-tune did not help.** One-shot v1 (RAFT SFT,
 eval loss 0.186) scored on Kaggle, graded by eye on the same 16 in-scope

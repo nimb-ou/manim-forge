@@ -838,3 +838,31 @@ v1 is about where the old pipeline was (3 of 20 clearly right): with no
 nearby scene there is nothing to adapt. Not yet separated: the engine
 (transformers nf4 vs MLX 4-bit), which run 2 on Kaggle measures by
 scoring the untuned base there too, beside Qwen3.5-9B untuned.
+
+### Run 2: which base model, untuned · 2026-10-08
+
+Same engine for every row (Kaggle T4, transformers nf4), same prompts:
+untuned, kit reference in the system prompt, the two nearest library
+scenes, greedy, one sample. By eye:
+
+| model | in-scope G | P | B | held-out G | P | B |
+|---|---|---|---|---|---|---|
+| Qwen2.5-Coder-7B, fine-tuned (one-shot v1, no reference) | 6 | 10 | 4 | 3 | 4 | 13 |
+| Qwen2.5-Coder-7B, untuned | 10 | 8 | 2 | — | | |
+| **Qwen3.5-9B, untuned** (thinking off) | **13** | 5 | 2 | **8** | 8 | 4 |
+
+The engine matters: on the same 16 prompts the untuned 7B had 12 good on
+the Mac (MLX 4-bit) and 7 here (nf4). Comparisons above are within one
+engine. Within it, the fine-tune is the worst row, and the newer base model
+the best, mainly on the maths: the area under 3x is 24 (the 7B wrote 16),
+i(2 + i) = 2i + i² = −1 + 2i, 45 m read off the speed graph, the hexagon by
+six triangles less 360°. Held-out is where the gap is widest: 8 clearly
+right of 20 (least squares, merge sort, half-life, tip-to-tail, Fibonacci
+→ φ, a determinant-zero collapse, dice sums turning into a bell) against 3.
+Both of its in-scope failures are render failures (an unclosed bracket, an
+API misuse), the kind best-of-N sampling recovers.
+
+**Decision for v1.0:** the one shot on **Qwen3.5-9B, untuned**, with
+retrieval, the kit reference and the checks. Fine-tuning is a v1.1
+question, and the evidence so far says a narrow SFT costs this task more
+than it gives.

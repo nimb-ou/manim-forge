@@ -45,7 +45,7 @@ def test_oneshot_job_runs_the_oneshot_engine(tmp_path, monkeypatch):
 
     monkeypatch.setattr(srv, "SESSIONS", tmp_path)
     monkeypatch.setattr(srv.worker, "oneshot", None)
-    monkeypatch.setattr(pipeline, "load", lambda adapter=None: ("model", "tok"))
+    monkeypatch.setattr(pipeline, "load", lambda adapter=None, base=None: ("model", "tok"))
     seen = {}
 
     def fake_oneshot(req, model, tok, emit, opts, api=False, **kw):

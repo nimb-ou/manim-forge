@@ -1,0 +1,83 @@
+{
+ "rubric": "Qwen2.5-Coder-7B same as is_p3_k8; untuned, kit API in prompt, 2 retrieved scenes, Kaggle T4 (transformers nf4)",
+ "01": [
+  "B",
+  "copies VAT from its example: '\u00a381.60 after discount and VAT'"
+ ],
+ "02": [
+  "G",
+  "complete graph on 9, 8+7+...+1 = 36, 9x8/2"
+ ],
+ "03": [
+  "P",
+  "14 right; the outside pieces overlap into a mess"
+ ],
+ "04": [
+  "G",
+  "hexagon cut into 4 triangles, 4 x 180 = 720"
+ ],
+ "05": [
+  "G",
+  "tree, HH lit, 1/4"
+ ],
+ "06": [
+  "P",
+  "150/2.5 = 60 right; bare number line"
+ ],
+ "07": [
+  "G",
+  "twelfths bars 9/12 + 2/12 = 11/12"
+ ],
+ "08": [
+  "B",
+  "'1/3 x 4 x 12 = 16' beside 'rectangles approach 24'"
+ ],
+ "09": [
+  "G",
+  "run 3, rise 9, m = 3, y = 3x - 5 through both points"
+ ],
+ "10": [
+  "P",
+  "450 g as text; no picture"
+ ],
+ "11": [
+  "P",
+  "8 m2 right; invents two coats and 1.6 L"
+ ],
+ "12": [
+  "G",
+  "sorted on a line, middle three lit, 7"
+ ],
+ "13": [
+  "P",
+  "45 m right; '1/2 x 5 x 3^2 = 45' slip"
+ ],
+ "14": [
+  "P",
+  "P' = (-y, x) but no coordinates; a stray arrow"
+ ],
+ "15": [
+  "G",
+  "tree of arrangements, 3! = 6"
+ ],
+ "16": [
+  "P",
+  "arrow turned to -1 + 2i, never labelled"
+ ],
+ "17": [
+  "G",
+  "2 pi x 0.35 = 2.2 m per turn, the roll drawn (extra wheels after)"
+ ],
+ "18": [
+  "G",
+  "balance with x-blocks, 4x = 16, x = 4"
+ ],
+ "19": [
+  "G",
+  "240 in tenths, 10% = 24, 5% = 12, 15% = 36"
+ ],
+ "20": [
+  "P",
+  "'56 squares' in an empty square, no grid"
+ ]
+}

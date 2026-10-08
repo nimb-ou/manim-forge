@@ -49,8 +49,10 @@ KIT_DEFAULT = CODER == KIT_CODER
 # One shot (forge/app/oneshot.py): the whole scene in one call, adapted from
 # the nearest hand-written scenes. Used when its adapter exists and ENGINE
 # says so; "twostage" is the planner + per-beat coder above.
-ONESHOT = ROOT / "adapters" / "mlx-oneshot"
-ENGINE = "oneshot"     # 2026-10-07: 12 of 16 in-scope right by eye, untuned, vs 0 of 20
+# The one shot runs untuned on oneshot.BASE_MODEL (Qwen3.5-9B) with the kit
+# reference in its prompt: 13 of 20 in-scope right by eye, against 0 for the
+# two-stage pipeline and 6 for the one-shot fine-tune (docs/RESULTS.md).
+ENGINE = "oneshot"
 
 
 class JobIn(BaseModel):
@@ -132,13 +134,13 @@ class Worker(threading.Thread):
             self.host = None
             job.emit({"stage": "loading", "note": "loading the model "
                       "(once per server start, ~20 s)"})
-            trained = (ONESHOT / "adapters.safetensors").exists()
-            self.oneshot = (*load(str(ONESHOT) if trained else None), trained)
-        model, tok, trained = self.oneshot
+            from forge.app.oneshot import BASE_MODEL
+            self.oneshot = load(None, base=BASE_MODEL)
+        model, tok = self.oneshot
         opts = Options(max_beats=job.spec.beats, quality=job.spec.quality,
                        kit=True, narrate=job.spec.narrate)
         res = run_oneshot(job.spec.prompt, model, tok, job.emit, opts,
-                          api=not trained)
+                          api=True)
         self._log(job, res)
 
     def _log(self, job: Job, res) -> None:

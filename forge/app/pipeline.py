@@ -107,26 +107,32 @@ PLAN_DECODE = {"temp": 0.5, "rep_penalty": 1.1}
 Emit = Callable[[dict], None]
 
 
-def load(adapter: str | None):
+def load(adapter: str | None, base: str = MODEL):
     from mlx_lm import load as mlx_load
-    return mlx_load(MODEL, **({"adapter_path": adapter} if adapter else {}))
+    return mlx_load(base, **({"adapter_path": adapter} if adapter else {}))
+
+
+_THINK = re.compile(r"<think>.*?(?:</think>|$)", re.S)
 
 
 def ask(model, tok, system: str, user: str, max_tokens: int,
         temp: float = 0.0, rep_penalty: float = 0.0) -> str:
     from mlx_lm import generate
     from mlx_lm.sample_utils import make_logits_processors, make_sampler
-    chat = tok.apply_chat_template(
-        [{"role": "system", "content": system},
-         {"role": "user", "content": user}],
-        add_generation_prompt=True, tokenize=False)
+    msgs = [{"role": "system", "content": system},
+            {"role": "user", "content": user}]
+    # Qwen3.x reasons in a <think> block unless told not to; the scene is the
+    # answer. Other templates ignore the flag.
+    chat = tok.apply_chat_template(msgs, add_generation_prompt=True,
+                                   tokenize=False, enable_thinking=False)
     procs = (make_logits_processors(repetition_penalty=rep_penalty,
                                     repetition_context_size=256)
              if rep_penalty else None)
-    return generate(model, tok, prompt=chat, max_tokens=max_tokens,
+    out = generate(model, tok, prompt=chat, max_tokens=max_tokens,
                     sampler=make_sampler(temp=temp,
                                          top_p=0.95 if temp else 0.0),
                     logits_processors=procs, verbose=False)
+    return _THINK.sub("", out).strip()
 
 
 def plan(model, tok, request: str, stride: int, max_beats: int,

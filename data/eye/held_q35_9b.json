@@ -1,0 +1,83 @@
+{
+ "rubric": "Qwen3.5-9B same as is_p3_k8; untuned, kit API in prompt, 2 retrieved scenes, Kaggle T4 (transformers nf4); held-out topics, guarded library",
+ "01": [
+  "P",
+  "halving bars fit in gaps; '1/2 + 1/3 + ... > 1' does not show divergence"
+ ],
+ "02": [
+  "G",
+  "stretch by 2, then by 3, is a stretch by 6; slope of outer times slope of inner"
+ ],
+ "03": [
+  "P",
+  "identity, scale, combined matrix product right; the picture never moves"
+ ],
+ "04": [
+  "P",
+  "pick 1, host opens 3, switch wins 2/3: right, drawn on a dice grid"
+ ],
+ "05": [
+  "B",
+  "empty axes and the limit formula"
+ ],
+ "06": [
+  "B",
+  "complex logs and angles, not the idea asked"
+ ],
+ "07": [
+  "P",
+  "365/365 x 364/365 ..., 23 people, P > 0.507: right; circles only"
+ ],
+ "08": [
+  "P",
+  "mean line and the formula; the data points all sit at 0"
+ ],
+ "09": [
+  "G",
+  "a guess, its errors, the best-fit line, minimise squared errors"
+ ],
+ "10": [
+  "G",
+  "bars split to singles and merged back sorted"
+ ],
+ "11": [
+  "B",
+  "garbled paths"
+ ],
+ "12": [
+  "B",
+  "render failed"
+ ],
+ "13": [
+  "P",
+  "secant slope 1, tangent parallel at c = 0.5 for x^2; garbled text later"
+ ],
+ "14": [
+  "G",
+  "decay curve halving 10 -> 5 -> 2.5, N0 (1/2)^(t/T), shorter half-life faster"
+ ],
+ "15": [
+  "G",
+  "(2,1) + (1,3) = (3,4) drawn tip to tail"
+ ],
+ "16": [
+  "P",
+  "the proof right as text; squares mean nothing"
+ ],
+ "17": [
+  "G",
+  "Fibonacci bars, ratios converging to 1.618, phi^2 - phi - 1 = 0"
+ ],
+ "18": [
+  "P",
+  "sines summing to a pulse; coefficient formula"
+ ],
+ "19": [
+  "G",
+  "unit square flattened to area 0, det = 0"
+ ],
+ "20": [
+  "G",
+  "one die flat, two triangular, three a smoother bell"
+ ]
+}
