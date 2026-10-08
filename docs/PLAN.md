@@ -11,6 +11,24 @@ things only Nimit can do.
 
 ---
 
+## v1.5 — after Nimit tried v1.0 (2026-10-08)
+
+His try ("how gradient descent works?") showed the gaps: a kit "repair"
+wiped the axes and curve, the ball sat off the graph, no steps were shown,
+and the explanation said what happens but not why. Phases, each with a
+by-eye gate on the same prompts. **Dev set:** 30 real-world requests
+(`world_prompts.json`). **Test set:** 20 fresh requests
+(`fresh_prompts.json`), never looked at until the end.
+
+| phase | what | result |
+|---|---|---|
+| 1. real-world set | 30 requests, v1.0 graded | **17 good / 10 partial / 3 bad** |
+| 2. what and how to explain | a `# plan:` lesson plan first; Qwen3.5 thinking | plan **19 / 9 / 2** (kept, on in the app); thinking used its whole budget and wrote nothing (0 of 9) — dropped |
+| 3. visuals and code | kit: no silent scene-wiping repairs; repairs, off-axes points, clipped curves, off-frame arrows counted as problems; gradient descent shows its steps | running (`world_kit`) |
+| 4. smarter examples | checked scenes for weak topics; batch 138 (learning rate, neuron, projectile, momentum, amplitude/frequency, divide by zero) | in the library (966 scenes) |
+| 5. training, done right | fine-tune Qwen3.5-9B on its own best outputs (filtered by render, checks, judge, eye); Kaggle quota resets ~Oct 10 | must beat untuned on the dev set by eye |
+| release v1.5 | fresh test set, v1.0 vs v1.5 side by side, by eye | ~Oct 14 |
+
 ## Finish — 2026-10-08 (supersedes everything below; history in docs/HISTORY.md)
 
 **Engine (decided, measured):** one shot on Qwen3.5-9B, untuned, two
