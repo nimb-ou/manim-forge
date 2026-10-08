@@ -50,14 +50,21 @@ def main() -> int:
     t0 = time.time()
     model, tok = load(None, base=BASE_MODEL)
     print(f"model loaded in {time.time() - t0:.0f} s", flush=True)
+    # --retry 06 09 ...: those scenes again from sampled (not greedy) answers,
+    # best of 3 by score(), for candidates that were wrong by eye.
+    retry = sys.argv[sys.argv.index("--retry") + 1:] if "--retry" in sys.argv else []
     for i, prompt in enumerate(PROMPTS, 1):
         slug = f"{i:02d}-" + re.sub(r"[^a-z0-9]+", "-", prompt.lower())[:40].strip("-")
-        if slug in runs and runs[slug].get("ok"):
+        if retry and f"{i:02d}" not in retry:
+            continue
+        if not retry and slug in runs and runs[slug].get("ok"):
             continue
         t1 = time.time()
+        import mlx.core as mx
+        mx.random.seed(7 + i)
         res = run_oneshot(prompt, model, tok, opts=Options(
             kit=True, narrate=True, mark_beats=True, quality="medium"),
-            api=True, samples=2)
+            api=True, samples=3 if retry else 2, greedy_first=not retry)
         row = {"prompt": prompt, "ok": res.ok, "seconds": round(time.time() - t1),
                "beats": [b.intent for b in res.beats], "error": res.error,
                "notes": res.notes, "video_s": res.duration}
@@ -65,6 +72,8 @@ def main() -> int:
             shutil.copy(res.video, out / f"{slug}.mp4")
             contact_sheet(res.video, out / f"{slug}.jpg", times=res.beat_ends)
             (out / f"{slug}.py").write_text(res.code.split("def construct(self):", 1)[-1])
+        if retry:
+            row["retry"] = True
         runs[slug] = row
         runs_path.write_text(json.dumps(runs, indent=1, ensure_ascii=False))
         print(f"[{i}/{len(PROMPTS)}] ok={res.ok} {row['seconds']} s "

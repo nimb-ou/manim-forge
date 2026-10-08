@@ -115,7 +115,7 @@ def score(res) -> tuple:
 def run_oneshot(request: str, model, tok, emit=lambda e: None, opts=None,
                 harness=None, api: bool = False, k: int = 2,
                 max_tokens: int = 2400, exclude: set[str] | None = None,
-                samples: int = 1, temp: float = 0.7):
+                samples: int = 1, temp: float = 0.7, greedy_first: bool = True):
     """Generate, parse, assemble and render as the pipeline does.
 
     With ``samples`` > 1 the first sample is greedy and the rest are drawn
@@ -132,7 +132,7 @@ def run_oneshot(request: str, model, tok, emit=lambda e: None, opts=None,
         emit({"stage": "plan", "status": "start",
               **({"note": f"sample {n + 1} of {samples}"} if samples > 1 else {})})
         reply = ask(model, tok, system, user, max_tokens=max_tokens,
-                    temp=temp if n else 0.0)
+                    temp=temp if (n or not greedy_first) else 0.0)
         beats, bodies = parse_scene(reply)
         emit({"stage": "plan", "status": "done", "n": len(beats),
               "elapsed": round(time.time() - t0, 1)})

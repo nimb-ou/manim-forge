@@ -1,0 +1,227 @@
+{
+ "01-a-jacket-costs-80-and-is-15-off-what-do": {
+  "prompt": "a jacket costs £80 and is 15% off. what do you pay?",
+  "ok": true,
+  "seconds": 47,
+  "beats": [
+   "A bar for the £80 price",
+   "15% cut off: £12 removed in red, £68 left",
+   "The bars beside 80 × 0.85 = 68"
+  ],
+  "error": "",
+  "notes": [
+   "sample 1/2: score (True, 1.0, 0, 0, True)"
+  ],
+  "video_s": 12.166667
+ },
+ "02-if-9-people-all-shake-hands-with-each-ot": {
+  "prompt": "if 9 people all shake hands with each other, how many handshakes is that?",
+  "ok": true,
+  "seconds": 53,
+  "beats": [
+   "Nine people as dots in a circle, labelled A to I",
+   "A's eight handshakes drawn as lines to everyone else",
+   "All 36 lines between the nine people drawn",
+   "The picture beside 9 × 8 ÷ 2 = 36"
+  ],
+  "error": "",
+  "notes": [
+   "sample 1/2: score (True, 1.0, 0, 0, True)"
+  ],
+  "video_s": 24.666667
+ },
+ "03-why-do-the-angles-of-a-hexagon-add-up-to": {
+  "prompt": "why do the angles of a hexagon add up to 720 degrees?",
+  "ok": true,
+  "seconds": 40,
+  "beats": [
+   "A regular hexagon",
+   "Lines from one corner splitting the hexagon into 4 triangles",
+   "The equation 4 × 180° = 720°, 720° ÷ 6 = 120° beside the hexagon"
+  ],
+  "error": "",
+  "notes": [
+   "sample 1/2: score (True, 1.0, 0, 0, True)"
+  ],
+  "video_s": 29.6
+ },
+ "04-how-do-you-add-3-4-and-1-6": {
+  "prompt": "how do you add 3/4 and 1/6?",
+  "ok": true,
+  "seconds": 107,
+  "beats": [
+   "Two bars: one cut in quarters with 3 shaded, one cut in sixths with 1 shaded",
+   "Both bars re-cut into twelfths: 3/4 becomes 9/12, 1/6 becomes 2/12",
+   "One bar of twelve twelfths with 9 blue and 2 orange shaded: 11/12"
+  ],
+  "error": "",
+  "notes": [
+   "sample 1/2: score (True, 1.0, 0, 0, True)"
+  ],
+  "video_s": 22.733333
+ },
+ "05-find-the-area-under-y-3x-from-0-to-4": {
+  "prompt": "find the area under y = 3x from 0 to 4",
+  "ok": true,
+  "seconds": 84,
+  "beats": [
+   "Axes with y = 3x from 0 to 4",
+   "The region under the line from 0 to 4 shaded: a triangle",
+   "Rectangles under the line close in on the triangle",
+   "Half base times height equals the integral"
+  ],
+  "error": "",
+  "notes": [
+   "sample 1/2: score (True, 1.0, 0, 0, True)"
+  ],
+  "video_s": 25.333008
+ },
+ "06-what-does-multiplying-by-i-do-to-the-poi": {
+  "prompt": "what does multiplying by i do to the point 2 + i?",
+  "ok": true,
+  "seconds": 43,
+  "beats": [
+   "The complex plane with the point 2 + i marked",
+   "The plane turns a quarter turn counter-clockwise, landing 2 + i at -1 + 2i",
+   "The result is a 180-degree flip relative to the start, revealing that i squared is -1"
+  ],
+  "error": "",
+  "notes": [
+   "sample 1/3: score (True, 1.0, 0, 0, True)"
+  ],
+  "video_s": 22.566667,
+  "retry": true
+ },
+ "07-what-s-the-chance-of-two-heads-when-you": {
+  "prompt": "what's the chance of two heads when you flip two coins?",
+  "ok": true,
+  "seconds": 65,
+  "beats": [
+   "A tree: start splitting into H and T, each splitting again into H and T, four ends HH, HT, TH, TT",
+   "The ends HH and TT stay dim, while HT and TH light up green",
+   "The tree beside P(two heads) = 1/4"
+  ],
+  "error": "",
+  "notes": [
+   "sample 1/2: score (True, 1.0, 0, 0, True)"
+  ],
+  "video_s": 20.366667
+ },
+ "08-solve-4x-3-19-using-a-balance": {
+  "prompt": "solve 4x + 3 = 19 using a balance",
+  "ok": true,
+  "seconds": 92,
+  "beats": [
+   "A balance with four x-boxes and 3 unit blocks on the left, 19 unit blocks on the right",
+   "Three unit blocks removed from each side, leaving four x-boxes against 16",
+   "The 16 weights split into 4 groups of 4, one per box, beside x = 4"
+  ],
+  "error": "",
+  "notes": [
+   "sample 1/2: score (True, 1.0, 0, 0, True)"
+  ],
+  "video_s": 19.0
+ },
+ "09-why-is-the-area-of-a-circle-pi-r-squared": {
+  "prompt": "why is the area of a circle pi r squared?",
+  "ok": true,
+  "seconds": 80,
+  "beats": [
+   "A circle of radius 2 cut into 8 alternating slices",
+   "The slices laid tip-to-tip to form a rough parallelogram",
+   "The shape approximates a rectangle with height r and width πr",
+   "Label the height as r and the width as πr",
+   "Calculate the area by multiplying width and height"
+  ],
+  "error": "",
+  "notes": [
+   "sample 1/3: score (True, 1.0, 0, 0, True)"
+  ],
+  "video_s": 37.3,
+  "retry": true
+ },
+ "10-what-does-a-2x2-matrix-do-to-the-plane": {
+  "prompt": "what does a 2x2 matrix do to the plane?",
+  "ok": true,
+  "seconds": 362,
+  "beats": [
+   "The identity grid with i-hat and j-hat",
+   "The matrix [[2, 1], [0.5, 1.5]] distorting the plane and the square",
+   "The matrix displayed on the right, matching the new edges of the transformed square",
+   "The determinant calculated and the area updated to 2.5"
+  ],
+  "error": "",
+  "notes": [
+   "set-up built eq",
+   "sample 1/3: score (True, 1.0, 0, -3, True)"
+  ],
+  "video_s": 40.266667,
+  "retry": true
+ },
+ "11-the-derivative-as-the-slope-of-the-tange": {
+  "prompt": "the derivative as the slope of the tangent line",
+  "ok": true,
+  "seconds": 77,
+  "beats": [
+   "A hill-shaped curve peaking at x = 2",
+   "A tangent sliding up the hill, its slope falling to zero",
+   "The tangent sliding down the far side, its slope negative",
+   "A flat yellow line resting on the peak"
+  ],
+  "error": "",
+  "notes": [
+   "sample 1/2: score (True, 1.0, 0, 0, True)"
+  ],
+  "video_s": 24.7
+ },
+ "12-how-far-does-a-bike-wheel-with-a-35-cm-r": {
+  "prompt": "how far does a bike wheel with a 35 cm radius roll in one turn?",
+  "ok": true,
+  "seconds": 383,
+  "beats": [
+   "A blue wheel of radius 0.35 m sits on the ground with a red mark at the bottom",
+   "The wheel rolls one full turn to the right until the red mark touches the ground again",
+   "A brace measures the distance traveled, showing it equals 2πr which is about 2.2 meters"
+  ],
+  "error": "",
+  "notes": [
+   "removed 3 lines using draw_dot, which nothing builds",
+   "sample 3/3: score (True, 1.0, 0, 0, True)"
+  ],
+  "video_s": 32.066667,
+  "retry": true
+ },
+ "13-fitting-a-straight-line-to-data-with-lea": {
+  "prompt": "fitting a straight line to data with least squares",
+  "ok": true,
+  "seconds": 91,
+  "beats": [
+   "The data points and a random guess",
+   "Rotate the guess line to minimize vertical error",
+   "The least squares line balances the errors perfectly",
+   "The math behind the magic"
+  ],
+  "error": "",
+  "notes": [
+   "sample 1/3: score (True, 1.0, 0, 0, True)"
+  ],
+  "video_s": 31.066016,
+  "retry": true
+ },
+ "14-why-does-a-stretched-spring-pull-back-ha": {
+  "prompt": "why does a stretched spring pull back harder the further you pull it?",
+  "ok": true,
+  "seconds": 90,
+  "beats": [
+   "A spring at rest and a hand pulling it to a new position",
+   "The spring stretches more, so the gap between the hand and the rest point grows",
+   "A red arrow appears pointing back at the hand, growing longer as the stretch grows"
+  ],
+  "error": "",
+  "notes": [
+   "sample 1/3: score (True, 1.0, 0, 0, True)"
+  ],
+  "video_s": 22.933333,
+  "retry": true
+ }
+}

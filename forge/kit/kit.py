@@ -143,11 +143,15 @@ def layout_issues(scene) -> int:
     """Text that collides with other text, plus anything off the frame, on
     screen now. A cheap, automatic stand-in for "is this frame readable",
     printed at every beat mark so the one-shot generator can prefer the
-    cleanest of several samples (forge/app/oneshot.py)."""
+    cleanest of several samples (forge/app/oneshot.py).
+
+    A frame with no picture at all -- only a title, captions or an equation
+    -- also counts, twice: a gallery scene of the circle's area drew one
+    circle and then captioned three empty screens (2026-10-08)."""
     from manim import (DecimalNumber, Integer, MathTex, MarkupText, Tex,
                        Text)
     kinds = (Text, MathTex, Tex, MarkupText, DecimalNumber, Integer)
-    texts, seen = [], set()
+    texts, seen, drawn = [], set(), [0]
 
     def walk(m):
         if id(m) in seen:
@@ -157,6 +161,13 @@ def layout_issues(scene) -> int:
             if m.get_fill_opacity() > 0.05 and m.width > 1e-3:
                 texts.append(m)
             return
+        if not m.submobjects:
+            try:          # a bare Mobject has neither attribute
+                visible = max(m.get_fill_opacity() or 0, m.get_stroke_opacity() or 0)
+            except AttributeError:
+                visible = 0
+            if visible > 0.05 and max(m.width, m.height) > 0.05:
+                drawn[0] += 1
         for sub in m.submobjects:
             walk(sub)
     for m in scene.mobjects:
@@ -177,6 +188,8 @@ def layout_issues(scene) -> int:
         if m.width > 1e-3 and (abs(m.get_left()[0]) > 7.3 or abs(m.get_right()[0]) > 7.3
                                or abs(m.get_top()[1]) > 4.15 or abs(m.get_bottom()[1]) > 4.15):
             bad += 1
+    if not drawn[0]:
+        bad += 2
     return bad
 
 
