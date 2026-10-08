@@ -57,3 +57,23 @@ def test_score_prefers_whole_clean_renders():
                   layout=[0, 0, 0, 0])
     assert score(clean) > score(messy) > score(short) > score(failed)
     assert score(clean) > score(slip) and score(messy) > score(slip)
+
+
+def test_the_panel_ends_on_the_winning_sample(monkeypatch):
+    from forge.app import oneshot, pipeline
+    replies = iter(["# beat 1: first try\nstage.title('a')",
+                    "# beat 1: second try\nstage.title('b')"])
+    monkeypatch.setattr(pipeline, "ask", lambda *a, **k: next(replies))
+
+    def fake_finish(request, beats, bodies, *a, **k):
+        first = beats[0].intent == "first try"
+        return pipeline.Result(request, beats, bodies, ok=first,
+                               layout=[1] if first else [])
+    monkeypatch.setattr(pipeline, "finish", fake_finish)
+    events = []
+    res = oneshot.run_oneshot("r", None, None, events.append, samples=2)
+    assert res.beats[0].intent == "first try"
+    last_plan = [e["beat"]["intent"] for e in events
+                 if e.get("stage") == "plan" and "beat" in e][-1]
+    assert last_plan == "first try"
+    assert any(e.get("reset") for e in events)

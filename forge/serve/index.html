@@ -129,7 +129,7 @@ details pre {
 <div class="wrap">
   <header>
     <h1>Manim Forge</h1>
-    <span class="tag">a request in plain English, planned, coded and rendered on this Mac</span>
+    <span class="tag">a request in plain English, written, rendered and narrated on this Mac</span>
     <span class="health" id="health">…</span>
   </header>
 
@@ -200,7 +200,8 @@ function note(text, bad) {
 async function health() {
   try {
     const h = await (await fetch("/api/health")).json();
-    $("health").textContent = `${h.planner} + ${h.coder} · ${h.model_loaded ? "model loaded" : "model loads on first run"}${h.queued ? " · " + h.queued + " queued" : ""}`;
+    const what = h.engine === "oneshot" ? `${h.model.split("/").pop()} · one shot` : `${h.planner} + ${h.coder}`;
+    $("health").textContent = `${what} · ${h.model_loaded ? "model loaded" : "model loads on first run"}${h.queued ? " · " + h.queued + " queued" : ""}`;
   } catch { $("health").textContent = "server not reachable"; }
 }
 health(); setInterval(health, 10000);
@@ -224,6 +225,7 @@ $("form").onsubmit = async (ev) => {
     if (e.stage !== current && STAGES.includes(e.stage)) { current = e.stage; stagePills(current); }
     if (e.stage === "queued" && e.position) $("player").textContent = `Queued behind ${e.position} job(s)…`;
     if (e.stage === "loading") $("player").textContent = e.note;
+    if (e.stage === "plan" && e.reset) $("beats-list").innerHTML = "";
     if (e.stage === "plan" && e.beat) {
       const b = e.beat, li = document.createElement("li");
       li.className = "beat"; li.dataset.n = b.n;

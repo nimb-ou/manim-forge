@@ -235,7 +235,8 @@ def sessions(limit: int = 20) -> list[dict]:
 
 @app.get("/api/health")
 def health() -> dict:
-    return {"ok": True, "model_loaded": worker.host is not None,
+    return {"ok": True, "model_loaded": worker.host is not None or worker.oneshot is not None,
             "queued": worker.q.qsize(),
             "planner": PLANNER.name, "coder": CODER.name, "kit": KIT_DEFAULT,
-            "engine": ENGINE}
+            "engine": ENGINE, "model": __import__("forge.app.oneshot",
+                                                   fromlist=["BASE_MODEL"]).BASE_MODEL}

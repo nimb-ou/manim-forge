@@ -128,20 +128,34 @@ def run_oneshot(request: str, model, tok, emit=lambda e: None, opts=None,
     system = system_prompt(api)
     user = user_prompt(request, k, exclude=exclude)
     best = None
+
+    def show(beats, bodies, reset=False):
+        if reset:
+            emit({"stage": "plan", "reset": True})
+        for b in beats:
+            emit({"stage": "plan", "beat": {"n": b.n, "seconds": None,
+                                            "intent": b.intent,
+                                            "narration": b.narration}})
+        for b, body in zip(beats, bodies):
+            emit({"stage": "code", "beat": b.n, "intent": b.intent, "code": body})
+
     for n in range(samples):
         emit({"stage": "plan", "status": "start",
               **({"note": f"sample {n + 1} of {samples}"} if samples > 1 else {})})
         reply = ask(model, tok, system, user, max_tokens=max_tokens,
                     temp=temp if (n or not greedy_first) else 0.0)
         beats, bodies = parse_scene(reply)
+        # The app lists beats from plan events and fills them from code
+        # events; a new sample clears the list ("reset") and shows its own.
+        if n:
+            emit({"stage": "assemble", "note": f"sample {n} was not clean; "
+                  f"trying sample {n + 1}"})
+        show(beats, bodies, reset=n > 0)
         emit({"stage": "plan", "status": "done", "n": len(beats),
               "elapsed": round(time.time() - t0, 1)})
         if not beats:
             res = Result(request, [], [], code=reply, error="no beats")
         else:
-            for b, body in zip(beats, bodies):
-                emit({"stage": "code", "beat": b.n, "intent": b.intent,
-                      "code": body})
             res = finish(request, beats, bodies, model, tok, system, opts,
                          emit if samples == 1 else (lambda e: None),
                          harness, t0, [])
@@ -151,6 +165,9 @@ def run_oneshot(request: str, model, tok, emit=lambda e: None, opts=None,
             best = res
         if best.ok and score(best)[1:4] == (1, 0, 0):
             break
+    if samples > 1 and best is not res and best.beats:
+        # An earlier sample won: show its beats, not the last one tried.
+        show(best.beats, best.bodies, reset=True)
     if samples > 1:
         emit({"stage": "done", "ok": best.ok, "video": best.video,
               "duration": best.duration, "error": best.error,

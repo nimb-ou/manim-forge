@@ -78,7 +78,10 @@ export PATH="/Library/TeX/texbin:$PATH"
 ./.venv/bin/python -m forge.serve     # http://127.0.0.1:8765
 ```
 
-The model (~6 GB) downloads on the first request.
+The model (~6 GB) downloads on the first request and loads in ~20 s after
+that. Tested Oct 8 from these steps in the browser: a narrated scene in
+**~45–50 s**, or **~3 min** when the first sample fails a check and a second
+is drawn.
 
 Tests and invariants:
 
