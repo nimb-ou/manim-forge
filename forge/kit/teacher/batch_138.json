@@ -1,0 +1,132 @@
+[
+ {
+  "request": "why does the learning rate matter in gradient descent?",
+  "beats": [
+   {
+    "intent": "The loss curve (x - 2)^2 on axes, the minimum at x = 2",
+    "narration": "Here is a loss curve, the square of x minus two. Its lowest point is at two.",
+    "code": "stage.title(\"The learning rate\")\nax = draw_axes(stage, x_range=(-1, 5), y_range=(0, 9))\nf = lambda x: (x - 2) ** 2\ng = plot_graph(stage, ax, f, label=\"loss\")\nlow = mark_point(stage, ax, 2, 0, color=GREEN, label=\"minimum\")"
+   },
+   {
+    "intent": "A small rate, 0.1: the ball creeps down in many short steps",
+    "narration": "With a small learning rate, nought point one, each step is a tenth of the slope. The ball creeps down: safe, but slow.",
+    "code": "slow = gradient_descent(stage, ax, f, -0.5, lr=0.1, steps=8, color=BLUE)\nstage.caption(\"rate 0.1: small steps, slow\")"
+   },
+   {
+    "intent": "A large rate, 0.95: the ball overshoots and bounces from side to side",
+    "narration": "With a large rate, nought point nine five, each step overshoots the bottom and lands on the other side. It bounces back and forth and barely settles.",
+    "code": "stage.remove(slow)\nfast = gradient_descent(stage, ax, f, -0.5, lr=0.95, steps=6, color=RED)\nstage.caption(\"rate 0.95: overshoots, bounces\")"
+   },
+   {
+    "intent": "The update rule beside the curve: the step is the rate times the slope",
+    "narration": "The step is the learning rate times the slope. Too small and you crawl; too big and you jump past the bottom.",
+    "code": "stage.equation(r\"x_{new} = x - \\eta \\cdot f'(x)\", r\"\\eta \\text{ small: slow}\", r\"\\eta \\text{ large: overshoot}\")"
+   }
+  ]
+ },
+ {
+  "request": "what does a single neuron in a neural network compute?",
+  "beats": [
+   {
+    "intent": "Three inputs feed one neuron, each arrow labelled with its weight",
+    "narration": "A neuron takes some inputs, here two, one and three, and gives each a weight: nought point five, minus one, and nought point two five.",
+    "code": "stage.title(\"One neuron\")\nins = VGroup(*[Circle(0.32, color=BLUE, fill_opacity=0.3).move_to([-4.5, y, 0]) for y in (1.6, 0, -1.6)])\nvals = [\"2\", \"1\", \"3\"]\ntags = VGroup(*[Text(v, font_size=28).move_to(c) for v, c in zip(vals, ins)])\nout = Circle(0.5, color=YELLOW, fill_opacity=0.25).move_to([0, 0, 0])\narrows = VGroup(*[Arrow(c.get_right(), out.get_left(), buff=0.1, color=GREY_B) for c in ins])\nstage.play(FadeIn(ins), FadeIn(tags), Create(out), *[GrowArrow(a) for a in arrows])\nstage.add(ins, tags, out, arrows)\nws = [\"0.5\", \"-1\", \"0.25\"]\nwl = VGroup(*[Text(\"w = \" + w, font_size=22, color=ORANGE).move_to(a.point_from_proportion(0.4) + 0.3 * UP) for w, a in zip(ws, arrows)])\nstage.play(FadeIn(wl))\nstage.add(wl)"
+   },
+   {
+    "intent": "Inside the neuron: the weighted sum 2(0.5) + 1(-1) + 3(0.25) = 0.75",
+    "narration": "It multiplies each input by its weight and adds them up: one, minus one, and nought point seven five. The sum is nought point seven five.",
+    "code": "stage.equation(r\"2(0.5) + 1(-1) + 3(0.25)\", r\"= 1 - 1 + 0.75\", r\"= 0.75\")\ns = Text(\"0.75\", font_size=28, color=YELLOW).move_to(out)\nstage.play(FadeIn(s))\nstage.add(s)"
+   },
+   {
+    "intent": "The sum goes through a squashing curve; 0.75 comes out as 0.68",
+    "narration": "Then it squashes the sum through an S-shaped curve, the sigmoid, so the output lands between nought and one. Nought point seven five comes out as about nought point six eight.",
+    "code": "stage.clear()\nstage.title(\"The activation\")\nax = draw_axes(stage, x_range=(-6, 6), y_range=(0, 1))\nsig = lambda z: 1 / (1 + np.exp(-z))\nplot_graph(stage, ax, sig, label=\"sigmoid\")\np = mark_point(stage, ax, 0.75, sig(0.75), color=YELLOW, label=\"0.68\")\nstage.equation(r\"\\sigma(0.75) = \\frac{1}{1 + e^{-0.75}} \\approx 0.68\")"
+   }
+  ]
+ },
+ {
+  "request": "how does a thrown ball move through the air?",
+  "beats": [
+   {
+    "intent": "A ball launched at 10 m/s at 45 degrees, its velocity split into across and up",
+    "narration": "Throw a ball at ten metres per second, at forty-five degrees. Its velocity splits into a part going across and a part going up, about seven metres per second each.",
+    "code": "stage.title(\"A thrown ball\")\nax = draw_axes(stage, x_range=(0, 11), y_range=(0, 4))\nv = 10 / np.sqrt(2)\no = ax.c2p(0, 0)\nacross = Arrow(o, ax.c2p(1.6, 0), buff=0, color=BLUE)\nup = Arrow(o, ax.c2p(0, 1.6), buff=0, color=RED)\nstage.play(GrowArrow(across), GrowArrow(up))\nstage.add(across, up)\nstage.label(across, \"7.1 m/s across\", direction=DOWN, color=BLUE)\nstage.label(up, \"7.1 m/s up\", direction=RIGHT, color=RED)"
+   },
+   {
+    "intent": "The path: steady across, slowing going up, a parabola landing at 10.2 m",
+    "narration": "Across, nothing slows it down. Up, gravity takes away about ten metres per second every second. Together the path is a parabola, landing about ten metres away.",
+    "code": "g = 9.8\nT = 2 * v / g\npath = ax.plot(lambda x: x - g * x ** 2 / (2 * v * v), x_range=[0, v * T, v * T / 100], color=YELLOW)\nball = Dot(o, color=YELLOW, radius=0.1)\nstage.play(MoveAlongPath(ball, path), Create(path), run_time=2.5)\nstage.add(path, ball)"
+   },
+   {
+    "intent": "The top of the flight at 2.55 m, where the upward speed is zero",
+    "narration": "At the very top the ball stops rising for an instant: its upward speed is zero. That happens at about two and a half metres high.",
+    "code": "top = mark_point(stage, ax, v * T / 2, v * v / (2 * g), color=RED, label=\"top: 2.55 m\")\nstage.equation(r\"h = \\frac{v_y^2}{2g} = \\frac{7.07^2}{19.6} \\approx 2.55\", r\"R = \\frac{v^2}{g} = \\frac{100}{9.8} \\approx 10.2\")"
+   }
+  ]
+ },
+ {
+  "request": "what is momentum, and why is a truck harder to stop than a bike?",
+  "beats": [
+   {
+    "intent": "A bike of 100 kg at 5 m/s and a truck of 2000 kg at 5 m/s, same speed",
+    "narration": "A bike and its rider weigh about a hundred kilograms; a truck, two thousand. Both are moving at five metres per second.",
+    "code": "stage.title(\"Momentum\")\nbike = Rectangle(width=0.8, height=0.5, color=BLUE, fill_opacity=0.5).move_to([-5, 1.5, 0])\ntruck = Rectangle(width=2.6, height=1.2, color=ORANGE, fill_opacity=0.5).move_to([-4.1, -1.2, 0])\nstage.play(FadeIn(bike), FadeIn(truck))\nstage.add(bike, truck)\nstage.label(bike, \"bike 100 kg\", direction=UP, color=BLUE)\nstage.label(truck, \"truck 2000 kg\", direction=UP, color=ORANGE)\na1 = Arrow(bike.get_right(), bike.get_right() + 1.2 * RIGHT, buff=0, color=WHITE)\na2 = Arrow(truck.get_right(), truck.get_right() + 1.2 * RIGHT, buff=0, color=WHITE)\nstage.play(GrowArrow(a1), GrowArrow(a2))\nstage.add(a1, a2)\nstage.caption(\"both at 5 m/s\")"
+   },
+   {
+    "intent": "Momentum as bars: 500 for the bike, 10,000 for the truck",
+    "narration": "Momentum is mass times velocity. The bike has five hundred; the truck has ten thousand: twenty times as much, at the same speed.",
+    "code": "stage.clear()\nstage.title(\"p = m × v\")\nbars = draw_bars(stage, [500, 10000], labels=[\"bike\", \"truck\"])\nstage.equation(r\"p_{bike} = 100 \\times 5 = 500\", r\"p_{truck} = 2000 \\times 5 = 10000\")"
+   },
+   {
+    "intent": "The same braking force takes 20 times as long to stop the truck",
+    "narration": "To stop something you must take all its momentum away. With the same brakes, a force of a thousand newtons, the bike stops in half a second and the truck in ten seconds.",
+    "code": "stage.equation(r\"t = \\frac{p}{F}\", r\"t_{bike} = \\frac{500}{1000} = 0.5\\,s\", r\"t_{truck} = \\frac{10000}{1000} = 10\\,s\")\nstage.caption(\"same force, 20 times the momentum\")"
+   }
+  ]
+ },
+ {
+  "request": "what do amplitude and frequency mean for a sine wave?",
+  "beats": [
+   {
+    "intent": "y = sin x on axes: it rises to 1 and falls to -1, one wave every 2π",
+    "narration": "Here is a sine wave. It rises to one, falls to minus one, and repeats every two pi.",
+    "code": "stage.title(\"Amplitude and frequency\")\nax = draw_axes(stage, x_range=(0, 7), y_range=(-3, 3))\nbase = plot_graph(stage, ax, lambda x: np.sin(x), color=BLUE, label=\"sin x\")"
+   },
+   {
+    "intent": "y = 2 sin x: twice as tall, the same rhythm",
+    "narration": "Multiply by two and every height doubles: it now reaches two. That's the amplitude: how tall the wave is.",
+    "code": "tall = plot_graph(stage, ax, lambda x: 2 * np.sin(x), color=YELLOW, label=\"2 sin x\")\nstage.caption(\"amplitude 2: twice as tall\")"
+   },
+   {
+    "intent": "y = sin 2x: the same height, two waves in the space of one",
+    "narration": "Put the two inside instead, sine of two x, and the height stays one but the wave repeats twice as often. That's the frequency: how many waves fit in.",
+    "code": "stage.remove(tall)\nfast = plot_graph(stage, ax, lambda x: np.sin(2 * x), color=GREEN, label=\"sin 2x\")\nstage.caption(\"frequency 2: twice as many waves\")"
+   },
+   {
+    "intent": "The general form A sin(fx): A sets the height, f the number of waves",
+    "narration": "So in A times sine of f x, A is the height and f is how fast it repeats.",
+    "code": "stage.equation(r\"y = A \\sin(f x)\", r\"A: \\text{amplitude}\", r\"f: \\text{frequency}\")"
+   }
+  ]
+ },
+ {
+  "request": "why can't you divide by zero?",
+  "beats": [
+   {
+    "intent": "12 ÷ 3 = 4 as 12 dots shared into 3 groups of 4",
+    "narration": "Dividing asks how many in each group. Twelve shared into three groups gives four each.",
+    "code": "stage.title(\"Dividing by zero\")\ndots = VGroup(*[Dot(radius=0.12, color=BLUE).move_to([-4.5 + 0.55 * (i % 4), 1.3 - 0.55 * (i // 4), 0]) for i in range(12)])\nstage.play(FadeIn(dots))\nstage.add(dots)\nboxes = VGroup(*[SurroundingRectangle(VGroup(*dots[4 * k:4 * k + 4]), color=YELLOW, buff=0.1) for k in range(3)])\nstage.play(Create(boxes))\nstage.add(boxes)\nstage.equation(r\"12 \\div 3 = 4\", r\"\\text{because } 3 \\times 4 = 12\")"
+   },
+   {
+    "intent": "12 ÷ 2, 12 ÷ 1, 12 ÷ 0.5, 12 ÷ 0.1: the answers grow without limit",
+    "narration": "Divide twelve by smaller and smaller numbers: six, twelve, twenty-four, a hundred and twenty. As the divisor heads to zero, the answer grows without end.",
+    "code": "stage.clear()\nstage.title(\"Smaller and smaller\")\nax = draw_axes(stage, x_range=(0, 4), y_range=(0, 30))\ncurve = plot_graph(stage, ax, lambda x: 12 / x, color=ORANGE, label=\"12 / x\")\nfor x0, lab in [(2, \"6\"), (1, \"12\"), (0.5, \"24\")]:\n    mark_point(stage, ax, x0, 12 / x0, color=YELLOW, label=lab)\nstage.caption(\"as x shrinks to 0, 12 / x has no end\")"
+   },
+   {
+    "intent": "Asking 12 ÷ 0 means finding x with 0 × x = 12, and none exists",
+    "narration": "Division undoes multiplication: twelve divided by zero would be a number that, times zero, gives twelve. But zero times anything is zero. No such number exists.",
+    "code": "stage.equation(r\"12 \\div 0 = x \\iff 0 \\times x = 12\", r\"0 \\times x = 0 \\ne 12\", r\"\\text{no such } x\")"
+   }
+  ]
+ }
+]

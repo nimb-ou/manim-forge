@@ -104,6 +104,8 @@ def main() -> int:
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--heldout", action="store_true",
                     help="the 20 held-out prompts (forge/evaluate/heldout_prompts.json)")
+    ap.add_argument("--fresh", action="store_true",
+                    help="the 20 fresh test requests (forge/evaluate/fresh_prompts.json)")
     ap.add_argument("--world", action="store_true",
                     help="the 30 real-world requests (forge/evaluate/world_prompts.json)")
     ap.add_argument("--inscope", action="store_true",
@@ -150,11 +152,12 @@ def main() -> int:
     mob = {n for n in dir(manim) if isinstance(getattr(manim, n), type)
            and issubclass(getattr(manim, n), manim.Mobject)}
     from forge.evaluate.hard_eval import build_tasks, concept_coverage
-    if a.short or a.heldout or a.inscope or a.world:
+    if a.short or a.heldout or a.inscope or a.world or a.fresh:
         from types import SimpleNamespace
         name = "heldout_prompts.json" if a.heldout else \
             "inscope_prompts.json" if a.inscope else \
-            "world_prompts.json" if a.world else "short_prompts.json"
+            "world_prompts.json" if a.world else \
+            "fresh_prompts.json" if a.fresh else "short_prompts.json"
         spec = json.loads((ROOT / "forge" / "evaluate" / name)
                           .read_text())["prompts"]
         # No reference video: coverage is 0 and length is against a nominal

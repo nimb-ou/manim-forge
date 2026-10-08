@@ -1,0 +1,65 @@
+{
+ "about": "Fresh test set (2026-10-08): 20 requests never used for development; run once at the end of v1.5 work, for v1.0 and v1.5 side by side. The 30 world_prompts are the development set.",
+ "prompts": [
+  {
+   "prompt": "how does a computer add two binary numbers?"
+  },
+  {
+   "prompt": "what is the area of a trapezium and why?"
+  },
+  {
+   "prompt": "why does ice float on water?"
+  },
+  {
+   "prompt": "what does it mean when two lines are perpendicular?"
+  },
+  {
+   "prompt": "how do you calculate the speed of a car from a distance-time graph?"
+  },
+  {
+   "prompt": "what is a probability tree?"
+  },
+  {
+   "prompt": "why does the moon have phases?"
+  },
+  {
+   "prompt": "how do you find the mean, median and mode?"
+  },
+  {
+   "prompt": "what does the slope of a velocity-time graph tell you?"
+  },
+  {
+   "prompt": "what is a function?"
+  },
+  {
+   "prompt": "how does a lever make lifting easier?"
+  },
+  {
+   "prompt": "why is the sum of an arithmetic series n/2 times first plus last?"
+  },
+  {
+   "prompt": "what is a parabola?"
+  },
+  {
+   "prompt": "how many ways can 4 people sit in a row?"
+  },
+  {
+   "prompt": "what does it mean to normalise a vector?"
+  },
+  {
+   "prompt": "why do we get a rainbow?"
+  },
+  {
+   "prompt": "how does interest on a loan add up over 3 years?"
+  },
+  {
+   "prompt": "what is the volume of a cylinder?"
+  },
+  {
+   "prompt": "what is the median of a set of numbers?"
+  },
+  {
+   "prompt": "what is a unit circle?"
+  }
+ ]
+}
