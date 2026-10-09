@@ -932,3 +932,22 @@ sample one (negative × negative). Scene 08 rendered only in the control,
 because the kit learned to plot around a hole between the runs. Equal
 totals, a small edge for the rewrite on like-for-like scenes: it is on in
 the app (`forge/serve/server.py`).
+
+## Self-check: can the 9B catch its own wrong numbers? · 2026-10-10
+
+`critique.self_check` hands the model the request and every string its scene
+puts on screen and asks for wrong numbers or claims. Measured on the 145
+self-training scenes graded by eye (`scripts/measure_selfcheck.py`):
+
+| | flagged, raw | flagged, after dropping "correct, but…" ramble |
+|---|---|---|
+| good scenes (64) | 29 | 15 |
+| partial (64) | 39 | 23 |
+| bad (17) | 14 | 8 |
+| the 16 number errors seen by eye | 13 | 8 |
+
+Raw, it flags almost half the good scenes; filtered, it misses half the real
+errors. Worse, its corrections are often wrong ("cos x ≈ 1 − x²/2 + x⁴/8",
+"f′(x) = −2x is incorrect for a hill"), so a rewrite acting on them would
+break correct scenes. **Off.** The code stays (`run_oneshot(check=True)`)
+for a stronger checker.
