@@ -139,6 +139,42 @@ _PALETTE = [BLUE, YELLOW, GREEN, RED, TEAL, ORANGE]
 _CURRENT: list = []      # the live Stage, for block calls that forget it
 
 
+def _text_boxes(scene) -> list:
+    """(left, bottom, right, top) of every visible text on screen."""
+    from manim import DecimalNumber, Integer, MarkupText, MathTex, Tex, Text
+    kinds = (Text, MathTex, Tex, MarkupText, DecimalNumber, Integer)
+    out, seen = [], set()
+
+    def walk(m):
+        if id(m) in seen:
+            return
+        seen.add(id(m))
+        if isinstance(m, kinds):
+            if m.get_fill_opacity() > 0.05 and m.width > 1e-3:
+                out.append((m.get_left()[0], m.get_bottom()[1], m.get_right()[0], m.get_top()[1]))
+            return
+        for sub in m.submobjects:
+            walk(sub)
+    for m in scene.mobjects:
+        walk(m)
+    return out
+
+
+def _hits(t, boxes) -> bool:
+    """Does mobject t cover a fifth of the smaller of itself and any box?"""
+    a = (t.get_left()[0], t.get_bottom()[1], t.get_right()[0], t.get_top()[1])
+    if abs(a[0]) > 7.1 or abs(a[2]) > 7.1 or abs(a[1]) > 3.95 or abs(a[3]) > 3.95:
+        return True                                   # off the frame counts too
+    for b in boxes:
+        w = min(a[2], b[2]) - max(a[0], b[0])
+        h = min(a[3], b[3]) - max(a[1], b[1])
+        if w > 0 and h > 0:
+            small = min((a[2] - a[0]) * (a[3] - a[1]), (b[2] - b[0]) * (b[3] - b[1]))
+            if w * h > 0.2 * small:
+                return True
+    return False
+
+
 def layout_issues(scene) -> int:
     return sum(w for w, _ in layout_report(scene))
 
@@ -406,6 +442,19 @@ class Stage:
         if not follow:                                   # a point: label there
             m = Dot(_xy(m), radius=0.001, fill_opacity=0)
         t = self._text(str(s), 28).set_color(color).next_to(m, direction, buff=0.15)
+        # The side asked for, unless that puts the label on text already on
+        # screen ("start" on "ball", a "4" on a "4": the commonest layout
+        # problem in the world set and the self-training rows, 2026-10-09).
+        # Then the first free side; if none is free, the side asked for.
+        boxes = _text_boxes(self.scene)
+        if _hits(t, boxes):
+            for d in (UP, DOWN, RIGHT, LEFT, UP + RIGHT, UP + LEFT, DOWN + RIGHT, DOWN + LEFT):
+                t.next_to(m, d, buff=0.15)
+                if not _hits(t, boxes):
+                    direction = d
+                    break
+            else:
+                t.next_to(m, direction, buff=0.15)
         self.scene.play(FadeIn(t), run_time=0.5)
         if follow:
             # The label rides with its object: a cart that rolled on or a

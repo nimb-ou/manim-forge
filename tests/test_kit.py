@@ -111,3 +111,14 @@ def test_curves_with_a_hole_are_plotted_around_it():
     f = kit._hole_safe(lambda x: 3 + (x - 2) ** 2 if x != 2 else None)
     assert abs(f(2) - 3) < 1e-6 and f(3) == 4
     assert kit._hole_safe(lambda x: 1 / x)(0) > 100
+
+
+def test_a_label_moves_off_text_already_there():
+    from manim import Dot, Rectangle
+    t = Rectangle(width=0.8, height=0.3)        # a label's box
+    other = Rectangle(width=0.9, height=0.3)
+    d = Dot([0, 0, 0])
+    other.next_to(d, kit.UP, buff=0.15)
+    boxes = [(other.get_left()[0], other.get_bottom()[1], other.get_right()[0], other.get_top()[1])]
+    assert kit._hits(t.next_to(d, kit.UP, buff=0.15), boxes)
+    assert not kit._hits(t.next_to(d, kit.DOWN, buff=0.15), boxes)

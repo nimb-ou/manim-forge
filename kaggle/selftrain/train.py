@@ -246,6 +246,12 @@ if MF_ATTEMPT is None:
                   f"{_attempt or 'nothing left to try'}", flush=True)
             continue
 
+        if (DATA / "SMOKE_ONLY").exists():
+            # A dataset with this marker checks the path end to end (load,
+            # template, LoRA on Qwen3.5, 20 steps) and stops there.
+            print("[plan] SMOKE_ONLY: smoke passed, not training", flush=True)
+            _won = True
+            break
         _r = run_attempt("full", _fp16, _len)
         ATTEMPTS.append({"phase": "full", "amp": _fp16, "max_len": _len, **_r})
         if _r["ok"]:
@@ -261,6 +267,8 @@ if MF_ATTEMPT is None:
         raise SystemExit(
             "every combination failed; read the 'why' fields above. 'crashed' "
             "is not an OOM and the child's traceback is in this log.")
+    if (DATA / "SMOKE_ONLY").exists():
+        sys.exit(0)
     print("\n[plan] done — the adapter is in /kaggle/working/adapter",
           flush=True)
     for _f in sorted((WORK / "adapter").iterdir()):
