@@ -77,3 +77,51 @@ def test_the_panel_ends_on_the_winning_sample(monkeypatch):
                  if e.get("stage") == "plan" and "beat" in e][-1]
     assert last_plan == "first try"
     assert any(e.get("reset") for e in events)
+
+
+def test_critique_finds_beats_that_draw_nothing():
+    from forge.app.critique import static_problems
+    from forge.app.twostage import Beat
+    beats = [Beat(1, None, "a plane with a vector"),
+             Beat(2, None, "the matrix is applied and the grid becomes a parallelogram"),
+             Beat(3, None, "the rule"),
+             Beat(4, None, "apply the shear to the grid")]
+    bodies = ["p = draw_plane(stage)\nv = draw_vector(stage, p, (1, 2))",
+              'stage.caption("The grid becomes a parallelogram")\nstage.pause(1)',
+              r'stage.equation(r"A v = (2, 3)")',
+              r'stage.equation(r"A = [[1, 1], [0, 1]]")  # apply_matrix(stage, p, A)']
+    found = dict(static_problems(beats, bodies))
+    assert set(found) == {2, 4}
+    assert "only changes the text" in found[2] and "equation" in found[4]
+
+
+def test_problems_list_kit_issues_and_slips_by_beat():
+    from forge.app.critique import problems
+    from forge.app.pipeline import Result
+    from forge.app.twostage import Beat
+    beats = [Beat(1, None, "axes"), Beat(2, None, "sum")]
+    res = Result("r", beats, ["ax = draw_axes(stage)", 'stage.equation("2 + 2 = 5")'],
+                 ok=True, issues=[(1, "the point (3, 4) is outside its axes")])
+    found = problems(res)
+    assert found[0] == "beat 1: the point (3, 4) is outside its axes"
+    assert any("2 + 2 = 5" in f for f in found)
+
+
+def test_a_flawed_draft_goes_back_with_its_problems(monkeypatch):
+    from forge.app import oneshot, pipeline
+    prompts = []
+    replies = iter(["# beat 1: grid\np = draw_plane(stage)\n# beat 2: the grid shears\n"
+                    "stage.caption('sheared')",
+                    "# beat 1: grid\np = draw_plane(stage)\n# beat 2: the grid shears\n"
+                    "apply_matrix(stage, p, [[1, 1], [0, 1]])"])
+
+    def fake_ask(model, tok, system, user, **k):
+        prompts.append((user, k.get("temp")))
+        return next(replies)
+    monkeypatch.setattr(pipeline, "ask", fake_ask)
+    monkeypatch.setattr(pipeline, "finish", lambda request, beats, bodies, *a, **k:
+                        pipeline.Result(request, beats, bodies, ok=True, layout=[0, 0]))
+    res = oneshot.run_oneshot("shear", None, None, samples=2, revise=1)
+    assert "PROBLEMS FOUND" in prompts[1][0] and "beat 2:" in prompts[1][0]
+    assert "stage.caption('sheared')" in prompts[1][0] and prompts[1][1] == 0.0
+    assert "apply_matrix" in res.bodies[1]

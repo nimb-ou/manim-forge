@@ -1,0 +1,123 @@
+{
+ "rubric": "as world_kit (strict, 2026-10-09). Library now has batch 138, so first drafts changed for 01 02 03 08 11 17 20 21 22 24; the critique-and-rewrite won in 14 15 23 25.",
+ "01": [
+  "P",
+  "new first draft: vectors from the axes origin, no descent"
+ ],
+ "02": [
+  "G",
+  "renders now: inputs, weights, weighted sum 0.75, sigmoid 0.68 (close to the batch 138 scene)"
+ ],
+ "03": [
+  "P",
+  "the ball steps down at rate 0.1; repeated 'ball' labels; literal \\eta in captions"
+ ],
+ "04": [
+  "G",
+  ""
+ ],
+ "05": [
+  "G",
+  ""
+ ],
+ "06": [
+  "G",
+  ""
+ ],
+ "07": [
+  "P",
+  "caption numbers disagree with the picture (one rectangle shown as none; 4 rectangles 8/9)"
+ ],
+ "08": [
+  "B",
+  "new first draft did not render (f returns None at the hole); the rewrite failed too"
+ ],
+ "09": [
+  "G",
+  ""
+ ],
+ "10": [
+  "G",
+  ""
+ ],
+ "11": [
+  "P",
+  "arrows drawn now; the 'same vector elsewhere' is not visibly moved"
+ ],
+ "12": [
+  "P",
+  "the grid never transforms: beat 2 is a caption only"
+ ],
+ "13": [
+  "G",
+  ""
+ ],
+ "14": [
+  "G",
+  "revised: v=(2,0), w=(3,0), shadow 2 -> 6; perpendicular 0; opposite -6; 8 beats"
+ ],
+ "15": [
+  "G",
+  "revised: the grid actually shears (x'=2x+y, y'=x+2y); origin fixed; definition"
+ ],
+ "16": [
+  "G",
+  ""
+ ],
+ "17": [
+  "P",
+  "vectors on a grid for a medical test; muddled"
+ ],
+ "18": [
+  "G",
+  ""
+ ],
+ "19": [
+  "P",
+  "the bar highlighted as 'most students' is not the tallest"
+ ],
+ "20": [
+  "P",
+  "bars encode nothing, but 1/2 x 1/2 x 1/2 = 1/8 = 12.5% stated right"
+ ],
+ "21": [
+  "G",
+  "t = sqrt(2h/g) has no m; d = 5t^2; a = g"
+ ],
+ "22": [
+  "P",
+  "last beat clears the curves"
+ ],
+ "23": [
+  "P",
+  "revised: tiny parabola, overlapping labels"
+ ],
+ "24": [
+  "G",
+  "bike 100 kg vs truck 2000 kg, 500 vs 10000, 20 times longer to stop (close to batch 138)"
+ ],
+ "25": [
+  "P",
+  "revised: arrows and captions disagree ('Flip -3 to +3: result flips to -6'); 9 beats"
+ ],
+ "26": [
+  "B",
+  "slices vanish; empty frames"
+ ],
+ "27": [
+  "G",
+  ""
+ ],
+ "28": [
+  "P",
+  "one set of bars; no simple-vs-compound comparison"
+ ],
+ "29": [
+  "P",
+  "the sieve resets to all yellow; primes never marked"
+ ],
+ "30": [
+  "P",
+  "thin picture"
+ ]
+}

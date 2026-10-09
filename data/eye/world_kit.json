@@ -1,0 +1,123 @@
+{
+ "rubric": "G/P/B as is_p3_k8, graded strictly 2026-10-09: a beat whose caption promises a motion the picture never shows is P. Scenes are byte-identical to world_plan (greedy first sample won everywhere), so this is also world_plan regraded strictly.",
+ "01": [
+  "P",
+  "lr 0.5 on (x-2)^2 reaches the bottom in one jump; no descent seen"
+ ],
+ "02": [
+  "B",
+  "did not render"
+ ],
+ "03": [
+  "P",
+  "the two agents never move; captions say 'oscillates', 'slow progress'"
+ ],
+ "04": [
+  "G",
+  ""
+ ],
+ "05": [
+  "G",
+  ""
+ ],
+ "06": [
+  "G",
+  ""
+ ],
+ "07": [
+  "P",
+  "caption numbers disagree with the picture (one rectangle shown as none; 4 rectangles 8/9)"
+ ],
+ "08": [
+  "G",
+  ""
+ ],
+ "09": [
+  "G",
+  ""
+ ],
+ "10": [
+  "G",
+  ""
+ ],
+ "11": [
+  "P",
+  "Q drawn off the grid in the title; the arrow never appears (from-to draw_vector call)"
+ ],
+ "12": [
+  "P",
+  "the grid never transforms: beat 2 is a caption only"
+ ],
+ "13": [
+  "G",
+  ""
+ ],
+ "14": [
+  "P",
+  "v runs over the title; cramped"
+ ],
+ "15": [
+  "P",
+  "the grid never transforms: beat 2 is a caption only"
+ ],
+ "16": [
+  "G",
+  ""
+ ],
+ "17": [
+  "P",
+  "weak picture; last beat empty"
+ ],
+ "18": [
+  "G",
+  ""
+ ],
+ "19": [
+  "P",
+  "the bar highlighted as 'most students' is not the tallest"
+ ],
+ "20": [
+  "B",
+  "empty axes, then one bar; no flips, no tree"
+ ],
+ "21": [
+  "G",
+  ""
+ ],
+ "22": [
+  "P",
+  "3 sin 3x clipped to one stroke"
+ ],
+ "23": [
+  "P",
+  "the path leaves the axes; 3 beats"
+ ],
+ "24": [
+  "P",
+  "labels on top of the box"
+ ],
+ "25": [
+  "G",
+  ""
+ ],
+ "26": [
+  "B",
+  "slices vanish; empty frames"
+ ],
+ "27": [
+  "G",
+  ""
+ ],
+ "28": [
+  "P",
+  "one set of bars; no simple-vs-compound comparison"
+ ],
+ "29": [
+  "P",
+  "the sieve resets to all yellow; primes never marked"
+ ],
+ "30": [
+  "P",
+  "thin picture"
+ ]
+}

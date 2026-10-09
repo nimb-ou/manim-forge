@@ -332,6 +332,8 @@ class Result:
     seconds: float = 0.0
     beat_ends: list[float] = field(default_factory=list)
     layout: list[int] = field(default_factory=list)   # kit.layout_issues per beat
+    issues: list[tuple[int, str]] = field(default_factory=list)  # (beat, what the kit saw)
+    reply: str = ""          # the model's own text, for the one shot (training rows)
 
 
 def run(request: str, host, emit: Emit, opts: Options | None = None,
@@ -496,6 +498,13 @@ def finish(request: str, beats: list[Beat], bodies: list[str], cm, ctok,
     ends = [float(x) for x in got[-1].split(",") if x.strip()] if got else []
     lay = re.findall(r"LAYOUT \[([^\]]*)\]", res.stderr or "")
     layout = [int(x) for x in lay[-1].split(",") if x.strip()] if lay else []
+    # The kit numbers beats by the marks it has passed, which skip dropped
+    # beats; map them back to the scene's own beat numbers.
+    live_n = [j + 1 for j, b in enumerate(bodies) if b.strip()]
+    issues = []
+    for k, what in re.findall(r"^ISSUE (\d+) (.*)$", res.stderr or "", re.M):
+        k = int(k)
+        issues.append((live_n[k - 1] if 0 < k <= len(live_n) else k, what.strip()))
     video = res.video_path if res.ok else None
     if video and voiced and ends:
         from forge.app.voice import mux
@@ -508,7 +517,7 @@ def finish(request: str, beats: list[Beat], bodies: list[str], cm, ctok,
         else:
             notes.append("narration could not be mixed in; silent video")
     out = Result(request, beats, bodies, asm.code, ok=res.ok, beat_ends=ends,
-                 layout=layout,
+                 layout=layout, issues=issues,
                  video=video,
                  duration=res.duration_s, notes=notes,
                  error="" if res.ok else res.error_kind.value,

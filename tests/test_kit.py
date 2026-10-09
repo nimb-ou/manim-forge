@@ -77,3 +77,31 @@ def test_middle_pictures_step_aside_for_an_equation_on_screen(monkeypatch):
     assert kit._REGIONS["right"] == dict.__getitem__(kit._REGIONS, "right")
     st._equation_where = "left"
     assert kit._REGIONS["full"] == dict.__getitem__(kit._REGIONS, "right")
+
+
+def test_draw_vector_takes_a_from_to_pair(monkeypatch):
+    # draw_vector(stage, p, (0, 0), (3, 4)) once drew an arrow to (0, 0).
+    made = []
+    monkeypatch.setattr(kit, "Arrow", lambda a, b, **k: made.append((tuple(a), tuple(b), k)) or object())
+    monkeypatch.setattr(kit, "GrowArrow", lambda a, **k: None)
+
+    class Plane:
+        def c2p(self, x, y):
+            return (float(x), float(y), 0.0)
+
+    class Scene:
+        def play(self, *a, **k):
+            pass
+    st = kit.Stage.__new__(kit.Stage)
+    st.scene, st._objects, st._issues = Scene(), [], 0
+    kit.draw_vector.__wrapped__(st, Plane(), (1, 1), (3, 2))
+    assert made[0][0][:2] == (1.0, 1.0) and made[0][1][:2] == (3.0, 2.0)
+    assert made[0][2]["color"] == kit.YELLOW
+
+
+def test_kit_issues_are_counted_and_said(capsys):
+    st = kit.Stage.__new__(kit.Stage)
+    st._issues, st._t = 0, [1.0, 2.0]
+    st.issue("the point (9, 9) is outside its axes")
+    assert st._issues == 1
+    assert "ISSUE 3 the point (9, 9) is outside its axes" in capsys.readouterr().err

@@ -123,6 +123,11 @@ def main() -> int:
                     help="one-shot: write a lesson plan (# plan: lines) before the beats")
     ap.add_argument("--think", action="store_true",
                     help="one-shot: let the model reason (enable_thinking) first")
+    ap.add_argument("--revise", type=int, default=0,
+                    help="one-shot: attempts after the first that rewrite the best "
+                         "draft with its problems listed (forge/app/critique.py)")
+    ap.add_argument("--ids", default="",
+                    help="only these prompts, by number (1-based, comma-separated)")
     ap.add_argument("--samples", type=int, default=1,
                     help="one-shot: render up to N samples, keep the best")
     ap.add_argument("--short", action="store_true",
@@ -183,7 +188,10 @@ def main() -> int:
                    signatures=a.signatures)
 
     rows = []
-    for i, t in enumerate(tasks, 1):
+    ids = {int(x) for x in a.ids.split(",") if x.strip()}
+    for i, t in enumerate(tasks, a.start + 1):
+        if ids and i not in ids:
+            continue
         t0 = time.time()
         # The planner samples (temperature 0.5): unseeded, two runs of the
         # same prompt got different plans and per-prompt swings of 0/6 to
@@ -205,7 +213,8 @@ def main() -> int:
             given = [Beat(*x) for x in cache[t.prompt]]
         if a.oneshot:
             res = run_oneshot(t.prompt, om, otok, opts=opts, api=a.api, k=a.k,
-                              samples=a.samples, plan=a.plan, think=a.think)
+                              samples=a.samples, plan=a.plan, think=a.think,
+                              revise=a.revise)
         else:
             res = run(t.prompt, host, lambda e: None, opts, beats=given)
         bodies = [b for b in res.bodies if b.strip()]
@@ -220,6 +229,7 @@ def main() -> int:
                "seconds": res.duration or 0.0, "real_seconds": t.real_seconds,
                "error": res.error, "notes": res.notes,
                "layout": getattr(res, "layout", []),
+               "issues": getattr(res, "issues", []),
                "elapsed": round(time.time() - t0)}
         slug = re.sub(r"[^a-z0-9]+", "-", t.prompt.lower())[:40].strip("-")
         (out_dir / f"{i:02d}-{slug}.py").write_text(res.code)

@@ -140,6 +140,10 @@ _CURRENT: list = []      # the live Stage, for block calls that forget it
 
 
 def layout_issues(scene) -> int:
+    return sum(w for w, _ in layout_report(scene))
+
+
+def layout_report(scene) -> list[tuple[int, str]]:
     """Text that collides with other text, plus anything off the frame, on
     screen now. A cheap, automatic stand-in for "is this frame readable",
     printed at every beat mark so the one-shot generator can prefer the
@@ -174,22 +178,26 @@ def layout_issues(scene) -> int:
         walk(m)
     boxes = [(t.get_left()[0], t.get_bottom()[1], t.get_right()[0], t.get_top()[1])
              for t in texts]
-    bad = 0
+    bad: list[tuple[int, str]] = []
+
+    def name(t):
+        s = getattr(t, "text", None) or getattr(t, "tex_string", None) or type(t).__name__
+        return repr(str(s)[:30])
     for i in range(len(boxes)):
         a = boxes[i]
-        for b in boxes[i + 1:]:
+        for j, b in enumerate(boxes[i + 1:], i + 1):
             w = min(a[2], b[2]) - max(a[0], b[0])
             h = min(a[3], b[3]) - max(a[1], b[1])
             if w > 0 and h > 0:
                 small = min((a[2] - a[0]) * (a[3] - a[1]), (b[2] - b[0]) * (b[3] - b[1]))
                 if w * h > 0.2 * small:
-                    bad += 1
+                    bad.append((1, f"the text {name(texts[i])} overlaps {name(texts[j])}"))
     for m in scene.mobjects:
         if m.width > 1e-3 and (abs(m.get_left()[0]) > 7.3 or abs(m.get_right()[0]) > 7.3
                                or abs(m.get_top()[1]) > 4.15 or abs(m.get_bottom()[1]) > 4.15):
-            bad += 1
+            bad.append((1, f"a {type(m).__name__} runs off the edge of the frame"))
     if not drawn[0]:
-        bad += 2
+        bad.append((2, "the screen shows only text, no picture"))
     return bad
 
 
@@ -213,6 +221,15 @@ class Stage:
         # so a cleaner sample wins (forge/app/oneshot.score).
         self._issues = 0
         self._issues_at_mark = 0
+
+    def issue(self, what: str):
+        """Count a problem the kit saw or repaired, and say what it was: the
+        one-shot generator hands these sentences back to the model to fix
+        (forge/app/critique.py) instead of only preferring another sample."""
+        import sys as _sys
+        self._issues += 1
+        beat = len(getattr(self, "_t", [])) + 1
+        print(f"ISSUE {beat} {what}", file=_sys.stderr, flush=True)
 
     # text slots ---------------------------------------------------------
     def _text(self, s: str, size: int):
@@ -419,7 +436,11 @@ class Stage:
         print("BEAT_ENDS", self._t, file=_sys.stderr, flush=True)
         fresh = self._issues - self._issues_at_mark
         self._issues_at_mark = self._issues
-        self._layout = getattr(self, "_layout", []) + [layout_issues(self.scene) + fresh]
+        report = layout_report(self.scene)
+        beat = len(self._t)
+        for _, what in report:
+            print(f"ISSUE {beat} at the end of the beat, {what}", file=_sys.stderr, flush=True)
+        self._layout = getattr(self, "_layout", []) + [sum(w for w, _ in report) + fresh]
         print("LAYOUT", self._layout, file=_sys.stderr, flush=True)
 
     def pause(self, seconds: float = 1.0):
@@ -430,6 +451,11 @@ class Stage:
     # as a method -- stage.draw_plane(...). The stage forwards the first to
     # the scene and binds the second, rather than failing the beat.
     def play(self, *anims, **kw):
+        # A block's return value handed to play -- stage.play(trace_graph(...))
+        # -- is a mobject the block already animated: nothing left to play.
+        anims = tuple(a for a in anims if not isinstance(a, _Mobject))
+        if not anims:
+            return None
         return self.scene.play(*anims, **kw)
 
     def add(self, *mobjects):
@@ -671,12 +697,22 @@ def draw_plane(stage: Stage, where: str = "center", x_extent: int = 4,
 
 
 def draw_vector(stage: Stage, plane_, xy, color=YELLOW, label: str | None = None):
-    """An arrow from the plane's origin to (x, y), grown, optionally labelled."""
+    """An arrow from the plane's origin to (x, y), grown, optionally labelled.
+    ``draw_vector(stage, plane, (x0, y0), (x1, y1))`` draws from one point
+    to the other."""
     _need(plane_, "c2p", "the plane from draw_plane(stage)", "draw_vector(stage, plane, (x, y))")
-    a = Arrow(plane_.c2p(0, 0), plane_.c2p(*xy), buff=0, color=color)
+    start = (0, 0)
+    # The from-to form, draw_vector(stage, p, (0, 0), (3, 4)): the second
+    # point landed in `color` and the arrow was drawn to (0, 0) -- nothing
+    # on screen for "an arrow from P to Q" (2026-10-09).
+    if isinstance(color, (tuple, list)) and len(color) in (2, 3) and \
+            all(isinstance(c, (int, float)) for c in color):
+        start, xy, color = tuple(xy)[:2], tuple(color)[:2], YELLOW
+    a = Arrow(plane_.c2p(*start), plane_.c2p(*xy), buff=0, color=color)
     tip = plane_.c2p(*xy)
     if abs(tip[0]) > 7.1 or abs(tip[1]) > 3.9:     # the arrow leaves the frame
-        stage._issues += 1
+        stage.issue(f"the vector to {tuple(xy)} runs off the screen; make the "
+                    "plane's extent larger or the vector shorter")
     stage.scene.play(GrowArrow(a), run_time=0.8)
     stage._objects.append(a)
     if label:
@@ -709,6 +745,15 @@ def apply_matrix(stage: Stage, plane_, matrix=((1, 1), (0, 1)), riders=(),
     riders = list(riders or [])
     if riders and not hasattr(riders[0], "get_center") and np.ndim(riders[0]) == 0:
         riders = [riders]                                # one (x, y) alone
+    # draw_basis returns (i, j): riders=[basis, v] once died in ApplyMatrix
+    # ("setting an array element with a sequence", world set 2026-10-09).
+    flat = []
+    for r in riders:
+        if isinstance(r, (tuple, list)) and r and all(hasattr(x, "get_center") for x in r):
+            flat += list(r)
+        else:
+            flat.append(r)
+    riders = flat
     riders = [r if hasattr(r, "get_center") else draw_vector(stage, plane_, tuple(r))
               for r in riders]
     about = plane_.c2p(0, 0)
@@ -820,7 +865,8 @@ def plot_graph(stage: Stage, ax, f, x_range=None, color=BLUE, label: str | None 
     # Most of the curve cut away because it leaves the axes (3 sin 3x on
     # axes 2 tall drew one steep stroke): axes too small for the curve.
     if want and (xr[1] - xr[0]) < 0.6 * want:
-        stage._issues += 1
+        stage.issue(f"most of the curve leaves the axes (y_range {tuple(ax.y_range[:2])}); "
+                    "make y_range big enough for the curve's highest and lowest values")
     g = ax.plot(f, x_range=[xr[0], xr[1]], color=color)
     # Callable like the function it plots: models write g(x) for a height
     # on the curve ("'ParametricFunction' object is not callable", twice).
@@ -982,7 +1028,8 @@ def mark_point(stage: Stage, nl, x: float, y=None, color=YELLOW, label: str | No
         if xr is not None and yr is not None and not (
                 min(xr[:2]) - 1e-9 <= px <= max(xr[:2]) + 1e-9
                 and min(yr[:2]) - 1e-9 <= py <= max(yr[:2]) + 1e-9):
-            stage._issues += 1          # drawn off its own axes
+            stage.issue(f"the point ({px:g}, {py:g}) is outside its axes "
+                        f"(x {tuple(xr[:2])}, y {tuple(yr[:2])}); widen the ranges")
         d = Dot(nl.c2p(px, py), color=color)
     elif np.ndim(x) == 1:                               # (x, y) on a number line
         d = Dot(nl.n2p(float(np.ravel(x)[0])), color=color)
@@ -1562,7 +1609,8 @@ def gradient_descent(stage: Stage, ax, f, x0: float, lr: float = 0.2,
     # axes stop at 6) is an invisible ball: walk the start downhill, along
     # the curve, until it is on the axes, and count the repair.
     if not (yr[0] <= f(x) <= yr[1]):
-        stage._issues += 1
+        stage.issue(f"gradient descent starts at x = {x0} where the curve is above "
+                    f"the axes' y_range {tuple(yr[:2])}; start closer to the bottom")
         for _ in range(200):
             slope = (f(x + h) - f(x - h)) / (2 * h)
             if yr[0] <= f(x) <= yr[1] or abs(slope) < 1e-9:
@@ -1591,6 +1639,12 @@ def gradient_descent(stage: Stage, ax, f, x0: float, lr: float = 0.2,
         x = new_x
         if abs(slope) < 1e-3:
             break
+    # lr = 0.5 on (x - 2)^2 lands on the minimum in one step: the "descent"
+    # is a single jump and the viewer sees no steps (world set, 2026-10-09).
+    if steps > 1 and k <= 1:
+        stage.issue(f"gradient descent with lr = {lr} reaches the bottom in "
+                    f"{k + 1} step(s), so no descent is seen; use a smaller lr "
+                    "so it takes 5 or more visible steps")
     if tangent is not None:
         stage.scene.play(FadeOut(tangent), run_time=0.3)
     stage._objects += [trail, ball]
@@ -2365,7 +2419,9 @@ def _tolerant(f):
                              and m is not None and hasattr(m, need)
                              and _on_screen(st, m)), have)
             if len(args) >= 2:
-                st._issues += 1
+                st.issue(f"{f.__name__} was given a {type(args[1]).__name__} where "
+                         f"it needs {_SLOTS[slot][0]}-capable axes or plane; pass the "
+                         "plane/axes variable")
             if have is None:
                 have = globals()[_SLOTS[slot][1]](st)
             # a wrong picture in the slot is replaced; data is shifted along

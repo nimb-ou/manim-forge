@@ -124,29 +124,39 @@ def score(res) -> tuple:
     layout problems (kit.layout_issues), and has 3-6 beats. Higher is
     better."""
     from forge.app.checks import arithmetic_errors
+    from forge.app.critique import static_problems
     kept = sum(1 for b in res.bodies if b.strip())
     slips = len(arithmetic_errors("\n".join(res.bodies)))
+    static = len(static_problems(res.beats, res.bodies))
     return (res.ok, kept / max(1, len(res.beats)), -slips,
-            -sum(res.layout), 3 <= len(res.beats) <= 6)
+            -(sum(res.layout) + static), 3 <= len(res.beats) <= 6)
 
 
 def run_oneshot(request: str, model, tok, emit=lambda e: None, opts=None,
                 harness=None, api: bool = False, k: int = 2,
                 max_tokens: int = 2400, exclude: set[str] | None = None,
                 samples: int = 1, temp: float = 0.7, greedy_first: bool = True,
-                plan: bool = False, think: bool = False):
+                plan: bool = False, think: bool = False, revise: int = 0):
     """Generate, parse, assemble and render as the pipeline does.
 
     With ``samples`` > 1 the first sample is greedy and the rest are drawn
     at ``temp``; each is rendered and the best by ``score`` is returned.
     A sample that renders whole with no layout problem ends the search.
+
+    With ``revise`` the first ``revise`` attempts after the first are not
+    fresh samples: the best draft so far goes back to the model with the
+    problems found in it (forge/app/critique.py) to be rewritten. Attempts
+    are ``samples`` in all either way.
     """
+    from forge.app.critique import problems, revise_prompt
     from forge.app.pipeline import Options, Result, ask, finish
     opts = opts or Options(kit=True)
     t0 = time.time()
     system = system_prompt(api, plan=plan)
     user = user_prompt(request, k, exclude=exclude)
     best = None
+    best_reply = ""
+    revised = 0
 
     def show(beats, bodies, reset=False):
         if reset:
@@ -161,14 +171,20 @@ def run_oneshot(request: str, model, tok, emit=lambda e: None, opts=None,
     for n in range(samples):
         emit({"stage": "plan", "status": "start",
               **({"note": f"sample {n + 1} of {samples}"} if samples > 1 else {})})
-        reply = ask(model, tok, system, user,
+        found = problems(best) if best is not None and revised < revise else []
+        if found:
+            revised += 1
+            emit({"stage": "assemble", "note": "revising the draft: "
+                  + "; ".join(found[:3]) + (" ..." if len(found) > 3 else "")})
+        reply = ask(model, tok, system,
+                    revise_prompt(user, best_reply, found) if found else user,
                     max_tokens=max_tokens + (4000 if think else 0),
-                    temp=temp if (n or not greedy_first) else 0.0,
+                    temp=0.0 if found or not (n or not greedy_first) else temp,
                     think=think)
         beats, bodies = parse_scene(reply)
         # The app lists beats from plan events and fills them from code
         # events; a new sample clears the list ("reset") and shows its own.
-        if n:
+        if n and not found:
             emit({"stage": "assemble", "note": f"sample {n} was not clean; "
                   f"trying sample {n + 1}"})
         show(beats, bodies, reset=n > 0)
@@ -181,9 +197,12 @@ def run_oneshot(request: str, model, tok, emit=lambda e: None, opts=None,
                          emit if samples == 1 else (lambda e: None),
                          harness, t0, [])
         if samples > 1:
-            res.notes.append(f"sample {n + 1}/{samples}: score {score(res)}")
+            res.notes.append(f"sample {n + 1}/{samples}{' (revised)' if found else ''}: "
+                             f"score {score(res)}")
         if best is None or score(res) > score(best):
-            best = res
+            best, best_reply = res, reply
+        elif found:
+            revised = revise    # the rewrite lost; asking again repeats it
         if best.ok and score(best)[1:4] == (1, 0, 0):
             break
     if samples > 1 and best is not res and best.beats:
@@ -195,5 +214,6 @@ def run_oneshot(request: str, model, tok, emit=lambda e: None, opts=None,
               "code": best.code, "elapsed": round(time.time() - t0, 1)})
     if not best.beats:
         emit({"stage": "done", "ok": False, "error": "no beats in the reply"})
+    best.reply = best_reply
     best.seconds = time.time() - t0
     return best

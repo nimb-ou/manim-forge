@@ -294,6 +294,15 @@ CATALOG: list[Dataset] = [
         keeps_failures="failed renders keep their code and error",
         archive=False,   # regenerable from the adapters and prompt sets
     ),
+    Dataset(
+        "data/selfgen",
+        "The model's own scenes for library requests (scripts/selfgen.py), "
+        "with what the critic found in each: the source of the v1.5 "
+        "self-training rows (scripts/build_selftrain.py).",
+        '{"i": int, "request": str, "user": str, "reply": str, "clean": bool, '
+        '"problems": [str], ...} per line in rows.jsonl; sheets/NNN.jpg',
+        keeps_failures="every attempt is a row; clean=false rows keep their problems",
+    ),
 ]
 
 
