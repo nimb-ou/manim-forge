@@ -423,5 +423,161 @@
  "199": [
   "P",
   "raw 'Foranye>0' text"
+ ],
+ "202": [
+  "P",
+  "det 1 right; the sheared plane runs across everything"
+ ],
+ "205": [
+  "G",
+  "shear keeps base and height: det 1, area 1"
+ ],
+ "206": [
+  "G",
+  "12 makes rectangles, 7 and 11 only a line"
+ ],
+ "207": [
+  "P",
+  "number labels piled on the curves"
+ ],
+ "208": [
+  "B",
+  "(1.5e8 + 3.8e5) / 3e5 is ~500 s, shown as 1.3 s"
+ ],
+ "209": [
+  "G",
+  "5 mi x 1.6 = 8 km on two number lines"
+ ],
+ "210": [
+  "G",
+  "6 triangles, 360/6 = 60, all corners 60"
+ ],
+ "211": [
+  "P",
+  "tiny triangles, labels piled"
+ ],
+ "212": [
+  "P",
+  "two beats, nothing explained"
+ ],
+ "213": [
+  "B",
+  "not about correlation; nonsense"
+ ],
+ "214": [
+  "P",
+  "'two rolls' but (5/6)^4"
+ ],
+ "215": [
+  "P",
+  "a step comes out as a step, captioned 'ramp'"
+ ],
+ "216": [
+  "G",
+  "3-point moving average smooths the line"
+ ],
+ "219": [
+  "P",
+  "road lengths change between beats"
+ ],
+ "220": [
+  "G",
+  "1000 -> 1100 -> 1200, 1000 + 100t"
+ ],
+ "222": [
+  "P",
+  "messy cake pieces"
+ ],
+ "223": [
+  "G",
+  "13/52 = 1/4"
+ ],
+ "225": [
+  "G",
+  "2 + 0.25 x 0.1 = 2.025 vs 2.0244"
+ ],
+ "226": [
+  "P",
+  "number line unreadable"
+ ],
+ "227": [
+  "P",
+  "area labelled -2 for det -4"
+ ],
+ "231": [
+  "G",
+  "12 as 1x12, 2x6, 3x4; 5 leaves one over"
+ ],
+ "233": [
+  "B",
+  "garbled LaTeX; 330 x 3 shown as 1020"
+ ],
+ "234": [
+  "G",
+  "sin x + (-sin x) = 0"
+ ],
+ "239": [
+  "G",
+  "ratio 2:3 of 10 L: parts of 2 L, 4 L + 6 L"
+ ],
+ "240": [
+  "P",
+  "two overlapping circles, no cut-and-choose"
+ ],
+ "241": [
+  "G",
+  "3/4 = 6/8 > 5/8 on bars"
+ ],
+ "242": [
+  "P",
+  "stray dots"
+ ],
+ "243": [
+  "G",
+  "rectangle 3 x (4 - 1) = 9"
+ ],
+ "244": [
+  "G",
+  "h / tan: 0.87, 1.5, 2.6 m as the sun lowers"
+ ],
+ "245": [
+  "P",
+  "8.625 right, then '= 9'"
+ ],
+ "246": [
+  "G",
+  "3.7 is nearer 4 than 3"
+ ],
+ "249": [
+  "G",
+  "2^x passes 2x + 1, gap grows"
+ ],
+ "251": [
+  "G",
+  "pressure pattern moves, air stays"
+ ],
+ "252": [
+  "P",
+  "cluttered"
+ ],
+ "253": [
+  "G",
+  "odd sines build a square wave"
+ ],
+ "254": [
+  "G",
+  "1/2 + 1/4 + ... fills the square"
+ ],
+ "260": [
+  "P",
+  "muddled balancing steps"
+ ],
+ "262": [
+  "G",
+  "s = 4t - t^2, slope 4 -> 0 -> -4"
+ ],
+ "263": [
+  "B",
+  "starts at 20: '480/25 = 18.4' (19.2); from 0 it is 20 weeks"
  ]
 }

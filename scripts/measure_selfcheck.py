@@ -24,9 +24,10 @@ def main() -> int:
             (ROOT / "data" / "selfgen" / "rows.jsonl").read_text().splitlines()}
     model, tok = load(None, base=BASE_MODEL)
     out = {}
-    for k, (grade, why) in eye.items():
+    for k, v in eye.items():
         if not k.isdigit() or int(k) not in rows:
             continue
+        grade, why = v
         r = rows[int(k)]
         beats, bodies = parse_scene(r["reply"])
         got = self_check(r["request"], beats, bodies, model, tok)
