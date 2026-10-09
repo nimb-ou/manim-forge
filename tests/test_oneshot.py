@@ -125,3 +125,14 @@ def test_a_flawed_draft_goes_back_with_its_problems(monkeypatch):
     assert "PROBLEMS FOUND" in prompts[1][0] and "beat 2:" in prompts[1][0]
     assert "stage.caption('sheared')" in prompts[1][0] and prompts[1][1] == 0.0
     assert "apply_matrix" in res.bodies[1]
+
+
+def test_a_failed_render_tells_the_critic_its_error_and_line():
+    from forge.app.pipeline import _failure
+    stderr = ("│ /tmp/s.py:2542 in construct                     │\n"
+              "│ ❱ 2542 │   │   stage.play(Animation(d).to_edge(UP))      │\n"
+              "╰──────────────────────────────────────────────────╯\n"
+              "AttributeError: 'Animation' object has no attribute 'to_edge'\n")
+    got = _failure(stderr)
+    assert got.startswith("AttributeError: 'Animation' object has no attribute 'to_edge'")
+    assert "stage.play(Animation(d).to_edge(UP))" in got

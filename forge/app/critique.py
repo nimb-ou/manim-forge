@@ -68,8 +68,9 @@ def problems(res) -> list[str]:
     from forge.app.checks import arithmetic_errors
     out: list[str] = []
     if not res.ok:
-        out.append(f"the scene did not render ({res.error or 'error'}); use only kit "
-                   "blocks and names from the examples")
+        why = getattr(res, "failure", "") or res.error or "error"
+        out.append(f"the scene did not render: {why}; fix or drop that statement, and "
+                   "use only kit blocks and names from the examples")
     found = static_problems(res.beats, res.bodies) + list(getattr(res, "issues", []))
     for n, what in sorted(found, key=lambda x: x[0]):
         line = f"beat {n}: {what}" if n else what

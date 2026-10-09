@@ -105,3 +105,9 @@ def test_kit_issues_are_counted_and_said(capsys):
     st.issue("the point (9, 9) is outside its axes")
     assert st._issues == 1
     assert "ISSUE 3 the point (9, 9) is outside its axes" in capsys.readouterr().err
+
+
+def test_curves_with_a_hole_are_plotted_around_it():
+    f = kit._hole_safe(lambda x: 3 + (x - 2) ** 2 if x != 2 else None)
+    assert abs(f(2) - 3) < 1e-6 and f(3) == 4
+    assert kit._hole_safe(lambda x: 1 / x)(0) > 100

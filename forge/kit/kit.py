@@ -856,9 +856,28 @@ def _axis_tag(t, font_size: int = 48, color=WHITE):
     return MathTex(s, font_size=font_size, color=color)
 
 
+def _hole_safe(f):
+    """f with its holes stepped over: ``lambda x: ... if x != 2 else None``
+    (a limit scene's removable discontinuity) crashed the plot when a
+    sample landed on x = 2 (world set, 2026-10-09). Where f gives None, an
+    error or a non-number, read it a hair to the side instead."""
+    def g(x):
+        for dx in (0.0, 1e-6, -1e-6, 1e-3, -1e-3):
+            try:
+                v = f(x + dx)
+                if v is not None and np.isfinite(float(v)):
+                    return float(v)
+            except Exception:
+                pass
+        return 0.0
+    g.__wrapped__ = f
+    return g
+
+
 def plot_graph(stage: Stage, ax, f, x_range=None, color=BLUE, label: str | None = None):
     """Plot f on the axes and draw it."""
     _need(ax, "plot", "the axes from draw_axes(stage)", "plot_graph(stage, axes, f)")
+    f = _hole_safe(f)
     xr = x_range or (ax.x_range[0], ax.x_range[1])
     want = xr[1] - xr[0]
     xr = _inside(ax, f, xr[0], xr[1])

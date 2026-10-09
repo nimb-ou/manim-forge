@@ -888,3 +888,38 @@ Pascal's row 1 3 6 4 1, dice sums that stay flat. About 100 s a scene in
 this batch run, ~50 s in the app when the first sample is clean.
 
 **v1.0's numbers are these.**
+
+## v1.5: the real-world dev set · 2026-10-08/09
+
+30 requests phrased the way people ask (`forge/evaluate/world_prompts.json`),
+release library, best of 2, graded by eye (`data/eye/world_*.json`).
+
+| run | what changed | good | partial | bad |
+|---|---|---|---|---|
+| `world_v1` | v1.0 as shipped | 17 | 10 | 3 |
+| `world_plan` | + `# plan:` lesson plan first | 19 | 9 | 2 |
+| `world_think` | + Qwen3.5 thinking | 0 of 9 written (the budget went on thinking) | | |
+| `world_kit` | + kit repairs counted (scenes byte-identical to `world_plan`), **graded strictly** | 12 | 15 | 3 |
+| `world_revise` | + batch 138 in the library, + critique-and-rewrite | **14** | 14 | 2 |
+
+**Grading drift.** `world_kit` produced the same 30 scripts as
+`world_plan`, byte for byte, yet I graded it 12 good where I had graded
+`world_plan` 19 the day before. The difference is the standard: on Oct 9 a
+beat whose caption promises a motion the picture never shows ("the grid
+becomes a parallelogram" over a still grid) is partial, however clean the
+frame. Rows above `world_kit` were graded leniently; comparisons are made
+within one day's standard only. From here on, every row is graded to the
+strict one.
+
+**The rewrite.** The critic (`forge/app/critique.py`) lists what is wrong
+with a draft: beats that only change the caption, the kit's own reports
+(points off their axes, curves cut off, one-step descents, misused slots,
+text on text, text-only frames) and arithmetic slips. The draft goes back
+with that list instead of a blind second sample. It won 4 of 30 scenes:
+the dot product (shadow 2 × 3 = 6, then 0, then −6) and the linear
+transformation (the grid now actually shears) went partial → good; a
+projectile stayed partial; negative × negative went good → partial (9
+beats, arrows that disagree with captions; rewrites are now told to keep
+3–6 beats). The library change moved four first drafts: the neuron now
+renders (bad → good), momentum improved, 3 heads bad → partial, and the
+limit scene now fails to render (good → bad).

@@ -318,6 +318,17 @@ class Options:
     signatures: bool = False
 
 
+def _failure(stderr: str) -> str:
+    """The last exception message and the scene line that raised it, from a
+    manim traceback (rich-formatted)."""
+    lines = [re.sub(r"[│╭╮╰╯─]+", " ", x).strip() for x in stderr.splitlines()]
+    err = next((x for x in reversed(lines)
+                if re.match(r"^[A-Za-z_.]*(Error|Exception)\b", x)), "")
+    src = next((x for x in reversed(lines) if x.startswith("❱")), "")
+    src = re.sub(r"^❱\s*\d+\s*", "", src).strip()
+    return (f"{err} at `{src}`" if src else err)[:300]
+
+
 @dataclass
 class Result:
     request: str
@@ -334,6 +345,7 @@ class Result:
     layout: list[int] = field(default_factory=list)   # kit.layout_issues per beat
     issues: list[tuple[int, str]] = field(default_factory=list)  # (beat, what the kit saw)
     reply: str = ""          # the model's own text, for the one shot (training rows)
+    failure: str = ""        # a failed render's error and line, for the critic
 
 
 def run(request: str, host, emit: Emit, opts: Options | None = None,
@@ -518,6 +530,7 @@ def finish(request: str, beats: list[Beat], bodies: list[str], cm, ctok,
             notes.append("narration could not be mixed in; silent video")
     out = Result(request, beats, bodies, asm.code, ok=res.ok, beat_ends=ends,
                  layout=layout, issues=issues,
+                 failure="" if res.ok else _failure(res.stderr or ""),
                  video=video,
                  duration=res.duration_s, notes=notes,
                  error="" if res.ok else res.error_kind.value,
