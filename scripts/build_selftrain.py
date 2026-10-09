@@ -14,6 +14,7 @@ from __future__ import annotations
 import argparse
 import json
 import random
+import re
 import sys
 from pathlib import Path
 
@@ -34,6 +35,12 @@ def main() -> int:
         reject = {int(x.split()[0]) for x in Path(a.reject).read_text().split("\n")
                   if x.strip() and not x.startswith("#")}
     system = system_prompt(True, plan=True)
+    # Problems the critic no longer reports (a grid past the frame edge, from
+    # rows written before the kit stopped counting it) do not disqualify.
+    stale = re.compile(r"a (NumberPlane|ComplexPlane) runs off the edge")
+    for r in rows:
+        r["clean"] = bool(r.get("ok")) and not [p for p in r.get("problems", [])
+                                               if not stale.search(p)]
     keep = [r for r in rows if r.get("clean") and r["i"] not in reject
             and r.get("user") and not touches_heldout(r["request"])]
     out = [{"messages": [{"role": "system", "content": system},

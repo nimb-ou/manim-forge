@@ -193,6 +193,10 @@ def layout_report(scene) -> list[tuple[int, str]]:
                 if w * h > 0.2 * small:
                     bad.append((1, f"the text {name(texts[i])} overlaps {name(texts[j])}"))
     for m in scene.mobjects:
+        # A grid reaching past the frame is the normal picture after a
+        # shear or a stretch, not a problem (self-training rows, 2026-10-09).
+        if isinstance(m, _NP):
+            continue
         if m.width > 1e-3 and (abs(m.get_left()[0]) > 7.3 or abs(m.get_right()[0]) > 7.3
                                or abs(m.get_top()[1]) > 4.15 or abs(m.get_bottom()[1]) > 4.15):
             bad.append((1, f"a {type(m).__name__} runs off the edge of the frame"))
