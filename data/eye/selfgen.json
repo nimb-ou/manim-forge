@@ -1,0 +1,55 @@
+{
+ "rubric": "G/P/B, strict; only G rows train (scripts/build_selftrain.py --eye)",
+ "2": [
+  "G",
+  "a = v^2/r = 25/2 = 12.5, velocity turns, change points inward"
+ ],
+ "5": [
+  "P",
+  "resistors vanish; the sum sits on the wire"
+ ],
+ "7": [
+  "G",
+  "(1,1) x -2 = (-2,-2), flips and doubles"
+ ],
+ "8": [
+  "P",
+  "third beat empty and garbled"
+ ],
+ "9": [
+  "G",
+  "100 x 1 = 20 x 5 on the ramp"
+ ],
+ "11": [
+  "G",
+  "point on the circle traces sine and cosine"
+ ],
+ "12": [
+  "B",
+  "secant from the origin; 'lim (1+h) = 2' is false"
+ ],
+ "13": [
+  "P",
+  "overlapping rectangles; 'area x k^2 = 4'"
+ ],
+ "15": [
+  "P",
+  "pendulum then unrelated peaks"
+ ],
+ "18": [
+  "P",
+  "equilibrium dot below the crossing (lines meet at (5, 6))"
+ ],
+ "19": [
+  "B",
+  "a circle on a line, nothing changes"
+ ],
+ "22": [
+  "P",
+  "'cross out 25, 35, 55' (55 > 50); colours muddled; 15 primes right"
+ ],
+ "23": [
+  "G",
+  "150,000,000 / 300,000 = 500 s = 8 min 20 s"
+ ]
+}

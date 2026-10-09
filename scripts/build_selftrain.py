@@ -25,6 +25,8 @@ sys.path.insert(0, str(ROOT))
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--reject", default="")
+    ap.add_argument("--eye", default="",
+                    help="data/eye/selfgen.json: keep only rows graded G there")
     a = ap.parse_args()
     from forge.app.oneshot import system_prompt
     from forge.evaluate.heldout_guard import touches_heldout
@@ -41,6 +43,9 @@ def main() -> int:
     for r in rows:
         r["clean"] = bool(r.get("ok")) and not [p for p in r.get("problems", [])
                                                if not stale.search(p)]
+    if a.eye:
+        eye = json.loads(Path(a.eye).read_text())
+        reject |= {r["i"] for r in rows if eye.get(str(r["i"]), ["?"])[0] != "G"}
     keep = [r for r in rows if r.get("clean") and r["i"] not in reject
             and r.get("user") and not touches_heldout(r["request"])]
     out = [{"messages": [{"role": "system", "content": system},

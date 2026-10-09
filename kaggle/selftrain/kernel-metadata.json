@@ -1,6 +1,6 @@
 {
-  "id": "nimbou/manim-forge-selftrain",
-  "title": "Manim Forge selftrain",
+  "id": "nimbou/manim-forge-selftrain-sft",
+  "title": "Manim Forge selftrain sft",
   "code_file": "train.py",
   "language": "python",
   "kernel_type": "script",
