@@ -1,0 +1,123 @@
+{
+ "rubric": "strict (2026-10-09). Control for world_revise: same library and plan, best of 2 with a blind second sample, no rewrite. Kit had the hole fix (08 renders) and the play/riders fixes.",
+ "01": [
+  "P",
+  "new first draft: vectors from the axes origin, no descent"
+ ],
+ "02": [
+  "G",
+  "renders now: inputs, weights, weighted sum 0.75, sigmoid 0.68 (close to the batch 138 scene)"
+ ],
+ "03": [
+  "P",
+  "ball moves once at rate 0.1; rate 0 stays"
+ ],
+ "04": [
+  "G",
+  ""
+ ],
+ "05": [
+  "G",
+  ""
+ ],
+ "06": [
+  "G",
+  ""
+ ],
+ "07": [
+  "P",
+  "caption numbers disagree with the picture (one rectangle shown as none; 4 rectangles 8/9)"
+ ],
+ "08": [
+  "G",
+  "hole at x=2, bands 0.5 then 0.05, both sides trapped, limit 3 (renders thanks to the hole fix)"
+ ],
+ "09": [
+  "G",
+  ""
+ ],
+ "10": [
+  "G",
+  ""
+ ],
+ "11": [
+  "P",
+  "the arrow is drawn now (from-to fix) but Q sits off the grid in the title"
+ ],
+ "12": [
+  "P",
+  "the grid never transforms: beat 2 is a caption only"
+ ],
+ "13": [
+  "G",
+  ""
+ ],
+ "14": [
+  "P",
+  "as world_kit: v over the title, cramped"
+ ],
+ "15": [
+  "P",
+  "as world_kit: the grid never transforms"
+ ],
+ "16": [
+  "G",
+  ""
+ ],
+ "17": [
+  "P",
+  "as world_kit"
+ ],
+ "18": [
+  "G",
+  ""
+ ],
+ "19": [
+  "P",
+  "the bar highlighted as 'most students' is not the tallest"
+ ],
+ "20": [
+  "B",
+  "as world_kit"
+ ],
+ "21": [
+  "G",
+  "t = sqrt(2h/g) has no m; d = 5t^2; a = g"
+ ],
+ "22": [
+  "P",
+  "last beat clears the curves"
+ ],
+ "23": [
+  "P",
+  "the curve falls off the axes"
+ ],
+ "24": [
+  "G",
+  "bike 100 kg vs truck 2000 kg, 500 vs 10000, 20 times longer to stop (close to batch 138)"
+ ],
+ "25": [
+  "G",
+  "as world_kit"
+ ],
+ "26": [
+  "B",
+  "slices vanish; empty frames"
+ ],
+ "27": [
+  "G",
+  ""
+ ],
+ "28": [
+  "P",
+  "one set of bars; no simple-vs-compound comparison"
+ ],
+ "29": [
+  "P",
+  "the sieve resets to all yellow; primes never marked"
+ ],
+ "30": [
+  "P",
+  "thin picture"
+ ]
+}

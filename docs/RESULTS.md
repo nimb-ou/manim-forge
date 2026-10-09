@@ -901,6 +901,7 @@ release library, best of 2, graded by eye (`data/eye/world_*.json`).
 | `world_think` | + Qwen3.5 thinking | 0 of 9 written (the budget went on thinking) | | |
 | `world_kit` | + kit repairs counted (scenes byte-identical to `world_plan`), **graded strictly** | 12 | 15 | 3 |
 | `world_revise` | + batch 138 in the library, + critique-and-rewrite | **14** | 14 | 2 |
+| `world_b2` | control: same library, blind second sample, no rewrite (kit had the hole fix) | 14 | 14 | 2 |
 
 **Grading drift.** `world_kit` produced the same 30 scripts as
 `world_plan`, byte for byte, yet I graded it 12 good where I had graded
@@ -923,3 +924,11 @@ beats, arrows that disagree with captions; rewrites are now told to keep
 3–6 beats). The library change moved four first drafts: the neuron now
 renders (bad → good), momentum improved, 3 heads bad → partial, and the
 limit scene now fails to render (good → bad).
+
+**Rewrite vs blind second sample** (`world_revise` vs `world_b2`, same
+first drafts). Where only the second attempt differed, the rewrite won three
+(dot product, linear transformation, 3 heads: bad → partial) and the blind
+sample one (negative × negative). Scene 08 rendered only in the control,
+because the kit learned to plot around a hole between the runs. Equal
+totals, a small edge for the rewrite on like-for-like scenes: it is on in
+the app (`forge/serve/server.py`).

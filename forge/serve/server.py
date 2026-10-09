@@ -139,11 +139,12 @@ class Worker(threading.Thread):
         model, tok = self.oneshot
         opts = Options(max_beats=job.spec.beats, quality=job.spec.quality,
                        kit=True, narrate=job.spec.narrate)
-        # A second sample only when the first fails to render whole or shows
-        # an arithmetic slip or a layout problem: both of Qwen3.5-9B's
-        # in-scope failures in run 2 were render failures.
+        # A second attempt only when the first fails to render whole or the
+        # critic finds a problem; it rewrites the draft with the problems
+        # listed (forge/app/critique.py) -- on the dev set it fixed three
+        # scenes a blind second sample left broken, and lost one.
         res = run_oneshot(job.spec.prompt, model, tok, job.emit, opts,
-                          api=True, samples=2, plan=True)
+                          api=True, samples=2, plan=True, revise=1)
         self._log(job, res)
 
     def _log(self, job: Job, res) -> None:

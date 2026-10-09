@@ -24,9 +24,9 @@ by-eye gate on the same prompts. **Dev set:** 30 real-world requests
 |---|---|---|
 | 1. real-world set | 30 requests, v1.0 graded | **17 good / 10 partial / 3 bad** |
 | 2. what and how to explain | a `# plan:` lesson plan first; Qwen3.5 thinking | plan **19 / 9 / 2** (kept, on in the app); thinking used its whole budget and wrote nothing (0 of 9) — dropped |
-| 3. visuals and code | kit: no silent scene-wiping repairs; repairs, off-axes points, clipped curves, off-frame arrows counted as problems; gradient descent shows its steps | running (`world_kit`) |
-| 4. smarter examples | checked scenes for weak topics; batch 138 (learning rate, neuron, projectile, momentum, amplitude/frequency, divide by zero) | in the library (966 scenes) |
-| 5. training, done right | fine-tune Qwen3.5-9B on its own best outputs (filtered by render, checks, judge, eye); Kaggle quota resets ~Oct 10 | must beat untuned on the dev set by eye |
+| 3. visuals and code | kit says what it repaired (`Stage.issue`); a critic lists caption-only beats, kit reports, slips and render errors; the draft is rewritten with them (`revise=1`) | graded strictly: 12/15/3 → **14/14/2**; rewrite beats a blind second sample 3–1 on like-for-like scenes; **on in the app**. Also found: my Oct 8 grades were lenient (same scripts, 19 vs 12 good) |
+| 4. smarter examples | batch 138 (learning rate, neuron, projectile, momentum, amplitude/frequency, divide by zero) | done (966 scenes). Retrieval already finds a close scene for every weak dev prompt; the model fails to follow it, so no more batches (the Oct 1–4 spiral) |
+| 5. training, done right | Qwen3.5-9B on its own scenes that pass the critic after the rewrite (`scripts/selfgen.py`, 300 library requests, none close to any eval prompt), QLoRA on Kaggle (`kaggle/selftrain`) | generating (Oct 9); must beat untuned on the dev set by eye |
 | release v1.5 | fresh test set, v1.0 vs v1.5 side by side, by eye | ~Oct 14 |
 
 ## Finish — 2026-10-08 (supersedes everything below; history in docs/HISTORY.md)
