@@ -346,6 +346,7 @@ class Result:
     issues: list[tuple[int, str]] = field(default_factory=list)  # (beat, what the kit saw)
     reply: str = ""          # the model's own text, for the one shot (training rows)
     failure: str = ""        # a failed render's error and line, for the critic
+    doubts: list[str] = field(default_factory=list)   # the model's own check of its numbers
 
 
 def run(request: str, host, emit: Emit, opts: Options | None = None,

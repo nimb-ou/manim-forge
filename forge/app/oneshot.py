@@ -128,7 +128,8 @@ def score(res) -> tuple:
     kept = sum(1 for b in res.bodies if b.strip())
     slips = len(arithmetic_errors("\n".join(res.bodies)))
     static = len(static_problems(res.beats, res.bodies))
-    return (res.ok, kept / max(1, len(res.beats)), -slips,
+    doubts = len(getattr(res, "doubts", []))
+    return (res.ok, kept / max(1, len(res.beats)), -(slips + doubts),
             -(sum(res.layout) + static), 3 <= len(res.beats) <= 6)
 
 
@@ -136,7 +137,8 @@ def run_oneshot(request: str, model, tok, emit=lambda e: None, opts=None,
                 harness=None, api: bool = False, k: int = 2,
                 max_tokens: int = 2400, exclude: set[str] | None = None,
                 samples: int = 1, temp: float = 0.7, greedy_first: bool = True,
-                plan: bool = False, think: bool = False, revise: int = 0):
+                plan: bool = False, think: bool = False, revise: int = 0,
+                check: bool = False):
     """Generate, parse, assemble and render as the pipeline does.
 
     With ``samples`` > 1 the first sample is greedy and the rest are drawn
@@ -147,6 +149,10 @@ def run_oneshot(request: str, model, tok, emit=lambda e: None, opts=None,
     fresh samples: the best draft so far goes back to the model with the
     problems found in it (forge/app/critique.py) to be rewritten. Attempts
     are ``samples`` in all either way.
+
+    With ``check`` each rendered draft is also read back to the model, which
+    lists wrong numbers or claims on screen (critique.self_check); they count
+    like arithmetic slips and go into the rewrite.
     """
     from forge.app.critique import problems, revise_prompt
     from forge.app.pipeline import Options, Result, ask, finish
@@ -196,6 +202,11 @@ def run_oneshot(request: str, model, tok, emit=lambda e: None, opts=None,
             res = finish(request, beats, bodies, model, tok, system, opts,
                          emit if samples == 1 else (lambda e: None),
                          harness, t0, [])
+        if check and res.ok and res.beats:
+            from forge.app.critique import self_check
+            res.doubts = self_check(request, res.beats, res.bodies, model, tok, ask=ask)
+            if res.doubts:
+                emit({"stage": "assemble", "note": "self-check: " + "; ".join(res.doubts[:2])})
         if samples > 1:
             res.notes.append(f"sample {n + 1}/{samples}{' (revised)' if found else ''}: "
                              f"score {score(res)}")

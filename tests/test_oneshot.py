@@ -136,3 +136,20 @@ def test_a_failed_render_tells_the_critic_its_error_and_line():
     got = _failure(stderr)
     assert got.startswith("AttributeError: 'Animation' object has no attribute 'to_edge'")
     assert "stage.play(Animation(d).to_edge(UP))" in got
+
+
+def test_self_check_reads_the_screen_and_parses_its_verdict():
+    from forge.app.critique import check_prompt, self_check
+    from forge.app.twostage import Beat
+    beats = [Beat(1, None, "beats in a day")]
+    bodies = ['stage.equation(r"72 \\times 86400 = 6220800")\nstage.caption("beats in a day")']
+    p = check_prompt("how many times does a heart beat in a day?", beats, bodies)
+    assert "72 \\times 86400" in p and "beats in a day" in p
+    said = []
+
+    def fake(model, tok, system, user, max_tokens):
+        said.append(user)
+        return "beat 1: 72 is per minute, 86400 is seconds -> 72 x 1440 = 103,680"
+    got = self_check("r", beats, bodies, None, None, ask=fake)
+    assert got == ["beat 1: on screen, 72 is per minute, 86400 is seconds -> 72 x 1440 = 103,680"]
+    assert self_check("r", beats, bodies, None, None, ask=lambda *a, **k: "NONE") == []

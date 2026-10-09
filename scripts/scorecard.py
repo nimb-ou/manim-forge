@@ -126,6 +126,8 @@ def main() -> int:
     ap.add_argument("--revise", type=int, default=0,
                     help="one-shot: attempts after the first that rewrite the best "
                          "draft with its problems listed (forge/app/critique.py)")
+    ap.add_argument("--check", action="store_true",
+                    help="one-shot: the model checks the numbers on screen (critique.self_check)")
     ap.add_argument("--ids", default="",
                     help="only these prompts, by number (1-based, comma-separated)")
     ap.add_argument("--samples", type=int, default=1,
@@ -214,7 +216,7 @@ def main() -> int:
         if a.oneshot:
             res = run_oneshot(t.prompt, om, otok, opts=opts, api=a.api, k=a.k,
                               samples=a.samples, plan=a.plan, think=a.think,
-                              revise=a.revise)
+                              revise=a.revise, check=a.check)
         else:
             res = run(t.prompt, host, lambda e: None, opts, beats=given)
         bodies = [b for b in res.bodies if b.strip()]

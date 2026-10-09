@@ -76,6 +76,7 @@ def problems(res) -> list[str]:
         line = f"beat {n}: {what}" if n else what
         if line not in out:
             out.append(line)
+    out += [d for d in getattr(res, "doubts", []) if d not in out]
     for slip in arithmetic_errors("\n".join(res.bodies)):
         out.append(f"on screen, \"{slip}\" is false; work the numbers out again")
     return out[:12]
@@ -89,3 +90,69 @@ def revise_prompt(user: str, draft: str, found: list[str]) -> str:
             + "\n".join(f"- {p}" for p in found)
             + "\n\nWrite the whole scene again in the same format, fixing every "
               "problem above. Keep what already works, and keep to 3-6 beats.")
+
+
+# -- the model checks its own numbers ------------------------------------------
+# The critic above cannot see a wrong number stated in words: 72 beats a
+# minute "x 86,400" seconds, a dot labelled the equilibrium off the lines'
+# crossing, "swaps = 3" after two swaps. Those are most of what is still
+# wrong by eye in the self-training rows (2026-10-09). The model that wrote
+# the scene is asked, in a separate short call, to check the text it put
+# on screen against the request.
+
+CHECK_SYSTEM = (
+    "You check a short maths animation for mistakes before it is shown. You "
+    "get the request and, beat by beat, what the picture shows and every text "
+    "on screen. Work every number out yourself first. Then list each number, "
+    "formula or claim on screen that is wrong for this request, or that "
+    "disagrees with the picture or with another beat, one per line as\n"
+    "beat N: <what is wrong> -> <what it should be>\n"
+    "Style, wording and missing detail are not mistakes. If nothing is wrong, "
+    "answer exactly NONE.")
+
+_SHOWN = re.compile(r"stage\.(?:equation|caption|label|title)\s*\(")
+_LIT = re.compile(r"""[rRbBuUfF]{0,2}("(?:[^"\\\n]|\\.)*"|'(?:[^'\\\n]|\\.)*')""")
+
+
+def shown_texts(body: str) -> list[str]:
+    """The string literals a beat puts on screen through the stage."""
+    import ast
+    out = []
+    for m in _SHOWN.finditer(body):
+        depth, i = 1, m.end()
+        while i < len(body) and depth:
+            depth += {"(": 1, ")": -1}.get(body[i], 0)
+            i += 1
+        for sm in _LIT.finditer(body[m.end(): i - 1]):
+            try:
+                s = ast.literal_eval(sm.group(0))
+            except (SyntaxError, ValueError):
+                continue
+            if isinstance(s, str) and s.strip():
+                out.append(s.strip())
+    return out
+
+
+def check_prompt(request: str, beats, bodies) -> str:
+    lines = [f"REQUEST: {request}", ""]
+    for n, (b, body) in enumerate(zip(beats, bodies), 1):
+        texts = shown_texts(body)
+        lines.append(f"beat {n}: {b.intent}")
+        lines.append("  on screen: " + (" | ".join(texts) if texts else "(no text)"))
+    return "\n".join(lines)
+
+
+def self_check(request: str, beats, bodies, model, tok, ask=None) -> list[str]:
+    """The model's own list of wrong numbers or claims, as critic lines."""
+    if ask is None:
+        from forge.app.pipeline import ask
+    reply = ask(model, tok, CHECK_SYSTEM, check_prompt(request, beats, bodies),
+                max_tokens=300)
+    if reply.strip().upper().startswith("NONE"):
+        return []
+    found = []
+    for line in reply.splitlines():
+        m = re.match(r"\s*[-*]?\s*beat\s*(\d+)\s*[:.-]\s*(.+)", line, re.I)
+        if m and len(found) < 4:
+            found.append(f"beat {m.group(1)}: on screen, {m.group(2).strip()}")
+    return found
