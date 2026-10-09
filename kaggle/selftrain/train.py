@@ -171,7 +171,7 @@ BASE = "Qwen/Qwen3.5-9B"
 RAW = ds
 ds = ds.map(_render, remove_columns=ds["train"].column_names)
 print("\nrendered prompt tail:\n", ds["train"][0]["prompt"][-300:])
-print("\nexample:\n", textwrap.shorten(ds["train"][0]["messages"][1]["content"], 200))
+print("\nexample:\n", textwrap.shorten(RAW["train"][0]["messages"][1]["content"], 200))
 
 # ── 2b. one attempt per process ────────────────────────────────────────────
 # Run 16's smoke passed cleanly and its full run then died with
@@ -358,9 +358,14 @@ def train_once(use_fp16: bool, smoke: bool, tag: str,
     # Standard QLoRA preparation: upcasts fp16/bf16 params to fp32, casts the
     # norms, makes the output embedding require grad. use_reentrant=False is the
     # supported checkpointing path.
-    model = prepare_model_for_kbit_training(
-        model, use_gradient_checkpointing=True,
+    # Not prepare_model_for_kbit_training: it upcasts every non-quantized
+    # parameter to fp32, and Qwen3.5's 248k-word embeddings and LM head are
+    # ~2B of them -- 8 GB, 11.8 of the T4's 15.6 GB gone before step 1 (the
+    # first smoke, 2026-10-09). Checkpointing and input grads are all that
+    # LoRA needs from it.
+    model.gradient_checkpointing_enable(
         gradient_checkpointing_kwargs={"use_reentrant": False})
+    model.enable_input_require_grads()
 
     # Belt and braces on top of that: every norm explicitly fp32. fp16 training
     # overflows in normalisation before it overflows anywhere else.
@@ -489,7 +494,14 @@ def train_once(use_fp16: bool, smoke: bool, tag: str,
 
 
     class GradSafeSFTTrainer(SFTTrainer):
-        """SFTTrainer that normalises gradient dtypes in the frame that fails.
+        """SFTTrainer that normalises gradient dtypes in the frame that fails,
+        and computes logits only where there is a label.
+
+        The full logits of a 5k-token row over a 248k vocabulary are 5 GB in
+        fp32; the scene being learned is ~1.5k of those tokens. So the
+        forward keeps only the positions whose next token is a completion
+        token (``logits_to_keep`` as an index tensor) and the loss is the
+        mean cross-entropy over them.
 
         transformers calls, in this order:
 
@@ -504,6 +516,25 @@ def train_once(use_fp16: bool, smoke: bool, tag: str,
         """
 
         _grad_reported = False
+
+        def __init__(self, *a, **k):
+            super().__init__(*a, **k)
+            self.model_accepts_loss_kwargs = False   # we return a mean; Trainer scales
+
+        def compute_loss(self, model, inputs, return_outputs=False,
+                         num_items_in_batch=None):
+            labels = inputs.get("labels")
+            if labels is None or labels.shape[0] != 1:
+                return super().compute_loss(model, inputs, return_outputs,
+                                            num_items_in_batch)
+            lab = labels[0]
+            pos = (lab[1:] != -100).nonzero().squeeze(-1)
+            out = model(input_ids=inputs["input_ids"],
+                        attention_mask=inputs.get("attention_mask"),
+                        logits_to_keep=pos, use_cache=False)
+            logits = out.logits[0].float()
+            loss = torch.nn.functional.cross_entropy(logits, lab[1:][pos])
+            return (loss, out) if return_outputs else loss
 
         def _clip_grad_norm(self, model):
             info = _normalise_grads(model)
