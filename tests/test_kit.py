@@ -51,8 +51,11 @@ def test_spaced_maths_labels_are_latex_and_words_stay_text(monkeypatch):
     st = kit.Stage.__new__(kit.Stage)
     for s in (r"\pi r", r"2\pi r", r"\theta = 30"):
         assert st._text(s, 28)[0] == "MathTex", s
-    for s in ("day 0", r"the \pi slice", "Legs 3 and 4"):
+    for s in ("day 0", "Legs 3 and 4"):
         assert st._text(s, 28)[0] == "Text", s
+    # Words with a command among them: running text, the command as maths
+    # (it was shown as the letters backslash-p-i).
+    assert st._text(r"the \pi slice", 28) == ("Tex", r"the $\pi$ slice")
 
 
 def test_axis_and_curve_labels_keep_words_and_maths_apart(monkeypatch):
