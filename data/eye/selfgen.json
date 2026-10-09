@@ -307,5 +307,121 @@
  "137": [
   "P",
   "thin"
+ ],
+ "141": [
+  "G",
+  "1+7+19+37 = 64 = 4^3 as growing shells"
+ ],
+ "142": [
+  "P",
+  "raw '2imes2'; boxes read 3 under '2 x 2 = 4'"
+ ],
+ "144": [
+  "P",
+  "messy second triangle"
+ ],
+ "146": [
+  "P",
+  "tangent drawn away from the curve"
+ ],
+ "147": [
+  "P",
+  "cluttered, stray arrows"
+ ],
+ "149": [
+  "G",
+  "slope of s(t) is v, slope of v(t) = t is a = 1"
+ ],
+ "153": [
+  "G",
+  "70 + 110 = 180, angles brought together"
+ ],
+ "154": [
+  "G",
+  "corners torn off make a straight line"
+ ],
+ "157": [
+  "P",
+  "red text over the caption"
+ ],
+ "158": [
+  "B",
+  "an XOR truth table called OR; 'both on: light' is wrong for stairs"
+ ],
+ "160": [
+  "B",
+  "garbled"
+ ],
+ "161": [
+  "P",
+  "parallelogram misplaced; 7.5 right"
+ ],
+ "162": [
+  "G",
+  "3 - 5 = -2 as a jump left"
+ ],
+ "164": [
+  "G",
+  "m1 m2 = 2 x (-1/2) = -1"
+ ],
+ "165": [
+  "P",
+  "the parallelogram floats away from the arrows"
+ ],
+ "167": [
+  "G",
+  "slices into a strip, pi r x r"
+ ],
+ "170": [
+  "G",
+  "f' sign matches f rising and falling, zeros at the turns"
+ ],
+ "171": [
+  "G",
+  "shadow forward, zero, backward"
+ ],
+ "174": [
+  "G",
+  "weighted sum 0.75, sigmoid 0.68"
+ ],
+ "175": [
+  "G",
+  "3 triangles, (n-2) x 180 = 540"
+ ],
+ "180": [
+  "P",
+  "overlapping circles"
+ ],
+ "184": [
+  "G",
+  "growth levels off at 50"
+ ],
+ "185": [
+  "G",
+  "arrows radiate outward, shorter further away"
+ ],
+ "188": [
+  "P",
+  "odd arrows"
+ ],
+ "189": [
+  "G",
+  "right angle at C anywhere; two isosceles triangles"
+ ],
+ "194": [
+  "G",
+  "90 / (90 + 891) = 9.2%"
+ ],
+ "196": [
+  "G",
+  "L + W = 10, A peaks at 25 when L = 5"
+ ],
+ "198": [
+  "P",
+  "basis change muddled"
+ ],
+ "199": [
+  "P",
+  "raw 'Foranye>0' text"
  ]
 }
