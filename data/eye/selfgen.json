@@ -203,5 +203,109 @@
  "83": [
   "G",
   "AAAAABBBCCCC -> 5A3B4C, 12 -> 6"
+ ],
+ "86": [
+  "G",
+  "slope readout, flat tangent at the top, f'(0) = 0"
+ ],
+ "91": [
+  "G",
+  "800 x 0.4 = 200 x 1.6 = 320"
+ ],
+ "93": [
+  "P",
+  "title 'One flip' throughout; HHH label for HH"
+ ],
+ "94": [
+  "P",
+  "counters garbled"
+ ],
+ "96": [
+  "P",
+  "last beats fade to nothing"
+ ],
+ "100": [
+  "P",
+  "an 8 column for a 3-digit number"
+ ],
+ "104": [
+  "G",
+  "(x-1)^2 - 4, roots 3 and -1"
+ ],
+ "105": [
+  "P",
+  "areas right (0.5, 1.125, 2, 3.125) but the formula shows as 'frac12 cdott'"
+ ],
+ "106": [
+  "P",
+  "hands drawn at 3:00; 75 degrees right"
+ ],
+ "108": [
+  "B",
+  "garbled forces, no wall"
+ ],
+ "109": [
+  "P",
+  "'slope is positive on the way up' over a slope of -3"
+ ],
+ "111": [
+  "B",
+  "garbled text, no exhaust"
+ ],
+ "112": [
+  "P",
+  "'2 pedal turns -> 2 wheel turns' (one pedal turn gives two)"
+ ],
+ "113": [
+  "P",
+  "cluttered; lambda labels disagree"
+ ],
+ "114": [
+  "G",
+  "w = -2v and w = 2v on one line"
+ ],
+ "116": [
+  "G",
+  "equal areas in equal times, fast near the sun"
+ ],
+ "118": [
+  "G",
+  "x = cos t, y = cos 2t is a parabola; other ratios"
+ ],
+ "121": [
+  "G",
+  "1 - x^2/2 + x^4/24 hugging cos x"
+ ],
+ "122": [
+  "G",
+  "waves bunch ahead, stretch behind"
+ ],
+ "123": [
+  "G",
+  "area 1/2 x 4 x 4 = 8 m; d = t^2/2 hits 8 at t = 4"
+ ],
+ "128": [
+  "B",
+  "no prism, two lines"
+ ],
+ "132": [
+  "P",
+  "odd first picture; 7 moves right"
+ ],
+ "133": [
+  "P",
+  "the angles never move"
+ ],
+ "134": [
+  "G",
+  "(-y, x) swirl, then a pull inward; particles spiral in"
+ ],
+ "135": [
+  "P",
+  "thin, cut captions"
+ ],
+ "137": [
+  "P",
+  "thin"
  ]
 }
