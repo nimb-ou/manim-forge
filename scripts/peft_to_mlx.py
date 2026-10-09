@@ -38,7 +38,20 @@ from pathlib import Path
 BASE_DEFAULT = "mlx-community/Qwen2.5-Coder-7B-Instruct-4bit"
 
 
-def convert(peft_dir: Path, out_dir: Path) -> dict:
+def _mlx_name(name: str, vl: bool) -> str:
+    """PEFT's module path -> mlx-lm's. Qwen3.5 is a vision-language
+    checkpoint: transformers names its text layers model.language_model.
+    layers.N (or model.layers.N when loaded as a causal LM), mlx-lm
+    language_model.model.layers.N (mlx_lm/models/qwen3_5.py sanitize)."""
+    if not vl:
+        return name
+    for a in ("model.language_model.", "model."):
+        if name.startswith(a):
+            return "language_model.model." + name[len(a):]
+    return name
+
+
+def convert(peft_dir: Path, out_dir: Path, vl: bool = False) -> dict:
     import mlx.core as mx
 
     cfg_path = peft_dir / "adapter_config.json"
@@ -83,6 +96,7 @@ def convert(peft_dir: Path, out_dir: Path) -> dict:
             name, w = name[: -len(".lora_B")] + ".lora_b", w.T
         else:
             continue
+        name = _mlx_name(name, vl)
         out[name] = w.astype(mx.float16)
         part = name.split(".")
         if "layers" in part:
@@ -184,7 +198,7 @@ def main() -> None:
                     help="load it and assert the weights actually moved")
     a = ap.parse_args()
 
-    stats = convert(a.peft, a.out)
+    stats = convert(a.peft, a.out, vl="Qwen3.5" in a.base)
     print("=" * 58)
     for k, v in stats.items():
         print(f"{k:>10}: {v}")
