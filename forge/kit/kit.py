@@ -175,6 +175,46 @@ def _hits(t, boxes) -> bool:
     return False
 
 
+_SWALLOWED = {"\t": "\\t", "\x08": "\\b", "\x0c": "\\f", "\x07": "\\a",
+              "\x0b": "\\v", "\r": "\\r"}
+
+
+def _unswallow(s: str) -> str:
+    r"""LaTeX written in a plain Python string loses its backslashes to
+    escapes: "\times" arrives as a tab and "imes", "\begin" as a backspace
+    and "egin", "\frac" as a form feed (self-training rows, 2026-10-09).
+    Put them back, and "\neq"/"\nabla"/"\nu" whose \n became a newline."""
+    s = str(s)
+    for ch, back in _SWALLOWED.items():
+        s = _re.sub(_re.escape(ch) + r"(?=[A-Za-z])", lambda m, b=back: b, s)
+    return _re.sub(r"\n(?=(eq|abla|u\b|ot\b|eg\b))", lambda m: "\\n", s)
+
+
+def _inline_math(s: str) -> str:
+    r"""Running text for Tex, with each LaTeX stretch in $...$: whole
+    \begin..\end environments, otherwise each word holding a command, a
+    power or a subscript. Text-mode specials outside maths are escaped."""
+    out, i = [], 0
+    for m in _re.finditer(r"\\begin\{(\w+\*?)\}.*?\\end\{\1\}", s, _re.S):
+        out.append(("t", s[i:m.start()]))
+        out.append(("m", m.group(0)))
+        i = m.end()
+    out.append(("t", s[i:]))
+    parts = []
+    for kind, chunk in out:
+        if kind == "m":
+            parts.append("$" + chunk + "$")
+            continue
+        words = []
+        for w in _re.split(r"(\s+)", chunk):
+            if _re.search(r"\\[A-Za-z]+|[\^_]", w):
+                words.append("$" + w + "$")
+            else:
+                words.append(_re.sub(r"([%&#])", r"\\\1", w))
+        parts.append("".join(words))
+    return "".join(parts)
+
+
 def layout_issues(scene) -> int:
     return sum(w for w, _ in layout_report(scene))
 
@@ -274,6 +314,7 @@ class Stage:
     # text slots ---------------------------------------------------------
     def _text(self, s: str, size: int):
         # A string with math in it becomes MathTex/Tex; plain words are Text.
+        s = _unswallow(s)
         if "$" in s:
             return Tex(s, font_size=size)
         if any(c in s for c in "\\^_") and " " not in s.strip():
@@ -283,6 +324,11 @@ class Stage:
         if _re.search(r"\\[A-Za-z]+", s) and not _re.search(
                 r"[A-Za-z]{3,}", _re.sub(r"\\[A-Za-z]+", " ", s)):
             return MathTex(s, font_size=size)
+        # Words with LaTeX among them ("800 N \times 1 m", "circle \pi
+        # \approx 3.14"): the commands set as maths inside running text,
+        # not shown raw.
+        if _re.search(r"\\[A-Za-z]+", s):
+            return Tex(_inline_math(s), font_size=size)
         return Text(s, font_size=size)
 
     def title(self, s: str, run_time: float = 1.0):
@@ -903,7 +949,7 @@ def _axis_tag(t, font_size: int = 48, color=WHITE):
     """An axis or curve label: LaTeX for maths (x, t, x^2, \\cos x); plain
     text for words with a space or a symbol LaTeX drops ("£k income",
     "m/s²", "more demand" came out "moredemand")."""
-    s = str(t)
+    s = _unswallow(str(t))
     if not _re.search(r"[\\^_]", s) and _re.search(r"[ £$%€°²³]", s):
         return Text(s, font_size=round(font_size * 0.55), color=color)
     return MathTex(s, font_size=font_size, color=color)
@@ -1118,7 +1164,7 @@ def _tag(label, font_size: int = 24):
     """A short label: LaTeX when it is maths (2^3, x_1, 10 \\times 0.1) or a
     bare number, plain text otherwise -- MathTex drops spaces and symbols,
     so "3 for £2" came out as "3for2" and "day 0" as "day0"."""
-    s = str(label)
+    s = _unswallow(str(label))
     if _re.search(r"[\\^_{}=]", s) or (s.isascii() and not _re.search(r"[A-Za-z$% ]", s)):
         return MathTex(s, font_size=font_size)
     return Text(s, font_size=round(font_size * 0.8))

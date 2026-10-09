@@ -122,3 +122,16 @@ def test_a_label_moves_off_text_already_there():
     boxes = [(other.get_left()[0], other.get_bottom()[1], other.get_right()[0], other.get_top()[1])]
     assert kit._hits(t.next_to(d, kit.UP, buff=0.15), boxes)
     assert not kit._hits(t.next_to(d, kit.DOWN, buff=0.15), boxes)
+
+
+def test_latex_that_lost_its_backslashes_to_escapes_is_restored():
+    assert kit._unswallow("800 N \times 1 m") == "800 N \\times 1 m"
+    assert kit._unswallow("\begin{bmatrix}") == "\\begin{bmatrix}"
+    assert kit._unswallow("x \neq 0") == "x \\neq 0"
+    assert kit._unswallow("two\nlines") == "two\nlines"
+
+
+def test_words_with_latex_commands_set_the_commands_as_maths():
+    assert kit._inline_math(r"800 N \times 1 m, 50% off") == r"800 N $\times$ 1 m, 50\% off"
+    got = kit._inline_math(r"A \begin{bmatrix} 2 & 0 \\ 0 & 2 \end{bmatrix} scales")
+    assert got == r"A $\begin{bmatrix} 2 & 0 \\ 0 & 2 \end{bmatrix}$ scales"

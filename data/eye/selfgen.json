@@ -51,5 +51,157 @@
  "23": [
   "G",
   "150,000,000 / 300,000 = 500 s = 8 min 20 s"
+ ],
+ "24": [
+  "B",
+  "overlap 'angle 360 x 11/22 = 164 degrees': the hands meet near 1:05, at 32.7 degrees"
+ ],
+ "27": [
+  "P",
+  "pi/16 = 0.196 and 39 of 200 right; a raw '\\pi \\approx' label"
+ ],
+ "28": [
+  "G",
+  "sin x then sin 2x, period 2pi -> pi, 2 cycles"
+ ],
+ "30": [
+  "P",
+  "raw 'egin{bmatrix}' in the caption"
+ ],
+ "31": [
+  "G",
+  "positive and negative correlation as points and lines"
+ ],
+ "33": [
+  "B",
+  "answers a balance-point question, not the rounding one"
+ ],
+ "34": [
+  "B",
+  "72 x 86,400: beats per minute times seconds"
+ ],
+ "36": [
+  "P",
+  "thin picture"
+ ],
+ "38": [
+  "P",
+  "odd rhombus, garbled readouts"
+ ],
+ "40": [
+  "G",
+  "1111 = 8+4+2+1 = 15, 2^4 = 16 patterns"
+ ],
+ "41": [
+  "P",
+  "v disappears, captions cut off"
+ ],
+ "42": [
+  "P",
+  "halves never counted to 6"
+ ],
+ "43": [
+  "P",
+  "passes right, but 'swaps = 3' (two swaps)"
+ ],
+ "45": [
+  "P",
+  "the boxes and the sums disagree (0000 beside 0011 = 3; 0111 called 1111)"
+ ],
+ "47": [
+  "P",
+  "plain; a stray line off the grid"
+ ],
+ "49": [
+  "G",
+  "4/52 x 3/51 = 12/2652 = 1/221"
+ ],
+ "50": [
+  "G",
+  "sin x / x squeezes to 1 from both sides"
+ ],
+ "51": [
+  "P",
+  "raw i^2 labels piled up"
+ ],
+ "52": [
+  "G",
+  "3 + 2i: across 3, up 2"
+ ],
+ "54": [
+  "G",
+  "p = mv, 20,000 vs 200,000, 4 s vs 40 s"
+ ],
+ "55": [
+  "P",
+  "(-1.5)(-1, 0) written as (-1.5, 0)"
+ ],
+ "57": [
+  "G",
+  "swap 3 and 1, then 3 and 2"
+ ],
+ "59": [
+  "P",
+  "final bars out of order"
+ ],
+ "60": [
+  "P",
+  "messy triangles, cut captions"
+ ],
+ "61": [
+  "B",
+  "no sum of waves"
+ ],
+ "64": [
+  "B",
+  "the triangle drawn is not A(0,0) B(4,0) C(0,3)"
+ ],
+ "65": [
+  "P",
+  "slope never given as rise over run"
+ ],
+ "67": [
+  "P",
+  "'sorted' bars out of order"
+ ],
+ "68": [
+  "P",
+  "3/5 right but title says without replacement; thin"
+ ],
+ "69": [
+  "B",
+  "'A/P decreases as s grows' (A/P = s/4 grows)"
+ ],
+ "70": [
+  "G",
+  "10 columns of 11 = 110, half = 55"
+ ],
+ "71": [
+  "G",
+  "10,000 cm^2 x 0.1 cm = 1000 cm^3 = 1 L"
+ ],
+ "73": [
+  "P",
+  "the folded half hangs outside"
+ ],
+ "74": [
+  "P",
+  "middle beat a pile of rectangles"
+ ],
+ "78": [
+  "P",
+  "raw 'imes' text (\\t swallowed)"
+ ],
+ "79": [
+  "G",
+  "300 -> 150 -> 30, 20% of 30 = 6"
+ ],
+ "82": [
+  "G",
+  "spike spreads; curvature drives it"
+ ],
+ "83": [
+  "G",
+  "AAAAABBBCCCC -> 5A3B4C, 12 -> 6"
  ]
 }
