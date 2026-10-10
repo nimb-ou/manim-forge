@@ -77,6 +77,9 @@ def problems(res) -> list[str]:
         if line not in out:
             out.append(line)
     out += [d for d in getattr(res, "doubts", []) if d not in out]
+    for n, num in getattr(res, "unexplained", [])[:4]:
+        out.append(f"beat {n}: shows {num}, which is not one of the worked numbers; "
+                   "show the worked variable with an f-string and fmt() instead")
     for slip in arithmetic_errors("\n".join(res.bodies)):
         out.append(f"on screen, \"{slip}\" is false; work the numbers out again")
     return out[:12]
@@ -156,3 +159,34 @@ def self_check(request: str, beats, bodies, model, tok, ask=None) -> list[str]:
         if m and len(found) < 4:
             found.append(f"beat {m.group(1)}: on screen, {m.group(2).strip()}")
     return found
+
+
+# -- what a student is told ----------------------------------------------------
+
+def student_verdict(res) -> dict:
+    """Whether the numbers on screen were checked, and if not, why -- in
+    words for the person watching, not for the model. A scene is "checked"
+    when its numbers were computed by running Python (forge/app/solve.py),
+    every number shown is one of them or the question's own, the arithmetic
+    on screen holds, and every beat was drawn."""
+    from forge.app.checks import arithmetic_errors
+    sol = getattr(res, "solution", None)
+    notes = []
+    if sol is None or not getattr(sol, "ok", False):
+        notes.append("The numbers were not worked out by a calculation this time, "
+                     "so they come from the AI alone. Check them.")
+    for slip in arithmetic_errors("\n".join(res.bodies)):
+        notes.append(f"On screen, “{slip}” is not right.")
+    for n, num in getattr(res, "unexplained", []):
+        notes.append(f"Part {n} shows {num}, which the worked calculation did not produce.")
+    for n, body in enumerate(res.bodies, 1):
+        if not body.strip():
+            notes.append(f"Part {n} could not be drawn and was left out.")
+    if not res.ok:
+        notes = ["The animation could not be made."]
+    facts = []
+    if sol is not None and getattr(sol, "ok", False):
+        from forge.app.solve import _show
+        for k, v in sol.values.items():
+            facts.append({"name": k, "value": _show(v), "what": sol.comments.get(k, "")})
+    return {"checked": bool(res.ok and not notes), "notes": notes[:5], "facts": facts}

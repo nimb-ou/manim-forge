@@ -1,0 +1,16 @@
+# What the app needs, pinned to the versions it was tested with (2026-10-10).
+# ./install.sh installs these; requirements.txt is the research toolkit.
+manim==0.21.0
+mlx==0.32.2
+mlx-lm==0.31.3
+mlx-audio==0.5.7
+misaki[en]==0.9.4
+fastapi==0.141.1
+uvicorn[standard]==0.53.0
+huggingface_hub==1.32.0
+transformers==5.17.0
+torch==2.14.0            # the scene library's small embedding model
+numpy==2.5.3
+sympy==1.14.0            # the worked numbers may use it
+pillow==12.3.0
+sentencepiece==0.2.2

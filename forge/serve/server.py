@@ -62,6 +62,8 @@ class JobIn(BaseModel):
     kit: bool = KIT_DEFAULT
     engine: str = Field(default=ENGINE, pattern="^(twostage|oneshot)$")
     narrate: bool = True
+    solve: bool = True       # compute the numbers first (forge/app/solve.py)
+    variant: int = Field(default=0, ge=0, le=1000)   # >0: "make another version", sampled
 
 
 @dataclass
@@ -145,8 +147,12 @@ class Worker(threading.Thread):
         # critic finds a problem; it rewrites the draft with the problems
         # listed (forge/app/critique.py) -- on the dev set it fixed three
         # scenes a blind second sample left broken, and lost one.
+        if job.spec.variant:
+            import mlx.core as mx
+            mx.random.seed(job.spec.variant)
         res = run_oneshot(job.spec.prompt, model, tok, job.emit, opts,
-                          api=True, samples=2, plan=True, revise=1)
+                          api=True, samples=2, plan=True, revise=1,
+                          solve=job.spec.solve, greedy_first=not job.spec.variant)
         self._log(job, res)
 
     def _log(self, job: Job, res) -> None:
@@ -157,7 +163,8 @@ class Worker(threading.Thread):
                "beats": [{"n": b.n, "seconds": b.seconds, "intent": b.intent,
                           "narration": b.narration} for b in res.beats],
                "bodies": res.bodies, "code": res.code, "video": res.video,
-               "seconds": round(res.seconds, 1)}
+               "seconds": round(res.seconds, 1),
+               "verdict": getattr(res, "verdict", {})}
         (SESSIONS / f"{time.strftime('%Y%m%d-%H%M%S')}-{job.id}.json") \
             .write_text(json.dumps(rec, indent=1))
 
@@ -215,10 +222,14 @@ def events(jid: str) -> StreamingResponse:
 
 
 @app.get("/api/jobs/{jid}/video")
-def video(jid: str) -> FileResponse:
+def video(jid: str, download: int = 0) -> FileResponse:
     job = worker.jobs.get(jid)
     if job is None or not job.video or not Path(job.video).exists():
         raise HTTPException(404, "no video for this job")
+    if download:
+        import re as _re
+        name = _re.sub(r"[^a-z0-9]+", "-", job.spec.prompt.lower()).strip("-")[:60] or "animation"
+        return FileResponse(job.video, media_type="video/mp4", filename=f"{name}.mp4")
     return FileResponse(job.video, media_type="video/mp4")
 
 

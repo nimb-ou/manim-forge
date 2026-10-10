@@ -347,6 +347,9 @@ class Result:
     reply: str = ""          # the model's own text, for the one shot (training rows)
     failure: str = ""        # a failed render's error and line, for the critic
     doubts: list[str] = field(default_factory=list)   # the model's own check of its numbers
+    solution: object = None  # the worked numbers (forge/app/solve.Solution), if any
+    verdict: dict = field(default_factory=dict)   # what the student is told (critique.student_verdict)
+    unexplained: list[tuple[int, str]] = field(default_factory=list)  # numbers nothing computed
 
 
 def run(request: str, host, emit: Emit, opts: Options | None = None,

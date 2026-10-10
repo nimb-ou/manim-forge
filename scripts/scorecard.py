@@ -128,6 +128,8 @@ def main() -> int:
     ap.add_argument("--revise", type=int, default=0,
                     help="one-shot: attempts after the first that rewrite the best "
                          "draft with its problems listed (forge/app/critique.py)")
+    ap.add_argument("--solve", action="store_true",
+                    help="one-shot: compute the numbers first (forge/app/solve.py)")
     ap.add_argument("--check", action="store_true",
                     help="one-shot: the model checks the numbers on screen (critique.self_check)")
     ap.add_argument("--ids", default="",
@@ -219,7 +221,7 @@ def main() -> int:
         if a.oneshot:
             res = run_oneshot(t.prompt, om, otok, opts=opts, api=a.api, k=a.k,
                               samples=a.samples, plan=a.plan, think=a.think,
-                              revise=a.revise, check=a.check)
+                              revise=a.revise, check=a.check, solve=a.solve)
         else:
             res = run(t.prompt, host, lambda e: None, opts, beats=given)
         bodies = [b for b in res.bodies if b.strip()]
@@ -235,6 +237,8 @@ def main() -> int:
                "error": res.error, "notes": res.notes,
                "layout": getattr(res, "layout", []),
                "issues": getattr(res, "issues", []),
+               "unexplained": getattr(res, "unexplained", []),
+               "solution": (res.solution.code if getattr(res, "solution", None) else ""),
                "elapsed": round(time.time() - t0)}
         slug = re.sub(r"[^a-z0-9]+", "-", t.prompt.lower())[:40].strip("-")
         (out_dir / f"{i:02d}-{slug}.py").write_text(res.code)

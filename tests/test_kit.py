@@ -138,3 +138,9 @@ def test_words_with_latex_commands_set_the_commands_as_maths():
     assert kit._inline_math(r"800 N \times 1 m, 50% off") == r"800 N $\times$ 1 m, 50\% off"
     got = kit._inline_math(r"A \begin{bmatrix} 2 & 0 \\ 0 & 2 \end{bmatrix} scales")
     assert got == r"A $\begin{bmatrix} 2 & 0 \\ 0 & 2 \end{bmatrix}$ scales"
+
+
+def test_fmt_writes_numbers_as_people_do():
+    from fractions import Fraction
+    assert kit.fmt(12.0) == "12" and kit.fmt(5.125) == "5.13" and kit.fmt(Fraction(3, 4)) == "3/4"
+    assert kit.fmt(2.675) == "2.68" and kit.fmt(-1.5) == "-1.5"

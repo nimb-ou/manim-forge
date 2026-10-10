@@ -24,6 +24,11 @@ the GRPO reward, and anywhere else, with no import path to get wrong.
 from __future__ import annotations
 
 import numpy as np
+from fractions import Fraction    # the worked numbers (forge/app/solve.py) use it
+try:
+    import sympy
+except ImportError:               # only a worked-numbers program needs it
+    sympy = None
 from manim import (BLUE, BLUE_D, DOWN, GREEN, GREY, GREY_B, LEFT, ORIGIN,
                    ORANGE, PI, RED, RIGHT, TAU, TEAL, UP, WHITE, YELLOW,
                    AnimationGroup, ApplyMatrix, Arrow, Axes, Circle,
@@ -953,6 +958,27 @@ def _axis_tag(t, font_size: int = 48, color=WHITE):
     if not _re.search(r"[\\^_]", s) and _re.search(r"[ £$%€°²³]", s):
         return Text(s, font_size=round(font_size * 0.55), color=color)
     return MathTex(s, font_size=font_size, color=color)
+
+
+def fmt(x, dp: int = 2) -> str:
+    """A computed number as a person would write it: 12 not 12.0, 5.13 not
+    5.125000001, 3/4 for a Fraction. For f-strings over the worked numbers
+    (forge/app/solve.py): stage.equation(f"\\bar x = {fmt(mean)}")."""
+    from fractions import Fraction
+    if isinstance(x, Fraction):
+        return str(x.numerator) if x.denominator == 1 else f"{x.numerator}/{x.denominator}"
+    try:
+        v = float(x)
+    except (TypeError, ValueError):
+        return str(x)
+    if not np.isfinite(v):
+        return str(x)
+    if abs(v - round(v)) < 1e-9:
+        return str(int(round(v)))
+    from decimal import ROUND_HALF_UP, Decimal
+    s = str(Decimal(repr(v)).quantize(Decimal(1).scaleb(-dp), rounding=ROUND_HALF_UP))
+    s = s.rstrip("0").rstrip(".") if "." in s else s
+    return s if s not in ("0", "-0") else f"{v:.2g}"
 
 
 def _hole_safe(f):

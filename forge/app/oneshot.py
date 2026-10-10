@@ -152,7 +152,7 @@ def score(res) -> tuple:
     kept = sum(1 for b in res.bodies if b.strip())
     slips = len(arithmetic_errors("\n".join(res.bodies)))
     static = len(static_problems(res.beats, res.bodies))
-    doubts = len(getattr(res, "doubts", []))
+    doubts = len(getattr(res, "doubts", [])) + len(getattr(res, "unexplained", []))
     return (res.ok, kept / max(1, len(res.beats)), -(slips + doubts),
             -(sum(res.layout) + static), 3 <= len(res.beats) <= 6)
 
@@ -162,7 +162,7 @@ def run_oneshot(request: str, model, tok, emit=lambda e: None, opts=None,
                 max_tokens: int = 2400, exclude: set[str] | None = None,
                 samples: int = 1, temp: float = 0.7, greedy_first: bool = True,
                 plan: bool = False, think: bool = False, revise: int = 0,
-                check: bool = False):
+                check: bool = False, solve: bool = False):
     """Generate, parse, assemble and render as the pipeline does.
 
     With ``samples`` > 1 the first sample is greedy and the rest are drawn
@@ -177,6 +177,11 @@ def run_oneshot(request: str, model, tok, emit=lambda e: None, opts=None,
     With ``check`` each rendered draft is also read back to the model, which
     lists wrong numbers or claims on screen (critique.self_check); they count
     like arithmetic slips and go into the rewrite.
+
+    With ``solve`` the numbers are computed first (forge/app/solve.py): the
+    model writes a short program, it is run, its variables are given to the
+    scene writer and defined at the top of the scene, and any number on
+    screen they do not explain counts like a slip.
     """
     from forge.app.critique import problems, revise_prompt
     from forge.app.pipeline import Options, Result, ask, finish
@@ -184,6 +189,15 @@ def run_oneshot(request: str, model, tok, emit=lambda e: None, opts=None,
     t0 = time.time()
     system = system_prompt(api, plan=plan)
     user = user_prompt(request, k, exclude=exclude)
+    sol = None
+    if solve:
+        from forge.app import solve as _solve
+        emit({"stage": "solve", "status": "start"})
+        sol = _solve.solve(request, model, tok, ask=ask)
+        emit({"stage": "solve", "status": "done", "ok": sol.ok, "code": sol.code,
+              "facts": _solve.facts_text(sol) if sol.ok else "", "error": sol.error})
+        if sol.ok:
+            user = user + "\n\n" + _solve.facts_text(sol)
     best = None
     best_reply = ""
     revised = 0
@@ -212,6 +226,9 @@ def run_oneshot(request: str, model, tok, emit=lambda e: None, opts=None,
                     temp=0.0 if found or not (n or not greedy_first) else temp,
                     think=think)
         beats, bodies = parse_scene(reply)
+        if sol is not None and sol.ok and bodies:
+            from forge.app import solve as _solve
+            bodies[0] = _solve.preamble(sol) + "\n" + bodies[0]
         # The app lists beats from plan events and fills them from code
         # events; a new sample clears the list ("reset") and shows its own.
         if n and not found:
@@ -226,6 +243,10 @@ def run_oneshot(request: str, model, tok, emit=lambda e: None, opts=None,
             res = finish(request, beats, bodies, model, tok, system, opts,
                          emit if samples == 1 else (lambda e: None),
                          harness, t0, [])
+        if sol is not None and sol.ok:
+            from forge.app import solve as _solve
+            res.solution = sol
+            res.unexplained = _solve.unexplained(request, res.bodies, sol)
         if check and res.ok and res.beats:
             from forge.app.critique import self_check
             res.doubts = self_check(request, res.beats, res.bodies, model, tok, ask=ask)
@@ -243,10 +264,14 @@ def run_oneshot(request: str, model, tok, emit=lambda e: None, opts=None,
     if samples > 1 and best is not res and best.beats:
         # An earlier sample won: show its beats, not the last one tried.
         show(best.beats, best.bodies, reset=True)
+    from forge.app.critique import student_verdict
+    best.verdict = student_verdict(best) if best.beats else {
+        "checked": False, "notes": ["The animation could not be made."], "facts": []}
     if samples > 1:
         emit({"stage": "done", "ok": best.ok, "video": best.video,
               "duration": best.duration, "error": best.error,
-              "code": best.code, "elapsed": round(time.time() - t0, 1)})
+              "code": best.code, "elapsed": round(time.time() - t0, 1),
+              "verdict": best.verdict})
     if not best.beats:
         emit({"stage": "done", "ok": False, "error": "no beats in the reply"})
     best.reply = best_reply

@@ -163,3 +163,33 @@ def test_adapter_path_honours_the_switch(monkeypatch, tmp_path):
     assert oneshot.adapter_path() is None          # untuned by default
     monkeypatch.setenv("FORGE_ADAPTER", str(tmp_path))
     assert oneshot.adapter_path() == str(tmp_path)
+
+
+def test_worked_numbers_run_and_explain_what_is_on_screen():
+    from forge.app import solve
+    sol = solve.run("data = [2, 3, 3, 5, 5, 5, 8, 10]  # the list\n"
+                    "total = sum(data)  # the sum\nmean = Fraction(total, len(data))  # the mean\n"
+                    "answer = mean")
+    assert sol.ok and sol.values["total"] == 41 and sol.values["mean"]["fraction"] == [41, 8]
+    assert sol.comments["mean"] == "the mean"
+    right = ['stage.equation(r"\\bar x = \\frac{41}{8} = 5.125")']
+    wrong = ['stage.equation(r"\\bar x = \\frac{47}{8} = 5.875")']
+    assert solve.unexplained("the mean of 2, 3, 3, 5, 5, 5, 8, 10", right, sol) == []
+    assert (1, "5.875") in solve.unexplained("the mean of 2, 3, 3, 5, 5, 5, 8, 10", wrong, sol)
+    assert not solve.run("x = 1/0").ok
+
+
+def test_a_student_is_told_when_numbers_were_not_checked():
+    from forge.app import solve
+    from forge.app.critique import student_verdict
+    from forge.app.pipeline import Result
+    from forge.app.twostage import Beat
+    sol = solve.run("answer = 6 * 4  # the area")
+    res = Result("r", [Beat(1, None, "x")], ['stage.equation("6 \\\\times 4 = 24")'], ok=True)
+    res.solution = sol
+    v = student_verdict(res)
+    assert v["checked"] and v["facts"][0]["value"] == "24"
+    res.unexplained = [(1, "25")]
+    assert not student_verdict(res)["checked"]
+    res.solution, res.unexplained = None, []
+    assert "not worked out" in student_verdict(res)["notes"][0]
