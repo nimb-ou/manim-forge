@@ -1,0 +1,95 @@
+{
+ "about": "v2.0 final test (2026-10-10): 30 student questions written before any v2.0 work and never looked at until the final blind grading. Do not tune on these.",
+ "prompts": [
+  {
+   "prompt": "a shop sells pens at 3 for \u00a31.20. how much do 7 pens cost?"
+  },
+  {
+   "prompt": "what is 3/5 as a percentage?"
+  },
+  {
+   "prompt": "a recipe for 4 people uses 300 g of flour. how much for 10 people?"
+  },
+  {
+   "prompt": "how do you find the angle sum of an octagon?"
+  },
+  {
+   "prompt": "what is the area of a triangle with base 8 cm and height 5 cm?"
+  },
+  {
+   "prompt": "how do you solve 3x - 7 = 11?"
+  },
+  {
+   "prompt": "a car travels 150 km in 2.5 hours. what is its average speed?"
+  },
+  {
+   "prompt": "what is the probability of rolling a total of 7 with two dice?"
+  },
+  {
+   "prompt": "how do you expand (x + 4)(x - 2)?"
+  },
+  {
+   "prompt": "what is the circumference of a circle with diameter 10 cm?"
+  },
+  {
+   "prompt": "how does the gradient of y = 3x + 2 show on a graph?"
+  },
+  {
+   "prompt": "what is 2 to the power 10, and why does doubling grow so fast?"
+  },
+  {
+   "prompt": "how do you find the hypotenuse of a right triangle with sides 5 and 12?"
+  },
+  {
+   "prompt": "a phone costs \u00a3240 after a 20% discount. what was the original price?"
+  },
+  {
+   "prompt": "what is the difference between speed and velocity?"
+  },
+  {
+   "prompt": "why does a heavier pendulum not swing faster?"
+  },
+  {
+   "prompt": "how do you find the gradient of a curve at a point?"
+  },
+  {
+   "prompt": "what does the integral of 2x from 0 to 3 equal, and why?"
+  },
+  {
+   "prompt": "how many seconds are in a day?"
+  },
+  {
+   "prompt": "what is the mean of 4, 8, 15, 16 and 23?"
+  },
+  {
+   "prompt": "how do you convert 72 km/h into metres per second?"
+  },
+  {
+   "prompt": "what does it mean for two triangles to be similar?"
+  },
+  {
+   "prompt": "how does Ohm's law work?"
+  },
+  {
+   "prompt": "why is any number to the power 0 equal to 1?"
+  },
+  {
+   "prompt": "what is the range and interquartile range of a data set?"
+  },
+  {
+   "prompt": "how do simultaneous equations meet on a graph?"
+  },
+  {
+   "prompt": "how do you find the volume of a sphere of radius 3?"
+  },
+  {
+   "prompt": "what is a vector's magnitude and direction?"
+  },
+  {
+   "prompt": "why does the sum of the exterior angles of a polygon equal 360 degrees?"
+  },
+  {
+   "prompt": "how does kinetic energy change if you double the speed?"
+  }
+ ]
+}
