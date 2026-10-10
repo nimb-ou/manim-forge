@@ -48,10 +48,16 @@ def embedder():
 
 
 def voice():
-    from forge.app import voice as v
-    got = v.speak(["Ready."], Path(tempfile.mkdtemp()))
-    if not got or got[0][0] is None:
-        raise RuntimeError("narration unavailable; videos will be silent")
+    # In a child process: the speech engine's native code can kill the
+    # process outright (a long espeak data path did, 2026-10-10).
+    code = ("from pathlib import Path; import tempfile; from forge.app import voice as v; "
+            "g = v.speak(['Ready.'], Path(tempfile.mkdtemp())); "
+            "raise SystemExit(0 if g and g[0][0] else 3)")
+    p = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, timeout=600,
+                       cwd=Path(__file__).resolve().parents[2])
+    if p.returncode != 0:
+        tail = [x for x in (p.stderr or "").splitlines() if x.strip()][-1:] or ["no output"]
+        raise RuntimeError("narration unavailable, videos will be silent (" + tail[0][:160] + ")")
 
 
 def render():

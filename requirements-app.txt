@@ -14,3 +14,4 @@ numpy==2.5.3
 sympy==1.14.0            # the worked numbers may use it
 pillow==12.3.0
 sentencepiece==0.2.2
+en_core_web_sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl   # the voice's English model

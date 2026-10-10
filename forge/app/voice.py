@@ -22,8 +22,29 @@ FFMPEG = shutil.which("ffmpeg") or "/opt/homebrew/bin/ffmpeg"
 GAP = 0.35            # seconds of quiet after a line before the beat may end
 
 
+def _short_espeak_data() -> None:
+    """espeak-ng (Kokoro's fallback for unknown words) cannot use a data
+    folder with a long path: it silently falls back to the path it was built
+    with and the whole process dies. A copy of Manim Forge unpacked deep in a
+    folder tree hit this (2026-10-10). Copy the data somewhere short."""
+    try:
+        import espeakng_loader
+        src = Path(espeakng_loader.get_data_path())
+        if len(str(src)) <= 100:
+            return
+        dst = Path.home() / ".cache" / "manim-forge" / "espeak-ng-data"
+        if not (dst / "phontab").exists():
+            shutil.copytree(src, dst, dirs_exist_ok=True)
+        import misaki.espeak  # noqa: F401  (sets its own path on import)
+        from phonemizer.backend.espeak.wrapper import EspeakWrapper
+        EspeakWrapper.set_data_path(str(dst))
+    except Exception:                                         # noqa: BLE001
+        pass
+
+
 @lru_cache(maxsize=1)
 def _model():
+    _short_espeak_data()
     from mlx_audio.tts.utils import load_model
     return load_model(VOICE_MODEL)
 

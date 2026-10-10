@@ -1,6 +1,6 @@
 #!/bin/bash
 # Manim Forge installer for an Apple Silicon Mac. Run it from this folder:
-#     ./install.sh
+#     bash install.sh
 # It installs the drawing tools (Homebrew, LaTeX, ffmpeg), a private Python
 # environment in .venv, downloads the AI model (~6 GB) and checks it all.
 # It is safe to run again; it only adds what is missing.
@@ -40,4 +40,6 @@ PY="$(brew --prefix python@3.12)/bin/python3.12"
 say "Downloading the AI model and checking everything"
 .venv/bin/python -m forge.serve.setup
 chmod +x "Start Manim Forge.command"
+# A folder downloaded as a ZIP is quarantined; the launcher would be blocked.
+xattr -dr com.apple.quarantine . 2>/dev/null || true
 say "Done. Double-click “Start Manim Forge” in this folder whenever you want to use it."
