@@ -150,7 +150,8 @@ def verify(out_dir: Path, base: str) -> None:
     from mlx_lm import load
 
     print(f"\nverifying against {base} …", flush=True)
-    plain, _ = load(base)
+    # One model only: two 9Bs do not fit a 16 GB Mac (and the plain one was
+    # never used).
     tuned, _ = load(base, adapter_path=str(out_dir))
 
     adapters = mx.load(str(out_dir / "adapters.safetensors"))
@@ -186,7 +187,7 @@ def verify(out_dir: Path, base: str) -> None:
     print(f"  {n_lora} tensors, {len(nonzero_b)} non-zero lora_b")
     print(f"  probe {probe}: |w| = {loaded:.4f}, matches the file")
     print("  the adapter is loaded and changes the model")
-    del plain, tuned
+    del tuned
 
 
 def main() -> None:
