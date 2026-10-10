@@ -48,6 +48,32 @@ ONESHOT_SYSTEM = (
 #: held-out topics 8 against 3 for the fine-tune (docs/RESULTS.md).
 BASE_MODEL = "mlx-community/Qwen3.5-9B-MLX-4bit"
 
+#: v1.5 (2026-10-10): a LoRA on BASE_MODEL trained on the model's own scenes
+#: that passed the critic and were graded good by eye (64 of 264). Graded
+#: blind on the 30 dev requests: 18 good / 9 / 3 against 15 / 13 / 2
+#: untuned (docs/RESULTS.md). Found locally first, else fetched once from
+#: the Hub; FORGE_ADAPTER=none runs untuned, FORGE_ADAPTER=<dir> another one.
+ADAPTER_REPO = "nimitttt/manim-forge-v1.5-lora"
+
+
+def adapter_path() -> str | None:
+    import os
+    from pathlib import Path
+    want = os.environ.get("FORGE_ADAPTER", "")
+    if want == "none":
+        return None
+    if want:
+        return want
+    local = Path(__file__).resolve().parents[2] / "adapters" / "mlx-selftrain"
+    if (local / "adapters.safetensors").exists():
+        return str(local)
+    try:
+        from huggingface_hub import snapshot_download
+        return snapshot_download(ADAPTER_REPO, allow_patterns=[
+            "adapters.safetensors", "adapter_config.json"])
+    except Exception:                                   # offline, or not published
+        return None
+
 BEAT_LINE = re.compile(r"^\s*#\s*beat\s*(\d+)\s*[:.-]\s*(.*)$", re.I)
 SAY_LINE = re.compile(r"^\s*#\s*say\s*:\s*(.*)$", re.I)
 

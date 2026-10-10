@@ -92,6 +92,7 @@ class Worker(threading.Thread):
         self.q: queue.Queue[Job] = queue.Queue()
         self.host = None
         self.oneshot = None                  # (model, tokenizer)
+        self.adapter = None                  # the one-shot LoRA, if loaded
         self.jobs: dict[str, Job] = {}
 
     def submit(self, spec: JobIn) -> Job:
@@ -134,8 +135,9 @@ class Worker(threading.Thread):
             self.host = None
             job.emit({"stage": "loading", "note": "loading the model "
                       "(once per server start, ~20 s)"})
-            from forge.app.oneshot import BASE_MODEL
-            self.oneshot = load(None, base=BASE_MODEL)
+            from forge.app.oneshot import BASE_MODEL, adapter_path
+            self.adapter = adapter_path()
+            self.oneshot = load(self.adapter, base=BASE_MODEL)
         model, tok = self.oneshot
         opts = Options(max_beats=job.spec.beats, quality=job.spec.quality,
                        kit=True, narrate=job.spec.narrate)
@@ -240,4 +242,5 @@ def health() -> dict:
             "queued": worker.q.qsize(),
             "planner": PLANNER.name, "coder": CODER.name, "kit": KIT_DEFAULT,
             "engine": ENGINE, "model": __import__("forge.app.oneshot",
-                                                   fromlist=["BASE_MODEL"]).BASE_MODEL}
+                                                   fromlist=["BASE_MODEL"]).BASE_MODEL,
+            "adapter": getattr(worker, "adapter", None)}

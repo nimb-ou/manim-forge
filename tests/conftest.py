@@ -12,3 +12,5 @@ os.environ.setdefault("FORGE_RETRIEVAL", "tfidf")
 # The server defaults the library to "release" (held-out topics kept) when it
 # is imported; tests always see the evaluation library.
 os.environ["FORGE_LIBRARY"] = "eval"
+# No adapter download from the Hub in tests.
+os.environ["FORGE_ADAPTER"] = "none"

@@ -153,3 +153,11 @@ def test_self_check_reads_the_screen_and_parses_its_verdict():
     got = self_check("r", beats, bodies, None, None, ask=fake)
     assert got == ["beat 1: on screen, 72 is per minute, 86400 is seconds -> 72 x 1440 = 103,680"]
     assert self_check("r", beats, bodies, None, None, ask=lambda *a, **k: "NONE") == []
+
+
+def test_adapter_path_honours_the_switch(monkeypatch, tmp_path):
+    from forge.app import oneshot
+    monkeypatch.setenv("FORGE_ADAPTER", "none")
+    assert oneshot.adapter_path() is None
+    monkeypatch.setenv("FORGE_ADAPTER", str(tmp_path))
+    assert oneshot.adapter_path() == str(tmp_path)
