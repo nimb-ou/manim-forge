@@ -5,33 +5,47 @@ disagree, the repo is right and this file is stale — fix it. The full story,
 mistakes included, is `docs/HISTORY.md`; every measurement is in
 `docs/RESULTS.md`; the remaining phases are at the top of `docs/PLAN.md`.
 
-## What this is (v1.0, 2026-10-08)
+## What this is (v1.5, 2026-10-10)
 
 A request in plain English becomes a short, narrated 3Blue1Brown-style
 animation, made entirely on a 16 GB Apple Silicon Mac. Never commercial;
 CC BY-NC-SA 4.0. Repo: github.com/nimb-ou/manim-forge
 
-## How v1.0 works
+## How v1.5 works
 
-1. **Retrieve** the two nearest of 942 hand-written, checked kit scenes
+1. **Retrieve** the two nearest of 966 hand-written, checked kit scenes
    (`forge/kit/library.py`: TF-IDF + bge-small).
-2. **One call writes the whole scene** — beats, narration, code — with the
-   kit's reference in the prompt (`forge/app/oneshot.py`). Model:
-   **Qwen3.5-9B, untuned**, MLX 4-bit (`oneshot.BASE_MODEL`), thinking off.
-3. **Check** on-screen arithmetic (`forge/app/checks.py`), and at every beat
-   mark text collisions, off-frame objects and empty pictures
-   (`kit.layout_issues`); a sample that fails, or does not render whole, is
-   replaced by a second (best of 2, `oneshot.score`).
-4. **Render** with the Forge kit (64 blocks, `forge/kit/kit.py`), salvaging a
-   failing statement before a whole beat (`forge/app/pipeline.finish`).
+2. **One call writes the whole scene**: a `# plan:` lesson plan, then beats,
+   narration and code, with the kit's reference in the prompt
+   (`forge/app/oneshot.py`, `plan=True`). Model: **Qwen3.5-9B, untuned**, MLX
+   4-bit (`oneshot.BASE_MODEL`), thinking off.
+3. **Render** with the Forge kit (64 blocks, `forge/kit/kit.py`), salvaging a
+   failing statement before a whole beat (`forge/app/pipeline.finish`). The
+   kit reports what it repaired or saw as `ISSUE` lines (`Stage.issue`,
+   `layout_report`).
+4. **Critique and rewrite once** (`forge/app/critique.py`, `revise=1`): kit
+   issues, caption-only beats, arithmetic slips and a failed render's error go
+   back to the model with the draft; the better of the two by `oneshot.score`
+   is kept.
 5. **Narrate** each beat with Kokoro-82M and hold the beat until its line is
    said (`forge/app/voice.py`).
 
 Served by `python -m forge.serve` (http://127.0.0.1:8766 via
-`.claude/launch.json`, 8765 by default). ~45–50 s a scene; ~3 min when a
-second sample is needed.
+`.claude/launch.json`, 8765 by default). ~50 s a scene; ~2.5 min with the
+rewrite. Off by default: the v1.5 LoRA (`FORGE_ADAPTER=hub`), the self-check
+(`run_oneshot(check=True)`).
 
-## How good it is (by eye, 20 prompts each; `data/eye/`)
+## How good it is (by eye; `data/eye/`)
+
+Fresh test set (20 requests, graded blind three ways, Oct 10):
+
+| | good | partial | bad |
+|---|---|---|---|
+| **v1.5** | **10** | 7 | 3 |
+| v1.0 | 7 | 11 | 2 |
+| v1.5 + LoRA | 8 | 9 | 3 |
+
+v1.0 on its own sets (Oct 8):
 
 | | good | partial | bad |
 |---|---|---|---|
@@ -75,14 +89,15 @@ the block below and exits non-zero if it has drifted; `--write` updates it.
 
 ```
 forge/kit/        the Forge kit, the scene library, teacher scenes (forge/kit/teacher)
-forge/app/        oneshot.py (v1.0), checks.py, voice.py, pipeline.py (assembly,
+forge/app/        oneshot.py, critique.py (v1.5), checks.py, voice.py, pipeline.py (assembly,
                   salvage, render), twostage.py (the older planner + coder)
 forge/serve/      the web app (FastAPI + server-sent events)
 forge/harness/    render + error classification
-forge/evaluate/   prompt sets (inscope, heldout, short), held-out guard
+forge/evaluate/   prompt sets (world = dev, fresh = test, inscope, heldout), held-out guard
 scripts/          scorecard.py, judge_sheets.py, judge_scenes.py, make_gallery.py,
-                  stack_sheets.py (eye grading), kaggle eval queues
-kaggle/           SFT kernels and oneshot_eval (score a config on a T4)
+                  stack_sheets.py and blind_pairs.py (eye grading), selfgen.py +
+                  build_selftrain.py (self-training rows), kaggle eval queues
+kaggle/           SFT kernels, selftrain (Qwen3.5-9B QLoRA on a T4), oneshot_eval
 data/eye/         by-eye grades with a reason per scene
 docs/gallery/     the v1.0 gallery
 ```
@@ -94,8 +109,9 @@ export PATH="/Library/TeX/texbin:$PATH"            # before anything that render
 ./.venv/bin/python -m forge.serve                   # the app
 ./.venv/bin/python -m pytest -q                     # gates every commit
 ./.venv/bin/python -m forge.doctor                  # invariants (CI runs it too)
-./.venv/bin/python -u scripts/scorecard.py --inscope --oneshot --api --coder none --samples 2 --tag T
+./.venv/bin/python -u scripts/scorecard.py --fresh --oneshot --api --coder none --samples 2 --revise 1 --plan --tag T
 ./.venv/bin/python scripts/stack_sheets.py T 01 02 03 04   # sheets to grade by eye
+./.venv/bin/python scripts/blind_pairs.py T1 T2 [T3]        # blind comparison pages
 ./.venv/bin/python -u scripts/make_gallery.py       # gallery candidates
 ```
 

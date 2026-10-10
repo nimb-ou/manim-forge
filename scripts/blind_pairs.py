@@ -32,15 +32,18 @@ def sheet(tag: str, i: int):
 
 
 def main() -> int:
-    a, b = sys.argv[1], sys.argv[2]
-    ids = sorted({int(p.name[:2]) for t in (a, b)
+    tags = sys.argv[1:]
+    a, b = tags[0], "__".join(tags[1:])
+    labels = "XYZW"[:len(tags)]
+    ids = sorted({int(p.name[:2]) for t in tags
                   for p in (ROOT / "data" / "scorecard" / t).glob("[0-9][0-9]-*.py")})
-    rng = random.Random(f"{a}|{b}")
+    rng = random.Random("|".join(tags))
     key, ims = {}, []
     for i in ids:
-        first_a = rng.random() < 0.5
-        key[f"{i:02d}"] = {"X": a if first_a else b, "Y": b if first_a else a}
-        for lab in ("X", "Y"):
+        order = list(tags)
+        rng.shuffle(order)
+        key[f"{i:02d}"] = dict(zip(labels, order))
+        for lab in labels:
             im, slug = sheet(key[f"{i:02d}"][lab], i)
             band = Image.new("RGB", (900, 22), (60, 60, 60))
             ImageDraw.Draw(band).text((6, 4), f"{i:02d}{lab}  {slug or ''}", fill=(255, 255, 0))
@@ -48,7 +51,7 @@ def main() -> int:
     (ROOT / "data" / "eye" / f"{a}__{b}.key.json").write_text(json.dumps(key, indent=1))
     pages = {}
     for i, band, im in ims:
-        pages.setdefault((ids.index(i)) // 2, []).extend([band, im])
+        pages.setdefault((ids.index(i)) // (2 if len(tags) == 2 else 1), []).extend([band, im])
     for n, parts in sorted(pages.items()):
         out = Image.new("RGB", (900, sum(p.height for p in parts)))
         y = 0

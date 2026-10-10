@@ -50,29 +50,27 @@ BASE_MODEL = "mlx-community/Qwen3.5-9B-MLX-4bit"
 
 #: v1.5 (2026-10-10): a LoRA on BASE_MODEL trained on the model's own scenes
 #: that passed the critic and were graded good by eye (64 of 264). Graded
-#: blind on the 30 dev requests: 18 good / 9 / 3 against 15 / 13 / 2
-#: untuned (docs/RESULTS.md). Found locally first, else fetched once from
-#: the Hub; FORGE_ADAPTER=none runs untuned, FORGE_ADAPTER=<dir> another one.
+#: blind, it won the 30 dev requests (18 good against 15 untuned) and lost
+#: the 20 fresh ones (8 against 10): 26 against 25 over both, no difference.
+#: So the app runs untuned; FORGE_ADAPTER=hub fetches this one from the Hub,
+#: FORGE_ADAPTER=<dir> loads a local one (docs/RESULTS.md).
 ADAPTER_REPO = "nimitttt/manim-forge-v1.5-lora"
 
 
 def adapter_path() -> str | None:
     import os
-    from pathlib import Path
     want = os.environ.get("FORGE_ADAPTER", "")
-    if want == "none":
+    if want in ("", "none"):
         return None
-    if want:
+    if want != "hub":
         return want
-    local = Path(__file__).resolve().parents[2] / "adapters" / "mlx-selftrain"
-    if (local / "adapters.safetensors").exists():
-        return str(local)
     try:
         from huggingface_hub import snapshot_download
         return snapshot_download(ADAPTER_REPO, allow_patterns=[
             "adapters.safetensors", "adapter_config.json"])
-    except Exception:                                   # offline, or not published
+    except Exception:                                   # offline
         return None
+
 
 BEAT_LINE = re.compile(r"^\s*#\s*beat\s*(\d+)\s*[:.-]\s*(.*)$", re.I)
 SAY_LINE = re.compile(r"^\s*#\s*say\s*:\s*(.*)$", re.I)

@@ -159,5 +159,7 @@ def test_adapter_path_honours_the_switch(monkeypatch, tmp_path):
     from forge.app import oneshot
     monkeypatch.setenv("FORGE_ADAPTER", "none")
     assert oneshot.adapter_path() is None
+    monkeypatch.delenv("FORGE_ADAPTER")
+    assert oneshot.adapter_path() is None          # untuned by default
     monkeypatch.setenv("FORGE_ADAPTER", str(tmp_path))
     assert oneshot.adapter_path() == str(tmp_path)

@@ -84,3 +84,33 @@ model on a 16 GB Mac. Non-commercial, built in the open.
   tagging v1.0; a release of anything to Hugging Face (needs Nimit's OK, and
   v1.0 has no adapter to release — the scene library and kit are the
   artefacts).
+
+## Oct 8 → 10: v1.5
+
+Nimit tried v1.0 ("how gradient descent works?"): the kit wiped the axes,
+the ball sat off the curve, nothing explained why. What followed, and what
+it measured (all by eye; RESULTS.md has the tables):
+
+| phase | result |
+|---|---|
+| 30 real-world dev requests | v1.0 17 / 10 / 3 (lenient grading, see below) |
+| lesson plan first | +2 good; kept |
+| thinking mode | 0 of 9 scenes written; dropped |
+| kit repairs counted, critique-and-rewrite | beats a blind second sample 3–1 like-for-like; kept |
+| self-check of its own numbers | unreliable both ways; off |
+| LoRA on its own 64 best scenes | dev +3, fresh −2: nothing; published, off |
+| **fresh test, blind** | **v1.5 10 / 7 / 3 against v1.0 7 / 11 / 2** |
+
+New mistakes, and what they cost:
+
+| mistake | cost | lesson |
+|---|---|---|
+| Grading drift: the same 30 scripts graded 19 good on Oct 8 and 12 on Oct 9 | a day of believing the plan helped more than it did | grade comparisons in one sitting, blind (`scripts/blind_pairs.py`) |
+| A library change and an engine change measured in one run | a confounded result; a control run (~1 h) | one change per run, or a control |
+| A Kaggle kernel named like its dataset (409 Conflict) | 20 min | distinct slugs |
+| `prepare_model_for_kbit_training` upcasting Qwen3.5's 2B embedding parameters to fp32 | three OOM smoke runs | upcast only what trains; logits only where there are labels |
+| A commit chained with `echo`, so a failing pytest committed | one red CI run | `r=$?; [ $r -eq 0 ] && git commit` (memory: ci-gate-commits) |
+| The v1.0 worktree had no `.venv`, so every render "failed" | 40 min | check the first result before leaving a run |
+
+What held up again: the untuned model with good context, checks that speak
+to it in words, and grading by eye. What did not, again: training it.

@@ -13,57 +13,56 @@ wrong ([`docs/POSTMORTEM.md`](docs/POSTMORTEM.md),
 ## How it works
 
 ```
-request ──► retrieve ──► one call writes ──► checks ──► Forge kit ──► render ──► voice ──► video
-            the 2 nearest   the whole scene     (arithmetic   (64 animation   (failing     (Kokoro,
-            of 942 hand-    (3–6 beats, code    on screen,    blocks)          statements   local)
-            written scenes  + narration)        layout, renders)               dropped)
+request ──► retrieve ──► plan, then ──► render ──► critic ──► rewrite once ──► voice ──► video
+            the 2 nearest   write the whole    with the     (what the kit   with the       (Kokoro,
+            of 966 hand-    scene in one call  Forge kit    saw, idle beats, problems      local)
+            written scenes  (3–6 beats)        (64 blocks)  slips, errors)  listed
 ```
 
 - **One call writes the whole scene**, beat by beat in one context, so later
   beats reuse and transform what earlier beats built
-  (`forge/app/oneshot.py`). The model is **Qwen3.5-9B, untuned**, 4-bit,
-  running under MLX.
-- **It adapts rather than invents.** The two nearest of 942 hand-written,
+  (`forge/app/oneshot.py`). It first writes a short lesson plan as comments
+  (the idea, the picture, the numbers, the arc). The model is **Qwen3.5-9B,
+  untuned**, 4-bit, running under MLX.
+- **It adapts rather than invents.** The two nearest of 966 hand-written,
   checked scenes (TF-IDF + a small embedding, `forge/kit/library.py`) are in
   the prompt, along with the kit's reference.
 - **The Forge kit** (`forge/kit/kit.py`): 64 blocks — `apply_matrix`,
   `slide_tangent`, `riemann_refine`, `bayes_square`, … — that draw and animate
   the picture so a small model's calls still produce a clean frame.
-- **Checks before you see it:** on-screen arithmetic is evaluated
-  (`forge/app/checks.py`), text collisions and off-frame objects are counted
-  at each beat (`kit.layout_issues`), and a scene that fails any of them, or
-  fails to render whole, is sampled once more.
+- **A critic, then one rewrite** (`forge/app/critique.py`): the kit reports
+  in words what it saw (a point off its axes, a curve cut off, text on text,
+  an empty frame), the critic adds beats that only change the caption,
+  arithmetic slips (`forge/app/checks.py`) and render errors, and the draft
+  goes back to the model with that list.
 - **Narrated:** each beat's line is spoken by Kokoro-82M and the beat is
   held until it is said (`forge/app/voice.py`).
 
 ## Where it stands
 
-Graded **by eye** from contact sheets (the vision judges proved lenient),
-20 prompts per set: **good** = right answer and the pictures show it;
-**partial** = right answer on screen, weak pictures or one flaw; **bad** =
-wrong or broken. Grades and reasons per scene are in `data/eye/`.
+Graded **by eye**, blind, from contact sheets: **good** = right answer and the
+pictures show it; **partial** = right answer, weak pictures or one flaw;
+**bad** = wrong or broken. Grades and reasons per scene are in `data/eye/`.
 
-| | in-scope: good / partial / bad | held-out: good / partial / bad |
-|---|---|---|
-| **v1.0 as shipped (Mac, MLX, best of 2)** | **12 / 6 / 2** | **9 / 4 / 7** |
-| same model, one sample, on Kaggle | 13 / 5 / 2 | 8 / 8 / 4 |
-| one shot, Qwen2.5-Coder-7B, untuned | 10 / 8 / 2 | — |
-| one shot, Qwen2.5-Coder-7B, fine-tuned for it | 6 / 10 / 4 | 3 / 4 / 13 |
-| planner + per-beat coder, fine-tuned (the old app) | 0 / 13 / 7 | ~3 good |
+**v1.5 against v1.0** on 20 fresh requests used for nothing else (a computer
+adding binary, the moon's phases, a probability tree, a unit circle, …):
 
-*In-scope*: new numbers and contexts for question types the hand-written
-scenes cover — school maths and everyday quantities
-(`forge/evaluate/inscope_prompts.json`). *Held-out*: 20 classic topics the
-library deliberately has nothing on (`forge/evaluate/heldout_prompts.json`),
-graded with those scenes removed; the shipped app keeps them in.
+| | good | partial | bad |
+|---|---|---|---|
+| **v1.5** | **10** | 7 | 3 |
+| v1.0 | 7 | 11 | 2 |
+| v1.5 + a LoRA trained on its own best scenes | 8 | 9 | 3 |
 
-The honest scope: questions like the ones in the in-scope set come out
-right about 60% of the time and with the right answer on screen about 90%;
-famous university topics come out right about half the time; when it is
-wrong it is usually a confident wrong number. See the ten scenes in
-[`docs/GALLERY.md`](docs/GALLERY.md). The fine-tuned models
-this project trained are not in v1.0 — retrieval, a stronger base model and
-checks beat every one of them (`docs/RESULTS.md`, Oct 7–8).
+v1.0 on its original sets: in-scope (school maths and everyday quantities)
+12 / 6 / 2, held-out classic topics 9 / 4 / 7.
+
+The honest scope: about half of new requests come out right with pictures
+that show it, most of the rest have the right answer with a weak or flawed
+picture, and about one in seven is wrong, usually a confident wrong number.
+Every model this project trained, including the v1.5 LoRA, did no better than
+the untuned model with good context and checks (`docs/RESULTS.md`,
+`docs/HISTORY.md`). The ten v1.0 scenes are in [`docs/GALLERY.md`](docs/GALLERY.md);
+the v1.5 changes in [`docs/RELEASE_v1.5.md`](docs/RELEASE_v1.5.md).
 
 ## Run it
 
@@ -82,9 +81,8 @@ export PATH="/Library/TeX/texbin:$PATH"
 ```
 
 The model (~6 GB) downloads on the first request and loads in ~20 s after
-that. Tested Oct 8 from these steps in the browser: a narrated scene in
-**~45–50 s**, or **~3 min** when the first sample fails a check and a second
-is drawn.
+that. A narrated scene takes **~50 s**, or **~2.5 min** when the first draft
+goes back for its rewrite. `FORGE_ADAPTER=hub` tries the v1.5 LoRA.
 
 Tests and invariants:
 

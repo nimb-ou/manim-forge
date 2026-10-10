@@ -951,3 +951,42 @@ errors. Worse, its corrections are often wrong ("cos x ≈ 1 − x²/2 + x⁴/8"
 "f′(x) = −2x is incorrect for a hill"), so a rewrite acting on them would
 break correct scenes. **Off.** The code stays (`run_oneshot(check=True)`)
 for a stronger checker.
+
+## v1.5: training on its own best scenes, and the final test · 2026-10-10
+
+**Self-training** (`scripts/selfgen.py`, `kaggle/selftrain`). The v1.5 engine
+(untuned, plan, critique-and-rewrite) wrote scenes for 264 library requests
+kept far from every evaluation prompt; 145 passed the critic; **64 were good by
+eye** (`data/eye/selfgen.json`) and are the whole training set. A rank-16 LoRA,
+3 epochs on a Kaggle T4 (eval loss 0.28 → 0.23; 12 of 60 rows cut at 4096
+tokens). Published, off by default:
+[nimitttt/manim-forge-v1.5-lora](https://huggingface.co/nimitttt/manim-forge-v1.5-lora).
+
+All rows below are graded **blind** (`scripts/blind_pairs.py`: each prompt's
+sheets shuffled and labelled X/Y/Z, the key opened after grading;
+`data/eye/blind_*.json`), with the same kit and library.
+
+| dev set, 30 requests | good | partial | bad |
+|---|---|---|---|
+| v1.5 untuned (`world_v15`) | 15 | 13 | 2 |
+| v1.5 + LoRA (`world_tuned`) | **18** | 9 | 3 |
+
+LoRA better on 8 prompts, worse on 6.
+
+| **fresh test set, 20 requests never used before** | good | partial | bad |
+|---|---|---|---|
+| v1.0 (the `v1.0` tag's own code) | 7 | 11 | 2 |
+| **v1.5 untuned** | **10** | 7 | 3 |
+| v1.5 + LoRA | 8 | 9 | 3 |
+
+v1.5 against v1.0: better on 8 prompts, worse on 6. The LoRA against untuned
+v1.5: better on 5, worse on 6. Over dev and test together the LoRA has 26 good
+of 50 and untuned 25: **no difference**, so v1.5 ships untuned and the
+self-training result joins the earlier ones (docs/HISTORY.md): with this little
+data, training on the model's own best output does not move it.
+
+What v1.5 fixed on the fresh set, by eye: binary addition column by column
+with carries (v1.0: bars), perpendicular gradients by rise-over-run triangles,
+the slope of a velocity graph read off a triangle, the median of an even set.
+What still fails in all three: the rainbow (a prism with no colours), the mean
+of a list (all three got a sum wrong), the lever picture.
