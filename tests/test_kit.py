@@ -144,3 +144,21 @@ def test_fmt_writes_numbers_as_people_do():
     from fractions import Fraction
     assert kit.fmt(12.0) == "12" and kit.fmt(5.125) == "5.13" and kit.fmt(Fraction(3, 4)) == "3/4"
     assert kit.fmt(2.675) == "2.68" and kit.fmt(-1.5) == "-1.5"
+
+
+def test_draw_vector_takes_a_start_point(monkeypatch):
+    made = []
+    monkeypatch.setattr(kit, "Arrow", lambda a, b, **k: made.append((tuple(a), tuple(b))) or object())
+    monkeypatch.setattr(kit, "GrowArrow", lambda a, **k: None)
+
+    class Plane:
+        def c2p(self, x, y):
+            return (float(x), float(y), 0.0)
+
+    class Scene:
+        def play(self, *a, **k):
+            pass
+    st = kit.Stage.__new__(kit.Stage)
+    st.scene, st._objects, st._issues = Scene(), [], 0
+    kit.draw_vector.__wrapped__(st, Plane(), (3, 2), start=(1, 1))
+    assert made[0][0][:2] == (1.0, 1.0) and made[0][1][:2] == (3.0, 2.0)

@@ -800,12 +800,13 @@ def draw_plane(stage: Stage, where: str = "center", x_extent: int = 4,
     return p
 
 
-def draw_vector(stage: Stage, plane_, xy, color=YELLOW, label: str | None = None):
+def draw_vector(stage: Stage, plane_, xy, color=YELLOW, label: str | None = None,
+                start=None):
     """An arrow from the plane's origin to (x, y), grown, optionally labelled.
-    ``draw_vector(stage, plane, (x0, y0), (x1, y1))`` draws from one point
-    to the other."""
+    ``draw_vector(stage, plane, (x0, y0), (x1, y1))`` or ``start=(x0, y0)``
+    draws from one point to the other."""
     _need(plane_, "c2p", "the plane from draw_plane(stage)", "draw_vector(stage, plane, (x, y))")
-    start = (0, 0)
+    start = tuple(start)[:2] if start is not None else (0, 0)
     # The from-to form, draw_vector(stage, p, (0, 0), (3, 4)): the second
     # point landed in `color` and the arrow was drawn to (0, 0) -- nothing
     # on screen for "an arrow from P to Q" (2026-10-09).
@@ -2570,7 +2571,17 @@ def _tolerant(f):
                 have = globals()[_SLOTS[slot][1]](st)
             # a wrong picture in the slot is replaced; data is shifted along
             wrong = len(args) > 1 and hasattr(args[1], "get_center")
-            args = (args[0], have) + args[2 if wrong else 1:]
+            # An arrow drawn from a point -- draw_vector(stage, ball, (1, -2)) --
+            # starts at that point, not at the origin: the slope arrows of a
+            # gradient-descent scene hung off the axes' corner (2026-10-10).
+            if wrong and f.__name__ == "draw_vector" and len(args) > 2 \
+                    and hasattr(have, "p2c") and np.ndim(args[2]) == 1:
+                x0, y0 = [float(c) for c in list(have.p2c(args[1].get_center()))[:2]]
+                dx, dy = [float(c) for c in list(args[2])[:2]]
+                args = (args[0], have, (x0 + dx, y0 + dy)) + args[3:]
+                kw = {**kw, "start": (x0, y0)}
+            else:
+                args = (args[0], have) + args[2 if wrong else 1:]
         # A plane or axes handed to a block that takes none -- the habit of
         # block(stage, p, ...) carried over: kit v7 called angle_sum,
         # squares_on_sides and swing_pendulum that way every time.
