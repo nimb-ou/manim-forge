@@ -37,8 +37,26 @@ SOLVE_SYSTEM = (
     "Fraction (from fractions) and sympy. End with a variable `answer`, then "
     "check it a second, independent way with `assert` -- add the terms one by "
     "one, substitute the solution back, count the cases, convert the units "
-    "back -- so that a wrong program fails. If the question asks why or what "
-    "something is, choose a small worked example and compute its numbers.")
+    "back -- so that a wrong program fails. Every question gets a program: "
+    "if it asks why, how or what something is, the animation will show a "
+    "concrete example, so choose one and compute its numbers.\n\n"
+    "QUESTION: a jacket costs £80 and is 15% off. what do you pay?\n"
+    "```python\n"
+    "price = 80  # the price in pounds\n"
+    "discount = price * 15 / 100  # 15% of the price\n"
+    "answer = price - discount  # what you pay\n"
+    "assert answer == price * 0.85\n"
+    "```\n\n"
+    "QUESTION: what is a derivative, really?\n"
+    "```python\n"
+    "x0 = 2  # the point on y = x^2 we look at\n"
+    "y0 = x0 ** 2  # its height\n"
+    "h = 0.5  # a small step to the right\n"
+    "secant_slope = ((x0 + h) ** 2 - y0) / h  # slope of the line through two points\n"
+    "tangent_slope = 2 * x0  # the slope as the step shrinks: the derivative\n"
+    "answer = tangent_slope\n"
+    "assert abs(((x0 + 1e-6) ** 2 - y0) / 1e-6 - answer) < 1e-3\n"
+    "```")
 
 _RUNNER = r"""
 import json, math, sys
@@ -152,7 +170,9 @@ def solve(request: str, model, tok, ask=None, max_tokens: int = 700) -> Solution
     if not sol.ok:                       # one retry with the error shown
         reply = ask(model, tok, SOLVE_SYSTEM,
                     f"QUESTION: {request}\n\nYOUR PROGRAM\n{sol.code}\n\nIT FAILED: "
-                    f"{sol.error or 'it defined no numbers'}\nWrite it again.",
+                    f"{sol.error or 'it defined no numbers'}\nWrite it again. If the question "
+                    "has no numbers of its own, choose a concrete example the animation can "
+                    "show and compute that.",
                     max_tokens=max_tokens)
         sol = run(extract_code(reply))
         if sol.ok and (clash := set(sol.values) & _reserved()):
