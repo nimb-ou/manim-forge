@@ -243,10 +243,11 @@ def run_oneshot(request: str, model, tok, emit=lambda e: None, opts=None,
             res = finish(request, beats, bodies, model, tok, system, opts,
                          emit if samples == 1 else (lambda e: None),
                          harness, t0, [])
-        if sol is not None and sol.ok:
+        if sol is not None:
             from forge.app import solve as _solve
             res.solution = sol
-            res.unexplained = _solve.unexplained(request, res.bodies, sol)
+            if sol.ok:
+                res.unexplained = _solve.unexplained(request, res.bodies, sol)
         if check and res.ok and res.beats:
             from forge.app.critique import self_check
             res.doubts = self_check(request, res.beats, res.bodies, model, tok, ask=ask)

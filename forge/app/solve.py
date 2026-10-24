@@ -34,9 +34,11 @@ SOLVE_SYSTEM = (
     "from the question's own numbers (never type a result you worked out "
     "yourself), each with a comment saying what it is. Use plain names "
     "(total, mean, speed_ms) and keep it under 25 lines. You may use math, "
-    "Fraction (from fractions) and sympy. End with a variable `answer`. If the "
-    "question asks why or what something is, choose a small worked example "
-    "and compute its numbers.")
+    "Fraction (from fractions) and sympy. End with a variable `answer`, then "
+    "check it a second, independent way with `assert` -- add the terms one by "
+    "one, substitute the solution back, count the cases, convert the units "
+    "back -- so that a wrong program fails. If the question asks why or what "
+    "something is, choose a small worked example and compute its numbers.")
 
 _RUNNER = r"""
 import json, math, sys
@@ -109,6 +111,11 @@ def run(code: str, timeout: float = 10.0) -> Solution:
     if p.returncode != 0:
         last = (p.stderr or "").strip().splitlines()[-1:] or ["error"]
         sol.error = last[0][:200]
+        if sol.error.startswith("AssertionError"):
+            # Which check failed, so the retry knows what disagreed.
+            line = next((x.strip() for x in reversed((p.stderr or "").splitlines())
+                         if x.strip().startswith("assert")), "")
+            sol.error = "the program's own check failed" + (f": {line}" if line else "")
         return sol
     try:
         sol.values = json.loads(p.stdout.strip().splitlines()[-1])
@@ -228,7 +235,23 @@ def unexplained(request: str, bodies: list[str], sol: Solution) -> list[tuple[in
     number (to the precision shown, or as a percentage), not in the request,
     and not a small whole number."""
     from forge.app.critique import shown_texts
-    known = _flat(sol.values.values()) + _numbers(request)
+    # Constants written in the program itself (3.6 to convert m/s to km/h,
+    # 9.8 for g) are part of the working too.
+    literals = [float(x) for x in re.findall(r"(?<![\w.])\d+\.?\d*", sol.code)]
+    known = _flat(sol.values.values()) + _numbers(request) + literals
+    # One step of working shown on screen (v0^2 = 100, 2g = 19.6, 41/8) is
+    # explained by the numbers it comes from.
+    base = sorted({round(k, 9) for k in known})[:60]
+    step = []
+    for i, a in enumerate(base):
+        step += [a * a, math.sqrt(abs(a))]
+        for b in base[i:]:
+            step += [a * b, a + b, abs(a - b)]
+            if b:
+                step.append(a / b)
+            if a:
+                step.append(b / a)
+    known += step
     known += [k * 100 for k in known] + [k / 100 for k in known]
 
     def explained(x: float, shown: str) -> bool:

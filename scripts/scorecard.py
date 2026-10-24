@@ -239,6 +239,8 @@ def main() -> int:
                "issues": getattr(res, "issues", []),
                "unexplained": getattr(res, "unexplained", []),
                "solution": (res.solution.code if getattr(res, "solution", None) else ""),
+               "verdict": getattr(res, "verdict", {}),
+               "solve_error": getattr(getattr(res, "solution", None), "error", ""),
                "elapsed": round(time.time() - t0)}
         slug = re.sub(r"[^a-z0-9]+", "-", t.prompt.lower())[:40].strip("-")
         (out_dir / f"{i:02d}-{slug}.py").write_text(res.code)
