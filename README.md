@@ -1,8 +1,11 @@
 # Manim Forge
 
 Type a sentence — *"a jacket costs £80 and is 15% off, what do you pay?"* —
-and get a short narrated 3Blue1Brown-style animation, written, rendered and
-checked by a local model on a Mac. No cloud, no API key.
+and get a short narrated animation in the style of 3Blue1Brown, written,
+rendered and checked by a local model on a Mac. No cloud, no API key.
+
+**Students: start with [`docs/STUDENTS.md`](docs/STUDENTS.md)** — install
+with one command, then double-click *Start Manim Forge*.
 
 Free, non-commercial, and built in the open — including the parts that went
 wrong ([`docs/POSTMORTEM.md`](docs/POSTMORTEM.md),
@@ -13,11 +16,21 @@ wrong ([`docs/POSTMORTEM.md`](docs/POSTMORTEM.md),
 ## How it works
 
 ```
-request ──► retrieve ──► plan, then ──► render ──► critic ──► rewrite once ──► voice ──► video
-            the 2 nearest   write the whole    with the     (what the kit   with the       (Kokoro,
-            of 966 hand-    scene in one call  Forge kit    saw, idle beats, problems      local)
-            written scenes  (3–6 beats)        (64 blocks)  slips, errors)  listed
+request ──► work out ──► retrieve ──► plan, then ──► render ──► critic ──► rewrite ──► voice ──► video
+            the numbers   the 2 nearest  write the whole  with the    (wrong or    once        (Kokoro,   + "checked"
+            (a Python     of 966 hand-   scene in one     Forge kit   unexplained              local)       or "check
+            program, run) written scenes call (3–6 beats)             numbers, …)                           this" badge
 ```
+
+- **Compute, don't guess** (`forge/app/solve.py`). Before the scene is
+  written, the model writes a short Python program that works out every
+  number the explanation needs, checking its answer a second way with an
+  `assert`. It is run; its variables are handed to the scene and defined in
+  it, so numbers on screen come from the calculation. Any number shown that
+  the calculation did not produce, a worked answer missing from the screen,
+  or a point drawn off its curve is reported — to the model for its
+  rewrite, and to the student as a **"check this one"** badge instead of
+  **"numbers checked"**.
 
 - **One call writes the whole scene**, beat by beat in one context, so later
   beats reuse and transform what earlier beats built
@@ -66,23 +79,21 @@ the v1.5 changes in [`docs/RELEASE_v1.5.md`](docs/RELEASE_v1.5.md).
 
 ## Run it
 
-Apple Silicon Mac, 16 GB.
+Apple Silicon Mac, 16 GB, ~12 GB free disk.
 
 ```bash
-brew install cairo pango pkg-config ffmpeg
-brew install --cask basictex          # MathTex needs LaTeX
-python3 -m venv .venv && ./.venv/bin/pip install -r requirements.txt mlx mlx-lm
-./.venv/bin/pip install mlx-audio "misaki[en]"     # narration (optional)
-export PATH="/Library/TeX/texbin:$PATH"
+bash install.sh
 ```
 
-```bash
-./.venv/bin/python -m forge.serve     # http://127.0.0.1:8765
-```
+It installs Homebrew if needed, the drawing tools (cairo, pango, ffmpeg,
+BasicTeX), Python 3.12 and a private `.venv` with the pinned app
+requirements (`requirements-app.txt`), downloads the models (~6 GB) and runs
+a self-check (`python -m forge.serve.setup`). Then double-click
+**Start Manim Forge** (or `./.venv/bin/python -m forge.serve`, port 8765).
 
-The model (~6 GB) downloads on the first request and loads in ~20 s after
-that. A narrated scene takes **~50 s**, or **~2.5 min** when the first draft
-goes back for its rewrite. `FORGE_ADAPTER=hub` tries the v1.5 LoRA.
+The model loads in ~20 s on the first question. A narrated scene takes one
+to three minutes. `FORGE_ADAPTER=hub` tries the v1.5 LoRA. The research
+toolkit (training, judges, Kaggle) needs `requirements.txt` as well.
 
 Tests and invariants:
 
