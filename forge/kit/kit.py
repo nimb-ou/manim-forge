@@ -180,6 +180,30 @@ def _hits(t, boxes) -> bool:
     return False
 
 
+def _fill_fmt(s: str) -> str:
+    """``"mean = {fmt(mean)}"`` written without the f in front: the braces
+    reached the screen as they were (2026-10-25). Fill them in from the
+    scene's own variables -- only the ``{fmt(...)}`` form, so LaTeX braces
+    are never touched."""
+    s = str(s)
+    if "{fmt(" not in s:
+        return s
+    import inspect
+    fr = inspect.currentframe()
+    while fr is not None and fr.f_code.co_name != "construct":
+        fr = fr.f_back
+    if fr is None:
+        return s
+    env = {**fr.f_globals, **fr.f_locals}
+
+    def sub(m):
+        try:
+            return str(eval(m.group(1), env))                 # noqa: S307
+        except Exception:                                     # noqa: BLE001
+            return m.group(0)
+    return _re.sub(r"\{(fmt\([^{}]*\))\}", sub, s)
+
+
 _SWALLOWED = {"\t": "\\t", "\x08": "\\b", "\x0c": "\\f", "\x07": "\\a",
               "\x0b": "\\v", "\r": "\\r"}
 
@@ -307,19 +331,21 @@ class Stage:
         self._issues = 0
         self._issues_at_mark = 0
 
-    def issue(self, what: str):
+    def issue(self, what: str, count: bool = True):
         """Count a problem the kit saw or repaired, and say what it was: the
         one-shot generator hands these sentences back to the model to fix
-        (forge/app/critique.py) instead of only preferring another sample."""
+        (forge/app/critique.py) instead of only preferring another sample.
+        ``count=False`` only reports it (for the student's verdict)."""
         import sys as _sys
-        self._issues += 1
+        if count:
+            self._issues += 1
         beat = len(getattr(self, "_t", [])) + 1
         print(f"ISSUE {beat} {what}", file=_sys.stderr, flush=True)
 
     # text slots ---------------------------------------------------------
     def _text(self, s: str, size: int):
         # A string with math in it becomes MathTex/Tex; plain words are Text.
-        s = _unswallow(s)
+        s = _fill_fmt(_unswallow(s))
         if "$" in s:
             return Tex(s, font_size=size)
         if any(c in s for c in "\\^_") and " " not in s.strip():
@@ -430,6 +456,7 @@ class Stage:
         """A derivation in a region: a step that continues the line ("= 12")
         extends it; any other step is written on a new line below, the
         earlier lines kept (up to four)."""
+        tex = tuple(_fill_fmt(t) for t in tex)
         old = getattr(self, "_equation", None)
         if old is not None and any(m in self.scene.mobjects for m in old):   # one at a time
             self.scene.play(*[FadeOut(m) for m in old if m in self.scene.mobjects], run_time=0.5)
@@ -1013,6 +1040,7 @@ def plot_graph(stage: Stage, ax, f, x_range=None, color=BLUE, label: str | None 
         stage.issue(f"most of the curve leaves the axes (y_range {tuple(ax.y_range[:2])}); "
                     "make y_range big enough for the curve's highest and lowest values")
     g = ax.plot(f, x_range=[xr[0], xr[1]], color=color)
+    stage._graphs = getattr(stage, "_graphs", []) + [(ax, f, xr[0], xr[1])]
     # Callable like the function it plots: models write g(x) for a height
     # on the curve ("'ParametricFunction' object is not callable", twice).
     g.__class__ = _callable_graph(type(g))
@@ -1175,6 +1203,19 @@ def mark_point(stage: Stage, nl, x: float, y=None, color=YELLOW, label: str | No
                 and min(yr[:2]) - 1e-9 <= py <= max(yr[:2]) + 1e-9):
             stage.issue(f"the point ({px:g}, {py:g}) is outside its axes "
                         f"(x {tuple(xr[:2])}, y {tuple(yr[:2])}); widen the ranges")
+        # A point beside the only curve on these axes: a derivative scene
+        # put "P" at (2, 4) on y = x^2/2, which is 2 there (2026-10-25).
+        # Reported for the student's verdict only -- data points off a
+        # fitted line are meant to be off it, so it is not sent back.
+        curves = [(fn, a, b) for (ax_, fn, a, b) in getattr(stage, "_graphs", []) if ax_ is nl]
+        if len(curves) == 1 and curves[0][1] <= px <= curves[0][2] and yr is not None:
+            try:
+                fy = float(curves[0][0](px))
+                if abs(fy - py) > 0.04 * abs(yr[1] - yr[0]):
+                    stage.issue(f"the point ({px:g}, {py:g}) is not on the curve "
+                                f"(it is at {fy:.3g} there)", count=False)
+            except Exception:                                   # noqa: BLE001
+                pass
         d = Dot(nl.c2p(px, py), color=color)
     elif np.ndim(x) == 1:                               # (x, y) on a number line
         d = Dot(nl.n2p(float(np.ravel(x)[0])), color=color)

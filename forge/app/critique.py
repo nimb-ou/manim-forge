@@ -71,7 +71,9 @@ def problems(res) -> list[str]:
         why = getattr(res, "failure", "") or res.error or "error"
         out.append(f"the scene did not render: {why}; fix or drop that statement, and "
                    "use only kit blocks and names from the examples")
-    found = static_problems(res.beats, res.bodies) + list(getattr(res, "issues", []))
+    # "not on the curve" goes to the student's verdict only (kit.mark_point).
+    found = static_problems(res.beats, res.bodies) + [
+        i for i in getattr(res, "issues", []) if "not on the curve" not in i[1]]
     for n, what in sorted(found, key=lambda x: x[0]):
         line = f"beat {n}: {what}" if n else what
         if line not in out:
@@ -80,6 +82,12 @@ def problems(res) -> list[str]:
     for n, num in getattr(res, "unexplained", [])[:4]:
         out.append(f"beat {n}: shows {num}, which is not one of the worked numbers; "
                    "show the worked variable with an f-string and fmt() instead")
+    sol = getattr(res, "solution", None)
+    if sol is not None and getattr(sol, "ok", False) and res.ok:
+        from forge.app.solve import _show, answer_shown
+        if answer_shown(res.bodies, sol) is False:
+            out.append("the worked answer, " + _show(sol.values["answer"]) + ", is not on "
+                       "screen; show it with stage.equation(f\"... = {fmt(answer)}\")")
     for slip in arithmetic_errors("\n".join(res.bodies)):
         out.append(f"on screen, \"{slip}\" is false; work the numbers out again")
     return out[:12]
@@ -179,6 +187,14 @@ def student_verdict(res) -> dict:
         notes.append(f"On screen, “{slip}” is not right.")
     for n, num in getattr(res, "unexplained", []):
         notes.append(f"Part {n} shows {num}, which the worked calculation did not produce.")
+    if sol is not None and getattr(sol, "ok", False) and res.ok:
+        from forge.app.solve import _show, answer_shown
+        if answer_shown(res.bodies, sol) is False:
+            notes.append("The worked answer (" + _show(sol.values["answer"])
+                         + ") is not what the animation shows.")
+    for n, what in getattr(res, "issues", []):
+        if "not on the curve" in what:
+            notes.append(f"Part {n} marks a point that is not on its curve.")
     for n, body in enumerate(res.bodies, 1):
         if not body.strip():
             notes.append(f"Part {n} could not be drawn and was left out.")

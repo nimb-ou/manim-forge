@@ -162,3 +162,12 @@ def test_draw_vector_takes_a_start_point(monkeypatch):
     st.scene, st._objects, st._issues = Scene(), [], 0
     kit.draw_vector.__wrapped__(st, Plane(), (3, 2), start=(1, 1))
     assert made[0][0][:2] == (1.0, 1.0) and made[0][1][:2] == (3.0, 2.0)
+
+
+def test_fmt_placeholders_written_without_the_f_are_filled():
+    def construct():
+        fmt = kit.fmt                                 # noqa: F841 (global in a real scene)
+        mean = 5.125                                  # noqa: F841
+        return kit._fill_fmt("mean = {fmt(mean)}"), kit._fill_fmt(r"\frac{a}{b}")
+    filled, latex = construct()
+    assert filled == "mean = 5.13" and latex == r"\frac{a}{b}"

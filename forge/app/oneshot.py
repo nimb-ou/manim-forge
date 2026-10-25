@@ -142,6 +142,44 @@ def parse_scene(text: str) -> tuple[list[Beat], list[str]]:
     return beats, bodies
 
 
+_FSTRING = re.compile(r"""(?<![\w])([rR]?[fF][rR]?)("|')(.*?)(?<!\\)\2""")
+
+
+def _is_expr(src: str) -> bool:
+    try:
+        compile(src.split("!")[0].split(":")[0] or "x", "<f>", "eval")
+        return bool(src.strip())
+    except SyntaxError:
+        return False
+
+
+def fix_fstrings(body: str) -> str:
+    """LaTeX inside an f-string -- f"\\text{new loss} = {loss}" -- does not
+    parse: Python reads {new loss} as an expression and the whole scene is
+    lost (dev set, 2026-10-25). On a line that does not compile, braces in
+    an f-string that hold no Python expression are doubled, so they print
+    as braces."""
+    out = []
+    for line in body.splitlines():
+        if _FSTRING.search(line):
+            try:
+                compile(line.strip(), "<line>", "exec")
+            except SyntaxError:
+                def esc(m):
+                    inner = re.sub(r"(?<!\{)\{([^{}]*)\}(?!\})",
+                                   lambda b: b.group(0) if _is_expr(b.group(1))
+                                   else "{{" + b.group(1) + "}}", m.group(3))
+                    return m.group(1) + m.group(2) + inner + m.group(2)
+                fixed = _FSTRING.sub(esc, line)
+                try:
+                    compile(fixed.strip(), "<line>", "exec")
+                    line = fixed
+                except SyntaxError:
+                    pass
+        out.append(line)
+    return "\n".join(out)
+
+
 def score(res) -> tuple:
     """How good a rendered sample looks without a judge: it rendered, kept
     every beat, shows no arithmetic slip (forge/app/checks.py), has few
@@ -226,6 +264,7 @@ def run_oneshot(request: str, model, tok, emit=lambda e: None, opts=None,
                     temp=0.0 if found or not (n or not greedy_first) else temp,
                     think=think)
         beats, bodies = parse_scene(reply)
+        bodies = [fix_fstrings(b) for b in bodies]
         if sol is not None and sol.ok and bodies:
             from forge.app import solve as _solve
             bodies[0] = _solve.preamble(sol) + "\n" + bodies[0]

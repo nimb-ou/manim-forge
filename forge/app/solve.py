@@ -47,16 +47,18 @@ SOLVE_SYSTEM = (
     "answer = price - discount  # what you pay\n"
     "assert answer == price * 0.85\n"
     "```\n\n"
-    "QUESTION: what is a derivative, really?\n"
+    "QUESTION: why do fractions need a common denominator to be added?\n"
     "```python\n"
-    "x0 = 2  # the point on y = x^2 we look at\n"
-    "y0 = x0 ** 2  # its height\n"
-    "h = 0.5  # a small step to the right\n"
-    "secant_slope = ((x0 + h) ** 2 - y0) / h  # slope of the line through two points\n"
-    "tangent_slope = 2 * x0  # the slope as the step shrinks: the derivative\n"
-    "answer = tangent_slope\n"
-    "assert abs(((x0 + 1e-6) ** 2 - y0) / 1e-6 - answer) < 1e-3\n"
-    "```")
+    "a = Fraction(1, 2)  # the first fraction\n"
+    "b = Fraction(1, 3)  # the second fraction\n"
+    "common = 6  # a denominator 2 and 3 both divide\n"
+    "a_parts = a * common  # 1/2 is 3 sixths\n"
+    "b_parts = b * common  # 1/3 is 2 sixths\n"
+    "answer = a + b  # 5/6\n"
+    "assert answer == Fraction(int(a_parts + b_parts), common)\n"
+    "```\n\n"
+    "The animation will draw exactly the example you choose -- the same "
+    "function, points and values -- so choose one that is simple to draw.")
 
 _RUNNER = r"""
 import json, math, sys
@@ -208,7 +210,8 @@ def facts_text(sol: Solution) -> str:
     return ("WORKED NUMBERS (computed by running Python; these variables already "
             "exist in the scene -- show them with f-strings and fmt(), e.g. "
             "stage.equation(f\"= {fmt(answer)}\"), and never work out a number "
-            "yourself):\n" + "\n".join(lines))
+            "yourself). Draw this same example: the same function, points and "
+            "values, and show the answer:\n" + "\n".join(lines))
 
 
 def preamble(sol: Solution) -> str:
@@ -248,6 +251,32 @@ def _flat(values) -> list[float]:
         if isinstance(v, dict) and "fraction" in v:
             out += [float(v["fraction"][0]), float(v["fraction"][1])]
     return out
+
+
+def answer_shown(bodies: list[str], sol: Solution) -> bool | None:
+    """Does the screen show the worked answer? None when the answer is not a
+    number or a short list of numbers. A list must appear in order, as a
+    run of numbers in one text: a matrix product shown as (2, 3) when the
+    program computed (2, 4) is not the answer, however right each digit
+    looks on its own."""
+    from forge.app.critique import shown_texts
+    v = sol.values.get("answer")
+    want = [_value(x) for x in v] if isinstance(v, list) else [_value(v)]
+    if not want or any(not isinstance(x, (int, float)) for x in want):
+        return None
+    joined = "\n".join(bodies)
+    if re.search(r"\{\s*(fmt\(\s*)?answer\b", joined):
+        return True                                        # an f-string over it
+
+    def close(a, b):
+        return abs(a - b) <= max(0.006, 0.006 * abs(b))
+    for body in bodies:
+        for text in shown_texts(body):
+            nums = _numbers(text)
+            for i in range(len(nums) - len(want) + 1):
+                if all(close(nums[i + j], w) for j, w in enumerate(want)):
+                    return True
+    return False
 
 
 def unexplained(request: str, bodies: list[str], sol: Solution) -> list[tuple[int, str]]:

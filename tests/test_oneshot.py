@@ -193,3 +193,21 @@ def test_a_student_is_told_when_numbers_were_not_checked():
     assert not student_verdict(res)["checked"]
     res.solution, res.unexplained = None, []
     assert "not worked out" in student_verdict(res)["notes"][0]
+
+
+def test_latex_braces_in_an_f_string_are_escaped_so_the_scene_parses():
+    from forge.app.oneshot import fix_fstrings
+    bad = '        stage.equation(f"\\\\text{new loss} = {new_loss}")'
+    got = fix_fstrings(bad)
+    compile(got.strip(), "<t>", "exec")
+    assert "{{new loss}}" in got and "{new_loss}" in got
+    ok = '        stage.caption(f"step {step_size}")'
+    assert fix_fstrings(ok) == ok
+
+
+def test_the_worked_answer_must_be_on_screen_in_order():
+    from forge.app import solve
+    sol = solve.run("answer = [2, 4]  # the product")
+    assert solve.answer_shown(['stage.equation(r"= (2, 4)")'], sol) is True
+    assert solve.answer_shown(['stage.equation(r"= (2, 3)")'], sol) is False
+    assert solve.answer_shown(['stage.equation(f"= {fmt(answer)}")'], sol) is True
