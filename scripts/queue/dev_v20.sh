@@ -9,7 +9,7 @@ wait_power() {
 }
 A="--oneshot --api --coder none --samples 2 --revise 1 --plan --solve"
 wait_power
-FORGE_LIBRARY=release .venv/bin/python -u scripts/scorecard.py --world --n 30 $A --tag world_v20 > data/logs/world_v20.log 2>&1
+FORGE_LIBRARY=release .venv/bin/python -u scripts/scorecard.py --world --n 30 $A --tag world_v20c > data/logs/world_v20c.log 2>&1
 wait_power
-FORGE_LIBRARY=release .venv/bin/python -u scripts/scorecard.py --fresh --n 20 $A --tag fresh_v20 > data/logs/fresh_v20.log 2>&1
-echo DONE > data/logs/dev_v20.done
+FORGE_LIBRARY=release .venv/bin/python -u scripts/scorecard.py --fresh --n 20 $A --tag fresh_v20c > data/logs/fresh_v20c.log 2>&1
+echo DONE > data/logs/dev_v20c.done
